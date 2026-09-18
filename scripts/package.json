@@ -1,0 +1,16 @@
+{
+  "name": "inlove-firebase-seed-scripts",
+  "version": "1.0.0",
+  "description": "Enterprise Firebase Firestore Data Seeder for InLove Android App (Enrichment & Anti-Decompilation)",
+  "main": "seed_firestore.js",
+  "scripts": {
+    "seed": "node seed_firestore.js",
+    "seed:rest": "node seed_firestore.js --mode=rest",
+    "seed:verify": "node seed_firestore.js --verify-only"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "firebase-admin": "^13.1.0"
+  },
+  "type": "commonjs"
+}

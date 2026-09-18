@@ -12,8 +12,8 @@ val SurfaceContainer = Color(0xFFFFE6F1)
 val SurfaceContainerHigh = Color(0xFFFFDCED)
 val SurfaceContainerHighest = Color(0xFFFFD1E7)
 
-val OnSurface = Color(0xFF26071B)
-val OnSurfaceVariant = Color(0xFF5E2744)
+val OnSurface = Color(0xFF1F0416)
+val OnSurfaceVariant = Color(0xFF4A1934)
 val SurfaceVariant = Color(0xFFFFE2EE)
 val Outline = Color(0xFF9E4774)
 val OutlineVariant = Color(0xFFF0B8D2)
@@ -53,11 +53,12 @@ val RoseGradientStart = Color(0xFFFF2D75)
 val RoseGradientMid = Color(0xFFE91E63)
 val RoseGradientEnd = Color(0xFFFF659A)
 
-// High-contrast vibrant accents
+// High-contrast vibrant accents & tokens
 val HotPink = Color(0xFFFF1493)
 val VibrantRose = Color(0xFFE91E63)
 val SoftPinkCard = Color(0xFFFFF8FB)
 val BorderPink = Color(0xFFFF80AB)
-val TextDarkPlum = Color(0xFF230517)
-val TextSubtlePlum = Color(0xFF6B2B50)
+val CardBorder = Color(0xFFFFC6DB)
+val TextDarkPlum = Color(0xFF1F0416)
+val TextSubtlePlum = Color(0xFF4A1934)
 

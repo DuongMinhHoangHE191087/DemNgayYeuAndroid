@@ -80,6 +80,7 @@ private fun profileDialogTextFieldColors() = OutlinedTextFieldDefaults.colors(
 @Composable
 fun EditMyProfileDialog(
   currentUser: OnlineUserEntity,
+  presetAvatars: List<String> = emptyList(),
   onDismiss: () -> Unit,
   onSave: (name: String, birthDate: String, avatarUrl: String, gender: String, bio: String) -> Unit
 ) {
@@ -99,14 +100,7 @@ fun EditMyProfileDialog(
     derivedStateOf { ProfileUtils.calculateZodiac(birthDate) }
   }
 
-  // Predefined sample avatars
-  val presetAvatars = listOf(
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=400&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop"
-  )
+
 
   Dialog(onDismissRequest = onDismiss) {
     Card(
@@ -188,37 +182,39 @@ fun EditMyProfileDialog(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Preset Avatars Row
-        Text(
-          text = "Chọn ảnh đại diện nhanh:",
-          fontSize = 11.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = Color.DarkGray
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          presetAvatars.forEach { url ->
-            val isSelected = avatarUrl == url
-            Box(
-              modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .border(
-                  width = if (isSelected) 2.5.dp else 1.dp,
-                  color = if (isSelected) Color(0xFFE91E63) else Color.LightGray,
-                  shape = CircleShape
+        // Preset Avatars Row (if available from Cloud)
+        if (presetAvatars.isNotEmpty()) {
+          Text(
+            text = "Chọn ảnh đại diện nhanh:",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.DarkGray
+          )
+          Spacer(modifier = Modifier.height(4.dp))
+          Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            presetAvatars.forEach { url ->
+              val isSelected = avatarUrl == url
+              Box(
+                modifier = Modifier
+                  .size(36.dp)
+                  .clip(CircleShape)
+                  .border(
+                    width = if (isSelected) 2.5.dp else 1.dp,
+                    color = if (isSelected) Color(0xFFE91E63) else Color.LightGray,
+                    shape = CircleShape
+                  )
+                  .clickable { avatarUrl = url }
+              ) {
+                AsyncImage(
+                  model = url,
+                  contentDescription = null,
+                  contentScale = ContentScale.Crop,
+                  modifier = Modifier.fillMaxSize()
                 )
-                .clickable { avatarUrl = url }
-            ) {
-              AsyncImage(
-                model = url,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-              )
+              }
             }
           }
         }

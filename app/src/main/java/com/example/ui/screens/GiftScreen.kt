@@ -1,5 +1,7 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
+import com.example.ui.util.AppLanguage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -26,7 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmOn
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Brush
@@ -45,7 +47,7 @@ import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.NaturePeople
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Redeem
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Schedule
@@ -118,14 +120,16 @@ fun GiftScreen(
   val mutualInterests by viewModel.mutualInterests.collectAsState()
   val partnerUser by viewModel.partnerOnlineUser.collectAsState()
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
+  val appLanguage by viewModel.appLanguage.collectAsState()
+  val isEnglish = appLanguage == AppLanguage.EN
 
   var giftItemToDelete by remember { mutableStateOf<ChecklistItemEntity?>(null) }
   var reminderToDelete by remember { mutableStateOf<GiftReminderEntity?>(null) }
 
   reminderToDelete?.let { reminder ->
     DeleteConfirmationDialog(
-      title = "Xóa lời nhắc quà tặng?",
-      message = "Bạn có chắc chắn muốn xóa lời nhắc '${reminder.title}' khỏi cơ sở dữ liệu không?",
+      title = if (isEnglish) "Delete Gift Reminder?" else "Xóa lời nhắc quà tặng?",
+      message = if (isEnglish) "Are you sure you want to delete reminder '${reminder.title}' from the database?" else "Bạn có chắc chắn muốn xóa lời nhắc '${reminder.title}' khỏi cơ sở dữ liệu không?",
       itemName = reminder.title,
       onConfirm = {
         viewModel.deleteGiftReminder(reminder.id)
@@ -139,8 +143,8 @@ fun GiftScreen(
 
   giftItemToDelete?.let { item ->
     DeleteConfirmationDialog(
-      title = "Xóa việc chuẩn bị quà?",
-      message = "Bạn có chắc chắn muốn xóa mục này khỏi checklist quà tặng không?",
+      title = if (isEnglish) "Delete Checklist Item?" else "Xóa việc chuẩn bị quà?",
+      message = if (isEnglish) "Are you sure you want to delete this item from the gift checklist?" else "Bạn có chắc chắn muốn xóa mục này khỏi checklist quà tặng không?",
       itemName = item.text,
       onConfirm = {
         viewModel.deleteChecklistItem(item.id)
@@ -157,10 +161,10 @@ fun GiftScreen(
   val progressPercent = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) * 100f else 75f
 
   val filteredIdeas = remember(giftIdeas, selectedCategory) {
-    if (selectedCategory == "Tất cả") {
-      giftIdeas
-    } else {
-      giftIdeas.filter { it.category.contains(selectedCategory, ignoreCase = true) }
+    when (selectedCategory) {
+      "Tất cả", "All" -> giftIdeas
+      "AI Đề Xuất ✨", "AI Suggestions ✨" -> giftIdeas.filter { it.isAiGenerated }
+      else -> giftIdeas.filter { it.category.contains(selectedCategory, ignoreCase = true) }
     }
   }
 
@@ -209,7 +213,7 @@ fun GiftScreen(
                 modifier = Modifier.size(14.dp)
               )
               Text(
-                text = "SẮP ĐẾN KỶ NIỆM ĐẶC BIỆT",
+                text = if (isEnglish) "SPECIAL ANNIVERSARY COMING" else "SẮP ĐẾN KỶ NIỆM ĐẶC BIỆT",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnPrimaryFixed,
@@ -221,7 +225,7 @@ fun GiftScreen(
           Spacer(modifier = Modifier.height(6.dp))
 
           Text(
-            text = "Gợi Ý Quà & Bất Ngờ",
+            text = if (isEnglish) "Gift & Surprise Ideas" else "Gợi Ý Quà & Bất Ngờ",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
@@ -230,7 +234,7 @@ fun GiftScreen(
           Spacer(modifier = Modifier.height(4.dp))
 
           Text(
-            text = "Kỷ niệm 1.000 ngày sắp đến trong 3 ngày nữa! Bạn đã chuẩn bị điều tuyệt vời gì chưa? 🎁",
+            text = if (isEnglish) "1,000 days anniversary is coming in 3 days! Have you prepared anything special? 🎁" else "Kỷ niệm 1.000 ngày sắp đến trong 3 ngày nữa! Bạn đã chuẩn bị điều tuyệt vời gì chưa? 🎁",
             fontSize = 13.sp,
             color = OnSurfaceVariant,
             lineHeight = 18.sp
@@ -255,13 +259,13 @@ fun GiftScreen(
                 modifier = Modifier.size(15.dp)
               )
               Text(
-                text = "Tiến độ chuẩn bị",
+                text = if (isEnglish) "Preparation Progress" else "Tiến độ chuẩn bị",
                 fontSize = 12.sp,
                 color = OnSurfaceVariant
               )
             }
             Text(
-              text = "${progressPercent.toInt()}% Hoàn tất",
+              text = if (isEnglish) "${progressPercent.toInt()}% Completed" else "${progressPercent.toInt()}% Hoàn tất",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = Primary
@@ -307,7 +311,7 @@ fun GiftScreen(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = "Gợi Ý Theo Sở Thích Chung",
+                text = if (isEnglish) "Suggestions by Mutual Interests" else "Gợi Ý Theo Sở Thích Chung",
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 color = Color(0xFF880E4F)
@@ -332,19 +336,24 @@ fun GiftScreen(
 
           if (mutualInterests.isNotEmpty()) {
             Text(
-              text = "Hai bạn cùng yêu thích: ${mutualInterests.joinToString(" • ")}",
+              text = if (isEnglish) "You both love: ${mutualInterests.joinToString(" • ")}" else "Hai bạn cùng yêu thích: ${mutualInterests.joinToString(" • ")}",
               fontSize = 12.sp,
               fontWeight = FontWeight.SemiBold,
               color = Color(0xFF4A148C)
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Suggestions based on intersection
-            val suggestions = listOf(
-              "Buổi hòa nhạc Acoustic cuối tuần" to "Địa điểm hẹn hò",
-              "Bộ tách gốm cà phê đôi nghệ thuật" to "Kỷ vật Handmade",
-              "Album Photobook kỷ niệm hành trình yêu" to "Quà lãng mạn"
-            )
+            // Suggestions based on enriched gift ideas from Cloud Firestore
+            val suggestions = remember(giftIdeas) {
+              if (giftIdeas.isNotEmpty()) {
+                giftIdeas.take(3).map { it.title to it.category }
+              } else {
+                listOf(
+                  "Ý tưởng hẹn hò lãng mạn" to "Địa điểm",
+                  "Món quà kỷ vật tình yêu" to "Kỷ niệm"
+                )
+              }
+            }
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
               suggestions.forEach { (title, tag) ->
@@ -372,10 +381,28 @@ fun GiftScreen(
             }
           } else {
             Text(
-              text = "Hãy cùng chọn sở thích ở trang Ghép Đôi để hệ thống tự động gợi ý quà và lịch hẹn lý tưởng cho cả hai!",
+              text = if (isEnglish) "Choose interests on the Pairing screen for automatic gift & date suggestions for both of you!" else "Hãy cùng chọn sở thích ở trang Ghép Đôi để hệ thống tự động gợi ý quà và lịch hẹn lý tưởng cho cả hai!",
               fontSize = 12.sp,
               color = Color.Gray
             )
+          }
+
+          Spacer(modifier = Modifier.height(10.dp))
+          androidx.compose.material3.Button(
+            onClick = { viewModel.triggerAiGiftSuggestions() },
+            shape = RoundedCornerShape(12.dp),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+              containerColor = Color(0xFFC2185B)
+            ),
+            modifier = Modifier
+              .fillMaxWidth()
+              .testTag("btn_trigger_ai_gift_suggestions")
+          ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(if (isEnglish) "🤖 AI Assistant: Gift Suggestions" else "🤖 Trợ Lý AI Gợi Ý Quà Cho Đôi Ta", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
           }
         }
       }
@@ -383,14 +410,27 @@ fun GiftScreen(
 
     // 2. Category Filter Tabs (Horizontal Scroll)
     item {
-      val categories = listOf(
-        "Tất cả",
-        "Quà lãng mạn",
-        "Trang sức & Nước hoa",
-        "Kỷ vật Handmade",
-        "Địa điểm hẹn hò",
-        "Bất ngờ bí mật"
-      )
+      val categories = if (isEnglish) {
+        listOf(
+          "All",
+          "AI Suggestions ✨",
+          "Romantic Gifts",
+          "Jewelry & Perfume",
+          "Handmade Keepsakes",
+          "Date Locations",
+          "Secret Surprises"
+        )
+      } else {
+        listOf(
+          "Tất cả",
+          "AI Đề Xuất ✨",
+          "Quà lãng mạn",
+          "Trang sức & Nước hoa",
+          "Kỷ vật Handmade",
+          "Địa điểm hẹn hò",
+          "Bất ngờ bí mật"
+        )
+      }
 
       Row(
         modifier = Modifier
@@ -469,7 +509,7 @@ fun GiftScreen(
                   modifier = Modifier.size(13.dp)
                 )
                 Text(
-                  text = "GÓI ĐỀ XUẤT VIP",
+                  text = if (isEnglish) "VIP PROPOSAL BUNDLE" else "GÓI ĐỀ XUẤT VIP",
                   fontSize = 10.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color.White,
@@ -483,7 +523,7 @@ fun GiftScreen(
               color = Color.Black.copy(alpha = 0.25f)
             ) {
               Text(
-                text = "Được chọn nhiều nhất",
+                text = if (isEnglish) "Most Popular" else "Được chọn nhiều nhất",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White.copy(alpha = 0.9f),
@@ -495,7 +535,7 @@ fun GiftScreen(
           Spacer(modifier = Modifier.height(10.dp))
 
           Text(
-            text = "Gói Kỷ Niệm 1.000 Ngày Hoàn Hảo",
+            text = if (isEnglish) "1,000 Days Perfect Celebration Bundle" else "Gói Kỷ Niệm 1.000 Ngày Hoàn Hảo",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -504,7 +544,7 @@ fun GiftScreen(
           Spacer(modifier = Modifier.height(4.dp))
 
           Text(
-            text = "Hoa hồng vĩnh cửu lồng kính pha lê kết hợp bữa tối Rooftop lung linh ánh nến ngắm toàn cảnh thành phố cùng thiệp thư tình viết tay.",
+            text = if (isEnglish) "Preserved rose in crystal glass combined with candlelight rooftop dinner overlooking the whole city with handwritten love letter." else "Hoa hồng vĩnh cửu lồng kính pha lê kết hợp bữa tối Rooftop lung linh ánh nến ngắm toàn cảnh thành phố cùng thiệp thư tình viết tay.",
             fontSize = 12.sp,
             color = Color.White.copy(alpha = 0.9f),
             lineHeight = 17.sp
@@ -517,7 +557,11 @@ fun GiftScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
-            val highlights = listOf(
+            val highlights = if (isEnglish) listOf(
+              Pair("Eternal Rose", Icons.Filled.LocalFlorist),
+              Pair("Rooftop Table", Icons.Filled.DinnerDining),
+              Pair("Handwritten Card", Icons.Filled.Mail)
+            ) else listOf(
               Pair("Hoa Vĩnh Cửu", Icons.Filled.LocalFlorist),
               Pair("Bàn Rooftop", Icons.Filled.DinnerDining),
               Pair("Thiệp Viết Tay", Icons.Filled.Mail)
@@ -568,14 +612,14 @@ fun GiftScreen(
               horizontalArrangement = Arrangement.Center
             ) {
               Text(
-                text = "Xem chi tiết lịch trình hoàn hảo",
+                text = if (isEnglish) "View perfect itinerary details" else "Xem chi tiết lịch trình hoàn hảo",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
               )
               Spacer(modifier = Modifier.width(6.dp))
               Icon(
-                imageVector = Icons.Filled.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
                 tint = Primary,
                 modifier = Modifier.size(16.dp)
@@ -604,14 +648,14 @@ fun GiftScreen(
             modifier = Modifier.size(20.dp)
           )
           Text(
-            text = "Ý Tưởng Chuẩn Bị Quà",
+            text = if (isEnglish) "Gift Preparation Ideas" else "Ý Tưởng Chuẩn Bị Quà",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
           )
         }
         Text(
-          text = "${filteredIdeas.size} gợi ý phù hợp",
+          text = if (isEnglish) "${filteredIdeas.size} matched ideas" else "${filteredIdeas.size} gợi ý phù hợp",
           fontSize = 12.sp,
           color = OnSurfaceVariant
         )
@@ -622,6 +666,7 @@ fun GiftScreen(
     items(filteredIdeas, key = { it.id }) { idea ->
       GiftIdeaCard(
         idea = idea,
+        isEnglish = isEnglish,
         onFavoriteToggle = { viewModel.toggleGiftFavorite(idea) },
         onActionClick = { viewModel.openGiftDetail(idea) }
       )
@@ -665,13 +710,13 @@ fun GiftScreen(
               }
               Column {
                 Text(
-                  text = "Checklist Quà Kỷ Niệm",
+                  text = if (isEnglish) "Anniversary Gift Checklist" else "Checklist Quà Kỷ Niệm",
                   fontSize = 16.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnSurface
                 )
                 Text(
-                  text = "Đã hoàn thành $completedCount/$totalCount việc",
+                  text = if (isEnglish) "Completed $completedCount/$totalCount tasks" else "Đã hoàn thành $completedCount/$totalCount việc",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
@@ -679,7 +724,7 @@ fun GiftScreen(
             }
 
             Text(
-              text = "+ Thêm việc",
+              text = if (isEnglish) "+ Add task" else "+ Thêm việc",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = Primary,
@@ -697,6 +742,7 @@ fun GiftScreen(
             checklistItems.forEach { item ->
               ChecklistRow(
                 item = item,
+                isEnglish = isEnglish,
                 onToggle = { viewModel.toggleChecklist(item) },
                 onDelete = { giftItemToDelete = item }
               )
@@ -744,14 +790,14 @@ fun GiftScreen(
               }
               Column {
                 Text(
-                  text = "Lời Nhắc Quà Tặng Đã Lưu",
+                  text = if (isEnglish) "Saved Gift Reminders" else "Lời Nhắc Quà Tặng Đã Lưu",
                   fontSize = 16.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnSurface
                 )
                 val completedReminders = giftReminders.count { it.isCompleted }
                 Text(
-                  text = "Lưu Room: $completedReminders/${giftReminders.size} món đã sẵn sàng",
+                  text = if (isEnglish) "Stored in Room: $completedReminders/${giftReminders.size} items ready" else "Lưu Room: $completedReminders/${giftReminders.size} món đã sẵn sàng",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
@@ -778,7 +824,7 @@ fun GiftScreen(
                   modifier = Modifier.size(15.dp)
                 )
                 Text(
-                  text = "Thêm nhắc quà",
+                  text = if (isEnglish) "Add reminder" else "Thêm nhắc quà",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = Primary
@@ -791,7 +837,7 @@ fun GiftScreen(
 
           if (giftReminders.isEmpty()) {
             Text(
-              text = "Chưa có lời nhắc quà tặng. Nhấn 'Thêm nhắc quà' để tạo lời nhắc chuẩn bị món quà ý nghĩa!",
+              text = if (isEnglish) "No gift reminders yet. Tap 'Add reminder' to schedule a thoughtful gift!" else "Chưa có lời nhắc quà tặng. Nhấn 'Thêm nhắc quà' để tạo lời nhắc chuẩn bị món quà ý nghĩa!",
               fontSize = 12.sp,
               color = OnSurfaceVariant,
               modifier = Modifier.padding(vertical = 8.dp)
@@ -801,6 +847,7 @@ fun GiftScreen(
               giftReminders.forEach { reminder ->
                 GiftReminderRow(
                   item = reminder,
+                  isEnglish = isEnglish,
                   onToggle = { viewModel.toggleGiftReminderCompleted(reminder) },
                   onDelete = { reminderToDelete = reminder }
                 )
@@ -828,8 +875,8 @@ fun GiftScreen(
             )
             .clickable {
               viewModel.openSetAlarmDialog(
-                title = "Nhắc nhở chuẩn bị quà tặng 🎁",
-                message = "Đừng quên chuẩn bị món quà ý nghĩa tặng người ấy nhé!"
+                title = if (isEnglish) "Gift Preparation Reminder 🎁" else "Nhắc nhở chuẩn bị quà tặng 🎁",
+                message = if (isEnglish) "Don't forget to prepare a meaningful gift for your partner!" else "Đừng quên chuẩn bị món quà ý nghĩa tặng người ấy nhé!"
               )
             }
             .testTag("btn_reminder_alarm")
@@ -853,7 +900,7 @@ fun GiftScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = "Tạo nhắc nhở mua quà (Sau 2 tiếng)",
+              text = if (isEnglish) "Set gift reminder (In 2 hours)" else "Tạo nhắc nhở mua quà (Sau 2 tiếng)",
               fontSize = 14.sp,
               fontWeight = FontWeight.Bold,
               color = Color.White
@@ -869,7 +916,7 @@ fun GiftScreen(
           modifier = Modifier
             .fillMaxWidth()
             .clickable {
-              viewModel.showToast("Mở sổ tay sở thích của người ấy...")
+              viewModel.showToast(if (isEnglish) "Opening partner's wishlist notebook..." else "Mở sổ tay sở thích của người ấy...")
             }
             .testTag("btn_preferences_notebook")
         ) {
@@ -886,7 +933,7 @@ fun GiftScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = "Lưu ý sổ tay sở thích của người ấy",
+              text = if (isEnglish) "Partner's Wishlist Notebook" else "Lưu ý sổ tay sở thích của người ấy",
               fontSize = 13.sp,
               fontWeight = FontWeight.SemiBold,
               color = OnSurface
@@ -901,6 +948,7 @@ fun GiftScreen(
 @Composable
 fun GiftIdeaCard(
   idea: GiftIdeaEntity,
+  isEnglish: Boolean = false,
   onFavoriteToggle: () -> Unit,
   onActionClick: () -> Unit
 ) {
@@ -1031,7 +1079,7 @@ fun GiftIdeaCard(
           ) {
             Column(modifier = Modifier.padding(10.dp)) {
               Text(
-                text = "CHECKLIST CHUẨN BỊ:",
+                text = if (isEnglish) "PREPARATION CHECKLIST:" else "CHECKLIST CHUẨN BỊ:",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
@@ -1049,7 +1097,7 @@ fun GiftIdeaCard(
                   modifier = Modifier.size(14.dp)
                 )
                 Text(
-                  text = "In 20 tấm ảnh đôi đẹp nhất của 2 đứa",
+                  text = if (isEnglish) "Print 20 best couple photos" else "In 20 tấm ảnh đôi đẹp nhất của 2 đứa",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
@@ -1066,7 +1114,7 @@ fun GiftIdeaCard(
                   modifier = Modifier.size(14.dp)
                 )
                 Text(
-                  text = "Viết lời chúc & kỷ niệm đáng nhớ dưới mỗi ảnh",
+                  text = if (isEnglish) "Write wishes & memorable notes below each photo" else "Viết lời chúc & kỷ niệm đáng nhớ dưới mỗi ảnh",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
@@ -1097,13 +1145,13 @@ fun GiftIdeaCard(
                 )
                 Column {
                   Text(
-                    text = "Thời gian khắc & giao:",
+                    text = if (isEnglish) "Engraving & delivery time:" else "Thời gian khắc & giao:",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurface
                   )
                   Text(
-                    text = "Khoảng 1 - 2 ngày (Nên đặt ngay)",
+                    text = if (isEnglish) "Around 1 - 2 days (Order soon)" else "Khoảng 1 - 2 ngày (Nên đặt ngay)",
                     fontSize = 11.sp,
                     color = OnSurfaceVariant
                   )
@@ -1126,7 +1174,7 @@ fun GiftIdeaCard(
           ) {
             Column(modifier = Modifier.padding(10.dp)) {
               Text(
-                text = "THỰC ĐƠN GỢI Ý:",
+                text = if (isEnglish) "SUGGESTED MENU:" else "THỰC ĐƠN GỢI Ý:",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
@@ -1137,7 +1185,8 @@ fun GiftIdeaCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.horizontalScroll(rememberScrollState())
               ) {
-                listOf("🥩 Bò Steak Thăn Nội", "🍷 Rượu Vang Hồng", "🎂 Bánh Kem Trái Tim").forEach { item ->
+                val menuItems = if (isEnglish) listOf("🥩 Tenderloin Steak", "🍷 Rosé Wine", "🎂 Heart Cake") else listOf("🥩 Bò Steak Thăn Nội", "🍷 Rượu Vang Hồng", "🎂 Bánh Kem Trái Tim")
+                menuItems.forEach { item ->
                   Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = Color.White,
@@ -1168,7 +1217,7 @@ fun GiftIdeaCard(
               modifier = Modifier.size(16.dp)
             )
             Text(
-              text = "Đồi thông ngoại ô (cách trung tâm 45 phút lái xe)",
+              text = if (isEnglish) "Suburban Pine Hill (45 mins drive from city center)" else "Đồi thông ngoại ô (cách trung tâm 45 phút lái xe)",
               fontSize = 11.sp,
               color = OnSurfaceVariant
             )
@@ -1194,7 +1243,7 @@ fun GiftIdeaCard(
           val actionIcon = when (idea.id) {
             1L -> Icons.Filled.PhotoLibrary
             2L -> Icons.Filled.Brush
-            3L -> Icons.Filled.ReceiptLong
+            3L -> Icons.AutoMirrored.Filled.ReceiptLong
             else -> Icons.Filled.Map
           }
           Icon(
@@ -1219,6 +1268,7 @@ fun GiftIdeaCard(
 @Composable
 fun ChecklistRow(
   item: ChecklistItemEntity,
+  isEnglish: Boolean = false,
   onToggle: () -> Unit,
   onDelete: () -> Unit
 ) {
@@ -1293,7 +1343,7 @@ fun ChecklistRow(
         ) {
           Icon(
             imageVector = Icons.Filled.Close,
-            contentDescription = "Xóa việc",
+            contentDescription = if (isEnglish) "Delete task" else "Xóa việc",
             tint = OutlineVariant,
             modifier = Modifier.size(16.dp)
           )
@@ -1306,6 +1356,7 @@ fun ChecklistRow(
 @Composable
 fun GiftReminderRow(
   item: GiftReminderEntity,
+  isEnglish: Boolean = false,
   onToggle: () -> Unit,
   onDelete: () -> Unit
 ) {
@@ -1336,7 +1387,7 @@ fun GiftReminderRow(
         ) {
           Icon(
             imageVector = if (item.isCompleted) Icons.Filled.CheckCircle else Icons.Filled.TaskAlt,
-            contentDescription = "Hoàn thành",
+            contentDescription = if (isEnglish) "Completed" else "Hoàn thành",
             tint = if (item.isCompleted) Primary else OnSurfaceVariant.copy(alpha = 0.4f),
             modifier = Modifier.size(22.dp)
           )
@@ -1357,7 +1408,7 @@ fun GiftReminderRow(
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text(
-              text = "Tặng: ${item.recipient}",
+              text = if (isEnglish) "To: ${item.recipient}" else "Tặng: ${item.recipient}",
               fontSize = 11.sp,
               color = Primary,
               fontWeight = FontWeight.Medium
@@ -1394,7 +1445,7 @@ fun GiftReminderRow(
       ) {
         Icon(
           imageVector = Icons.Filled.Close,
-          contentDescription = "Xóa lời nhắc quà",
+          contentDescription = if (isEnglish) "Delete gift reminder" else "Xóa lời nhắc quà",
           tint = OnSurfaceVariant.copy(alpha = 0.6f),
           modifier = Modifier.size(18.dp)
         )

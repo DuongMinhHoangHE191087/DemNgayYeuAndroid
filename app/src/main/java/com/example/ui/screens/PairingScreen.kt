@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import android.content.ClipData
@@ -52,7 +53,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -129,8 +130,8 @@ fun PairingScreen(
   val selectedInviteForVerification by viewModel.selectedInviteForVerification.collectAsState()
   val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsState()
 
-  // Send Invite form fields
-  var proposedStartDateText by remember { mutableStateOf("18/12/2022") }
+  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
+  var proposedStartDateText by remember { mutableStateOf(todayFormatted) }
   var loveNoteInput by remember { mutableStateOf("Cùng anh/em xây dựng hạnh phúc Set Love nhé! 💕") }
 
   val calculatedDaysFromProposed by remember(proposedStartDateText) {
@@ -143,6 +144,7 @@ fun PairingScreen(
   fun copyToClipboard(text: String, label: String = "Couple Code") {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = ClipData.newPlainText(label, text)
+    @Suppress("UsePropertyAccessSyntax")
     clipboard.setPrimaryClip(clip)
     viewModel.showToast("Đã sao chép: $text")
   }
@@ -173,19 +175,15 @@ fun PairingScreen(
           containerColor = MaterialTheme.colorScheme.surface
         ),
         actions = {
-          // Switch Demo User Quick Button for Testing
-          OutlinedButton(
-            onClick = { viewModel.switchDemoUser() },
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            modifier = Modifier.padding(end = 8.dp).testTag("switch_demo_user_button")
+          IconButton(
+            onClick = { shareCoupleLink(currentUser.coupleCode) },
+            modifier = Modifier.padding(end = 4.dp).testTag("topbar_share_couple_code_button")
           ) {
             Icon(
-              imageVector = Icons.Default.SwapHoriz,
-              contentDescription = "Chuyển tài khoản",
-              modifier = Modifier.size(16.dp)
+              imageVector = Icons.Default.Share,
+              contentDescription = "Chia sẻ mã ghép đôi",
+              tint = Color(0xFFE91E63)
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Đổi bên", fontSize = 12.sp)
           }
         }
       )
@@ -305,7 +303,7 @@ fun PairingScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                   ) {
                     Text(text = "Số ngày yêu tính tự động:", fontSize = 13.sp, color = Color.DarkGray)
-                    Text(text = incomingDays.toString() + " ngày bên nhau 💕", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD81B60))
+                    Text(text = "$incomingDays ngày bên nhau 💕", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD81B60))
                   }
                   if (invite.loveNote.isNotBlank()) {
                     Text(
@@ -818,25 +816,6 @@ fun PairingScreen(
                   }
                 }
 
-                // Gợi ý thử nghiệm nhanh
-                Spacer(modifier = Modifier.height(8.dp))
-                val targetSuggestion = if (currentUser.uid == OnlineCoupleRepository.USER_A_ID) {
-                  OnlineCoupleRepository.USER_B_CODE
-                } else {
-                  OnlineCoupleRepository.USER_A_CODE
-                }
-
-                Text(
-                  text = "💡 Thử nghiệm nhanh: Bấm để dán " + targetSuggestion,
-                  fontSize = 12.sp,
-                  color = Color(0xFF00897B),
-                  fontWeight = FontWeight.Medium,
-                  modifier = Modifier.clickable {
-                    viewModel.updateSearchQuery(targetSuggestion)
-                    viewModel.performSearch()
-                  }
-                )
-
                 // THÔNG TIN SET LOVE CHỈ HIỂN THỊ SAU KHI ĐÃ CHỌN NGƯỜI
                 if (searchedUser != null) {
                   val target = searchedUser!!
@@ -936,7 +915,7 @@ fun PairingScreen(
                         )
                       }
 
-                      Divider(color = Color(0xFFFFCDD2))
+                      HorizontalDivider(color = Color(0xFFFFCDD2))
 
                       // THIẾT LẬP KỶ NIỆM YÊU (THỐNG NHẤT TỪ NGƯỜI TẠO)
                       Text(
@@ -951,7 +930,7 @@ fun PairingScreen(
                         value = proposedStartDateText,
                         onValueChange = { proposedStartDateText = it },
                         label = "Ngày bắt đầu yêu (dd/MM/yyyy) *",
-                        placeholder = "18/12/2022",
+                        placeholder = "dd/MM/yyyy",
                         dialogTitle = "Chọn ngày bắt đầu yêu",
                         quickPresets = DatePickerPresets.relationshipStartDatePresets(),
                         modifier = Modifier.fillMaxWidth(),
@@ -976,7 +955,7 @@ fun PairingScreen(
                           )
                           Spacer(modifier = Modifier.width(8.dp))
                           Text(
-                            text = "✨ Tính đến hôm nay: " + calculatedDaysFromProposed + " ngày yêu nhau 💕",
+                            text = "✨ Tính đến hôm nay: $calculatedDaysFromProposed ngày yêu nhau 💕",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFD81B60)
@@ -1106,9 +1085,11 @@ fun PairingScreen(
 
   // DIALOGS:
   // 1. Edit My Profile Dialog
+  val dynamicPresetAvatars by viewModel.presetAvatars.collectAsState()
   if (showEditProfileDialog) {
     EditMyProfileDialog(
       currentUser = currentUser,
+      presetAvatars = dynamicPresetAvatars,
       onDismiss = { viewModel.closeEditProfileDialog() },
       onSave = { name, birthDate, avatarUrl, gender, bio ->
         viewModel.updateMyProfile(name, birthDate, avatarUrl, gender, bio)

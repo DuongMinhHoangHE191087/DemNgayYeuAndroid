@@ -145,4 +145,119 @@
     <!-- Generic & Toasts -->
     <string name="toast_switched_vi">Đã chuyển sang Tiếng Việt 🇻🇳</string>
     <string name="toast_switched_en">Đã chuyển sang English 🇬🇧</string>
+
+    <!-- Onboarding Flow -->
+    <string name="onboarding_welcome_title">Chào Mừng Đến Với InLove 💕</string>
+    <string name="onboarding_welcome_sub">Không gian lãng mạn lưu giữ trọn vẹn từng khoảnh khắc tình yêu đôi bạn</string>
+    <string name="onboarding_lang_select_title">Chọn Ngôn Ngữ Hiển Thị</string>
+    <string name="onboarding_counter_title">Đếm Trọn Từng Ngày Yêu ⏳</string>
+    <string name="onboarding_counter_sub">Đếm chính xác từng ngày bên nhau, bắn tim kỷ niệm chúc mừng các cột mốc: 100, 200, 365, 1000 ngày!</string>
+    <string name="onboarding_memories_title">Kho Kỷ Niệm &amp; Nhật Ký Đôi 📸</string>
+    <string name="onboarding_memories_sub">Lưu lại ảnh hẹn hò, địa điểm ý nghĩa và dòng cảm xúc ngọt ngào an toàn trên máy và đồng bộ đám mây.</string>
+    <string name="onboarding_reminder_title">Nhắc Hẹn Thông Minh &amp; Gợi Ý Quà 🎁</string>
+    <string name="onboarding_reminder_sub">Không bao giờ quên ngày quan trọng nhờ chuông báo trước (7 ngày, 3 ngày, 1 ngày) kèm gợi ý quà tặng từ AI.</string>
+    <string name="onboarding_start_title">Sẵn Sàng Bắt Đầu Hành Trình 🌸</string>
+    <string name="onboarding_start_sub">Cá nhân hóa tên 2 bạn, ngày bắt đầu yêu, hoặc khám phá ngay ứng dụng!</string>
+    <string name="onboarding_btn_next">Tiếp tục</string>
+    <string name="onboarding_btn_back">Quay lại</string>
+    <string name="onboarding_btn_skip">Bỏ qua</string>
+    <string name="onboarding_btn_start">Bắt Đầu Ngay ✨</string>
+
+    <!-- Calendar Screen -->
+    <string name="calendar_title">Lịch Kỷ Niệm</string>
+    <string name="calendar_filter_all">Tất cả</string>
+    <string name="calendar_filter_upcoming">Sắp tới</string>
+    <string name="calendar_filter_past">Đã qua</string>
+    <string name="calendar_prev_month">Tháng trước</string>
+    <string name="calendar_next_month">Tháng sau</string>
+    <string name="calendar_add_anniversary">Thêm Ngày Kỷ Niệm</string>
+    <string name="calendar_delete_title">Xóa Ngày Kỷ Niệm?</string>
+    <string name="calendar_delete_msg">Bạn có chắc chắn muốn xóa ngày kỷ niệm này khỏi lịch không?</string>
+    <string name="calendar_milestone_delete_title">Xóa Cột Mốc Kỷ Niệm?</string>
+    <string name="calendar_milestone_delete_msg">Bạn có chắc chắn muốn xóa cột mốc này khỏi lịch không?</string>
+
+    <!-- Gift Screen -->
+    <string name="gift_screen_title">Gợi Ý Quà Tặng</string>
+    <string name="gift_cat_all">Tất cả</string>
+    <string name="gift_cat_ai">AI Đề Xuất ✨</string>
+    <string name="gift_cat_jewelry">Trang Sức</string>
+    <string name="gift_cat_tech">Công Nghệ</string>
+    <string name="gift_cat_flowers">Hoa &amp; Thiệp</string>
+    <string name="gift_cat_travel">Du Lịch &amp; Hẹn Hò</string>
+    <string name="gift_cat_fashion">Thời Trang</string>
+    <string name="gift_cat_diy">Thủ Công &amp; DIY</string>
+    <string name="gift_checklist_title">Danh Sách Cần Chuẩn Bị</string>
+    <string name="gift_checklist_add">Thêm Việc Chuẩn Bị</string>
+    <string name="gift_delete_reminder_title">Xóa Lời Nhắc Quà Tặng?</string>
+    <string name="gift_delete_reminder_msg">Bạn có chắc chắn muốn xóa lời nhắc quà tặng này không?</string>
+    <string name="gift_delete_item_title">Xóa Việc Chuẩn Bị?</string>
+    <string name="gift_delete_item_msg">Bạn có chắc chắn muốn xóa mục này khỏi checklist quà tặng không?</string>
+
+    <!-- Reminder Screen -->
+    <string name="reminder_screen_title">Trung Tâm Nhắc Hẹn</string>
+    <string name="reminder_realtime_header">Nhắc Hẹn Thời Gian Thực</string>
+    <string name="reminder_cadence_custom">Tùy Chỉnh</string>
+    <string name="reminder_cadence_weekly">Hàng Tuần</string>
+    <string name="reminder_cadence_monthly">Hàng Tháng</string>
+    <string name="reminder_cadence_annually">Hàng Năm</string>
+    <string name="reminder_delete_title">Xóa Lời Nhắc Hẹn Hò?</string>
+    <string name="reminder_delete_msg">Bạn có chắc chắn muốn xóa lời nhắc này không? Báo thức liên quan sẽ bị hủy.</string>
+    <string name="reminder_mark_all_read">Đã Xem Tất Cả</string>
+    <string name="reminder_add_new">Thêm Lời Nhắc Mới</string>
+
+    <!-- Pairing Screen -->
+    <string name="pairing_title">Kết Nối Đôi Bạn 1-1</string>
+    <string name="pairing_sub">Ghép đôi cùng người ấy để đồng bộ đếm ngày và kỷ niệm thời gian thực</string>
+    <string name="pairing_my_code">Mã Kết Nối Của Bạn</string>
+    <string name="pairing_partner_code">Nhập Mã Của Người Ấy</string>
+    <string name="pairing_btn_send">Gửi Lời Mời Kết Nối</string>
+    <string name="pairing_status_connected">Đã Kết Đôi ❤️</string>
+    <string name="pairing_status_pending">Đang Chờ Phản Hồi ⏳</string>
+    <string name="pairing_btn_disconnect">Hủy Kết Đôi</string>
+    <string name="pairing_copy_code">Đã sao chép mã kết nối vào bộ nhớ tạm!</string>
+
+    <!-- Paywall Screen -->
+    <string name="paywall_title">INLOVE PREMIUM</string>
+    <string name="paywall_sub">Tình yêu không giới hạn — Gắn kết mọi kỷ niệm trọn vẹn</string>
+    <string name="paywall_benefits_header">Đặc Quyền VIP</string>
+    <string name="paywall_benefit_ads">Tắt hoàn toàn 100% quảng cáo vĩnh viễn</string>
+    <string name="paywall_benefit_ai">Gợi ý quà tặng &amp; Thư tình AI không giới hạn</string>
+    <string name="paywall_benefit_cloud">Lưu trữ ảnh kỷ niệm HD lên đám mây không giới hạn</string>
+    <string name="paywall_benefit_lock">Khóa ứng dụng vân tay / FaceID tuyệt đối riêng tư</string>
+    <string name="paywall_benefit_theme">Huy hiệu Premium &amp; Theme độc quyền dành cho cặp đôi</string>
+    <string name="paywall_plan_yearly_title">Gói 1 Năm — Được Yêu Thích ❤️</string>
+    <string name="paywall_plan_yearly_price">299.000 đ / năm</string>
+    <string name="paywall_plan_yearly_sub">3 ngày dùng thử miễn phí, sau đó ~24.900 đ/tháng</string>
+    <string name="paywall_plan_yearly_badge">TIẾT KIỆM 50%</string>
+    <string name="paywall_plan_monthly_title">Gói 1 Tháng</string>
+    <string name="paywall_plan_monthly_price">49.000 đ / tháng</string>
+    <string name="paywall_plan_monthly_sub">Thanh toán linh hoạt, hủy bất kỳ lúc nào</string>
+    <string name="paywall_plan_lifetime_title">Gói Trọn Đời Vĩnh Cửu 💫</string>
+    <string name="paywall_plan_lifetime_price">699.000 đ một lần</string>
+    <string name="paywall_plan_lifetime_sub">Thanh toán duy nhất 1 lần — Sử dụng mãi mãi</string>
+    <string name="paywall_plan_lifetime_badge">MÃI MÃI</string>
+    <string name="paywall_btn_trial">🎁 BẮT ĐẦU DÙNG THỬ 3 NGÀY MIỄN PHÍ</string>
+    <string name="paywall_btn_monthly">💳 ĐĂNG KÝ THÁNG NGAY</string>
+    <string name="paywall_btn_lifetime">👑 NÂNG CẤP TRỌN ĐỜI NGAY</string>
+    <string name="paywall_btn_restore">Khôi phục gói mua (Restore Purchases)</string>
+    <string name="paywall_btn_manage">Quản lý &amp; Hủy gói cước trên Google Play</string>
+    <string name="paywall_terms">Điều khoản dịch vụ</string>
+    <string name="paywall_privacy">Chính sách bảo mật</string>
+    <string name="paywall_restoring">Đang kiểm tra giao dịch đã mua…</string>
+    <string name="paywall_restore_success">Đã khôi phục thành công gói VIP!</string>
+    <string name="paywall_restore_empty">Không tìm thấy giao dịch nào với tài khoản Google Play này.</string>
+    <string name="paywall_vip_congrats">🎉 Chúc mừng! Bạn đã là thành viên VIP InLove!</string>
+
+    <!-- Auth Screen -->
+    <string name="auth_login_title">Đăng Nhập InLove</string>
+    <string name="auth_register_title">Tạo Tài Khoản InLove</string>
+    <string name="auth_email_label">Địa chỉ Email</string>
+    <string name="auth_password_label">Mật khẩu</string>
+    <string name="auth_confirm_password_label">Xác nhận mật khẩu</string>
+    <string name="auth_forgot_password">Quên mật khẩu?</string>
+    <string name="auth_btn_login">Đăng Nhập</string>
+    <string name="auth_btn_register">Đăng Ký</string>
+    <string name="auth_btn_guest">Tiếp tục với chế độ Khách</string>
+    <string name="auth_switch_to_register">Chưa có tài khoản? Đăng ký ngay</string>
+    <string name="auth_switch_to_login">Đã có tài khoản? Đăng nhập</string>
 </resources>

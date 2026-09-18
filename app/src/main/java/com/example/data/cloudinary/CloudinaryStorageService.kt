@@ -44,9 +44,9 @@ object CloudinaryStorageService : ICloudinaryMediaService {
   val mediaService: ICloudinaryMediaService = CloudinaryMediaService.getInstance()
 
   // Configurable Cloudinary parameters
-  var cloudName: String = "inlove-couple"
-  var uploadPreset: String = "inlove_unsigned"
-  var folderName: String = "inlove_memories"
+  var cloudName: String = try { com.example.BuildConfig.CLOUDINARY_CLOUD_NAME.ifEmpty { "dt6p7wm6i" } } catch (_: Throwable) { "dt6p7wm6i" }
+  var uploadPreset: String = try { com.example.BuildConfig.CLOUDINARY_UPLOAD_PRESET.ifEmpty { "inlove_unsigned" } } catch (_: Throwable) { "inlove_unsigned" }
+  var folderName: String = try { com.example.BuildConfig.CLOUDINARY_FOLDER.ifEmpty { "inlove_memories" } } catch (_: Throwable) { "inlove_memories" }
 
   // Limit constants requested by user
   const val MAX_IMAGE_SIZE_BYTES = 10L * 1024 * 1024 // 10 MB limit for photo

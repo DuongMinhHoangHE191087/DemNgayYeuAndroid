@@ -1,0 +1,132 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user is a member of the relationship
+    function isRelationshipMember(relData) {
+      return isAuthenticated() && (
+        request.auth.uid == relData.partnerAId ||
+        request.auth.uid == relData.partnerBId
+      );
+    }
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Users Collection
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // ===============================================================
+    // Relationships Collection
+    // ===============================================================
+    match /relationships/{relationshipId} {
+      allow read: if isAuthenticated() && (
+        resource == null || isRelationshipMember(resource.data)
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.partnerAId == request.auth.uid ||
+        request.resource.data.partnerBId == request.auth.uid
+      );
+      allow update: if isAuthenticated() && isRelationshipMember(resource.data);
+      allow delete: if isAuthenticated() && isRelationshipMember(resource.data);
+    }
+
+    // ===============================================================
+    // Invites Collection (Couple Pairing)
+    // ===============================================================
+    match /invites/{inviteId} {
+      allow read: if isAuthenticated() && (
+        resource.data.senderUid == request.auth.uid ||
+        resource.data.receiverUid == request.auth.uid ||
+        resource.data.receiverCoupleCode != null
+      );
+      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.senderUid == request.auth.uid ||
+        resource.data.receiverUid == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Memories Collection (Anniversary Photos & Videos via Cloudinary)
+    // ===============================================================
+    match /memories/{memoryId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.authorUid == request.auth.uid ||
+        resource.data.relationshipId == request.resource.data.relationshipId
+      );
+      allow delete: if isAuthenticated() && resource.data.authorUid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Anniversaries Collection
+    // ===============================================================
+    match /anniversaries/{anniversaryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // ===============================================================
+    // Public / Shared Catalog Collections (Enriched Dynamic Content)
+    // Read: All authenticated users or public read
+    // Write: Denied to clients (Admin & Seeder script only)
+    // ===============================================================
+    match /gift_ideas/{giftId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /milestone_presets/{milestoneId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /badge_definitions/{badgeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /preset_assets/{assetId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /checklist_templates/{checklistId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ===============================================================
+    // Test Account Fixtures (Zero credentials stored in APK)
+    // Read: Allowed for test login sync
+    // Write: Denied to clients
+    // ===============================================================
+    match /test_fixtures/{fixtureId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

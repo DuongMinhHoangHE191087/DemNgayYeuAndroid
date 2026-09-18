@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.components
 
 import android.content.Context
@@ -42,8 +43,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.NavigateBefore
-import androidx.compose.material.icons.filled.NavigateNext
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -105,7 +106,6 @@ import java.util.Locale
  * 'Memories' widget on the couple dashboard displaying an interactive carousel of photos
  * from the user's gallery associated with specific anniversaries, powered by Coil.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnniversaryMemoriesWidget(
   viewModel: InLoveViewModel,
@@ -145,16 +145,17 @@ fun AnniversaryMemoriesWidget(
         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
       )
     } else {
-      pendingPhotoUri = "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=1080&auto=format&fit=crop"
+      pendingPhotoUri = ""
       showAddDialog = true
     }
   }
 
   // Predefined core anniversaries list
   val defaultAnniversaryList = remember(anniversaryDate, milestones, memories) {
+    val initialAnniversary = if (anniversaryDate.isNotBlank()) "$anniversaryDate - Ngày Bắt Đầu Yêu" else "Ngày Bắt Đầu Yêu"
     val list = mutableListOf(
-      "18/12 - Ngày Bắt Đầu Yêu",
-      "Kỷ Niệm 1 Năm Hoàng Kim",
+      initialAnniversary,
+      "Kỷ Niệm 1 Năm Yêu Nhau",
       "100 Ngày Bên Nhau",
       "14/02 - Lễ Tình Nhân Valentine",
       "Chuyến Du Lịch Đầu Tiên"
@@ -341,11 +342,11 @@ fun AnniversaryMemoriesWidget(
         defaultAnniversaryList.forEach { anniversaryName ->
           val isSelected = selectedFilter.equals(anniversaryName, ignoreCase = true)
           val chipIcon = when {
-            anniversaryName.contains("18/12") || anniversaryName.contains("Bắt Đầu") -> "🌹"
+            anniversaryName.contains("Bắt Đầu") || anniversaryName.contains("Yêu") -> "🌹"
             anniversaryName.contains("1 Năm") || anniversaryName.contains("Year") -> "💍"
             anniversaryName.contains("100") -> "💕"
             anniversaryName.contains("Valentine") || anniversaryName.contains("14/02") -> "🍫"
-            anniversaryName.contains("Du Lịch") || anniversaryName.contains("Sa Pa") -> "✈️"
+            anniversaryName.contains("Du Lịch") -> "✈️"
             anniversaryName.contains("Sinh Nhật") -> "🎂"
             else -> "✨"
           }
@@ -430,7 +431,7 @@ fun AnniversaryMemoriesWidget(
               modifier = Modifier.size(32.dp)
             ) {
               Icon(
-                imageVector = Icons.Filled.NavigateBefore,
+                imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
                 contentDescription = "Previous Photo",
                 tint = if (pagerState.currentPage > 0) Primary else Color.LightGray
               )
@@ -475,7 +476,7 @@ fun AnniversaryMemoriesWidget(
               modifier = Modifier.size(32.dp)
             ) {
               Icon(
-                imageVector = Icons.Filled.NavigateNext,
+                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                 contentDescription = "Next Photo",
                 tint = if (pagerState.currentPage < filteredMemories.size - 1) Primary else Color.LightGray
               )
@@ -525,7 +526,7 @@ fun AnniversaryMemoriesWidget(
   if (showAddDialog && pendingPhotoUri != null) {
     AddAnniversaryPhotoDialog(
       initialPhotoUri = pendingPhotoUri!!,
-      preselectedAnniversary = if (selectedFilter != "Tất cả" && selectedFilter != "All") selectedFilter else "18/12 - Ngày Bắt Đầu Yêu",
+      preselectedAnniversary = if (selectedFilter != "Tất cả" && selectedFilter != "All") selectedFilter else (defaultAnniversaryList.firstOrNull() ?: "Ngày Bắt Đầu Yêu"),
       anniversaryOptions = defaultAnniversaryList,
       isVietnamese = isVietnamese,
       onDismiss = {

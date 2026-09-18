@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -34,7 +35,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.Settings
@@ -348,7 +349,7 @@ fun UserGuideDialog(
               contentAlignment = Alignment.Center
             ) {
               Icon(
-                imageVector = Icons.Filled.MenuBook,
+                imageVector = Icons.AutoMirrored.Filled.MenuBook,
                 contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
@@ -640,12 +641,37 @@ val WALLPAPER_PRESETS = listOf(
 fun WallpaperPickerDialog(
   language: AppLanguage,
   currentWallpaperUrl: String,
+  presetWallpapers: List<String> = emptyList(),
   onApplyWallpaper: (String) -> Unit,
   onDismiss: () -> Unit
 ) {
   val strings = LocalizedStrings.get(language)
   var selectedUrl by remember { mutableStateOf(currentWallpaperUrl) }
   var customUrlInput by remember { mutableStateOf("") }
+
+  val activePresets = remember(presetWallpapers) {
+    if (presetWallpapers.isNotEmpty()) {
+      presetWallpapers.mapIndexed { index, url ->
+        val titleVi = when (index % 5) {
+          0 -> "Hoa Anh Đào"
+          1 -> "Hoàng Hôn Hồng"
+          2 -> "Đêm Sao Lãng Mạn"
+          3 -> "Vườn Hồng Mộng Mơ"
+          else -> "Trái Tim Lãng Mạn"
+        }
+        val titleEn = when (index % 5) {
+          0 -> "Cherry Blossom"
+          1 -> "Sunset Rose"
+          2 -> "Starry Night"
+          3 -> "Rose Garden"
+          else -> "Romantic Heart"
+        }
+        WallpaperPreset(titleVi, titleEn, url)
+      }
+    } else {
+      WALLPAPER_PRESETS
+    }
+  }
 
   Dialog(onDismissRequest = onDismiss) {
     Surface(
@@ -723,36 +749,25 @@ fun WallpaperPickerDialog(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-          WALLPAPER_PRESETS.take(2).forEach { preset ->
-            WallpaperCardItem(
-              preset = preset,
-              isSelected = selectedUrl == preset.url,
-              language = language,
-              onClick = { selectedUrl = preset.url },
-              modifier = Modifier.weight(1f)
-            )
+        activePresets.chunked(2).forEach { rowPresets ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            rowPresets.forEach { preset ->
+              WallpaperCardItem(
+                preset = preset,
+                isSelected = selectedUrl == preset.url,
+                language = language,
+                onClick = { selectedUrl = preset.url },
+                modifier = Modifier.weight(1f)
+              )
+            }
+            if (rowPresets.size == 1) {
+              Spacer(modifier = Modifier.weight(1f))
+            }
           }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-          WALLPAPER_PRESETS.drop(2).forEach { preset ->
-            WallpaperCardItem(
-              preset = preset,
-              isSelected = selectedUrl == preset.url,
-              language = language,
-              onClick = { selectedUrl = preset.url },
-              modifier = Modifier.weight(1f)
-            )
-          }
+          Spacer(modifier = Modifier.height(8.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -875,13 +890,14 @@ private fun WallpaperCardItem(
 @Composable
 fun CaptureMemoryDialog(
   language: AppLanguage,
+  presetPhotos: List<String> = emptyList(),
   onSaveMemory: (note: String, photoUrl: String) -> Unit,
   onDismiss: () -> Unit
 ) {
   val strings = LocalizedStrings.get(language)
   var noteText by remember { mutableStateOf("") }
-  var photoUrlText by remember {
-    mutableStateOf("https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=1080&auto=format&fit=crop")
+  var photoUrlText by remember(presetPhotos) {
+    mutableStateOf(presetPhotos.firstOrNull() ?: "")
   }
 
   Dialog(onDismissRequest = onDismiss) {
@@ -1001,6 +1017,42 @@ fun CaptureMemoryDialog(
             unfocusedBorderColor = Color(0xFFFFCDD2)
           )
         )
+
+        if (presetPhotos.isNotEmpty()) {
+          Spacer(modifier = Modifier.height(8.dp))
+          Text(
+            text = if (language == AppLanguage.VI) "Hoặc chọn từ bộ sưu tập mẫu:" else "Or pick from curated presets:",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Primary
+          )
+          Spacer(modifier = Modifier.height(4.dp))
+          LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            items(presetPhotos) { url ->
+              Box(
+                modifier = Modifier
+                  .size(44.dp)
+                  .clip(RoundedCornerShape(8.dp))
+                  .border(
+                    width = if (photoUrlText == url) 2.dp else 1.dp,
+                    color = if (photoUrlText == url) Primary else Color(0xFFFFCDD2),
+                    shape = RoundedCornerShape(8.dp)
+                  )
+                  .clickable { photoUrlText = url }
+              ) {
+                AsyncImage(
+                  model = url,
+                  contentDescription = null,
+                  contentScale = ContentScale.Crop,
+                  modifier = Modifier.fillMaxSize()
+                )
+              }
+            }
+          }
+        }
 
         Spacer(modifier = Modifier.height(10.dp))
 

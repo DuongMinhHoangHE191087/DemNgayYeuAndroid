@@ -30,7 +30,7 @@ data class FirebaseRelationship3NF(
   val user2Uid: String = "",              // [FK] Foreign Key -> users_3nf.uid
   val startDate: Long = 0L,
   val startDateText: String = "",
-  val loveTitle: String = "Bámmmm",
+  val loveTitle: String = "InLove",
   val status: String = "ACTIVE",          // "ACTIVE", "PENDING_BREAKUP", "TERMINATED"
   val createdAt: Long = System.currentTimeMillis()
 )

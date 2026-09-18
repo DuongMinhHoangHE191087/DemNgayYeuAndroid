@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package com.example.ui.screens
 
 import androidx.compose.animation.animateColorAsState
@@ -26,7 +28,10 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.History
@@ -35,14 +40,13 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -90,6 +94,9 @@ import com.example.ui.theme.SurfaceContainerLowest
 import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
 
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.ui.platform.LocalUriHandler
+
 @Composable
 fun SettingsScreen(viewModel: InLoveViewModel) {
   var notificationEnabled by remember { mutableStateOf(true) }
@@ -104,6 +111,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
 
   val appLanguage by viewModel.appLanguage.collectAsState()
   val context = LocalContext.current
+  val uriHandler = LocalUriHandler.current
 
   // Online 1-1 Set Love States
   val currentUser by viewModel.currentOnlineUser.collectAsState()
@@ -111,6 +119,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   val activeRelationship by viewModel.activeRelationship.collectAsState()
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
   val incomingInvite by viewModel.incomingInvite.collectAsState()
+  val isVip by viewModel.isVip.collectAsState()
   var showConfirmBreakupDialog by remember { mutableStateOf(false) }
 
   // Account & Security States
@@ -392,8 +401,14 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 }
               }
 
+              val loveSince = activeRelationship?.startDateText?.ifBlank { null }
+              val partnerSubtitle = if (partnerUser != null) {
+                if (!loveSince.isNullOrBlank()) "Mã: ${partnerUser!!.coupleCode} • Yêu từ $loveSince" else "Mã: ${partnerUser!!.coupleCode}"
+              } else {
+                "Mã của bạn: ${currentUser.coupleCode}"
+              }
               Text(
-                text = if (partnerUser != null) "Mã: ${partnerUser!!.coupleCode} • Yêu từ 18/12/2022" else "Mã của bạn: ${currentUser.coupleCode}",
+                text = partnerSubtitle,
                 fontSize = 12.sp,
                 color = Color.Gray
               )
@@ -526,7 +541,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                  text = "Đề xuất ngày bắt đầu: ${incomingInvite!!.proposedStartDateText.ifEmpty { "18/12/2022" }}",
+                  text = "Đề xuất ngày bắt đầu: ${incomingInvite!!.proposedStartDateText.ifEmpty { "Chưa đặt" }}",
                   fontSize = 12.sp,
                   color = Color.DarkGray
                 )
@@ -595,6 +610,98 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       )
     }
 
+    // 2.5. VIP Subscription Banner & Entry Point to Paywall
+    item {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        Card(
+          shape = RoundedCornerShape(20.dp),
+          colors = CardDefaults.cardColors(
+            containerColor = if (isVip) Color(0xFFFFF8E1) else Color(0xFFFFF0F5)
+          ),
+          border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isVip) Color(0xFFFFD54F) else Color(0xFFF48FB1)
+          ),
+          elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable { viewModel.setVipDialogVisible(true) }
+            .testTag("settings_vip_upgrade_card")
+        ) {
+          Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Box(
+              modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(if (isVip) Color(0xFFFFB300) else Primary),
+              contentAlignment = Alignment.Center
+            ) {
+              Icon(
+                imageVector = Icons.Filled.WorkspacePremium,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(26.dp)
+              )
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+              Text(
+                text = if (isVip) "Thành Viên InLove VIP 👑" else "Nâng Cấp Gói VIP Tình Yêu ✨",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = if (isVip) Color(0xFFB78103) else Primary
+              )
+              Spacer(modifier = Modifier.height(2.dp))
+              Text(
+                text = if (isVip) "Không quảng cáo • Cloud lưu trữ • AI không giới hạn"
+                       else "Tắt sạch quảng cáo • Thử miễn phí 3 ngày gói Năm",
+                fontSize = 12.sp,
+                color = OnSurfaceVariant
+              )
+            }
+            Icon(
+              imageVector = Icons.Filled.ChevronRight,
+              contentDescription = null,
+              tint = if (isVip) Color(0xFFFFB300) else Primary
+            )
+          }
+        }
+
+        // Nút Quản Lý & Hủy Gói Thuê Bao (Google Play Policy Bắt Buộc)
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+              uriHandler.openUri("https://play.google.com/store/account/subscriptions?package=com.aistudio.inlove.kmrv")
+            }
+            .padding(horizontal = 4.dp, vertical = 6.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.Center
+        ) {
+          Icon(
+            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+            contentDescription = "Quản lý gói Google Play",
+            tint = Color(0xFF8A2E5B),
+            modifier = Modifier.size(15.dp)
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = "Quản lý & Hủy gói cước trên Google Play",
+            fontSize = 12.5.sp,
+            color = Color(0xFF8A2E5B),
+            fontWeight = FontWeight.Medium,
+            style = androidx.compose.ui.text.TextStyle(
+              textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+            )
+          )
+        }
+      }
+    }
+
     // 3. Settings Group: Quản Lý Hồ Sơ & Kỷ Niệm
     item {
       Text(
@@ -661,7 +768,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           )
 
           SettingClickableRow(
-            icon = Icons.Filled.MenuBook,
+            icon = Icons.AutoMirrored.Filled.MenuBook,
             title = stringResource(R.string.settings_guide_title),
             subtitle = stringResource(R.string.settings_guide_sub),
             onClick = { viewModel.openGuideDialog() }
@@ -699,7 +806,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           )
 
           SettingSwitchRow(
-            icon = Icons.Filled.VolumeUp,
+            icon = Icons.AutoMirrored.Filled.VolumeUp,
             title = stringResource(R.string.settings_notif_sound_title),
             subtitle = stringResource(R.string.settings_notif_sound_sub),
             checked = soundEnabled,
@@ -728,7 +835,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
-          // Account Profile Header
+          // Account Profile Header / Guest Mode Status
           if (currentAccount != null) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
@@ -779,6 +886,48 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Spacer(modifier = Modifier.height(14.dp))
             androidx.compose.material3.HorizontalDivider(color = Color(0xFFF0F0F0))
             Spacer(modifier = Modifier.height(10.dp))
+          } else {
+            // Guest / Offline Mode Notice & Call-to-action
+            Surface(
+              shape = RoundedCornerShape(16.dp),
+              color = Color(0xFFFFF0F5),
+              border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFF80AB)),
+              modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp)
+            ) {
+              Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                  Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = null,
+                    tint = Color(0xFFC2185B),
+                    modifier = Modifier.size(20.dp)
+                  )
+                  Spacer(modifier = Modifier.width(8.dp))
+                  Text(
+                    text = "Chế độ Khách (Offline)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color(0xFF880E4F)
+                  )
+                }
+                Text(
+                  text = "Dữ liệu đếm ngày yêu và kỷ niệm của bạn đang được lưu trữ an toàn riêng tư trực tiếp trên máy.",
+                  fontSize = 12.5.sp,
+                  lineHeight = 18.sp,
+                  color = Color(0xFF424242)
+                )
+                Button(
+                  onClick = { viewModel.openAuthScreen() },
+                  shape = RoundedCornerShape(12.dp),
+                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                  modifier = Modifier.fillMaxWidth()
+                ) {
+                  Icon(imageVector = Icons.Filled.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
+                  Spacer(modifier = Modifier.width(8.dp))
+                  Text("Đăng Nhập / Đăng Ký để Đồng Bộ Đám Mây", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+              }
+            }
           }
 
           // PIN Protection Switch
@@ -805,21 +954,24 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             onClick = { showSetPinDialog = true }
           )
 
-          // Change Password Button
-          SettingClickableRow(
-            icon = Icons.Filled.Shield,
-            title = "Đổi mật khẩu tài khoản",
-            subtitle = "Yêu cầu mật khẩu cũ & đánh giá độ mạnh",
-            onClick = { showChangePasswordDialog = true }
-          )
+          // Account-specific options
+          if (currentAccount != null) {
+            // Change Password Button
+            SettingClickableRow(
+              icon = Icons.Filled.Shield,
+              title = "Đổi mật khẩu tài khoản",
+              subtitle = "Yêu cầu mật khẩu cũ & đánh giá độ mạnh",
+              onClick = { showChangePasswordDialog = true }
+            )
 
-          // Security Audit Logs
-          SettingClickableRow(
-            icon = Icons.Filled.History,
-            title = "Nhật ký bảo mật",
-            subtitle = "Xem lịch sử đăng nhập, cảnh báo thử sai và đổi mật khẩu",
-            onClick = { showSecurityAuditLogsDialog = true }
-          )
+            // Security Audit Logs
+            SettingClickableRow(
+              icon = Icons.Filled.History,
+              title = "Nhật ký bảo mật",
+              subtitle = "Xem lịch sử đăng nhập, cảnh báo thử sai và đổi mật khẩu",
+              onClick = { showSecurityAuditLogsDialog = true }
+            )
+          }
 
           // Lock App Now (if PIN enabled)
           if (isPinActive) {
@@ -831,6 +983,13 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             )
           }
 
+          // Sync Enriched Cloud Presets from Firestore
+          SettingClickableRow(
+            icon = Icons.Filled.CloudSync,
+            title = "Đồng bộ dữ liệu Cloud Firestore",
+            subtitle = "Làm mới gợi ý quà tặng, huy hiệu và mốc kỷ niệm",
+            onClick = { viewModel.syncCloudData() }
+          )
 
           SettingClickableRow(
             icon = Icons.Filled.Info,
@@ -839,24 +998,26 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             onClick = { viewModel.showToast(aboutToast) }
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          if (currentAccount != null) {
+            Spacer(modifier = Modifier.height(12.dp))
 
-          // Logout Button
-          OutlinedButton(
-            onClick = { showLogoutConfirmDialog = true },
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .testTag("btn_logout")
-          ) {
-            Icon(
-              imageVector = Icons.Default.ExitToApp,
-              contentDescription = null,
-              modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Đăng Xuất Tài Khoản", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            // Logout Button
+            OutlinedButton(
+              onClick = { showLogoutConfirmDialog = true },
+              colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+              shape = RoundedCornerShape(12.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("btn_logout")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text("Đăng Xuất Tài Khoản (Về Chế Độ Khách)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
           }
         }
       }
@@ -928,7 +1089,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       onDismissRequest = { showLogoutConfirmDialog = false },
       icon = {
         Icon(
-          imageVector = Icons.Default.ExitToApp,
+          imageVector = Icons.AutoMirrored.Filled.ExitToApp,
           contentDescription = null,
           tint = Color(0xFFD32F2F),
           modifier = Modifier.size(32.dp)

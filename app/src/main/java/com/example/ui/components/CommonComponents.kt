@@ -1,5 +1,7 @@
+@file:Suppress("FunctionName")
 package com.example.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
+import com.example.ui.theme.CardBorder
 import com.example.ui.theme.Primary
 import com.example.ui.theme.PrimaryFixed
 import com.example.ui.theme.RoseGradientEnd
@@ -116,7 +119,7 @@ fun InLoveTopBar(
           )
           Text(
             text = title,
-            color = Color(0xFF26071B),
+            color = OnSurface,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -193,16 +196,17 @@ fun InLoveBottomNav(
     modifier = Modifier
       .fillMaxWidth()
       .navigationBarsPadding()
-      .padding(horizontal = 14.dp, vertical = 8.dp),
+      .padding(horizontal = 10.dp, vertical = 4.dp),
     contentAlignment = Alignment.Center
   ) {
     Surface(
-      shape = RoundedCornerShape(32.dp),
-      color = Color.White.copy(alpha = 0.95f),
-      shadowElevation = 10.dp,
+      shape = RoundedCornerShape(28.dp),
+      color = Color.White.copy(alpha = 0.98f),
+      shadowElevation = 8.dp,
+      border = BorderStroke(1.2.dp, CardBorder),
       modifier = Modifier
         .fillMaxWidth()
-        .height(64.dp)
+        .height(58.dp)
     ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -216,7 +220,7 @@ fun InLoveBottomNav(
           Box(
             modifier = Modifier
               .weight(1f)
-              .clip(RoundedCornerShape(24.dp))
+              .clip(RoundedCornerShape(20.dp))
               .clickable { onTabSelected(index) }
               .padding(vertical = 4.dp)
               .testTag(tab.tag),
@@ -228,26 +232,27 @@ fun InLoveBottomNav(
             ) {
               Box(
                 modifier = Modifier
-                  .clip(RoundedCornerShape(14.dp))
+                  .clip(RoundedCornerShape(12.dp))
                   .background(
                     if (isSelected) PrimaryFixed.copy(alpha = 0.7f) else Color.Transparent
                   )
-                  .padding(horizontal = 12.dp, vertical = 4.dp),
+                  .padding(horizontal = 8.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center
               ) {
                 Icon(
                   imageVector = icon,
                   contentDescription = tab.title,
                   tint = if (isSelected) Primary else OnSurfaceVariant,
-                  modifier = Modifier.size(22.dp)
+                  modifier = Modifier.size(20.dp)
                 )
               }
-              Spacer(modifier = Modifier.height(2.dp))
+              Spacer(modifier = Modifier.height(1.dp))
               Text(
                 text = tab.title,
                 fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) Primary else OnSurfaceVariant
+                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                color = if (isSelected) Primary else OnSurfaceVariant,
+                maxLines = 1
               )
             }
           }

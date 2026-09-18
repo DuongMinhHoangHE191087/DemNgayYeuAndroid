@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
@@ -42,15 +43,29 @@ import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -268,7 +283,7 @@ fun AddMilestoneDialog(
               val now = System.currentTimeMillis()
               val diff = parsedMillis - now
               val days = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(diff).toInt()
-              daysRemainingStr = Math.max(0, days).toString()
+              daysRemainingStr = kotlin.math.max(0, days).toString()
             }
           },
           label = "Ngày tháng sự kiện (dd/MM/yyyy) *",
@@ -487,7 +502,7 @@ fun GiftDetailDialog(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-              text = if (gift.detailsSnippet.isNotBlank()) gift.detailsSnippet else "Món quà tuyệt vời lưu lại khoảnh khắc gắn kết của hai bạn.",
+              text = gift.detailsSnippet.ifBlank { "Món quà tuyệt vời lưu lại khoảnh khắc gắn kết của hai bạn." },
               fontSize = 12.sp,
               color = OnSurface
             )
@@ -702,7 +717,10 @@ fun EditCoupleDialog(
   viewModel: InLoveViewModel,
   onDismiss: () -> Unit
 ) {
+  val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
+
+  // State from ViewModel
   val currentUser by viewModel.currentOnlineUser.collectAsState()
   val partnerUser by viewModel.partnerOnlineUser.collectAsState()
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
@@ -711,19 +729,82 @@ fun EditCoupleDialog(
   val loveDays by viewModel.loveDays.collectAsState()
   val anniversaryDate by viewModel.anniversaryDate.collectAsState()
 
+  val boyName by viewModel.boyName.collectAsState()
+  val boyBirthDate by viewModel.boyBirthDate.collectAsState()
+  val boyAvatarUrl by viewModel.boyAvatarUrl.collectAsState()
+  val girlName by viewModel.girlName.collectAsState()
+  val girlBirthDate by viewModel.girlBirthDate.collectAsState()
+  val girlAvatarUrl by viewModel.girlAvatarUrl.collectAsState()
+  val loveTitle by viewModel.loveTitle.collectAsState()
+
+  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
+
+  // Offline editable states
+  var currentBoyName by remember(boyName) { mutableStateOf(boyName.ifEmpty { "Bạn" }) }
+  var currentBoyBirth by remember(boyBirthDate) { mutableStateOf(boyBirthDate.ifEmpty { "15/10/2004" }) }
+  var currentBoyAvatar by remember(boyAvatarUrl) { mutableStateOf(boyAvatarUrl) }
+
+  var currentGirlName by remember(girlName) { mutableStateOf(girlName.ifEmpty { "Người thương" }) }
+  var currentGirlBirth by remember(girlBirthDate) { mutableStateOf(girlBirthDate.ifEmpty { "20/11/2004" }) }
+  var currentGirlAvatar by remember(girlAvatarUrl) { mutableStateOf(girlAvatarUrl) }
+
+  var currentLoveTitle by remember(loveTitle) { mutableStateOf(loveTitle.ifEmpty { "Hành Trình Yêu Thương" }) }
+  var currentAnniversary by remember(anniversaryDate) { mutableStateOf(anniversaryDate.ifEmpty { todayFormatted }) }
+
+  val boyAge by remember(currentBoyBirth) { derivedStateOf { ProfileUtils.calculateAge(currentBoyBirth) } }
+  val boyZodiac by remember(currentBoyBirth) { derivedStateOf { ProfileUtils.calculateZodiac(currentBoyBirth).first } }
+
+  val girlAge by remember(currentGirlBirth) { derivedStateOf { ProfileUtils.calculateAge(currentGirlBirth) } }
+  val girlZodiac by remember(currentGirlBirth) { derivedStateOf { ProfileUtils.calculateZodiac(currentGirlBirth).first } }
+
+  val calculatedOfflineDays by remember(currentAnniversary) {
+    derivedStateOf { ProfileUtils.calculateLoveDays(currentAnniversary) }
+  }
+
+  // Image pickers with safe internal file copying
+  val boyLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    uri?.let {
+      currentBoyAvatar = viewModel.saveLocalAvatar(it, isPartner = false)
+    }
+  }
+
+  val girlLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    uri?.let {
+      currentGirlAvatar = viewModel.saveLocalAvatar(it, isPartner = true)
+    }
+  }
+
+  // Online search & invite states
   var searchQuery by remember { mutableStateOf("") }
   var isSearching by remember { mutableStateOf(false) }
   var searchError by remember { mutableStateOf<String?>(null) }
   var selectedPartner by remember { mutableStateOf<OnlineUserEntity?>(null) }
-
-  var proposedStartDateText by remember {
-    mutableStateOf(anniversaryDate.ifEmpty { "18/12/2022" })
-  }
+  var proposedStartDateText by remember { mutableStateOf(anniversaryDate.ifEmpty { todayFormatted }) }
   var loveNote by remember { mutableStateOf("") }
-
-  // Auto-calculated days strictly based on selected start date
-  val calculatedDays by remember(proposedStartDateText) {
+  val calculatedOnlineDays by remember(proposedStartDateText) {
     derivedStateOf { ProfileUtils.calculateLoveDays(proposedStartDateText) }
+  }
+
+  var activeTab by remember { mutableIntStateOf(0) } // 0: Offline, 1: Online
+
+  fun copyToClipboard(text: String, label: String = "Couple Code") {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText(label, text)
+    @Suppress("UsePropertyAccessSyntax")
+    clipboard.setPrimaryClip(clip)
+    viewModel.showToast("Đã sao chép: $text")
+  }
+
+  fun shareCoupleLink(code: String) {
+    val shareLink = ProfileUtils.createShareLink(code)
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+      type = "text/plain"
+      putExtra(
+        Intent.EXTRA_TEXT,
+        "Cùng kết nối Set Love 1-1 với mình trên InLove nhé! Bấm vào link hoặc nhập mã:\n$shareLink\nMã ghép đôi: $code ❤️"
+      )
+    }
+    context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ mã ghép đôi qua"))
   }
 
   Dialog(onDismissRequest = onDismiss) {
@@ -743,7 +824,7 @@ fun EditCoupleDialog(
           .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
       ) {
-        // --- 1. HEADER (To rõ, không chữ chú thích thừa) ---
+        // 1. HEADER
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.SpaceBetween,
@@ -760,7 +841,7 @@ fun EditCoupleDialog(
               modifier = Modifier.size(26.dp)
             )
             Text(
-              text = "Hồ Sơ Cặp Đôi (Set Love)",
+              text = "Hồ Sơ Cặp Đôi",
               fontSize = 20.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF880E4F)
@@ -779,308 +860,202 @@ fun EditCoupleDialog(
           }
         }
 
-        // --- 2. LỜI MỜI SET LOVE TỪ NGƯỜI KHÁC (NẾU CÓ) ---
-        if (incomingInvite != null) {
-          val invite = incomingInvite!!
-          Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
-            border = BorderStroke(1.5.dp, Color(0xFFFF4081)),
-            modifier = Modifier.fillMaxWidth().testTag("dialog_incoming_invite_card")
-          ) {
-            Column(
-              modifier = Modifier.padding(16.dp),
-              verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Favorite,
-                  contentDescription = null,
-                  tint = Color(0xFFE91E63),
-                  modifier = Modifier.size(20.dp)
-                )
-                Text(
-                  text = "Lời Mời Set Love Đang Chờ Duyệt!",
-                  fontWeight = FontWeight.Bold,
-                  fontSize = 16.sp,
-                  color = Color(0xFFD81B60)
-                )
-              }
-
-              // Thông tin người gửi (chỉ đọc, không thể chỉnh sửa)
-              Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                  model = invite.senderAvatar.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
-                  contentDescription = "Sender Avatar",
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier
-                    .size(62.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color(0xFFFF80AB), CircleShape)
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                  Text(
-                    text = invite.effectiveSenderName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color(0xFF880E4F)
-                  )
-                  Text(
-                    text = "Mã: " + invite.senderCoupleCode,
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                  )
-                  Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFFFEBEE),
-                    modifier = Modifier.padding(top = 2.dp)
-                  ) {
-                    Text(
-                      text = "Hồ sơ đối tác • Chỉ đọc ✓",
-                      fontSize = 11.sp,
-                      fontWeight = FontWeight.SemiBold,
-                      color = Color(0xFFC2185B),
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                  }
-                }
-              }
-
-              // Thông tin kỷ niệm yêu thống nhất từ người tạo
-              Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, Color(0xFFFFCDD2)),
-                modifier = Modifier.fillMaxWidth()
-              ) {
-                Column(
-                  modifier = Modifier.padding(12.dp),
-                  verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                  val incomingDateText = invite.proposedStartDateText.ifEmpty {
-                    ProfileUtils.formatDate(invite.proposedStartDate)
-                  }
-                  val incomingDays = ProfileUtils.calculateLoveDays(invite.proposedStartDate)
-
-                  Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                  ) {
-                    Text(text = "Ngày bắt đầu yêu thống nhất:", fontSize = 14.sp, color = Color.DarkGray)
-                    Text(text = incomingDateText, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC2185B))
-                  }
-
-                  Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                  ) {
-                    Text(text = "Số ngày yêu tính tự động:", fontSize = 14.sp, color = Color.DarkGray)
-                    Text(text = incomingDays.toString() + " ngày bên nhau 💕", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD81B60))
-                  }
-
-                  if (invite.loveNote.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                      text = """ + invite.loveNote + """,
-                      fontSize = 13.sp,
-                      fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                      color = Color(0xFF4A148C)
-                    )
-                  }
-                }
-              }
-
-              // Hai nút hành động: Đồng ý hoặc Từ chối
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-              ) {
-                OutlinedButton(
-                  onClick = { viewModel.rejectSetLoveInvite(invite.inviteId) },
-                  shape = RoundedCornerShape(14.dp),
-                  modifier = Modifier.weight(1f).height(48.dp).testTag("dialog_reject_invite_btn")
-                ) {
-                  Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text("Từ chối", fontSize = 14.sp)
-                }
-
-                Button(
-                  onClick = {
-                    viewModel.acceptSetLoveInvite(invite.inviteId)
-                    onDismiss()
-                  },
-                  shape = RoundedCornerShape(14.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                  modifier = Modifier.weight(1.3f).height(48.dp).testTag("dialog_accept_invite_btn")
-                ) {
-                  Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text("Đồng ý Set Love ❤️", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                }
-              }
+        // 2. TAB SELECTOR: OFFLINE FIRST vs GHÉP ĐÔI TRỰC TUYẾN
+        TabRow(
+          selectedTabIndex = activeTab,
+          containerColor = Color(0xFFFFF0F5),
+          contentColor = Color(0xFFE91E63),
+          indicator = { tabPositions ->
+            TabRowDefaults.SecondaryIndicator(
+              modifier = Modifier.tabIndicatorOffset(tabPositions[activeTab]),
+              color = Color(0xFFE91E63),
+              height = 3.dp
+            )
+          },
+          modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+        ) {
+          Tab(
+            selected = activeTab == 0,
+            onClick = { activeTab = 0 },
+            text = {
+              Text(
+                text = "Hồ Sơ Trên Máy (Offline)",
+                fontWeight = if (activeTab == 0) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 13.sp
+              )
             }
-          }
+          )
+          Tab(
+            selected = activeTab == 1,
+            onClick = { activeTab = 1 },
+            text = {
+              Text(
+                text = "Ghép Đôi 1-1 (Online)",
+                fontWeight = if (activeTab == 1) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 13.sp
+              )
+            }
+          )
         }
 
-        // --- 3. ĐANG CHỜ ĐỐI PHƯƠNG PHẢN HỒI (NẾU CÓ OUTGOING INVITE) ---
-        if (outgoingInvite != null && relationshipStatus != OnlineStatus.COUPLED) {
-          val out = outgoingInvite!!
+        // 3. TAB CONTENT
+        if (activeTab == 0) {
+          // --- TAB 0: THIẾT LẬP TRÊN MÁY (OFFLINE) ---
+
+          // THẺ BẠN (Partner 1)
           Card(
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
-            border = BorderStroke(1.2.dp, Color(0xFFFFB74D)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9FB)),
+            border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
             modifier = Modifier.fillMaxWidth()
           ) {
-            Column(
-              modifier = Modifier.padding(16.dp),
-              verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-              ) {
-                Icon(Icons.Default.Schedule, contentDescription = null, tint = Color(0xFFE65100), modifier = Modifier.size(22.dp))
-                Text("Đang Chờ Đối Phương Xác Nhận", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFFE65100))
-              }
-              val outDays = ProfileUtils.calculateLoveDays(out.proposedStartDate)
-              Text(
-                text = "Đã gửi tới mã: " + out.targetCoupleCode + " • Ngày yêu đề xuất: " + out.proposedStartDateText + " (" + outDays + " ngày)",
-                fontSize = 14.sp,
-                color = Color.DarkGray
-              )
-              OutlinedButton(
-                onClick = { viewModel.cancelSentInvite() },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-              ) {
-                Text("Hủy lời mời đã gửi", fontSize = 14.sp)
-              }
-            }
-          }
-        }
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+              Text(text = "THÔNG TIN CỦA BẠN", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF00897B))
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                  AsyncImage(
+                    model = currentBoyAvatar.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
+                    contentDescription = "Avatar Bạn",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                      .size(56.dp)
+                      .clip(CircleShape)
+                      .border(2.dp, Color(0xFF00897B), CircleShape)
+                  )
+                  Surface(
+                    shape = CircleShape,
+                    color = Color(0xFF00897B),
+                    modifier = Modifier.size(22.dp).clickable { boyLauncher.launch("image/*") }
+                  ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.padding(3.5.dp))
+                  }
+                }
 
-        // --- 4. NẾU ĐÃ KẾT ĐÔI: HIỂN THỊ HỒ SƠ NGƯỜI ĐÓ (CHỈ ĐỌC) & THÔNG TIN KỶ NIỆM THỐNG NHẤT ---
-        if (relationshipStatus == OnlineStatus.COUPLED) {
-          val partner = partnerUser
-          Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
-            border = BorderStroke(1.2.dp, Color(0xFFFF80AB)),
-            modifier = Modifier.fillMaxWidth().testTag("coupled_partner_card")
-          ) {
-            Column(
-              modifier = Modifier.padding(16.dp),
-              verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Text(
-                  text = "HỒ SƠ ĐỐI TÁC CỦA BẠN",
-                  fontSize = 15.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color(0xFF880E4F)
-                )
-                Surface(
-                  shape = RoundedCornerShape(8.dp),
-                  color = Color(0xFFE8F5E9)
-                ) {
-                  Text(
-                    text = "ĐÃ KẾT ĐÔI 1-1 ✓",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2E7D32),
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                Column(modifier = Modifier.weight(1f)) {
+                  OutlinedTextField(
+                    value = currentBoyName,
+                    onValueChange = { currentBoyName = it },
+                    label = { Text("Tên của bạn") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = dialogTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth().testTag("input_boy_name")
                   )
                 }
               }
 
-              // Thông tin người đó: CHỈ ĐỌC, KHÔNG THỂ ĐIỀU CHỈNH
-              Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                  model = partner?.avatarUrl?.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" }
-                    ?: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
-                  contentDescription = "Partner Avatar",
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier
-                    .size(68.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color(0xFFFF4081), CircleShape)
-                )
+              InLoveDatePickerField(
+                value = currentBoyBirth,
+                onValueChange = { currentBoyBirth = it },
+                label = "Ngày sinh của bạn (dd/MM/yyyy)",
+                dialogTitle = "Chọn ngày sinh của bạn",
+                quickPresets = DatePickerPresets.birthDatePresets(),
+                modifier = Modifier.fillMaxWidth()
+              )
 
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                  Text(
-                    text = partner?.effectiveDisplayName ?: "Người ấy",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color(0xFF880E4F)
-                  )
-                  Text(
-                    text = "Mã: " + (partner?.coupleCode ?: ""),
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                  )
-                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if ((partner?.age ?: 0) > 0) {
-                      Text(text = partner?.age.toString() + " tuổi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFC2185B))
-                    }
-                    if (!partner?.zodiac.isNullOrBlank()) {
-                      Text(text = "• Cung " + partner?.zodiac, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF880E4F))
-                    }
+              Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (boyAge > 0) {
+                  Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFE0F2F1)) {
+                    Text("$boyAge tuổi", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00695C), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                  }
+                }
+                if (boyZodiac.isNotBlank()) {
+                  Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFE0F2F1)) {
+                    Text("Cung $boyZodiac", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00695C), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                   }
                 }
               }
+            }
+          }
 
-              Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Color.White,
+          // THẺ ĐỐI TÁC (Partner 2 - Người ấy)
+          Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+            border = BorderStroke(1.dp, Color(0xFFFF80AB)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+              Text(text = "THÔNG TIN ĐỐI TÁC (NGƯỜI ẤY)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFFD81B60))
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                  AsyncImage(
+                    model = currentGirlAvatar.ifEmpty { "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" },
+                    contentDescription = "Avatar Đối tác",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                      .size(56.dp)
+                      .clip(CircleShape)
+                      .border(2.dp, Color(0xFFE91E63), CircleShape)
+                  )
+                  Surface(
+                    shape = CircleShape,
+                    color = Color(0xFFE91E63),
+                    modifier = Modifier.size(22.dp).clickable { girlLauncher.launch("image/*") }
+                  ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.padding(3.5.dp))
+                  }
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                  OutlinedTextField(
+                    value = currentGirlName,
+                    onValueChange = { currentGirlName = it },
+                    label = { Text("Tên người thương") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = dialogTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth().testTag("input_girl_name")
+                  )
+                }
+              }
+
+              InLoveDatePickerField(
+                value = currentGirlBirth,
+                onValueChange = { currentGirlBirth = it },
+                label = "Ngày sinh người thương (dd/MM/yyyy)",
+                dialogTitle = "Chọn ngày sinh người thương",
+                quickPresets = DatePickerPresets.birthDatePresets(),
                 modifier = Modifier.fillMaxWidth()
-              ) {
-                Text(
-                  text = "🔒 Thông tin đối tác được đồng bộ từ tài khoản đối phương và không thể điều chỉnh tại đây.",
-                  fontSize = 12.sp,
-                  color = Color(0xFF757575),
-                  modifier = Modifier.padding(10.dp)
-                )
+              )
+
+              Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (girlAge > 0) {
+                  Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFEBEE)) {
+                    Text("$girlAge tuổi", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC2185B), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                  }
+                }
+                if (girlZodiac.isNotBlank()) {
+                  Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFEBEE)) {
+                    Text("Cung $girlZodiac", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC2185B), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                  }
+                }
               }
             }
           }
 
-          // Kỷ niệm ngày yêu thống nhất
+          // KỶ NIỆM NGÀY YÊU & TÍNH NGÀY
           Card(
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF5FF)),
             border = BorderStroke(1.dp, Color(0xFFE1BEE7)),
             modifier = Modifier.fillMaxWidth()
           ) {
-            Column(
-              modifier = Modifier.padding(16.dp),
-              verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Text(
-                text = "Kỷ Niệm Tình Yêu Thống Nhất",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color(0xFF7B1FA2)
-              )
-              Row(
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+              Text(text = "KỶ NIỆM NGÀY BẮT ĐẦU YÊU", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF7B1FA2))
+
+              InLoveDatePickerField(
+                value = currentAnniversary,
+                onValueChange = { currentAnniversary = it },
+                label = "Ngày bắt đầu yêu (dd/MM/yyyy)",
+                dialogTitle = "Chọn ngày bắt đầu yêu",
+                quickPresets = DatePickerPresets.relationshipStartDatePresets(),
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(text = "Ngày bắt đầu yêu:", fontSize = 14.sp, color = Color.DarkGray)
-                Text(text = anniversaryDate, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF7B1FA2))
-              }
+                testTag = "input_anniversary_date"
+              )
+
               Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = Color(0xFFFFEBEE),
@@ -1093,345 +1068,355 @@ fun EditCoupleDialog(
                   Icon(Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE91E63), modifier = Modifier.size(20.dp))
                   Spacer(modifier = Modifier.width(8.dp))
                   Text(
-                    text = "Đã yêu nhau " + loveDays + " ngày bên nhau 💕",
-                    fontSize = 16.sp,
+                    text = "✨ Đã đồng hành: $calculatedOfflineDays ngày bên nhau 💕",
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFD81B60)
                   )
                 }
               }
+
+              OutlinedTextField(
+                value = currentLoveTitle,
+                onValueChange = { currentLoveTitle = it },
+                label = { Text("Tiêu đề tình yêu") },
+                placeholder = { Text("Ví dụ: Hành Trình Yêu Thương") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = dialogTextFieldColors(),
+                modifier = Modifier.fillMaxWidth().testTag("input_love_title")
+              )
             }
           }
-        }
 
-        // --- 5. NẾU CHƯA KẾT ĐÔI: TÌM KIẾM ĐỐI TÁC & CHỈ HIỆN THÔNG TIN SET LOVE KHI ĐÃ CHỌN NGƯỜI ---
-        if (relationshipStatus != OnlineStatus.COUPLED && incomingInvite == null) {
-          Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.2.dp, Color(0xFFFFCDD2)),
-            modifier = Modifier.fillMaxWidth()
+          // NÚT LƯU TRÊN MÁY (OFFLINE)
+          Button(
+            onClick = {
+              viewModel.saveCoupleProfile(
+                boy = currentBoyName,
+                boyBirth = currentBoyBirth,
+                boyAvatar = currentBoyAvatar,
+                boyA = boyAge,
+                boyZod = boyZodiac,
+                girl = currentGirlName,
+                girlBirth = currentGirlBirth,
+                girlAvatar = currentGirlAvatar,
+                girlA = girlAge,
+                girlZod = girlZodiac,
+                title = currentLoveTitle,
+                days = calculatedOfflineDays,
+                anniversary = currentAnniversary
+              )
+              viewModel.triggerFloatingHearts()
+              viewModel.showToast("Đã lưu hồ sơ cặp đôi trên máy thành công! 💕")
+              onDismiss()
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+            modifier = Modifier.fillMaxWidth().height(50.dp).testTag("btn_save_couple_offline")
           ) {
-            Column(
-              modifier = Modifier.padding(16.dp),
-              verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-              Text(
-                text = "Tìm Kiếm Người Ấy Để Set Love",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color(0xFF880E4F)
-              )
-
-              // Ô tìm kiếm & Nút tìm kiếm
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-              ) {
-                OutlinedTextField(
-                  value = searchQuery,
-                  onValueChange = {
-                    searchQuery = it
-                    searchError = null
-                  },
-                  placeholder = { Text("Mã hoặc link người ấy (vd: LOVE-9966)...", fontSize = 14.sp) },
-                  singleLine = true,
-                  shape = RoundedCornerShape(14.dp),
-                  colors = dialogTextFieldColors(),
-                  modifier = Modifier.weight(1f).testTag("dialog_search_input")
-                )
-
-                Button(
-                  onClick = {
-                    val q = searchQuery.trim()
-                    if (q.isNotBlank()) {
-                      coroutineScope.launch {
-                        isSearching = true
-                        searchError = null
-                        val res = viewModel.searchPartnerForSetLove(q)
-                        isSearching = false
-                        if (res == null) {
-                          searchError = "Không tìm thấy người dùng với mã này"
-                        } else if (res.uid == currentUser.uid) {
-                          searchError = "Không thể gửi lời mời cho chính mình"
-                        } else {
-                          selectedPartner = res
-                        }
-                      }
-                    }
-                  },
-                  shape = RoundedCornerShape(14.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                  contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-                  modifier = Modifier.testTag("dialog_btn_search")
-                ) {
-                  if (isSearching) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                  } else {
-                    Icon(Icons.Default.Search, contentDescription = "Tìm kiếm")
-                  }
-                }
-              }
-
-              if (searchError != null) {
-                Text(text = searchError!!, color = Color(0xFFD32F2F), fontSize = 13.sp, fontWeight = FontWeight.Medium)
-              }
-
-              // Gợi ý nhanh tiện lợi
-              val quickTargetCode = if (currentUser.uid == OnlineCoupleRepository.USER_A_ID) {
-                OnlineCoupleRepository.USER_B_CODE
-              } else {
-                OnlineCoupleRepository.USER_A_CODE
-              }
-              Text(
-                text = "💡 Thử nghiệm nhanh: Bấm để dán " + quickTargetCode,
-                fontSize = 12.sp,
-                color = Color(0xFF00897B),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable {
-                  searchQuery = quickTargetCode
-                  coroutineScope.launch {
-                    isSearching = true
-                    searchError = null
-                    val res = viewModel.searchPartnerForSetLove(quickTargetCode)
-                    isSearching = false
-                    if (res != null) selectedPartner = res
-                  }
-                }
-              )
-            }
+            Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Lưu Hồ Sơ Trên Máy (Offline) 💕", fontWeight = FontWeight.Bold, fontSize = 15.sp)
           }
 
-          // CHỈ HIỂN THỊ KHI ĐÃ TÌM THẤY & CHỌN ĐỐI PHƯƠNG
-          if (selectedPartner != null) {
-            val partner = selectedPartner!!
+        } else {
+          // --- TAB 1: GHÉP ĐÔI 1-1 (ONLINE) ---
 
-            // Thẻ hồ sơ người đó: THÔNG TIN KÈM THEO KHÔNG THỂ ĐIỀU CHỈNH (READ-ONLY)
+          // 1. INCOMING INVITE (NẾU CÓ)
+          if (incomingInvite != null) {
+            val invite = incomingInvite!!
             Card(
               shape = RoundedCornerShape(20.dp),
               colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
               border = BorderStroke(1.5.dp, Color(0xFFFF4081)),
-              modifier = Modifier.fillMaxWidth().testTag("dialog_selected_partner_card")
+              modifier = Modifier.fillMaxWidth().testTag("dialog_incoming_invite_card")
             ) {
               Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
               ) {
                 Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                  Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFE91E63)
-                  ) {
-                    Text(
-                      text = "ĐÃ TÌM THẤY ĐỐI TÁC • CHỈ ĐỌC",
-                      fontSize = 11.sp,
-                      fontWeight = FontWeight.ExtraBold,
-                      color = Color.White,
-                      modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                  }
-
-                  IconButton(
-                    onClick = { selectedPartner = null },
-                    modifier = Modifier.size(28.dp)
-                  ) {
-                    Icon(Icons.Default.Close, contentDescription = "Bỏ chọn", tint = Color.Gray)
-                  }
+                  Icon(Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE91E63), modifier = Modifier.size(20.dp))
+                  Text("Lời Mời Set Love Đang Chờ Duyệt!", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFFD81B60))
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   AsyncImage(
-                    model = partner.avatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
-                    contentDescription = "Partner Avatar",
+                    model = invite.senderAvatar.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
+                    contentDescription = "Sender Avatar",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                      .size(68.dp)
-                      .clip(CircleShape)
-                      .border(2.dp, Color(0xFFFF4081), CircleShape)
+                    modifier = Modifier.size(54.dp).clip(CircleShape).border(2.dp, Color(0xFFFF80AB), CircleShape)
                   )
-
-                  Spacer(modifier = Modifier.width(14.dp))
-
+                  Spacer(modifier = Modifier.width(12.dp))
                   Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                      text = partner.effectiveDisplayName,
-                      fontWeight = FontWeight.Bold,
-                      fontSize = 18.sp,
-                      color = Color(0xFF880E4F)
-                    )
-                    Text(
-                      text = "Mã: " + partner.coupleCode,
-                      fontSize = 13.sp,
-                      color = Color.Gray
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                      if (partner.age > 0) {
-                        Text(text = partner.age.toString() + " tuổi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFC2185B))
-                      }
-                      if (partner.zodiac.isNotBlank()) {
-                        Text(text = "• Cung " + partner.zodiac, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF880E4F))
-                      }
-                    }
+                    Text(text = invite.effectiveSenderName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF880E4F))
+                    Text(text = "Mã: " + invite.senderCoupleCode, fontSize = 12.sp, color = Color.Gray)
                   }
                 }
 
-                if (partner.bio.isNotBlank()) {
-                  Text(
-                    text = """ + partner.bio + """,
-                    fontSize = 13.sp,
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    color = Color.DarkGray
-                  )
-                }
+                val incomingDateText = invite.proposedStartDateText.ifEmpty { ProfileUtils.formatDate(invite.proposedStartDate) }
+                val incomingDays = ProfileUtils.calculateLoveDays(invite.proposedStartDate)
 
-                Surface(
-                  shape = RoundedCornerShape(8.dp),
-                  color = Color.White.copy(alpha = 0.8f),
-                  modifier = Modifier.fillMaxWidth()
-                ) {
-                  Text(
-                    text = "🔒 Hồ sơ người ấy là chỉ đọc, không thể chỉnh sửa tại đây.",
-                    fontSize = 12.sp,
-                    color = Color(0xFF757575),
-                    modifier = Modifier.padding(8.dp)
-                  )
-                }
-
-                Divider(color = Color(0xFFFFCDD2))
-
-                // THIẾT LẬP KỶ NIỆM YÊU (THỐNG NHẤT TỪ NGƯỜI TẠO)
-                Text(
-                  text = "Thiết Lập Ngày Bắt Đầu Yêu:",
-                  fontWeight = FontWeight.Bold,
-                  fontSize = 15.sp,
-                  color = Color(0xFF880E4F)
-                )
-
-                // Date Picker chọn ngày bắt đầu yêu
-                InLoveDatePickerField(
-                  value = proposedStartDateText,
-                  onValueChange = { proposedStartDateText = it },
-                  label = "Ngày bắt đầu yêu (dd/MM/yyyy) *",
-                  placeholder = "18/12/2022",
-                  dialogTitle = "Chọn ngày bắt đầu yêu",
-                  quickPresets = DatePickerPresets.relationshipStartDatePresets(),
-                  modifier = Modifier.fillMaxWidth(),
-                  testTag = "dialog_input_proposed_start_date"
-                )
-
-                // TỰ ĐỘNG TÍNH SỐ NGÀY YÊU (KHÔNG NHẬP TAY)
                 Surface(
                   shape = RoundedCornerShape(12.dp),
-                  color = Color(0xFFFFEBEE),
+                  color = Color.White,
+                  border = BorderStroke(1.dp, Color(0xFFFFCDD2)),
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                  ) {
-                    Icon(
-                      imageVector = Icons.Default.Favorite,
-                      contentDescription = null,
-                      tint = Color(0xFFE91E63),
-                      modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                      text = "✨ Tính đến hôm nay: " + calculatedDays + " ngày yêu nhau 💕",
-                      fontSize = 15.sp,
-                      fontWeight = FontWeight.Bold,
-                      color = Color(0xFFD81B60)
-                    )
+                  Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(text = "Ngày bắt đầu yêu đề xuất: $incomingDateText", fontSize = 13.sp, color = Color.DarkGray)
+                    Text(text = "Số ngày yêu: $incomingDays ngày 💕", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD81B60))
                   }
                 }
 
-                // Lời nhắn gửi đối phương
-                OutlinedTextField(
-                  value = loveNote,
-                  onValueChange = { loveNote = it },
-                  label = { Text("Lời nhắn gửi người ấy (tùy chọn)") },
-                  maxLines = 2,
-                  shape = RoundedCornerShape(14.dp),
-                  colors = dialogTextFieldColors(),
-                  modifier = Modifier.fillMaxWidth()
-                )
-
-                // Nút Gửi Lời Mời Set Love
-                Button(
-                  onClick = {
-                    val parsedMillis = ProfileUtils.parseDateToMillis(proposedStartDateText)
-                    viewModel.sendSetLoveInvite(
-                      targetCodeOrLink = partner.coupleCode,
-                      proposedStartDateMillis = parsedMillis,
-                      loveNote = loveNote
-                    )
-                    onDismiss()
-                  },
-                  shape = RoundedCornerShape(16.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .testTag("dialog_btn_send_set_love")
-                ) {
-                  Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(18.dp))
-                  Spacer(modifier = Modifier.width(8.dp))
-                  Text(
-                    text = "Gửi Lời Mời Set Love Cho " + partner.effectiveDisplayName + " ❤️",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                  )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                  OutlinedButton(
+                    onClick = { viewModel.rejectSetLoveInvite(invite.inviteId) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                  ) {
+                    Text("Từ chối")
+                  }
+                  Button(
+                    onClick = {
+                      viewModel.acceptSetLoveInvite(invite.inviteId)
+                      onDismiss()
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                    modifier = Modifier.weight(1.2f)
+                  ) {
+                    Text("Đồng ý ❤️", fontWeight = FontWeight.Bold)
+                  }
                 }
               }
             }
           }
-        }
 
-        // --- 6. FOOTER: HỒ SƠ CỦA BẠN ĐIỀU CHỈNH TRONG CÀI ĐẶT ---
-        Surface(
-          shape = RoundedCornerShape(14.dp),
-          color = Color(0xFFF5F5F7),
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-              viewModel.openEditProfileDialog()
-              onDismiss()
+          // 2. OUTGOING INVITE (NẾU CÓ)
+          if (outgoingInvite != null && relationshipStatus != OnlineStatus.COUPLED) {
+            val out = outgoingInvite!!
+            Card(
+              shape = RoundedCornerShape(20.dp),
+              colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
+              border = BorderStroke(1.2.dp, Color(0xFFFFB74D)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Đang Chờ Người Ấy Xác Nhận...", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFFE65100))
+                val outDays = ProfileUtils.calculateLoveDays(out.proposedStartDate)
+                Text(
+                  text = "Mã gửi tới: ${out.targetCoupleCode} • $outDays ngày yêu",
+                  fontSize = 13.sp,
+                  color = Color.DarkGray
+                )
+                OutlinedButton(
+                  onClick = { viewModel.cancelSentInvite() },
+                  shape = RoundedCornerShape(10.dp),
+                  modifier = Modifier.fillMaxWidth()
+                ) {
+                  Text("Hủy lời mời đã gửi")
+                }
+              }
             }
-        ) {
-          Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Default.Person,
-              contentDescription = null,
-              tint = Color(0xFF5C6BC0),
-              modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-              Text(
-                text = "Hồ sơ cá nhân của bạn",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = OnSurface
-              )
-              Text(
-                text = "Chỉnh sửa đầy đủ tại mục Cài đặt (Tên, ngày sinh, ảnh)",
-                fontSize = 12.sp,
-                color = OnSurfaceVariant
-              )
+          }
+
+          // 3. COUPLED STATUS (NẾU ĐÃ KẾT ĐÔI)
+          if (relationshipStatus == OnlineStatus.COUPLED) {
+            val partner = partnerUser
+            Card(
+              shape = RoundedCornerShape(20.dp),
+              colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+              border = BorderStroke(1.2.dp, Color(0xFFFF80AB)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("ĐÃ KẾT ĐÔI 1-1 TRỰC TUYẾN ❤️", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF880E4F))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                  AsyncImage(
+                    model = partner?.avatarUrl?.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" } ?: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(50.dp).clip(CircleShape).border(2.dp, Color(0xFFFF4081), CircleShape)
+                  )
+                  Spacer(modifier = Modifier.width(12.dp))
+                  Column {
+                    Text(partner?.effectiveDisplayName ?: "Người ấy", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Mã: ${partner?.coupleCode ?: ""}", fontSize = 12.sp, color = Color.Gray)
+                  }
+                }
+              }
             }
-            Icon(
-              imageVector = Icons.Filled.ChevronRight,
-              contentDescription = null,
-              tint = Color.Gray
-            )
+          }
+
+          // 4. MÃ KẾT ĐÔI CỦA BẠN & TÌM KIẾM ĐỐI PHƯƠNG
+          if (relationshipStatus != OnlineStatus.COUPLED && incomingInvite == null) {
+            // Thẻ mã của bạn
+            Card(
+              shape = RoundedCornerShape(20.dp),
+              colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+              border = BorderStroke(1.dp, Color(0xFFFFB6C1)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("MÃ KẾT NỐI CỦA BẠN (CHIA SẺ CHO NGƯỜI YÊU):", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF880E4F))
+                Row(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                  Text(
+                    text = currentUser.coupleCode,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFD81B60),
+                    letterSpacing = 1.sp
+                  )
+                  Row {
+                    IconButton(onClick = { copyToClipboard(currentUser.coupleCode) }) {
+                      Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFFD81B60), modifier = Modifier.size(18.dp))
+                    }
+                    IconButton(onClick = { shareCoupleLink(currentUser.coupleCode) }) {
+                      Icon(Icons.Default.Share, contentDescription = "Share", tint = Color(0xFFD81B60), modifier = Modifier.size(18.dp))
+                    }
+                  }
+                }
+              }
+            }
+
+            // Thẻ tìm kiếm & gửi lời mời
+            Card(
+              shape = RoundedCornerShape(20.dp),
+              colors = CardDefaults.cardColors(containerColor = Color.White),
+              border = BorderStroke(1.dp, Color(0xFFFFCDD2)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Tìm Kiếm Mã Người Ấy Để Kết Đôi:", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF880E4F))
+
+                Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                  OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = {
+                      searchQuery = it
+                      searchError = null
+                    },
+                    placeholder = { Text("Nhập mã đối tác (vd: LOVE-8888)...", fontSize = 13.sp) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = dialogTextFieldColors(),
+                    modifier = Modifier.weight(1f).testTag("dialog_search_input")
+                  )
+
+                  Button(
+                    onClick = {
+                      val q = searchQuery.trim()
+                      if (q.isNotBlank()) {
+                        coroutineScope.launch {
+                          isSearching = true
+                          searchError = null
+                          val res = viewModel.searchPartnerForSetLove(q)
+                          isSearching = false
+                          if (res == null) {
+                            searchError = "Không tìm thấy người dùng với mã này"
+                          } else if (res.uid == currentUser.uid) {
+                            searchError = "Không thể gửi lời mời cho chính mình"
+                          } else {
+                            selectedPartner = res
+                          }
+                        }
+                      }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                    modifier = Modifier.testTag("dialog_btn_search")
+                  ) {
+                    if (isSearching) {
+                      CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    } else {
+                      Icon(Icons.Default.Search, contentDescription = "Tìm")
+                    }
+                  }
+                }
+
+                if (searchError != null) {
+                  Text(text = searchError!!, color = Color(0xFFD32F2F), fontSize = 12.sp)
+                }
+
+                if (selectedPartner != null) {
+                  val partner = selectedPartner!!
+                  Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+                    border = BorderStroke(1.dp, Color(0xFFFF4081)),
+                    modifier = Modifier.fillMaxWidth()
+                  ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                      Row(verticalAlignment = Alignment.CenterVertically) {
+                        AsyncImage(
+                          model = partner.avatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
+                          contentDescription = null,
+                          contentScale = ContentScale.Crop,
+                          modifier = Modifier.size(50.dp).clip(CircleShape).border(2.dp, Color(0xFFFF4081), CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                          Text(partner.effectiveDisplayName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF880E4F))
+                          Text("Mã: ${partner.coupleCode}", fontSize = 12.sp, color = Color.Gray)
+                        }
+                      }
+
+                      InLoveDatePickerField(
+                        value = proposedStartDateText,
+                        onValueChange = { proposedStartDateText = it },
+                        label = "Ngày bắt đầu yêu thống nhất",
+                        dialogTitle = "Chọn ngày bắt đầu yêu",
+                        quickPresets = DatePickerPresets.relationshipStartDatePresets(),
+                        modifier = Modifier.fillMaxWidth()
+                      )
+
+                      OutlinedTextField(
+                        value = loveNote,
+                        onValueChange = { loveNote = it },
+                        label = { Text("Lời nhắn (tùy chọn)") },
+                        maxLines = 2,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = dialogTextFieldColors(),
+                        modifier = Modifier.fillMaxWidth()
+                      )
+
+                      Button(
+                        onClick = {
+                          val parsedMillis = ProfileUtils.parseDateToMillis(proposedStartDateText)
+                          viewModel.sendSetLoveInvite(
+                            targetCodeOrLink = partner.coupleCode,
+                            proposedStartDateMillis = parsedMillis,
+                            loveNote = loveNote
+                          )
+                          onDismiss()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                        modifier = Modifier.fillMaxWidth()
+                      ) {
+                        Text("Gửi Lời Mời Cho ${partner.effectiveDisplayName} ❤️", fontWeight = FontWeight.Bold)
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
 
@@ -1465,7 +1450,7 @@ fun EditCoupleDialog(
   currentGirlZodiac: String = "",
   currentTitle: String = "",
   currentDays: Int = 0,
-  currentAnniversary: String = "18/12/2022",
+  currentAnniversary: String = "",
   onSearchPartner: (suspend (String) -> OnlineUserEntity?)? = null,
   onDismiss: () -> Unit,
   onSave: (
@@ -1902,7 +1887,8 @@ fun AddAnniversaryDateDialog(
   ) -> Unit
 ) {
   var title by remember { mutableStateOf("") }
-  var dateText by remember { mutableStateOf("18/12/2022") }
+  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
+  var dateText by remember { mutableStateOf(todayFormatted) }
   var selectedType by remember { mutableStateOf("LOVE") }
   var description by remember { mutableStateOf("") }
   var isAnnual by remember { mutableStateOf(true) }
@@ -1957,7 +1943,7 @@ fun AddAnniversaryDateDialog(
           value = dateText,
           onValueChange = { dateText = it },
           label = "Ngày kỷ niệm (dd/MM/yyyy) *",
-          placeholder = "18/12/2022",
+          placeholder = "dd/MM/yyyy",
           dialogTitle = "Chọn ngày kỷ niệm",
           quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
           helperText = DatePickerUtils.getFriendlyDateDescription(dateText),
@@ -2174,7 +2160,7 @@ fun AddGiftReminderDialog(
             value = recipient,
             onValueChange = { recipient = it },
             label = { Text("Tặng cho") },
-            placeholder = { Text("TLinh") },
+            placeholder = { Text("Người thương") },
             modifier = Modifier
               .weight(1f)
               .testTag("input_gift_reminder_recipient"),

@@ -145,4 +145,119 @@
     <!-- Generic & Toasts -->
     <string name="toast_switched_vi">Switched to Tiếng Việt 🇻🇳</string>
     <string name="toast_switched_en">Switched to English 🇬🇧</string>
+
+    <!-- Onboarding Flow -->
+    <string name="onboarding_welcome_title">Welcome to InLove 💕</string>
+    <string name="onboarding_welcome_sub">Cherishing every precious moment of your romantic love story</string>
+    <string name="onboarding_lang_select_title">Select Display Language</string>
+    <string name="onboarding_counter_title">Cherish Every Day in Love ⏳</string>
+    <string name="onboarding_counter_sub">Accurately count days together and celebrate memorable milestones: 100, 200, 365, 1000 days!</string>
+    <string name="onboarding_memories_title">Memories &amp; Private Diary 📸</string>
+    <string name="onboarding_memories_sub">Capture photos, date spots and sweet thoughts safely preserved offline and synced across devices.</string>
+    <string name="onboarding_reminder_title">Smart Reminders &amp; AI Gifts 🎁</string>
+    <string name="onboarding_reminder_sub">Never forget important anniversaries with advance alerts (7d, 3d, 1d) plus AI romantic gift suggestions.</string>
+    <string name="onboarding_start_title">Ready to Begin Your Journey 🌸</string>
+    <string name="onboarding_start_sub">Personalize couple names, your anniversary start date, or start exploring immediately!</string>
+    <string name="onboarding_btn_next">Continue</string>
+    <string name="onboarding_btn_back">Back</string>
+    <string name="onboarding_btn_skip">Skip</string>
+    <string name="onboarding_btn_start">Get Started ✨</string>
+
+    <!-- Calendar Screen -->
+    <string name="calendar_title">Anniversary Calendar</string>
+    <string name="calendar_filter_all">All</string>
+    <string name="calendar_filter_upcoming">Upcoming</string>
+    <string name="calendar_filter_past">Past</string>
+    <string name="calendar_prev_month">Previous Month</string>
+    <string name="calendar_next_month">Next Month</string>
+    <string name="calendar_add_anniversary">Add Anniversary</string>
+    <string name="calendar_delete_title">Delete Anniversary Date?</string>
+    <string name="calendar_delete_msg">Are you sure you want to delete this anniversary date from the calendar?</string>
+    <string name="calendar_milestone_delete_title">Delete Milestone?</string>
+    <string name="calendar_milestone_delete_msg">Are you sure you want to delete this milestone from the calendar?</string>
+
+    <!-- Gift Screen -->
+    <string name="gift_screen_title">Gift Suggestions</string>
+    <string name="gift_cat_all">All</string>
+    <string name="gift_cat_ai">AI Suggestions ✨</string>
+    <string name="gift_cat_jewelry">Jewelry</string>
+    <string name="gift_cat_tech">Tech Gadgets</string>
+    <string name="gift_cat_flowers">Flowers &amp; Cards</string>
+    <string name="gift_cat_travel">Travel &amp; Date</string>
+    <string name="gift_cat_fashion">Fashion</string>
+    <string name="gift_cat_diy">Handmade &amp; DIY</string>
+    <string name="gift_checklist_title">Preparation Checklist</string>
+    <string name="gift_checklist_add">Add Checklist Item</string>
+    <string name="gift_delete_reminder_title">Delete Gift Reminder?</string>
+    <string name="gift_delete_reminder_msg">Are you sure you want to delete this gift reminder?</string>
+    <string name="gift_delete_item_title">Delete Checklist Item?</string>
+    <string name="gift_delete_item_msg">Are you sure you want to remove this item from your gift checklist?</string>
+
+    <!-- Reminder Screen -->
+    <string name="reminder_screen_title">Reminders Hub</string>
+    <string name="reminder_realtime_header">Real-time Reminder Center</string>
+    <string name="reminder_cadence_custom">Custom</string>
+    <string name="reminder_cadence_weekly">Weekly</string>
+    <string name="reminder_cadence_monthly">Monthly</string>
+    <string name="reminder_cadence_annually">Annually</string>
+    <string name="reminder_delete_title">Delete Date Reminder?</string>
+    <string name="reminder_delete_msg">Are you sure you want to delete this reminder? Related alarms will also be cancelled.</string>
+    <string name="reminder_mark_all_read">Mark All Read</string>
+    <string name="reminder_add_new">Add Reminder</string>
+
+    <!-- Pairing Screen -->
+    <string name="pairing_title">Couple Connection 1-1</string>
+    <string name="pairing_sub">Pair with your loved one to synchronize day counter and memories in real time</string>
+    <string name="pairing_my_code">Your Invite Code</string>
+    <string name="pairing_partner_code">Enter Partner\'s Code</string>
+    <string name="pairing_btn_send">Send Connection Request</string>
+    <string name="pairing_status_connected">Connected ❤️</string>
+    <string name="pairing_status_pending">Awaiting Response ⏳</string>
+    <string name="pairing_btn_disconnect">Disconnect</string>
+    <string name="pairing_copy_code">Code copied to clipboard!</string>
+
+    <!-- Paywall Screen -->
+    <string name="paywall_title">INLOVE PREMIUM</string>
+    <string name="paywall_sub">Unlimited Love — Cherish every precious moment together</string>
+    <string name="paywall_benefits_header">VIP Privileges</string>
+    <string name="paywall_benefit_ads">100% Ad-Free forever</string>
+    <string name="paywall_benefit_ai">Unlimited AI gift ideas &amp; love letters</string>
+    <string name="paywall_benefit_cloud">Unlimited HD cloud memory photo backup</string>
+    <string name="paywall_benefit_lock">Fingerprint / PIN private security lock</string>
+    <string name="paywall_benefit_theme">Exclusive couple themes &amp; Premium badges</string>
+    <string name="paywall_plan_yearly_title">1-Year Plan — Most Popular ❤️</string>
+    <string name="paywall_plan_yearly_price">$12.99 / year</string>
+    <string name="paywall_plan_yearly_sub">3 days free trial, then ~$1.08/month</string>
+    <string name="paywall_plan_yearly_badge">SAVE 50%</string>
+    <string name="paywall_plan_monthly_title">1-Month Plan</string>
+    <string name="paywall_plan_monthly_price">$1.99 / month</string>
+    <string name="paywall_plan_monthly_sub">Flexible billing, cancel anytime</string>
+    <string name="paywall_plan_lifetime_title">Lifetime Eternal Access 💫</string>
+    <string name="paywall_plan_lifetime_price">$29.99 one-time</string>
+    <string name="paywall_plan_lifetime_sub">Pay once — Cherish love forever</string>
+    <string name="paywall_plan_lifetime_badge">LIFETIME</string>
+    <string name="paywall_btn_trial">🎁 START 3-DAY FREE TRIAL</string>
+    <string name="paywall_btn_monthly">💳 SUBSCRIBE MONTHLY NOW</string>
+    <string name="paywall_btn_lifetime">👑 UPGRADE LIFETIME NOW</string>
+    <string name="paywall_btn_restore">Restore Purchases</string>
+    <string name="paywall_btn_manage">Manage Subscriptions on Google Play</string>
+    <string name="paywall_terms">Terms of Service</string>
+    <string name="paywall_privacy">Privacy Policy</string>
+    <string name="paywall_restoring">Checking purchased transactions…</string>
+    <string name="paywall_restore_success">VIP subscription restored successfully!</string>
+    <string name="paywall_restore_empty">No purchases found for this Google Play account.</string>
+    <string name="paywall_vip_congrats">🎉 Congratulations! You are an InLove VIP member!</string>
+
+    <!-- Auth Screen -->
+    <string name="auth_login_title">Sign In to InLove</string>
+    <string name="auth_register_title">Create InLove Account</string>
+    <string name="auth_email_label">Email address</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_confirm_password_label">Confirm password</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_btn_login">Sign In</string>
+    <string name="auth_btn_register">Create Account</string>
+    <string name="auth_btn_guest">Continue as Guest</string>
+    <string name="auth_switch_to_register">Don\'t have an account? Sign up</string>
+    <string name="auth_switch_to_login">Already have an account? Sign in</string>
 </resources>

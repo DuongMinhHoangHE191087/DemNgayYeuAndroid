@@ -89,12 +89,12 @@ object DatePickerUtils {
   }
 
   /**
-   * Generates a friendly relative time description (e.g. "Chủ Nhật, 18/12/2022 • Cách đây 1365 ngày")
+   * Generates a friendly relative time description (e.g. "Thứ Ba, 14/02/2023 • Cách đây 1000 ngày")
    */
   fun getFriendlyDateDescription(dateStr: String): String {
     val millis = parseDateToUtcMillis(dateStr) ?: return ""
     val nowUtc = System.currentTimeMillis()
-    val diffDays = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(Math.abs(nowUtc - millis))
+    val diffDays = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(kotlin.math.abs(nowUtc - millis))
     val isPast = millis <= nowUtc
     return if (isPast) {
       "Đã qua $diffDays ngày yêu"
@@ -141,7 +141,9 @@ object DatePickerPresets {
     cal.add(Calendar.YEAR, -2)
     val twoYearsAgo = cal.timeInMillis
 
-    val defaultLoveDay = DatePickerUtils.parseDateToUtcMillis("18/12/2022") ?: today
+    cal.timeInMillis = today
+    cal.add(Calendar.YEAR, -3)
+    val threeYearsAgo = cal.timeInMillis
 
     return listOf(
       "Hôm nay" to today,
@@ -150,7 +152,7 @@ object DatePickerPresets {
       "6 tháng trước" to sixMonthsAgo,
       "1 năm trước" to oneYearAgo,
       "2 năm trước" to twoYearsAgo,
-      "18/12/2022" to defaultLoveDay
+      "3 năm trước" to threeYearsAgo
     )
   }
 
@@ -188,6 +190,41 @@ object DatePickerPresets {
       "+100 ngày" to hundredDaysLater,
       "+6 tháng" to sixMonthsLater,
       "Tròn 1 năm" to oneYearLater
+    )
+  }
+
+  /**
+   * Common quick presets for birthday dates.
+   */
+  fun birthDatePresets(): List<Pair<String, Long>> {
+    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+      set(Calendar.HOUR_OF_DAY, 0)
+      set(Calendar.MINUTE, 0)
+      set(Calendar.SECOND, 0)
+      set(Calendar.MILLISECOND, 0)
+    }
+    val today = cal.timeInMillis
+
+    cal.add(Calendar.YEAR, -18)
+    val eighteenYearsAgo = cal.timeInMillis
+
+    cal.timeInMillis = today
+    cal.add(Calendar.YEAR, -20)
+    val twentyYearsAgo = cal.timeInMillis
+
+    cal.timeInMillis = today
+    cal.add(Calendar.YEAR, -22)
+    val twentyTwoYearsAgo = cal.timeInMillis
+
+    cal.timeInMillis = today
+    cal.add(Calendar.YEAR, -25)
+    val twentyFiveYearsAgo = cal.timeInMillis
+
+    return listOf(
+      "18 tuổi" to eighteenYearsAgo,
+      "20 tuổi" to twentyYearsAgo,
+      "22 tuổi" to twentyTwoYearsAgo,
+      "25 tuổi" to twentyFiveYearsAgo
     )
   }
 }

@@ -9,6 +9,43 @@ enum class AppLanguage {
   VI, EN
 }
 
+object LocaleManager {
+  private const val PREFS_NAME = "inlove_preferences"
+  private const val KEY_APP_LANGUAGE = "key_app_language"
+  private const val KEY_FIRST_LAUNCH = "key_first_launch"
+
+  fun getInitialLanguage(context: Context): AppLanguage {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val savedLang = prefs.getString(KEY_APP_LANGUAGE, null)
+    if (savedLang != null) {
+      return try {
+        AppLanguage.valueOf(savedLang)
+      } catch (e: Exception) {
+        AppLanguage.EN
+      }
+    }
+    // Foreign user (system language is not Vietnamese) -> Default to English (EN)
+    // Vietnam user (system language is "vi") -> Default to Vietnamese (VI)
+    val systemLang = Locale.getDefault().language
+    return if (systemLang.equals("vi", ignoreCase = true)) AppLanguage.VI else AppLanguage.EN
+  }
+
+  fun saveLanguage(context: Context, language: AppLanguage) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putString(KEY_APP_LANGUAGE, language.name).apply()
+  }
+
+  fun isFirstLaunch(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getBoolean(KEY_FIRST_LAUNCH, true)
+  }
+
+  fun setFirstLaunchCompleted(context: Context) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
+  }
+}
+
 data class AppStrings(
   // Nav items
   val navHome: String,
@@ -128,14 +165,114 @@ data class AppStrings(
   val langVietnamese: String,
   val langEnglish: String,
   val btnConfirm: String,
-  val btnCancel: String
+  val btnCancel: String,
+
+  // Onboarding Strings
+  val onboardingWelcomeTitle: String,
+  val onboardingWelcomeSub: String,
+  val onboardingLangSelectTitle: String,
+  val onboardingCounterTitle: String,
+  val onboardingCounterSub: String,
+  val onboardingMemoriesTitle: String,
+  val onboardingMemoriesSub: String,
+  val onboardingReminderTitle: String,
+  val onboardingReminderSub: String,
+  val onboardingStartTitle: String,
+  val onboardingStartSub: String,
+  val onboardingBtnNext: String,
+  val onboardingBtnBack: String,
+  val onboardingBtnSkip: String,
+  val onboardingBtnStart: String,
+
+  // Calendar Strings
+  val calendarTitle: String,
+  val calendarFilterAll: String,
+  val calendarFilterUpcoming: String,
+  val calendarFilterPast: String,
+  val calendarPrevMonth: String,
+  val calendarNextMonth: String,
+  val calendarAddAnniversary: String,
+
+  // Gift Strings
+  val giftScreenTitle: String,
+  val giftCatAll: String,
+  val giftCatAi: String,
+  val giftCatJewelry: String,
+  val giftCatTech: String,
+  val giftCatFlowers: String,
+  val giftCatTravel: String,
+  val giftCatFashion: String,
+  val giftCatDiy: String,
+  val giftChecklistTitle: String,
+  val giftChecklistAdd: String,
+
+  // Reminder Strings
+  val reminderScreenTitle: String,
+  val reminderRealtimeHeader: String,
+  val reminderCadenceCustom: String,
+  val reminderCadenceWeekly: String,
+  val reminderCadenceMonthly: String,
+  val reminderCadenceAnnually: String,
+  val reminderMarkAllRead: String,
+  val reminderAddNew: String,
+
+  // Pairing Strings
+  val pairingTitle: String,
+  val pairingSub: String,
+  val pairingMyCode: String,
+  val pairingPartnerCode: String,
+  val pairingBtnSend: String,
+  val pairingStatusConnected: String,
+  val pairingStatusPending: String,
+  val pairingBtnDisconnect: String,
+
+  // Paywall Strings
+  val paywallTitle: String,
+  val paywallSub: String,
+  val paywallBenefitsHeader: String,
+  val paywallBenefitAds: String,
+  val paywallBenefitAi: String,
+  val paywallBenefitCloud: String,
+  val paywallBenefitLock: String,
+  val paywallBenefitTheme: String,
+  val paywallPlanYearlyTitle: String,
+  val paywallPlanYearlyPrice: String,
+  val paywallPlanYearlySub: String,
+  val paywallPlanYearlyBadge: String,
+  val paywallPlanMonthlyTitle: String,
+  val paywallPlanMonthlyPrice: String,
+  val paywallPlanMonthlySub: String,
+  val paywallPlanLifetimeTitle: String,
+  val paywallPlanLifetimePrice: String,
+  val paywallPlanLifetimeSub: String,
+  val paywallPlanLifetimeBadge: String,
+  val paywallBtnTrial: String,
+  val paywallBtnMonthly: String,
+  val paywallBtnLifetime: String,
+  val paywallBtnRestore: String,
+  val paywallBtnManage: String,
+  val paywallTerms: String,
+  val paywallPrivacy: String,
+
+  // Auth Strings
+  val authLoginTitle: String,
+  val authRegisterTitle: String,
+  val authEmailLabel: String,
+  val authPasswordLabel: String,
+  val authConfirmPasswordLabel: String,
+  val authForgotPassword: String,
+  val authBtnLogin: String,
+  val authBtnRegister: String,
+  val authBtnGuest: String,
+  val authSwitchToRegister: String,
+  val authSwitchToLogin: String
 )
 
 object LocalizedStrings {
   fun fromContext(context: Context, lang: AppLanguage): AppStrings {
     val locale = when (lang) {
-      AppLanguage.VI -> Locale("vi")
-      AppLanguage.EN -> Locale("en")
+      AppLanguage.VI -> Locale.forLanguageTag("vi")
+      AppLanguage.EN -> Locale.forLanguageTag("en")
     }
     val config = Configuration(context.resources.configuration).apply {
       setLocale(locale)
@@ -253,7 +390,107 @@ object LocalizedStrings {
       langVietnamese = res.getString(R.string.lang_vietnamese),
       langEnglish = res.getString(R.string.lang_english),
       btnConfirm = res.getString(R.string.btn_confirm),
-      btnCancel = res.getString(R.string.btn_cancel)
+      btnCancel = res.getString(R.string.btn_cancel),
+
+      // Onboarding
+      onboardingWelcomeTitle = res.getString(R.string.onboarding_welcome_title),
+      onboardingWelcomeSub = res.getString(R.string.onboarding_welcome_sub),
+      onboardingLangSelectTitle = res.getString(R.string.onboarding_lang_select_title),
+      onboardingCounterTitle = res.getString(R.string.onboarding_counter_title),
+      onboardingCounterSub = res.getString(R.string.onboarding_counter_sub),
+      onboardingMemoriesTitle = res.getString(R.string.onboarding_memories_title),
+      onboardingMemoriesSub = res.getString(R.string.onboarding_memories_sub),
+      onboardingReminderTitle = res.getString(R.string.onboarding_reminder_title),
+      onboardingReminderSub = res.getString(R.string.onboarding_reminder_sub),
+      onboardingStartTitle = res.getString(R.string.onboarding_start_title),
+      onboardingStartSub = res.getString(R.string.onboarding_start_sub),
+      onboardingBtnNext = res.getString(R.string.onboarding_btn_next),
+      onboardingBtnBack = res.getString(R.string.onboarding_btn_back),
+      onboardingBtnSkip = res.getString(R.string.onboarding_btn_skip),
+      onboardingBtnStart = res.getString(R.string.onboarding_btn_start),
+
+      // Calendar
+      calendarTitle = res.getString(R.string.calendar_title),
+      calendarFilterAll = res.getString(R.string.calendar_filter_all),
+      calendarFilterUpcoming = res.getString(R.string.calendar_filter_upcoming),
+      calendarFilterPast = res.getString(R.string.calendar_filter_past),
+      calendarPrevMonth = res.getString(R.string.calendar_prev_month),
+      calendarNextMonth = res.getString(R.string.calendar_next_month),
+      calendarAddAnniversary = res.getString(R.string.calendar_add_anniversary),
+
+      // Gifts
+      giftScreenTitle = res.getString(R.string.gift_screen_title),
+      giftCatAll = res.getString(R.string.gift_cat_all),
+      giftCatAi = res.getString(R.string.gift_cat_ai),
+      giftCatJewelry = res.getString(R.string.gift_cat_jewelry),
+      giftCatTech = res.getString(R.string.gift_cat_tech),
+      giftCatFlowers = res.getString(R.string.gift_cat_flowers),
+      giftCatTravel = res.getString(R.string.gift_cat_travel),
+      giftCatFashion = res.getString(R.string.gift_cat_fashion),
+      giftCatDiy = res.getString(R.string.gift_cat_diy),
+      giftChecklistTitle = res.getString(R.string.gift_checklist_title),
+      giftChecklistAdd = res.getString(R.string.gift_checklist_add),
+
+      // Reminders
+      reminderScreenTitle = res.getString(R.string.reminder_screen_title),
+      reminderRealtimeHeader = res.getString(R.string.reminder_realtime_header),
+      reminderCadenceCustom = res.getString(R.string.reminder_cadence_custom),
+      reminderCadenceWeekly = res.getString(R.string.reminder_cadence_weekly),
+      reminderCadenceMonthly = res.getString(R.string.reminder_cadence_monthly),
+      reminderCadenceAnnually = res.getString(R.string.reminder_cadence_annually),
+      reminderMarkAllRead = res.getString(R.string.reminder_mark_all_read),
+      reminderAddNew = res.getString(R.string.reminder_add_new),
+
+      // Pairing
+      pairingTitle = res.getString(R.string.pairing_title),
+      pairingSub = res.getString(R.string.pairing_sub),
+      pairingMyCode = res.getString(R.string.pairing_my_code),
+      pairingPartnerCode = res.getString(R.string.pairing_partner_code),
+      pairingBtnSend = res.getString(R.string.pairing_btn_send),
+      pairingStatusConnected = res.getString(R.string.pairing_status_connected),
+      pairingStatusPending = res.getString(R.string.pairing_status_pending),
+      pairingBtnDisconnect = res.getString(R.string.pairing_btn_disconnect),
+
+      // Paywall
+      paywallTitle = res.getString(R.string.paywall_title),
+      paywallSub = res.getString(R.string.paywall_sub),
+      paywallBenefitsHeader = res.getString(R.string.paywall_benefits_header),
+      paywallBenefitAds = res.getString(R.string.paywall_benefit_ads),
+      paywallBenefitAi = res.getString(R.string.paywall_benefit_ai),
+      paywallBenefitCloud = res.getString(R.string.paywall_benefit_cloud),
+      paywallBenefitLock = res.getString(R.string.paywall_benefit_lock),
+      paywallBenefitTheme = res.getString(R.string.paywall_benefit_theme),
+      paywallPlanYearlyTitle = res.getString(R.string.paywall_plan_yearly_title),
+      paywallPlanYearlyPrice = res.getString(R.string.paywall_plan_yearly_price),
+      paywallPlanYearlySub = res.getString(R.string.paywall_plan_yearly_sub),
+      paywallPlanYearlyBadge = res.getString(R.string.paywall_plan_yearly_badge),
+      paywallPlanMonthlyTitle = res.getString(R.string.paywall_plan_monthly_title),
+      paywallPlanMonthlyPrice = res.getString(R.string.paywall_plan_monthly_price),
+      paywallPlanMonthlySub = res.getString(R.string.paywall_plan_monthly_sub),
+      paywallPlanLifetimeTitle = res.getString(R.string.paywall_plan_lifetime_title),
+      paywallPlanLifetimePrice = res.getString(R.string.paywall_plan_lifetime_price),
+      paywallPlanLifetimeSub = res.getString(R.string.paywall_plan_lifetime_sub),
+      paywallPlanLifetimeBadge = res.getString(R.string.paywall_plan_lifetime_badge),
+      paywallBtnTrial = res.getString(R.string.paywall_btn_trial),
+      paywallBtnMonthly = res.getString(R.string.paywall_btn_monthly),
+      paywallBtnLifetime = res.getString(R.string.paywall_btn_lifetime),
+      paywallBtnRestore = res.getString(R.string.paywall_btn_restore),
+      paywallBtnManage = res.getString(R.string.paywall_btn_manage),
+      paywallTerms = res.getString(R.string.paywall_terms),
+      paywallPrivacy = res.getString(R.string.paywall_privacy),
+
+      // Auth
+      authLoginTitle = res.getString(R.string.auth_login_title),
+      authRegisterTitle = res.getString(R.string.auth_register_title),
+      authEmailLabel = res.getString(R.string.auth_email_label),
+      authPasswordLabel = res.getString(R.string.auth_password_label),
+      authConfirmPasswordLabel = res.getString(R.string.auth_confirm_password_label),
+      authForgotPassword = res.getString(R.string.auth_forgot_password),
+      authBtnLogin = res.getString(R.string.auth_btn_login),
+      authBtnRegister = res.getString(R.string.auth_btn_register),
+      authBtnGuest = res.getString(R.string.auth_btn_guest),
+      authSwitchToRegister = res.getString(R.string.auth_switch_to_register),
+      authSwitchToLogin = res.getString(R.string.auth_switch_to_login)
     )
   }
 
@@ -375,7 +612,107 @@ object LocalizedStrings {
     langVietnamese = "Tiếng Việt 🇻🇳",
     langEnglish = "English 🇬🇧",
     btnConfirm = "Xác Nhận",
-    btnCancel = "Hủy"
+    btnCancel = "Hủy",
+
+    // Onboarding
+    onboardingWelcomeTitle = "Chào Mừng Đến Với InLove 💕",
+    onboardingWelcomeSub = "Không gian lãng mạn lưu giữ trọn vẹn từng khoảnh khắc tình yêu đôi bạn",
+    onboardingLangSelectTitle = "Chọn Ngôn Ngữ Hiển Thị",
+    onboardingCounterTitle = "Đếm Trọn Từng Ngày Yêu ⏳",
+    onboardingCounterSub = "Đếm chính xác từng ngày bên nhau, bắn tim kỷ niệm chúc mừng các cột mốc: 100, 200, 365, 1000 ngày!",
+    onboardingMemoriesTitle = "Kho Kỷ Niệm & Nhật Ký Đôi 📸",
+    onboardingMemoriesSub = "Lưu lại ảnh hẹn hò, địa điểm ý nghĩa và dòng cảm xúc ngọt ngào an toàn trên máy và đồng bộ đám mây.",
+    onboardingReminderTitle = "Nhắc Hẹn Thông Minh & Gợi Ý Quà 🎁",
+    onboardingReminderSub = "Không bao giờ quên ngày quan trọng nhờ chuông báo trước (7 ngày, 3 ngày, 1 ngày) kèm gợi ý quà tặng từ AI.",
+    onboardingStartTitle = "Sẵn Sàng Bắt Đầu Hành Trình 🌸",
+    onboardingStartSub = "Cá nhân hóa tên 2 bạn, ngày bắt đầu yêu, hoặc khám phá ngay ứng dụng!",
+    onboardingBtnNext = "Tiếp tục",
+    onboardingBtnBack = "Quay lại",
+    onboardingBtnSkip = "Bỏ qua",
+    onboardingBtnStart = "Bắt Đầu Ngay ✨",
+
+    // Calendar
+    calendarTitle = "Lịch Kỷ Niệm",
+    calendarFilterAll = "Tất cả",
+    calendarFilterUpcoming = "Sắp tới",
+    calendarFilterPast = "Đã qua",
+    calendarPrevMonth = "Tháng trước",
+    calendarNextMonth = "Tháng sau",
+    calendarAddAnniversary = "Thêm Ngày Kỷ Niệm",
+
+    // Gifts
+    giftScreenTitle = "Gợi Ý Quà Tặng",
+    giftCatAll = "Tất cả",
+    giftCatAi = "AI Đề Xuất ✨",
+    giftCatJewelry = "Trang Sức",
+    giftCatTech = "Công Nghệ",
+    giftCatFlowers = "Hoa & Thiệp",
+    giftCatTravel = "Du Lịch & Hẹn Hò",
+    giftCatFashion = "Thời Trang",
+    giftCatDiy = "Thủ Công & DIY",
+    giftChecklistTitle = "Danh Sách Cần Chuẩn Bị",
+    giftChecklistAdd = "Thêm Việc Chuẩn Bị",
+
+    // Reminders
+    reminderScreenTitle = "Trung Tâm Nhắc Hẹn",
+    reminderRealtimeHeader = "Nhắc Hẹn Thời Gian Thực",
+    reminderCadenceCustom = "Tùy Chỉnh",
+    reminderCadenceWeekly = "Hàng Tuần",
+    reminderCadenceMonthly = "Hàng Tháng",
+    reminderCadenceAnnually = "Hàng Năm",
+    reminderMarkAllRead = "Đã Xem Tất Cả",
+    reminderAddNew = "Thêm Lời Nhắc Mới",
+
+    // Pairing
+    pairingTitle = "Kết Nối Đôi Bạn 1-1",
+    pairingSub = "Ghép đôi cùng người ấy để đồng bộ đếm ngày và kỷ niệm thời gian thực",
+    pairingMyCode = "Mã Kết Nối Của Bạn",
+    pairingPartnerCode = "Nhập Mã Của Người Ấy",
+    pairingBtnSend = "Gửi Lời Mời Kết Nối",
+    pairingStatusConnected = "Đã Kết Đôi ❤️",
+    pairingStatusPending = "Đang Chờ Phản Hồi ⏳",
+    pairingBtnDisconnect = "Hủy Kết Đôi",
+
+    // Paywall
+    paywallTitle = "INLOVE PREMIUM",
+    paywallSub = "Tình yêu không giới hạn — Gắn kết mọi kỷ niệm trọn vẹn",
+    paywallBenefitsHeader = "Đặc Quyền VIP",
+    paywallBenefitAds = "Tắt hoàn toàn 100% quảng cáo vĩnh viễn",
+    paywallBenefitAi = "Gợi ý quà tặng & Thư tình AI không giới hạn",
+    paywallBenefitCloud = "Lưu trữ ảnh kỷ niệm HD lên đám mây không giới hạn",
+    paywallBenefitLock = "Khóa ứng dụng vân tay / FaceID tuyệt đối riêng tư",
+    paywallBenefitTheme = "Huy hiệu Premium & Theme độc quyền dành cho cặp đôi",
+    paywallPlanYearlyTitle = "Gói 1 Năm — Được Yêu Thích ❤️",
+    paywallPlanYearlyPrice = "299.000 đ / năm",
+    paywallPlanYearlySub = "3 ngày dùng thử miễn phí, sau đó ~24.900 đ/tháng",
+    paywallPlanYearlyBadge = "TIẾT KIỆM 50%",
+    paywallPlanMonthlyTitle = "Gói 1 Tháng",
+    paywallPlanMonthlyPrice = "49.000 đ / tháng",
+    paywallPlanMonthlySub = "Thanh toán linh hoạt, hủy bất kỳ lúc nào",
+    paywallPlanLifetimeTitle = "Gói Trọn Đời Vĩnh Cửu 💫",
+    paywallPlanLifetimePrice = "699.000 đ một lần",
+    paywallPlanLifetimeSub = "Thanh toán duy nhất 1 lần — Sử dụng mãi mãi",
+    paywallPlanLifetimeBadge = "MÃI MÃI",
+    paywallBtnTrial = "🎁 BẮT ĐẦU DÙNG THỬ 3 NGÀY MIỄN PHÍ",
+    paywallBtnMonthly = "💳 ĐĂNG KÝ THÁNG NGAY",
+    paywallBtnLifetime = "👑 NÂNG CẤP TRỌN ĐỜI NGAY",
+    paywallBtnRestore = "Khôi phục gói mua (Restore Purchases)",
+    paywallBtnManage = "Quản lý & Hủy gói cước trên Google Play",
+    paywallTerms = "Điều khoản dịch vụ",
+    paywallPrivacy = "Chính sách bảo mật",
+
+    // Auth
+    authLoginTitle = "Đăng Nhập InLove",
+    authRegisterTitle = "Tạo Tài Khoản InLove",
+    authEmailLabel = "Địa chỉ Email",
+    authPasswordLabel = "Mật khẩu",
+    authConfirmPasswordLabel = "Xác nhận mật khẩu",
+    authForgotPassword = "Quên mật khẩu?",
+    authBtnLogin = "Đăng Nhập",
+    authBtnRegister = "Đăng Ký",
+    authBtnGuest = "Tiếp tục với chế độ Khách",
+    authSwitchToRegister = "Chưa có tài khoản? Đăng ký ngay",
+    authSwitchToLogin = "Đã có tài khoản? Đăng nhập"
   )
 
   val englishStatic = AppStrings(
@@ -488,6 +825,106 @@ object LocalizedStrings {
     langVietnamese = "Tiếng Việt 🇻🇳",
     langEnglish = "English 🇬🇧",
     btnConfirm = "Confirm",
-    btnCancel = "Cancel"
+    btnCancel = "Cancel",
+
+    // Onboarding
+    onboardingWelcomeTitle = "Welcome to InLove 💕",
+    onboardingWelcomeSub = "Cherishing every precious moment of your romantic love story",
+    onboardingLangSelectTitle = "Select Display Language",
+    onboardingCounterTitle = "Cherish Every Day in Love ⏳",
+    onboardingCounterSub = "Accurately count days together and celebrate memorable milestones: 100, 200, 365, 1000 days!",
+    onboardingMemoriesTitle = "Memories & Private Diary 📸",
+    onboardingMemoriesSub = "Capture photos, date spots and sweet thoughts safely preserved offline and synced across devices.",
+    onboardingReminderTitle = "Smart Reminders & AI Gifts 🎁",
+    onboardingReminderSub = "Never forget important anniversaries with advance alerts (7d, 3d, 1d) plus AI romantic gift suggestions.",
+    onboardingStartTitle = "Ready to Begin Your Journey 🌸",
+    onboardingStartSub = "Personalize couple names, your anniversary start date, or start exploring immediately!",
+    onboardingBtnNext = "Continue",
+    onboardingBtnBack = "Back",
+    onboardingBtnSkip = "Skip",
+    onboardingBtnStart = "Get Started ✨",
+
+    // Calendar
+    calendarTitle = "Anniversary Calendar",
+    calendarFilterAll = "All",
+    calendarFilterUpcoming = "Upcoming",
+    calendarFilterPast = "Past",
+    calendarPrevMonth = "Previous Month",
+    calendarNextMonth = "Next Month",
+    calendarAddAnniversary = "Add Anniversary",
+
+    // Gifts
+    giftScreenTitle = "Gift Suggestions",
+    giftCatAll = "All",
+    giftCatAi = "AI Suggestions ✨",
+    giftCatJewelry = "Jewelry",
+    giftCatTech = "Tech Gadgets",
+    giftCatFlowers = "Flowers & Cards",
+    giftCatTravel = "Travel & Date",
+    giftCatFashion = "Fashion",
+    giftCatDiy = "Handmade & DIY",
+    giftChecklistTitle = "Preparation Checklist",
+    giftChecklistAdd = "Add Checklist Item",
+
+    // Reminders
+    reminderScreenTitle = "Reminders Hub",
+    reminderRealtimeHeader = "Real-time Reminder Center",
+    reminderCadenceCustom = "Custom",
+    reminderCadenceWeekly = "Weekly",
+    reminderCadenceMonthly = "Monthly",
+    reminderCadenceAnnually = "Annually",
+    reminderMarkAllRead = "Mark All Read",
+    reminderAddNew = "Add Reminder",
+
+    // Pairing
+    pairingTitle = "Couple Connection 1-1",
+    pairingSub = "Pair with your loved one to synchronize day counter and memories in real time",
+    pairingMyCode = "Your Invite Code",
+    pairingPartnerCode = "Enter Partner's Code",
+    pairingBtnSend = "Send Connection Request",
+    pairingStatusConnected = "Connected ❤️",
+    pairingStatusPending = "Awaiting Response ⏳",
+    pairingBtnDisconnect = "Disconnect",
+
+    // Paywall
+    paywallTitle = "INLOVE PREMIUM",
+    paywallSub = "Unlimited Love — Cherish every precious moment together",
+    paywallBenefitsHeader = "VIP Privileges",
+    paywallBenefitAds = "100% Ad-Free forever",
+    paywallBenefitAi = "Unlimited AI gift ideas & love letters",
+    paywallBenefitCloud = "Unlimited HD cloud memory photo backup",
+    paywallBenefitLock = "Fingerprint / PIN private security lock",
+    paywallBenefitTheme = "Exclusive couple themes & Premium badges",
+    paywallPlanYearlyTitle = "1-Year Plan — Most Popular ❤️",
+    paywallPlanYearlyPrice = "$12.99 / year",
+    paywallPlanYearlySub = "3 days free trial, then ~$1.08/month",
+    paywallPlanYearlyBadge = "SAVE 50%",
+    paywallPlanMonthlyTitle = "1-Month Plan",
+    paywallPlanMonthlyPrice = "$1.99 / month",
+    paywallPlanMonthlySub = "Flexible billing, cancel anytime",
+    paywallPlanLifetimeTitle = "Lifetime Eternal Access 💫",
+    paywallPlanLifetimePrice = "$29.99 one-time",
+    paywallPlanLifetimeSub = "Pay once — Cherish love forever",
+    paywallPlanLifetimeBadge = "LIFETIME",
+    paywallBtnTrial = "🎁 START 3-DAY FREE TRIAL",
+    paywallBtnMonthly = "💳 SUBSCRIBE MONTHLY NOW",
+    paywallBtnLifetime = "👑 UPGRADE LIFETIME NOW",
+    paywallBtnRestore = "Restore Purchases",
+    paywallBtnManage = "Manage Subscriptions on Google Play",
+    paywallTerms = "Terms of Service",
+    paywallPrivacy = "Privacy Policy",
+
+    // Auth
+    authLoginTitle = "Sign In to InLove",
+    authRegisterTitle = "Create InLove Account",
+    authEmailLabel = "Email address",
+    authPasswordLabel = "Password",
+    authConfirmPasswordLabel = "Confirm password",
+    authForgotPassword = "Forgot password?",
+    authBtnLogin = "Sign In",
+    authBtnRegister = "Create Account",
+    authBtnGuest = "Continue as Guest",
+    authSwitchToRegister = "Don't have an account? Sign up",
+    authSwitchToLogin = "Already have an account? Sign in"
   )
 }

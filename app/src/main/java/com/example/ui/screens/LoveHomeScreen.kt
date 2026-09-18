@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedContent
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,7 +50,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -97,6 +99,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.sin
@@ -109,6 +112,9 @@ import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
 import com.example.ui.theme.Secondary
+import com.example.ui.theme.CardBorder
+import com.example.ui.theme.TextDarkPlum
+import com.example.ui.theme.TextSubtlePlum
 import com.example.ui.viewmodel.InLoveViewModel
 
 // High-quality romantic cherry blossom floral background
@@ -257,6 +263,19 @@ fun LoveHomeScreen(
     label = "animated_milestone_progress"
   )
 
+  // Responsive dimension calculations for optimal mobile rendering
+  val screenConfig = androidx.compose.ui.platform.LocalConfiguration.current
+  val isCompactScreen = screenConfig.screenWidthDp < 390 || screenConfig.screenHeightDp < 750
+  val counterBoxSize = if (isCompactScreen) 198.dp else 222.dp
+  val counterSurfaceSize = counterBoxSize - 22.dp
+  val daysCountFontSize = if (isCompactScreen) 46.sp else 54.sp
+  val daysCountLineHeight = if (isCompactScreen) 48.sp else 56.sp
+  val daysTitleFontSize = if (isCompactScreen) 16.sp else 18.sp
+  val daysInLoveLabelSize = if (isCompactScreen) 13.sp else 14.5.sp
+  val avatarOuterSize = if (isCompactScreen) 62.dp else 70.dp
+  val avatarInnerSize = avatarOuterSize - 4.dp
+  val centerHeartSize = if (isCompactScreen) 44.dp else 50.dp
+
   // Trigger floating heart celebration overlay whenever a milestone anniversary is reached
   val isMilestoneReached = (loveDays > 0 && loveDays % 100 == 0)
   LaunchedEffect(loveDays) {
@@ -274,17 +293,17 @@ fun LoveHomeScreen(
       modifier = Modifier.fillMaxSize()
     )
 
-    // Soft pastel romantic dreamy gradient overlay for delicate contrast
+    // Soft pearl and romantic dreamy gradient overlay ensuring high contrast and readability over any wallpaper
     Box(
       modifier = Modifier
         .fillMaxSize()
         .background(
           Brush.verticalGradient(
             listOf(
-              Color(0x35FFB6C1), // Soft Pastel Rose Pink
-              Color(0x22FFE4E1), // Misty Rose Cream
-              Color(0x38F8BBD0), // Soft Strawberry Pastel
-              Color(0xF2FFF0F5)  // Lavender Blush Base
+              Color(0x70FFF5F8), // Soft Pearl Rose Scrim (high readability)
+              Color(0x55FFE4E1), // Misty Rose Cream
+              Color(0x75FCE4EC), // Soft Strawberry Pastel
+              Color(0xF5FFF0F5)  // Solid Lavender Blush Base
             )
           )
         )
@@ -300,28 +319,28 @@ fun LoveHomeScreen(
       modifier = Modifier
         .fillMaxSize()
         .verticalScroll(scrollState)
-        .padding(horizontal = 14.dp, vertical = 6.dp)
-        .padding(bottom = 90.dp),
+        .padding(horizontal = 12.dp, vertical = 4.dp)
+        .padding(bottom = 20.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       // Top Quick Action Bar: Symmetrical, cohesive, soft pastel glassmorphic card
       Surface(
-        shape = RoundedCornerShape(22.dp),
-        color = Color.White.copy(alpha = 0.96f),
-        shadowElevation = 5.dp,
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White.copy(alpha = 0.98f),
+        shadowElevation = 4.dp,
         modifier = Modifier
           .fillMaxWidth()
           .border(
             width = 1.2.dp,
-            color = Color(0xFFFFC6DB),
-            shape = RoundedCornerShape(22.dp)
+            color = CardBorder,
+            shape = RoundedCornerShape(20.dp)
           )
           .padding(vertical = 2.dp)
       ) {
         Row(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 8.dp),
+            .padding(horizontal = 4.dp, vertical = 6.dp),
           horizontalArrangement = Arrangement.SpaceAround,
           verticalAlignment = Alignment.CenterVertically
         ) {
@@ -330,7 +349,8 @@ fun LoveHomeScreen(
             icon = Icons.Rounded.Favorite,
             label = strings.actionWallpaper,
             onClick = { viewModel.openWallpaperDialog() },
-            testTag = "btn_quick_wallpaper"
+            testTag = "btn_quick_wallpaper",
+            modifier = Modifier.weight(1f)
           )
 
           // 2. Capture / Save Memory
@@ -338,23 +358,26 @@ fun LoveHomeScreen(
             icon = Icons.Filled.CameraAlt,
             label = strings.actionMemory,
             onClick = { viewModel.openMemoryDialog() },
-            testTag = "btn_quick_memory"
+            testTag = "btn_quick_memory",
+            modifier = Modifier.weight(1f)
           )
 
-          // 3. Edit Partner / Companion Profile (Holding Heart Icon from Extended Icons)
+          // 3. Edit Partner / Companion Profile
           HomeQuickActionButton(
             icon = Icons.Filled.VolunteerActivism,
             label = strings.actionCouple,
             onClick = { viewModel.openEditCoupleDialog() },
-            testTag = "btn_quick_couple"
+            testTag = "btn_quick_couple",
+            modifier = Modifier.weight(1f)
           )
 
           // 4. User Guide
           HomeQuickActionButton(
-            icon = Icons.Filled.MenuBook,
+            icon = Icons.AutoMirrored.Filled.MenuBook,
             label = strings.actionGuide,
             onClick = { viewModel.openGuideDialog() },
-            testTag = "btn_quick_guide"
+            testTag = "btn_quick_guide",
+            modifier = Modifier.weight(1f)
           )
 
           // 5. Language Switcher (VI / EN)
@@ -362,7 +385,8 @@ fun LoveHomeScreen(
             icon = Icons.Filled.Language,
             label = if (appLanguage == AppLanguage.VI) "VI 🇻🇳" else "EN 🇬🇧",
             onClick = { viewModel.openLanguageDialog() },
-            testTag = "btn_quick_language"
+            testTag = "btn_quick_language",
+            modifier = Modifier.weight(1f)
           )
         }
       }
@@ -403,7 +427,8 @@ fun LoveHomeScreen(
               Text(
                 text = "Bấm vào đây để nhập tên & ngày sinh (tuổi & cung hoàng đạo sẽ tự động tính!)",
                 fontSize = 11.sp,
-                color = Color.DarkGray
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF4E1D00)
               )
             }
           }
@@ -488,15 +513,15 @@ fun LoveHomeScreen(
             Text(
               text = "Ghép đôi 1-1 (Set Love) để đồng bộ ngày yêu cùng người ấy",
               fontSize = 12.sp,
-              fontWeight = FontWeight.SemiBold,
-              color = Color(0xFF880E4F),
+              fontWeight = FontWeight.Bold,
+              color = TextDarkPlum,
               modifier = Modifier.weight(1f)
             )
             Text(
               text = "Bấm để ghép >",
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color(0xFFE91E63)
+              fontSize = 11.5.sp,
+              fontWeight = FontWeight.ExtraBold,
+              color = Primary
             )
           }
         }
@@ -506,7 +531,7 @@ fun LoveHomeScreen(
       Surface(
         shape = RoundedCornerShape(50.dp),
         color = Color(0xFFFFF0F5).copy(alpha = 0.95f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFC6DB)),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
         shadowElevation = 3.dp,
         modifier = Modifier.padding(bottom = 6.dp)
       ) {
@@ -525,7 +550,7 @@ fun LoveHomeScreen(
             text = "GẮN KẾT YÊU THƯƠNG",
             fontSize = 11.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFFC2185B),
+            color = Color(0xFF880E4F),
             letterSpacing = 1.sp
           )
           Icon(
@@ -541,7 +566,7 @@ fun LoveHomeScreen(
       Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-          .size(240.dp)
+          .size(counterBoxSize)
           .clickable {
             viewModel.triggerFloatingHearts()
             viewModel.showToast("Bên nhau $loveDays ngày hạnh phúc vô bờ! ❤️")
@@ -550,7 +575,7 @@ fun LoveHomeScreen(
       ) {
         // Glowing animated circular progress ring with soft rotating pastel aura
         Canvas(modifier = Modifier.fillMaxSize()) {
-          val strokeWidth = 6.dp.toPx()
+          val strokeWidth = 5.dp.toPx()
           // Background soft ring
           drawCircle(
             color = Color(0xFFFFE4EE).copy(alpha = 0.85f),
@@ -579,8 +604,8 @@ fun LoveHomeScreen(
         Surface(
           shape = CircleShape,
           color = Color.White.copy(alpha = 0.98f),
-          shadowElevation = 10.dp,
-          modifier = Modifier.size(218.dp)
+          shadowElevation = 8.dp,
+          modifier = Modifier.size(counterSurfaceSize)
         ) {
           Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -590,17 +615,17 @@ fun LoveHomeScreen(
             // Love title with romantic heart borders
             Row(
               verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(6.dp)
+              horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
               Icon(
                 imageVector = Icons.Outlined.FavoriteBorder,
                 contentDescription = null,
                 tint = Color(0xFFFF80AB),
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(14.dp)
               )
               Text(
                 text = loveTitle,
-                fontSize = 20.sp,
+                fontSize = daysTitleFontSize,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
                 letterSpacing = 0.5.sp
@@ -609,7 +634,7 @@ fun LoveHomeScreen(
                 imageVector = Icons.Filled.Favorite,
                 contentDescription = null,
                 tint = Primary,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(14.dp)
               )
             }
 
@@ -618,10 +643,10 @@ fun LoveHomeScreen(
             // Big Days Count in High Contrast
             Text(
               text = "$animatedLoveDays",
-              fontSize = 64.sp,
+              fontSize = daysCountFontSize,
               fontWeight = FontWeight.ExtraBold,
-              color = Color(0xFF26071B),
-              lineHeight = 66.sp
+              color = TextDarkPlum,
+              lineHeight = daysCountLineHeight
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -634,21 +659,21 @@ fun LoveHomeScreen(
                 imageVector = Icons.Filled.VolunteerActivism,
                 contentDescription = null,
                 tint = Color(0xFFFF4081),
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(14.dp)
               )
-              Spacer(modifier = Modifier.width(4.dp))
+              Spacer(modifier = Modifier.width(3.dp))
               Text(
                 text = strings.daysInLove,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFC2185B)
+                fontSize = daysInLoveLabelSize,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF880E4F)
               )
-              Spacer(modifier = Modifier.width(4.dp))
+              Spacer(modifier = Modifier.width(3.dp))
               Icon(
                 imageVector = Icons.Rounded.Favorite,
                 contentDescription = null,
                 tint = HotPink,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(12.dp)
               )
             }
           }
@@ -661,9 +686,9 @@ fun LoveHomeScreen(
       Card(
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
-          containerColor = Color.White.copy(alpha = 0.96f)
+          containerColor = Color.White.copy(alpha = 0.98f)
         ),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFFC6DB)),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         modifier = Modifier
           .fillMaxWidth()
@@ -674,7 +699,7 @@ fun LoveHomeScreen(
         Row(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 14.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically
         ) {
@@ -687,15 +712,15 @@ fun LoveHomeScreen(
               .testTag("current_user_profile_col")
           ) {
             Box(
-              modifier = Modifier.size(76.dp),
+              modifier = Modifier.size(avatarOuterSize),
               contentAlignment = Alignment.Center
             ) {
               Box(
                 modifier = Modifier
-                  .size(72.dp)
+                  .size(avatarInnerSize)
                   .clip(CircleShape)
-                  .border(2.5.dp, Color(0xFF81D4FA), CircleShape)
-                  .shadow(4.dp, CircleShape)
+                  .border(2.dp, Color(0xFF81D4FA), CircleShape)
+                  .shadow(3.dp, CircleShape)
               ) {
                 AsyncImage(
                   model = currentOnlineUser.avatarUrl.ifEmpty { boyAvatarUrl },
@@ -707,7 +732,7 @@ fun LoveHomeScreen(
               // Mini edit badge
               Box(
                 modifier = Modifier
-                  .size(22.dp)
+                  .size(20.dp)
                   .align(Alignment.BottomEnd)
                   .clip(CircleShape)
                   .background(Color(0xFFE0F7FA))
@@ -718,21 +743,21 @@ fun LoveHomeScreen(
                   imageVector = Icons.Default.Edit,
                   contentDescription = "Chỉnh sửa hồ sơ",
                   tint = Color(0xFF00ACC1),
-                  modifier = Modifier.size(12.dp)
+                  modifier = Modifier.size(11.dp)
                 )
               }
             }
 
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
               text = currentOnlineUser.effectiveDisplayName,
-              fontSize = 15.sp,
+              fontSize = 14.sp,
               fontWeight = FontWeight.Bold,
-              color = Color(0xFF26071B)
+              color = TextDarkPlum
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
             // Badges: Soft Pastel Age & Zodiac (Auto calculated)
             Row(
@@ -760,9 +785,9 @@ fun LoveHomeScreen(
                   Text(
                     text = if (currentOnlineUser.age > 0) "${currentOnlineUser.age}t" else "$boyAge t",
                     color = Color(0xFF00838F),
-                    fontSize = 11.sp,
+                    fontSize = 10.5.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                   )
                 }
 
@@ -775,31 +800,31 @@ fun LoveHomeScreen(
                     color = Color(0xFF7B1FA2),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                   )
                 }
               }
             }
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-              text = if (currentOnlineUser.birthDate.isNotBlank()) currentOnlineUser.birthDate else "Bấm để cài đặt",
-              fontSize = 11.sp,
+              text = currentOnlineUser.birthDate.ifBlank { "Bấm để cài đặt" },
+              fontSize = 10.5.sp,
               fontWeight = FontWeight.Medium,
-              color = Color(0xFF6B2B50)
+              color = TextSubtlePlum
             )
           }
 
           // Center: Beating Romantic Heart Button with Dual Love Expanding Waves
           Box(
-            modifier = Modifier.size(76.dp),
+            modifier = Modifier.size(avatarOuterSize),
             contentAlignment = Alignment.Center
           ) {
             // Expanding Heartbeat Ripple 1
             Box(
               modifier = Modifier
-                .size(52.dp)
+                .size(centerHeartSize)
                 .scale(ripple1Scale)
                 .clip(CircleShape)
                 .background(Color(0xFFFF80AB).copy(alpha = ripple1Alpha))
@@ -807,7 +832,7 @@ fun LoveHomeScreen(
             // Expanding Heartbeat Ripple 2
             Box(
               modifier = Modifier
-                .size(52.dp)
+                .size(centerHeartSize)
                 .scale(ripple2Scale)
                 .clip(CircleShape)
                 .background(Color(0xFFFFB6C1).copy(alpha = ripple2Alpha))
@@ -816,14 +841,14 @@ fun LoveHomeScreen(
             Box(
               modifier = Modifier
                 .scale(pulseScale)
-                .size(52.dp)
+                .size(centerHeartSize)
                 .clip(CircleShape)
                 .background(
                   Brush.linearGradient(
                     listOf(RoseGradientStart, RoseGradientMid)
                   )
                 )
-                .shadow(6.dp, CircleShape)
+                .shadow(4.dp, CircleShape)
                 .clickable {
                   viewModel.triggerFloatingHearts()
                   if (isCoupled) {
@@ -840,7 +865,7 @@ fun LoveHomeScreen(
                 imageVector = Icons.Filled.Favorite,
                 contentDescription = "Trái tim tình yêu",
                 tint = Color.White,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(22.dp)
               )
             }
           }
@@ -855,15 +880,15 @@ fun LoveHomeScreen(
                 .testTag("partner_user_profile_col")
             ) {
               Box(
-                modifier = Modifier.size(76.dp),
+                modifier = Modifier.size(avatarOuterSize),
                 contentAlignment = Alignment.Center
               ) {
                 Box(
                   modifier = Modifier
-                    .size(72.dp)
+                    .size(avatarInnerSize)
                     .clip(CircleShape)
-                    .border(2.5.dp, Color(0xFFFF80AB), CircleShape)
-                    .shadow(4.dp, CircleShape)
+                    .border(2.dp, Color(0xFFFF80AB), CircleShape)
+                    .shadow(3.dp, CircleShape)
                 ) {
                   AsyncImage(
                     model = partnerUser!!.avatarUrl.ifEmpty { girlAvatarUrl },
@@ -875,138 +900,138 @@ fun LoveHomeScreen(
                 // Mini floating heart badge
                 Box(
                   modifier = Modifier
-                    .size(22.dp)
+                    .size(20.dp)
                     .align(Alignment.BottomEnd)
                     .clip(CircleShape)
                     .background(Color(0xFFFCE4EC))
                     .border(1.5.dp, Color.White, CircleShape),
-                  contentAlignment = Alignment.Center
-                ) {
-                  Icon(
-                    imageVector = Icons.Rounded.Favorite,
-                    contentDescription = null,
-                    tint = Color(0xFFFF4081),
-                    modifier = Modifier.size(12.dp)
-                  )
-                }
-              }
-
-              Spacer(modifier = Modifier.height(5.dp))
-
-              Text(
-                text = partnerUser!!.displayName,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF26071B)
-              )
-
-              Spacer(modifier = Modifier.height(4.dp))
-
-              // Badges: Soft Pastel Age & Zodiac
-              Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFFCE4EC)
-                ) {
-                  Text(
-                    text = if (partnerUser!!.age > 0) "${partnerUser!!.age}t" else "$girlAge t",
-                    color = Color(0xFFC2185B),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                  )
-                }
-
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFFFF0F5)
-                ) {
-                  Text(
-                    text = partnerUser!!.zodiac.ifEmpty { girlZodiac },
-                    color = Color(0xFFAD1457),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                  )
-                }
-              }
-
-              Spacer(modifier = Modifier.height(3.dp))
-
-              Text(
-                text = partnerUser!!.birthDate.ifEmpty { girlBirthDate },
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF6B2B50)
-              )
-            }
-          } else {
-            // Uncoupled / Waiting Partner State
-            Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier
-                .weight(1f)
-                .clickable { viewModel.openPairingScreen() }
-                .testTag("partner_waiting_placeholder_col")
-            ) {
-              Box(
-                modifier = Modifier.size(76.dp),
                 contentAlignment = Alignment.Center
               ) {
-                Box(
-                  modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFFF0F5))
-                    .border(2.dp, Color(0xFFFF80AB), CircleShape),
-                  contentAlignment = Alignment.Center
-                ) {
-                  Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Thêm người ấy",
-                    tint = Color(0xFFE91E63),
-                    modifier = Modifier.size(32.dp)
-                  )
-                }
+                Icon(
+                  imageVector = Icons.Rounded.Favorite,
+                  contentDescription = null,
+                  tint = Color(0xFFFF4081),
+                  modifier = Modifier.size(11.dp)
+                )
               }
+            }
 
-              Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-              Text(
-                text = "Chờ người ấy",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF880E4F)
-              )
+            Text(
+              text = partnerUser!!.displayName,
+              fontSize = 14.sp,
+              fontWeight = FontWeight.Bold,
+              color = TextDarkPlum
+            )
 
-              Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
+            // Badges: Soft Pastel Age & Zodiac
+            Row(
+              horizontalArrangement = Arrangement.spacedBy(4.dp),
+              verticalAlignment = Alignment.CenterVertically
+            ) {
               Surface(
                 shape = RoundedCornerShape(50.dp),
-                color = Color(0xFFFFEBEE)
+                color = Color(0xFFFCE4EC)
               ) {
                 Text(
-                  text = "+ Ghép Đôi 1-1",
-                  color = Color(0xFFE91E63),
-                  fontSize = 10.sp,
+                  text = if (partnerUser!!.age > 0) "${partnerUser!!.age}t" else "$girlAge t",
+                  color = Color(0xFFC2185B),
+                  fontSize = 10.5.sp,
                   fontWeight = FontWeight.Bold,
-                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                  modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
               }
 
-              Spacer(modifier = Modifier.height(3.dp))
+              Surface(
+                shape = RoundedCornerShape(50.dp),
+                color = Color(0xFFFFF0F5)
+              ) {
+                Text(
+                  text = partnerUser!!.zodiac.ifEmpty { girlZodiac },
+                  color = Color(0xFFAD1457),
+                  fontSize = 10.sp,
+                  fontWeight = FontWeight.SemiBold,
+                  modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+              }
+            }
 
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+              text = partnerUser!!.birthDate.ifEmpty { girlBirthDate },
+              fontSize = 10.5.sp,
+              fontWeight = FontWeight.Medium,
+              color = TextSubtlePlum
+            )
+          }
+        } else {
+          // Uncoupled / Waiting Partner State
+          Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+              .weight(1f)
+              .clickable { viewModel.openPairingScreen() }
+              .testTag("partner_waiting_placeholder_col")
+          ) {
+            Box(
+              modifier = Modifier.size(avatarOuterSize),
+              contentAlignment = Alignment.Center
+            ) {
+              Box(
+                modifier = Modifier
+                  .size(avatarInnerSize)
+                  .clip(CircleShape)
+                  .background(Color(0xFFFFF0F5))
+                  .border(2.dp, Color(0xFFFF80AB), CircleShape),
+                contentAlignment = Alignment.Center
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Add,
+                  contentDescription = "Thêm người ấy",
+                  tint = Color(0xFFE91E63),
+                  modifier = Modifier.size(26.dp)
+                )
+              }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+              text = "Chờ người ấy",
+              fontSize = 13.5.sp,
+              fontWeight = FontWeight.Bold,
+              color = TextDarkPlum
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Surface(
+              shape = RoundedCornerShape(50.dp),
+              color = Color(0xFFFFEBEE)
+            ) {
               Text(
-                text = "Nhập mã hoặc link",
+                text = "+ Ghép Đôi 1-1",
+                color = Color(0xFFE91E63),
                 fontSize = 10.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color.Gray
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
               )
             }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+              text = "Nhập mã hoặc link",
+              fontSize = 10.sp,
+              fontWeight = FontWeight.Medium,
+              color = TextSubtlePlum
+            )
           }
+        }
         }
       }
 
@@ -1063,7 +1088,7 @@ fun LoveHomeScreen(
         colors = CardDefaults.cardColors(
           containerColor = Color.White.copy(alpha = 0.98f)
         ),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFFC6DB)),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         modifier = Modifier
           .fillMaxWidth()
@@ -1106,7 +1131,7 @@ fun LoveHomeScreen(
                   text = String.format(strings.nextMilestoneTitle, nextMilestone),
                   fontSize = 16.sp,
                   fontWeight = FontWeight.Bold,
-                  color = Color(0xFF26071B)
+                  color = TextDarkPlum
                 )
               }
             }
@@ -1139,7 +1164,7 @@ fun LoveHomeScreen(
               text = strings.progressTowards,
               fontSize = 11.sp,
               fontWeight = FontWeight.Medium,
-              color = Color(0xFF6B2B50)
+              color = TextSubtlePlum
             )
             Text(
               text = "${(milestoneProgress * 100).toInt()}% ($loveDays / $nextMilestone)",
@@ -1173,8 +1198,9 @@ fun LoveHomeScreen(
             Text(
               text = String.format(strings.romanticAdviceFormat, daysRemaining, nextMilestone, girlName),
               fontSize = 12.sp,
-              lineHeight = 17.sp,
-              color = Color(0xFF4A0023),
+              lineHeight = 18.sp,
+              fontWeight = FontWeight.Medium,
+              color = TextDarkPlum,
               modifier = Modifier.padding(10.dp)
             )
           }
@@ -1290,7 +1316,7 @@ fun LoveHomeScreen(
         colors = CardDefaults.cardColors(
           containerColor = Color.White.copy(alpha = 0.98f)
         ),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFFC6DB)),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         modifier = Modifier
           .fillMaxWidth()
@@ -1333,7 +1359,7 @@ fun LoveHomeScreen(
                   text = strings.quoteSectionTitle,
                   fontSize = 15.sp,
                   fontWeight = FontWeight.Bold,
-                  color = Color(0xFF26071B)
+                  color = TextDarkPlum
                 )
               }
             }
@@ -1384,7 +1410,7 @@ fun LoveHomeScreen(
                   fontStyle = FontStyle.Italic,
                   fontWeight = FontWeight.Medium,
                   lineHeight = 20.sp,
-                  color = Color(0xFF330922)
+                  color = TextDarkPlum
                 )
               }
             }
@@ -1482,14 +1508,15 @@ fun HomeQuickActionButton(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
     modifier = modifier
-      .clip(RoundedCornerShape(16.dp))
+      .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+      .clip(RoundedCornerShape(14.dp))
       .clickable { onClick() }
-      .padding(horizontal = 6.dp, vertical = 4.dp)
+      .padding(horizontal = 2.dp, vertical = 4.dp)
       .testTag(testTag)
   ) {
     Box(
       modifier = Modifier
-        .size(38.dp)
+        .size(36.dp)
         .clip(CircleShape)
         .background(
           Brush.linearGradient(
@@ -1503,16 +1530,17 @@ fun HomeQuickActionButton(
         imageVector = icon,
         contentDescription = label,
         tint = Color.White,
-        modifier = Modifier.size(18.dp)
+        modifier = Modifier.size(17.dp)
       )
     }
-    Spacer(modifier = Modifier.height(4.dp))
+    Spacer(modifier = Modifier.height(3.dp))
     Text(
       text = label,
-      fontSize = 11.sp,
+      fontSize = 10.sp,
       fontWeight = FontWeight.Bold,
-      color = Color(0xFF26071B),
-      maxLines = 1
+      color = TextDarkPlum,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis
     )
   }
 }

@@ -6,9 +6,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Note: Google Play restricts USE_EXACT_ALARM strictly to Alarm Clock/Timer apps.
+         Using SCHEDULE_EXACT_ALARM ensures 100% Google Play compliance for reminder/calendar apps. -->
+    <!-- <uses-permission android:name="android.permission.USE_EXACT_ALARM" /> -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Google Play Billing permission for In-App Purchases & Subscriptions -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:allowBackup="true"
@@ -19,6 +24,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
+
+        <!-- Google Mobile Ads (AdMob) Application ID
+             ⚠️ PRODUCTION: Thay ca-app-pub-3940256099942544~3347511713 bằng App ID thật từ AdMob Console.
+             Giá trị hiện tại là Google Test App ID — an toàn trong môi trường dev/test. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

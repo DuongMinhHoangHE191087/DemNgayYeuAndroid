@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example
 
 import android.os.Bundle
@@ -29,7 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.repository.AuthState
-import com.example.ui.components.AdBannerPlaceholder
 import com.example.ui.components.DigitalTrophyRewardDialog
 import com.example.ui.components.FloatingHeartsOverlay
 import com.example.ui.components.InLoveBottomNav
@@ -51,6 +51,7 @@ import com.example.ui.screens.GiftScreen
 import com.example.ui.screens.LanguageSelectionDialog
 import com.example.ui.screens.LoveHomeScreen
 import com.example.ui.screens.MemoriesGridScreen
+import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.PairingScreen
 import com.example.ui.screens.ReminderScreen
 import com.example.ui.screens.SettingsScreen
@@ -61,6 +62,8 @@ import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.Surface
 import com.example.ui.theme.SurfaceContainerLowest
 import com.example.ui.util.AppLanguage
+import com.example.ui.components.ComposeBannerAd
+import com.example.ui.screens.PaywallScreen
 import com.example.ui.util.LocalizedStrings
 import com.example.ui.viewmodel.InLoveViewModel
 
@@ -68,6 +71,16 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+
+    // Khởi tạo AppServiceLocator & Ads / Billing Services
+    com.example.di.AppServiceLocator.initialize(applicationContext)
+    val adsManager = com.example.di.AppServiceLocator.adsManager
+    adsManager.initialize(this)
+    adsManager.registerAppOpenAdLifecycle(application)
+    adsManager.preloadInterstitial(this, "ca-app-pub-3940256099942544/1033173712") // Test Interstitial ID
+    adsManager.preloadAppOpenAd(this, "ca-app-pub-3940256099942544/9257395921")   // Test App Open ID
+    com.example.di.AppServiceLocator.billingManager.startBillingConnection()
+
     setContent {
       androidx.compose.runtime.CompositionLocalProvider(
         androidx.activity.compose.LocalActivityResultRegistryOwner provides this
@@ -93,6 +106,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val showAddAnniversaryDialog by viewModel.showAddAnniversaryDialog.collectAsState()
   val showAddGiftReminderDialog by viewModel.showAddGiftReminderDialog.collectAsState()
   val showEditCoupleDialog by viewModel.showEditCoupleDialog.collectAsState()
+  val showAuthScreen by viewModel.showAuthScreen.collectAsState()
   val selectedGiftDetail by viewModel.selectedGiftDetail.collectAsState()
   val showVipProposalDetail by viewModel.showVipProposalDetail.collectAsState()
 
@@ -105,11 +119,13 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val loveDays by viewModel.loveDays.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
   val selectedWallpaperUrl by viewModel.selectedWallpaperUrl.collectAsState()
+  val presetWallpapers by viewModel.presetWallpapers.collectAsState()
+  val presetPhotos by viewModel.presetPhotos.collectAsState()
 
   val locale = remember(appLanguage) {
     when (appLanguage) {
-      AppLanguage.VI -> java.util.Locale("vi")
-      AppLanguage.EN -> java.util.Locale("en")
+      AppLanguage.VI -> java.util.Locale.forLanguageTag("vi")
+      AppLanguage.EN -> java.util.Locale.forLanguageTag("en")
     }
   }
   val currentConfig = androidx.compose.ui.platform.LocalConfiguration.current
@@ -159,6 +175,9 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     val authState by viewModel.authState.collectAsState()
+    val isVip by viewModel.isVip.collectAsState()
+    val showVipDialog by viewModel.showVipDialog.collectAsState()
+    val currentTier by viewModel.subscriptionTier.collectAsState()
 
     LaunchedEffect(toastMessage) {
       toastMessage?.let { msg ->
@@ -217,15 +236,24 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       else -> strings.navSettings
     }
 
-    when (val currentAuth = authState) {
-      is AuthState.Unauthenticated -> {
-        AuthScreen(viewModel = viewModel)
-      }
-      is AuthState.PinLocked -> {
-        AppPinLockScreen(account = currentAuth.account, viewModel = viewModel)
-      }
-      is AuthState.Authenticated -> {
-        Box(
+    val isFirstLaunch by viewModel.isFirstLaunch.collectAsState()
+
+    if (isFirstLaunch) {
+      OnboardingScreen(
+        viewModel = viewModel,
+        onFinishOnboarding = {
+          viewModel.completeFirstLaunch()
+        }
+      )
+    } else if (showAuthScreen) {
+      AuthScreen(
+        viewModel = viewModel,
+        onBackToGuest = { viewModel.closeAuthScreen() }
+      )
+    } else if (authState is AuthState.PinLocked) {
+      AppPinLockScreen(account = (authState as AuthState.PinLocked).account, viewModel = viewModel)
+    } else {
+      Box(
           modifier = Modifier
             .fillMaxSize()
             .background(
@@ -249,10 +277,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
               .statusBarsPadding()
               .padding(top = 4.dp, bottom = 2.dp)
           ) {
-            AdBannerPlaceholder(
-              onClick = {
-                viewModel.showToast(strings.adPlaceholderNotice)
-              }
+            ComposeBannerAd(
+              isVip = isVip
             )
           }
         } else {
@@ -268,11 +294,9 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
               }
             )
 
-            // Khoảng trắng phía trên ứng dụng dành cho Plugin Quảng Cáo
-            AdBannerPlaceholder(
-              onClick = {
-                viewModel.showToast(strings.adPlaceholderNotice)
-              }
+            // Khoảng trắng phía trên ứng dụng dành cho Banner Quảng Cáo AdMob
+            ComposeBannerAd(
+              isVip = isVip
             )
           }
         }
@@ -442,6 +466,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       WallpaperPickerDialog(
         language = appLanguage,
         currentWallpaperUrl = selectedWallpaperUrl,
+        presetWallpapers = presetWallpapers,
         onApplyWallpaper = { url ->
           viewModel.setWallpaper(url)
         },
@@ -452,6 +477,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     if (showMemoryDialog) {
       CaptureMemoryDialog(
         language = appLanguage,
+        presetPhotos = presetPhotos,
         onSaveMemory = { note, photoUrl ->
           viewModel.saveMemory(note, photoUrl)
         },
@@ -500,17 +526,34 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsState()
     val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
+    val dynamicPresetAvatars by viewModel.presetAvatars.collectAsState()
     if (showEditProfileDialog) {
       EditMyProfileDialog(
         currentUser = currentOnlineUser,
+        presetAvatars = dynamicPresetAvatars,
         onDismiss = { viewModel.closeEditProfileDialog() },
         onSave = { name, birth, avatar, gender, bio ->
           viewModel.updateMyProfile(name, birth, avatar, gender, bio)
         }
       )
     }
+
+    if (showVipDialog) {
+      androidx.compose.ui.window.Dialog(
+        onDismissRequest = { viewModel.setVipDialogVisible(false) },
+        properties = androidx.compose.ui.window.DialogProperties(
+          usePlatformDefaultWidth = false,
+          dismissOnBackPress = true
+        )
+      ) {
+        PaywallScreen(
+          billingManager = com.example.di.AppServiceLocator.billingManager,
+          adsManager = com.example.di.AppServiceLocator.adsManager,
+          onDismiss = { viewModel.setVipDialogVisible(false) }
+        )
+      }
+    }
   }
-}
 }
 }
 }

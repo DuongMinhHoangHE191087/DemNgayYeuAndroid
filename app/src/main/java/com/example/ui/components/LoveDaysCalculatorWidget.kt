@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.EditCalendar
+import kotlin.time.Duration.Companion.seconds
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
@@ -215,7 +216,7 @@ fun LoveDaysCalculatorWidget(
   var currentTimestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
   LaunchedEffect(Unit) {
     while (true) {
-      delay(1000)
+      delay(1.seconds)
       currentTimestamp = System.currentTimeMillis()
     }
   }
@@ -273,12 +274,13 @@ fun LoveDaysCalculatorWidget(
               text = if (isVietnamese) "Bộ Đếm & Tính Ngày Yêu" else "Love Days Calculator",
               fontWeight = FontWeight.Bold,
               fontSize = 16.sp,
-              color = Color(0xFF26071B)
+              color = Color(0xFF1F0416)
             )
             Text(
               text = if (isVietnamese) "Tính toán chính xác thời gian bên nhau" else "Calculates total days & time together",
               fontSize = 11.sp,
-              color = Color(0xFF6B2B50)
+              fontWeight = FontWeight.Medium,
+              color = Color(0xFF4A1934)
             )
           }
         }
@@ -343,7 +345,7 @@ fun LoveDaysCalculatorWidget(
               text = if (isVietnamese) "Ngày bắt đầu yêu:" else "Anniversary Start:",
               fontSize = 12.sp,
               fontWeight = FontWeight.Medium,
-              color = Color(0xFF6B2B50)
+              color = Color(0xFF4A1934)
             )
             Text(
               text = anniversaryDate,
@@ -411,7 +413,7 @@ fun LoveDaysCalculatorWidget(
             text = "%,d".format(breakdown.totalDays),
             fontSize = 44.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF26071B),
+            color = Color(0xFF1F0416),
             lineHeight = 46.sp
           )
 
@@ -423,7 +425,7 @@ fun LoveDaysCalculatorWidget(
             },
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF6B2B50),
+            color = Color(0xFF4A1934),
             textAlign = TextAlign.Center
           )
         }
@@ -740,9 +742,9 @@ private fun ManualDateInputDialog(
 
         Text(
           text = if (isVietnamese) {
-            "Nhập ngày hai bạn chính thức yêu nhau (định dạng ngày/tháng/năm, ví dụ: 18/12/2022)."
+            "Nhập ngày hai bạn chính thức yêu nhau (định dạng ngày/tháng/năm, ví dụ: 14/02/2023)."
           } else {
-            "Enter your relationship start date (format dd/MM/yyyy, e.g. 18/12/2022)."
+            "Enter your relationship start date (format dd/MM/yyyy, e.g. 14/02/2023)."
           },
           fontSize = 12.sp,
           color = Color(0xFF6B2B50)
@@ -755,7 +757,7 @@ private fun ManualDateInputDialog(
             isError = false
           },
           label = if (isVietnamese) "Ngày bắt đầu (dd/MM/yyyy) *" else "Start Date (dd/MM/yyyy) *",
-          placeholder = "18/12/2022",
+          placeholder = "dd/MM/yyyy",
           dialogTitle = if (isVietnamese) "Chọn Ngày Bắt Đầu Yêu" else "Select Start Date",
           quickPresets = DatePickerPresets.relationshipStartDatePresets(),
           helperText = DatePickerUtils.getFriendlyDateDescription(dateText),
@@ -774,7 +776,7 @@ private fun ManualDateInputDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-          val presets = listOf("18/12/2022", "14/02/2023", "20/10/2021")
+          val presets = listOf("14/02/2023", "20/10/2022", "08/03/2024")
           presets.forEach { preset ->
             Surface(
               shape = RoundedCornerShape(50.dp),

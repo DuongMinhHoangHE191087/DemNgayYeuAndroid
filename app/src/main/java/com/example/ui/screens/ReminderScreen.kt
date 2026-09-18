@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -32,7 +33,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FeaturedPlayList
+import androidx.compose.material.icons.automirrored.filled.FeaturedPlayList
 import androidx.compose.material.icons.filled.FrontHand
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MarkEmailRead
@@ -93,6 +94,7 @@ import com.example.ui.theme.SurfaceContainerHighest
 import com.example.ui.theme.SurfaceContainerLow
 import com.example.ui.theme.SurfaceContainerLowest
 import com.example.ui.theme.Tertiary
+import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
 
 @Composable
@@ -104,13 +106,15 @@ fun ReminderScreen(
   val reminderCadences by viewModel.reminderCadences.collectAsState()
   val isAllRead by viewModel.isAllNotificationsRead.collectAsState()
   val sweetNoteLiked by viewModel.sweetNoteLiked.collectAsState()
+  val appLanguage by viewModel.appLanguage.collectAsState()
+  val isEnglish = appLanguage == AppLanguage.EN
 
   var reminderToDelete by remember { mutableStateOf<CustomReminderEntity?>(null) }
 
   reminderToDelete?.let { reminder ->
     DeleteConfirmationDialog(
-      title = "Xóa lời nhắc hẹn hò?",
-      message = "Bạn có chắc chắn muốn xóa lời nhắc này không? Lời nhắc và báo thức liên quan sẽ bị hủy bỏ hoàn toàn.",
+      title = if (isEnglish) "Delete Date Reminder?" else "Xóa lời nhắc hẹn hò?",
+      message = if (isEnglish) "Are you sure you want to delete this reminder? Related reminders and alarms will be cancelled." else "Bạn có chắc chắn muốn xóa lời nhắc này không? Lời nhắc và báo thức liên quan sẽ bị hủy bỏ hoàn toàn.",
       itemName = reminder.title,
       onConfirm = {
         viewModel.deleteCustomReminder(reminder.id)
@@ -148,7 +152,7 @@ fun ReminderScreen(
                 .background(Primary)
             )
             Text(
-              text = "THỜI GIAN THỰC",
+              text = if (isEnglish) "REAL-TIME" else "THỜI GIAN THỰC",
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
               color = Primary,
@@ -156,7 +160,7 @@ fun ReminderScreen(
             )
           }
           Text(
-            text = "Trung Tâm Nhắc Hẹn",
+            text = if (isEnglish) "Reminders Hub" else "Trung Tâm Nhắc Hẹn",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
@@ -187,7 +191,7 @@ fun ReminderScreen(
                 modifier = Modifier.size(16.dp)
               )
               Text(
-                text = if (isAllRead) "Đã xong" else "Đã đọc",
+                text = if (isAllRead) (if (isEnglish) "Done" else "Đã xong") else (if (isEnglish) "Mark Read" else "Đã đọc"),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = if (isAllRead) Primary else OnSurfaceVariant
@@ -197,7 +201,7 @@ fun ReminderScreen(
 
           // Notification config button
           IconButton(
-            onClick = { viewModel.showToast("Cài đặt thông báo sâu đang sẵn sàng") },
+            onClick = { viewModel.showToast(if (isEnglish) "Notification settings ready" else "Cài đặt thông báo sâu đang sẵn sàng") },
             modifier = Modifier
               .size(36.dp)
               .clip(CircleShape)
@@ -206,7 +210,7 @@ fun ReminderScreen(
           ) {
             Icon(
               imageVector = Icons.Filled.NotificationsActive,
-              contentDescription = "Cấu hình",
+              contentDescription = if (isEnglish) "Configure" else "Cấu hình",
               tint = Primary,
               modifier = Modifier.size(18.dp)
             )
@@ -252,7 +256,7 @@ fun ReminderScreen(
                 )
               }
               Text(
-                text = "Tần suất nhắc nhở tự động",
+                text = if (isEnglish) "Auto reminder frequency" else "Tần suất nhắc nhở tự động",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface
@@ -264,7 +268,7 @@ fun ReminderScreen(
               color = PrimaryFixed.copy(alpha = 0.5f)
             ) {
               Text(
-                text = "${reminderCadences.size} mốc chọn",
+                text = if (isEnglish) "${reminderCadences.size} options" else "${reminderCadences.size} mốc chọn",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
@@ -286,6 +290,7 @@ fun ReminderScreen(
                 rowItems.forEach { cadence ->
                   CadencePill(
                     cadence = cadence,
+                    isEnglish = isEnglish,
                     onToggle = { viewModel.toggleCadence(cadence) },
                     modifier = Modifier.weight(1f)
                   )
@@ -318,14 +323,14 @@ fun ReminderScreen(
               .background(Primary)
           )
           Text(
-            text = "Hôm Nay",
+            text = if (isEnglish) "Today" else "Hôm Nay",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
           )
         }
         Text(
-          text = "MỚI NHẤT",
+          text = if (isEnglish) "LATEST" else "MỚI NHẤT",
           fontSize = 11.sp,
           fontWeight = FontWeight.Bold,
           color = Primary,
@@ -373,7 +378,7 @@ fun ReminderScreen(
                   modifier = Modifier.size(15.dp)
                 )
                 Text(
-                  text = "CỘT MỐC VĨ ĐẠI",
+                  text = if (isEnglish) "GRAND MILESTONE" else "CỘT MỐC VĨ ĐẠI",
                   fontSize = 10.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color.White,
@@ -391,7 +396,7 @@ fun ReminderScreen(
           Spacer(modifier = Modifier.height(10.dp))
 
           Text(
-            text = "Sắp đến kỷ niệm 1.000 Ngày Yêu!",
+            text = if (isEnglish) "Approaching 1,000 Days of Love!" else "Sắp đến kỷ niệm 1.000 Ngày Yêu!",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -400,7 +405,7 @@ fun ReminderScreen(
           Spacer(modifier = Modifier.height(4.dp))
 
           Text(
-            text = "Chỉ còn 3 ngày (11/09/2026). Đừng quên chuẩn bị món quà đặc biệt và đặt bàn hẹn hò lãng mạn nhé!",
+            text = if (isEnglish) "Only 3 days left (11/09/2026). Don't forget to prepare a special gift and book a romantic table!" else "Chỉ còn 3 ngày (11/09/2026). Đừng quên chuẩn bị món quà đặc biệt và đặt bàn hẹn hò lãng mạn nhé!",
             fontSize = 13.sp,
             color = Color.White.copy(alpha = 0.9f),
             lineHeight = 18.sp
@@ -433,14 +438,17 @@ fun ReminderScreen(
                 )
               }
               Column {
+                val boy = viewModel.boyName.collectAsState().value
+                val girl = viewModel.girlName.collectAsState().value
+                val days = viewModel.loveDays.collectAsState().value
                 Text(
-                  text = "Đức Minh & Khánh Linh",
+                  text = "$boy & $girl",
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color.White
                 )
                 Text(
-                  text = "Khoảnh khắc gắn bó 1.000 ngày ngọt ngào",
+                  text = if (isEnglish) "Together for $days sweet days" else "Khoảnh khắc gắn bó $days ngày ngọt ngào",
                   fontSize = 11.sp,
                   color = Color.White.copy(alpha = 0.8f)
                 )
@@ -469,14 +477,14 @@ fun ReminderScreen(
                 horizontalArrangement = Arrangement.Center
               ) {
                 Icon(
-                  imageVector = Icons.Filled.FeaturedPlayList,
+                  imageVector = Icons.AutoMirrored.Filled.FeaturedPlayList,
                   contentDescription = null,
                   tint = Primary,
                   modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Gợi ý quà",
+                  text = if (isEnglish) "Gift Ideas" else "Gợi ý quà",
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
                   color = Primary
@@ -489,7 +497,7 @@ fun ReminderScreen(
               color = Color.White.copy(alpha = 0.25f),
               modifier = Modifier
                 .weight(1f)
-                .clickable { viewModel.showToast("Chuyển sang đặt bàn & không gian hẹn hò...") }
+                .clickable { viewModel.showToast(if (isEnglish) "Switching to booking & dating space..." else "Chuyển sang đặt bàn & không gian hẹn hò...") }
             ) {
               Row(
                 modifier = Modifier.padding(vertical = 11.dp),
@@ -504,7 +512,7 @@ fun ReminderScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Đặt lịch hẹn",
+                  text = if (isEnglish) "Book Date" else "Đặt lịch hẹn",
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color.White
@@ -552,7 +560,7 @@ fun ReminderScreen(
               horizontalArrangement = Arrangement.SpaceBetween
             ) {
               Text(
-                text = "TIN NHẮN YÊU THƯƠNG",
+                text = if (isEnglish) "SWEET LOVE NOTE" else "TIN NHẮN YÊU THƯƠNG",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Secondary,
@@ -568,7 +576,10 @@ fun ReminderScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-              text = "“Chào buổi sáng công chúa của anh, chúc em một ngày mới ngập tràn năng lượng và nụ cười rạng rỡ!”",
+              text = if (isEnglish)
+                "“Good morning my princess, wishing you a brand new day full of radiant energy and joy!”"
+              else
+                "“Chào buổi sáng công chúa của anh, chúc em một ngày mới ngập tràn năng lượng và nụ cười rạng rỡ!”",
               fontSize = 13.sp,
               fontStyle = FontStyle.Italic,
               color = OnSurface,
@@ -598,7 +609,11 @@ fun ReminderScreen(
                     modifier = Modifier.size(13.dp)
                   )
                   Text(
-                    text = if (sweetNoteLiked) "Đã thích ❤️ (2)" else "Thả tim (1)",
+                    text = if (sweetNoteLiked) {
+                      if (isEnglish) "Liked ❤️ (2)" else "Đã thích ❤️ (2)"
+                    } else {
+                      if (isEnglish) "Heart (1)" else "Thả tim (1)"
+                    },
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = Primary
@@ -607,7 +622,7 @@ fun ReminderScreen(
               }
 
               Text(
-                text = "Từ Anh yêu",
+                text = if (isEnglish) "From My Love" else "Từ Anh yêu",
                 fontSize = 11.sp,
                 color = OnSurfaceVariant
               )
@@ -635,14 +650,14 @@ fun ReminderScreen(
               .background(Secondary)
           )
           Text(
-            text = "Tuần Này",
+            text = if (isEnglish) "This Week" else "Tuần Này",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
           )
         }
         Text(
-          text = "2 thông báo",
+          text = if (isEnglish) "2 notifications" else "2 thông báo",
           fontSize = 12.sp,
           color = OnSurfaceVariant
         )
@@ -680,18 +695,19 @@ fun ReminderScreen(
           }
 
           Column(modifier = Modifier.weight(1f)) {
+            val partner = viewModel.girlName.collectAsState().value
             Row(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.SpaceBetween
             ) {
               Text(
-                text = "Sinh Nhật Khánh Linh",
+                text = if (isEnglish) "$partner's Birthday" else "Sinh Nhật $partner",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
               )
               Text(
-                text = "Hôm qua",
+                text = if (isEnglish) "Yesterday" else "Hôm qua",
                 fontSize = 10.sp,
                 color = Outline
               )
@@ -700,7 +716,10 @@ fun ReminderScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-              text = "Còn 15 ngày nữa là đến ngày đặc biệt của Khánh Linh (23/09). Hãy bắt đầu lên ý tưởng quà tặng và lên kế hoạch bí mật ngay!",
+              text = if (isEnglish)
+                "Coming up is $partner's special day. Start brainstorming gift ideas and prepare surprises now!"
+              else
+                "Sắp đến ngày đặc biệt của $partner. Hãy bắt đầu lên ý tưởng quà tặng và chuẩn bị bất ngờ ngay!",
               fontSize = 13.sp,
               color = OnSurface,
               lineHeight = 18.sp
@@ -712,12 +731,12 @@ fun ReminderScreen(
               shape = RoundedCornerShape(20.dp),
               color = PrimaryFixed.copy(alpha = 0.6f),
               modifier = Modifier.clickable {
-                viewModel.showToast("Đã lưu vào danh sách chuẩn bị quà sinh nhật")
+                viewModel.showToast(if (isEnglish) "Saved to birthday gift checklist" else "Đã lưu vào danh sách chuẩn bị quà sinh nhật")
                 onNavigateToGifts()
               }
             ) {
               Text(
-                text = "Lên danh sách quà",
+                text = if (isEnglish) "Plan gifts" else "Lên danh sách quà",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnPrimaryFixed,
@@ -766,28 +785,31 @@ fun ReminderScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
               ) {
                 Text(
-                  text = "KỶ NIỆM 1 NĂM TRƯỚC",
+                  text = if (isEnglish) "1 YEAR ANNIVERSARY FLASHBACK" else "KỶ NIỆM 1 NĂM TRƯỚC",
                   fontSize = 10.sp,
                   fontWeight = FontWeight.Bold,
                   color = Secondary,
                   letterSpacing = 0.5.sp
                 )
                 Text(
-                  text = "3 ngày trước",
+                  text = if (isEnglish) "3 days ago" else "3 ngày trước",
                   fontSize = 10.sp,
                   color = Outline
                 )
               }
               Spacer(modifier = Modifier.height(2.dp))
               Text(
-                text = "Hành trình du lịch Hội An",
+                text = if (isEnglish) "Hoi An Travel Journey" else "Hành trình du lịch Hội An",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface
               )
               Spacer(modifier = Modifier.height(2.dp))
               Text(
-                text = "Đúng ngày này 1 năm trước, hai bạn đã cùng nhau thả hoa đăng tại phố cổ Hội An dưới trăng rằm.",
+                text = if (isEnglish)
+                  "Exactly on this day 1 year ago, you released lanterns together in Hoi An ancient town under the full moon."
+                else
+                  "Đúng ngày này 1 năm trước, hai bạn đã cùng nhau thả hoa đăng tại phố cổ Hội An dưới trăng rằm.",
                 fontSize = 12.sp,
                 color = OnSurfaceVariant,
                 lineHeight = 17.sp
@@ -802,7 +824,9 @@ fun ReminderScreen(
               .height(150.dp)
               .padding(horizontal = 14.dp, vertical = 4.dp)
               .clip(RoundedCornerShape(16.dp))
-              .clickable { viewModel.showToast("Mở trọn vẹn album ảnh kỷ niệm Hội An...") }
+              .clickable {
+                viewModel.showToast(if (isEnglish) "Opening full Hoi An memory album..." else "Mở trọn vẹn album ảnh kỷ niệm Hội An...")
+              }
           ) {
             AsyncImage(
               model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAbOEba4hclQ4bO__pIIi5dVFW8xCl9aYnZLlmcskH8zXTVdcKEpE_jVWdO6cCgPD1GNdHY7iB1UahD2WS0hbs2UCErBRjPSwLHPItn0kXx1YaLqF1Q4Nx64Jn_P_yyG2-CYfajOTTgQCJyNnbmT3dgTGGeJweviOVRZhHDONxa6mTRXDee_0jdMejAXjjSabpZWwIjKbmcAcihx7srP81878WvyKXGSrTUuLke-s3tmNrNhfSaNUQvXg",
@@ -839,7 +863,7 @@ fun ReminderScreen(
                     modifier = Modifier.size(15.dp)
                   )
                   Text(
-                    text = "12 tấm ảnh",
+                    text = if (isEnglish) "12 photos" else "12 tấm ảnh",
                     fontSize = 12.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Medium
@@ -851,7 +875,7 @@ fun ReminderScreen(
                   color = Color.White.copy(alpha = 0.3f)
                 ) {
                   Text(
-                    text = "Xem lại kỷ niệm →",
+                    text = if (isEnglish) "Relive memory →" else "Xem lại kỷ niệm →",
                     fontSize = 11.sp,
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -883,7 +907,7 @@ fun ReminderScreen(
               .background(Tertiary)
           )
           Text(
-            text = "Nhắc Nhở Tùy Chỉnh",
+            text = if (isEnglish) "Custom Reminders" else "Nhắc Nhở Tùy Chỉnh",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
@@ -902,7 +926,7 @@ fun ReminderScreen(
             modifier = Modifier.size(16.dp)
           )
           Text(
-            text = "Thêm lời nhắc",
+            text = if (isEnglish) "Add reminder" else "Thêm lời nhắc",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Primary
@@ -915,6 +939,7 @@ fun ReminderScreen(
     items(customReminders, key = { it.id }) { reminder ->
       CustomReminderCard(
         reminder = reminder,
+        isEnglish = isEnglish,
         onDelete = { reminderToDelete = reminder },
         onSetAlarm = {
           viewModel.openSetAlarmDialog(
@@ -954,7 +979,7 @@ fun ReminderScreen(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = "Tạo lời nhắc hẹn hò riêng của hai bạn",
+            text = if (isEnglish) "Create a special date reminder for both of you" else "Tạo lời nhắc hẹn hò riêng của hai bạn",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = Primary
@@ -968,6 +993,7 @@ fun ReminderScreen(
 @Composable
 fun CadencePill(
   cadence: ReminderCadenceEntity,
+  isEnglish: Boolean = false,
   onToggle: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -997,8 +1023,14 @@ fun CadencePill(
           tint = if (cadence.isEnabled) Primary else Outline,
           modifier = Modifier.size(16.dp)
         )
+        val pillLabel = when (cadence.key) {
+          "7_days" -> if (isEnglish) "Before 7 days" else cadence.label
+          "3_days" -> if (isEnglish) "Before 3 days" else cadence.label
+          "1_day" -> if (isEnglish) "Before 1 day" else cadence.label
+          else -> cadence.label
+        }
         Text(
-          text = cadence.label,
+          text = pillLabel,
           fontSize = 12.sp,
           fontWeight = FontWeight.Medium,
           color = OnSurface
@@ -1035,6 +1067,7 @@ fun CadencePill(
 @Composable
 fun CustomReminderCard(
   reminder: CustomReminderEntity,
+  isEnglish: Boolean = false,
   onDelete: () -> Unit,
   onSetAlarm: () -> Unit
 ) {
@@ -1099,12 +1132,21 @@ fun CustomReminderCard(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
       ) {
+        val displayDaysRemaining = if (isEnglish) {
+          reminder.daysRemainingText
+            .replace("Còn ", "In ")
+            .replace(" ngày", " days")
+            .replace("Hôm nay", "Today")
+        } else {
+          reminder.daysRemainingText
+        }
+
         Surface(
           shape = RoundedCornerShape(12.dp),
           color = SurfaceContainerHighest
         ) {
           Text(
-            text = reminder.daysRemainingText,
+            text = displayDaysRemaining,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = Primary,
@@ -1120,7 +1162,7 @@ fun CustomReminderCard(
         ) {
           Icon(
             imageVector = Icons.Filled.Alarm,
-            contentDescription = "Cài báo thức",
+            contentDescription = if (isEnglish) "Set alarm" else "Cài báo thức",
             tint = Primary,
             modifier = Modifier.size(16.dp)
           )
@@ -1134,7 +1176,7 @@ fun CustomReminderCard(
         ) {
           Icon(
             imageVector = Icons.Filled.Close,
-            contentDescription = "Xóa",
+            contentDescription = if (isEnglish) "Delete" else "Xóa",
             tint = Outline,
             modifier = Modifier.size(16.dp)
           )

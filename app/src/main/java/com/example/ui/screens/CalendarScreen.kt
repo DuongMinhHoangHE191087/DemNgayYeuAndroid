@@ -1,5 +1,7 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
+import com.example.ui.util.AppLanguage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,7 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CalendarToday
@@ -122,14 +124,15 @@ fun CalendarScreen(
   val loveBadges by viewModel.loveBadges.collectAsState()
   val loveDays by viewModel.loveDays.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
+  val isEnglish = appLanguage == AppLanguage.EN
   var selectedDay by remember { mutableIntStateOf(11) }
   var milestoneToDelete by remember { mutableStateOf<MilestoneEntity?>(null) }
   var anniversaryToDelete by remember { mutableStateOf<AnniversaryDateEntity?>(null) }
 
   anniversaryToDelete?.let { ann ->
     DeleteConfirmationDialog(
-      title = "Xóa ngày kỷ niệm?",
-      message = "Bạn có chắc chắn muốn xóa ngày kỷ niệm '${ann.title}' khỏi cơ sở dữ liệu không?",
+      title = if (isEnglish) "Delete Anniversary?" else "Xóa ngày kỷ niệm?",
+      message = if (isEnglish) "Are you sure you want to delete anniversary '${ann.title}' from the database?" else "Bạn có chắc chắn muốn xóa ngày kỷ niệm '${ann.title}' khỏi cơ sở dữ liệu không?",
       itemName = ann.title,
       onConfirm = {
         viewModel.deleteAnniversaryDate(ann.id)
@@ -143,8 +146,8 @@ fun CalendarScreen(
 
   milestoneToDelete?.let { milestone ->
     DeleteConfirmationDialog(
-      title = "Xóa ngày kỷ niệm?",
-      message = "Bạn có chắc chắn muốn xóa ngày kỷ niệm này khỏi lịch không? Lời nhắc và dữ liệu đã lưu sẽ bị xóa hoàn toàn khỏi thiết bị.",
+      title = if (isEnglish) "Delete Milestone?" else "Xóa ngày kỷ niệm?",
+      message = if (isEnglish) "Are you sure you want to delete this milestone from the calendar? All reminders and saved data will be completely removed." else "Bạn có chắc chắn muốn xóa ngày kỷ niệm này khỏi lịch không? Lời nhắc và dữ liệu đã lưu sẽ bị xóa hoàn toàn khỏi thiết bị.",
       itemName = milestone.title,
       onConfirm = {
         viewModel.deleteMilestone(milestone.id)
@@ -158,8 +161,8 @@ fun CalendarScreen(
 
   val filteredMilestones = remember(milestones, currentFilter) {
     when (currentFilter) {
-      "Sắp tới (3)" -> milestones.filter { !it.isPast }
-      "Đã qua (1)" -> milestones.filter { it.isPast }
+      "Sắp tới (3)", "Upcoming (3)" -> milestones.filter { !it.isPast }
+      "Đã qua (1)", "Past (1)" -> milestones.filter { it.isPast }
       else -> milestones
     }
   }
@@ -190,7 +193,7 @@ fun CalendarScreen(
               modifier = Modifier.size(24.dp)
             )
             Text(
-              text = "Tháng 9, 2026",
+              text = if (isEnglish) "September 2026" else "Tháng 9, 2026",
               fontSize = 20.sp,
               fontWeight = FontWeight.Bold,
               color = OnSurface
@@ -207,30 +210,30 @@ fun CalendarScreen(
               modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
               IconButton(
-                onClick = { viewModel.showToast("Xem tháng 8/2026") },
+                onClick = { viewModel.showToast(if (isEnglish) "View August 2026" else "Xem tháng 8/2026") },
                 modifier = Modifier.size(32.dp)
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronLeft,
-                  contentDescription = "Tháng trước",
+                  contentDescription = if (isEnglish) "Previous month" else "Tháng trước",
                   tint = OnSurfaceVariant,
                   modifier = Modifier.size(18.dp)
                 )
               }
               Text(
-                text = "T9",
+                text = if (isEnglish) "Sep" else "T9",
                 color = Primary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = 4.dp)
               )
               IconButton(
-                onClick = { viewModel.showToast("Xem tháng 10/2026") },
+                onClick = { viewModel.showToast(if (isEnglish) "View October 2026" else "Xem tháng 10/2026") },
                 modifier = Modifier.size(32.dp)
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronRight,
-                  contentDescription = "Tháng sau",
+                  contentDescription = if (isEnglish) "Next month" else "Tháng sau",
                   tint = OnSurfaceVariant,
                   modifier = Modifier.size(18.dp)
                 )
@@ -242,13 +245,23 @@ fun CalendarScreen(
 
       // 2. Filter Pills Row
       item {
-        val filterOptions = listOf(
-          Pair("Tất cả (4)", Icons.Filled.AutoAwesome),
-          Pair("Huy Hiệu (12)", Icons.Filled.EmojiEvents),
-          Pair("Sắp tới (3)", Icons.Filled.HourglassTop),
-          Pair("Đã qua (1)", Icons.Filled.HistoryEdu),
-          Pair("Năm 2026", Icons.Filled.Favorite)
-        )
+        val filterOptions = if (isEnglish) {
+          listOf(
+            Pair("All (4)", Icons.Filled.AutoAwesome),
+            Pair("Badges (12)", Icons.Filled.EmojiEvents),
+            Pair("Upcoming (3)", Icons.Filled.HourglassTop),
+            Pair("Past (1)", Icons.Filled.HistoryEdu),
+            Pair("Year 2026", Icons.Filled.Favorite)
+          )
+        } else {
+          listOf(
+            Pair("Tất cả (4)", Icons.Filled.AutoAwesome),
+            Pair("Huy Hiệu (12)", Icons.Filled.EmojiEvents),
+            Pair("Sắp tới (3)", Icons.Filled.HourglassTop),
+            Pair("Đã qua (1)", Icons.Filled.HistoryEdu),
+            Pair("Năm 2026", Icons.Filled.Favorite)
+          )
+        }
 
         Row(
           modifier = Modifier
@@ -309,7 +322,7 @@ fun CalendarScreen(
         ) {
           Column(modifier = Modifier.padding(14.dp)) {
             // Day names row
-            val dayNames = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+            val dayNames = if (isEnglish) listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun") else listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
             Row(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.SpaceAround
@@ -370,9 +383,9 @@ fun CalendarScreen(
                     .clickable {
                       selectedDay = dayNum
                       if (dayNum == 11) {
-                        viewModel.showToast("11/09: Cột mốc 1.000 ngày bên nhau!")
+                        viewModel.showToast(if (isEnglish) "Sep 11: 1,000 Days Anniversary together!" else "11/09: Cột mốc 1.000 ngày bên nhau!")
                       } else if (dayNum == 9) {
-                        viewModel.showToast("Hôm nay: Ngày 09/09/2026")
+                        viewModel.showToast(if (isEnglish) "Today: Sep 09, 2026" else "Hôm nay: Ngày 09/09/2026")
                       }
                     },
                   contentAlignment = Alignment.Center
@@ -422,7 +435,7 @@ fun CalendarScreen(
               modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                  viewModel.showToast("Sắp đến mốc 1.000 ngày yêu nhau!")
+                  viewModel.showToast(if (isEnglish) "Approaching 1,000 days of love!" else "Sắp đến mốc 1.000 ngày yêu nhau!")
                 }
             ) {
               Row(
@@ -441,14 +454,14 @@ fun CalendarScreen(
                     modifier = Modifier.size(16.dp)
                   )
                   Text(
-                    text = "Chỉ còn 3 ngày đến Kỷ niệm 1.000 ngày yêu nhau!",
+                    text = if (isEnglish) "Only 3 days left until 1,000th Love Anniversary!" else "Chỉ còn 3 ngày đến Kỷ niệm 1.000 ngày yêu nhau!",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = OnPrimaryFixed
                   )
                 }
                 Icon(
-                  imageVector = Icons.Filled.ArrowForward,
+                  imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                   contentDescription = null,
                   tint = Primary,
                   modifier = Modifier.size(14.dp)
@@ -463,6 +476,7 @@ fun CalendarScreen(
       item {
         FirestoreMilestonesSchedulerCard(
           upcomingMilestones = upcomingMilestones,
+          isEnglish = isEnglish,
           onTestNotification = { viewModel.triggerTestMilestoneNotification() },
           onSyncFirestore = { viewModel.syncUpcomingMilestonesFromFirestore() }
         )
@@ -504,13 +518,13 @@ fun CalendarScreen(
                 }
                 Column {
                   Text(
-                    text = "Ngày Kỷ Niệm Của Hai Bạn",
+                    text = if (isEnglish) "Your Anniversaries" else "Ngày Kỷ Niệm Của Hai Bạn",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = OnSurface
                   )
                   Text(
-                    text = "Lưu trữ Room (${anniversaryDates.size} ngày đặc biệt)",
+                    text = if (isEnglish) "Stored in Room (${anniversaryDates.size} special dates)" else "Lưu trữ Room (${anniversaryDates.size} ngày đặc biệt)",
                     fontSize = 11.sp,
                     color = OnSurfaceVariant
                   )
@@ -536,7 +550,7 @@ fun CalendarScreen(
                     modifier = Modifier.size(15.dp)
                   )
                   Text(
-                    text = "Thêm ngày",
+                    text = if (isEnglish) "Add Date" else "Thêm ngày",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = Primary
@@ -574,7 +588,7 @@ fun CalendarScreen(
                   )
                   Spacer(modifier = Modifier.width(4.dp))
                   Text(
-                    text = "Thử chuông báo 🔔",
+                    text = if (isEnglish) "Test Alarm 🔔" else "Thử chuông báo 🔔",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Primary
@@ -603,7 +617,7 @@ fun CalendarScreen(
                   )
                   Spacer(modifier = Modifier.width(4.dp))
                   Text(
-                    text = "Đồng bộ lại ⏰",
+                    text = if (isEnglish) "Resync ⏰" else "Đồng bộ lại ⏰",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Secondary
@@ -616,7 +630,7 @@ fun CalendarScreen(
 
             if (anniversaryDates.isEmpty()) {
               Text(
-                text = "Chưa có ngày kỷ niệm riêng. Nhấn 'Thêm ngày' để lưu ngày bắt đầu yêu, hẹn hò hoặc kỷ niệm đáng nhớ.",
+                text = if (isEnglish) "No custom anniversaries yet. Tap 'Add Date' to save your love story or special dates." else "Chưa có ngày kỷ niệm riêng. Nhấn 'Thêm ngày' để lưu ngày bắt đầu yêu, hẹn hò hoặc kỷ niệm đáng nhớ.",
                 fontSize = 12.sp,
                 color = OnSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp)
@@ -626,6 +640,7 @@ fun CalendarScreen(
                 anniversaryDates.forEach { ann ->
                   AnniversaryDateRow(
                     item = ann,
+                    isEnglish = isEnglish,
                     onToggleNotification = { viewModel.toggleAnniversaryNotification(ann) },
                     onDelete = { anniversaryToDelete = ann }
                   )
@@ -637,7 +652,7 @@ fun CalendarScreen(
       }
 
       // 4. Milestone Cards or Heart Badge Cards Stream
-      if (currentFilter == "Huy Hiệu (12)") {
+      if (currentFilter == "Huy Hiệu (12)" || currentFilter == "Badges (12)") {
         item {
           MilestoneBadgeDashboardCard(
             viewModel = viewModel,
@@ -658,15 +673,16 @@ fun CalendarScreen(
         items(filteredMilestones, key = { it.id }) { milestone ->
           MilestoneCard(
             milestone = milestone,
+            isEnglish = isEnglish,
             onGiftClick = onNavigateToGifts,
             onNotificationToggle = { viewModel.toggleMilestoneNotification(milestone) },
-            onEditClick = { viewModel.showToast("Chỉnh sửa: ${milestone.title}") },
-            onAlbumClick = { viewModel.showToast("Mở album ảnh kỷ niệm...") },
+            onEditClick = { viewModel.showToast(if (isEnglish) "Edit: ${milestone.title}" else "Chỉnh sửa: ${milestone.title}") },
+            onAlbumClick = { viewModel.showToast(if (isEnglish) "Open photo album..." else "Mở album ảnh kỷ niệm...") },
             onDelete = { milestoneToDelete = milestone },
             onSetAlarm = {
               viewModel.openSetAlarmDialog(
-                title = "Kỷ niệm: ${milestone.title}",
-                message = "Hôm nay là ngày kỷ niệm ${milestone.title}! ${milestone.subtitle}",
+                title = if (isEnglish) "Anniversary: ${milestone.title}" else "Kỷ niệm: ${milestone.title}",
+                message = if (isEnglish) "Today is anniversary ${milestone.title}! ${milestone.subtitle}" else "Hôm nay là ngày kỷ niệm ${milestone.title}! ${milestone.subtitle}",
                 reminderId = milestone.id
               )
             }
@@ -707,13 +723,13 @@ fun CalendarScreen(
               }
               Column {
                 Text(
-                  text = "Đồng bộ dữ liệu mốc thời gian",
+                  text = if (isEnglish) "Timeline Data Synchronized" else "Đồng bộ dữ liệu mốc thời gian",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = Primary
                 )
                 Text(
-                  text = "Đã chuyển 4 sự kiện từ danh sách cũ",
+                  text = if (isEnglish) "Migrated 4 events from previous timeline" else "Đã chuyển 4 sự kiện từ danh sách cũ",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
@@ -768,7 +784,7 @@ fun CalendarScreen(
             modifier = Modifier.size(22.dp)
           )
           Text(
-            text = "Thêm Kỷ Niệm",
+            text = if (isEnglish) "Add Milestone" else "Thêm Kỷ Niệm",
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
@@ -782,6 +798,7 @@ fun CalendarScreen(
 @Composable
 fun AnniversaryDateRow(
   item: AnniversaryDateEntity,
+  isEnglish: Boolean = false,
   onToggleNotification: () -> Unit,
   onDelete: () -> Unit
 ) {
@@ -806,51 +823,34 @@ fun AnniversaryDateRow(
       ) {
         Box(
           modifier = Modifier
-            .size(36.dp)
+            .size(38.dp)
             .clip(CircleShape)
-            .background(
-              when (item.type) {
-                "LOVE" -> Primary.copy(alpha = 0.15f)
-                "FIRST_DATE" -> Secondary.copy(alpha = 0.15f)
-                "WEDDING" -> Tertiary.copy(alpha = 0.15f)
-                else -> PrimaryFixed
-              }
-            ),
+            .background(PrimaryFixed.copy(alpha = 0.5f)),
           contentAlignment = Alignment.Center
         ) {
           Icon(
-            imageVector = when (item.type) {
-              "LOVE" -> Icons.Filled.Favorite
-              "WEDDING" -> Icons.Filled.Stars
-              else -> Icons.Filled.Cake
-            },
+            imageVector = Icons.Filled.CalendarToday,
             contentDescription = null,
-            tint = when (item.type) {
-              "LOVE" -> Primary
-              "WEDDING" -> Tertiary
-              else -> Primary
-            },
+            tint = Primary,
             modifier = Modifier.size(18.dp)
           )
         }
         Column {
-          Text(
-            text = item.title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = OnSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
           Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
           ) {
             Text(
+              text = item.title,
+              fontSize = 13.5.sp,
+              fontWeight = FontWeight.Bold,
+              color = OnSurface
+            )
+            Text(
               text = item.dateText,
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Medium,
-              color = Primary
+              fontSize = 11.5.sp,
+              color = Primary,
+              fontWeight = FontWeight.SemiBold
             )
             if (item.description.isNotBlank()) {
               Text(
@@ -865,12 +865,12 @@ fun AnniversaryDateRow(
           Text(
             text = if (item.notificationEnabled) {
               if (item.reminderDaysBefore > 0) {
-                "🔔 Nhắc trước ${item.reminderDaysBefore} ngày & đúng ngày (09:00)"
+                if (isEnglish) "🔔 Remind ${item.reminderDaysBefore} days before & on the day (09:00)" else "🔔 Nhắc trước ${item.reminderDaysBefore} ngày & đúng ngày (09:00)"
               } else {
-                "🔔 Nhắc đúng ngày kỷ niệm (09:00)"
+                if (isEnglish) "🔔 Remind on anniversary date (09:00)" else "🔔 Nhắc đúng ngày kỷ niệm (09:00)"
               }
             } else {
-              "🔕 Thông báo đã tắt"
+              if (isEnglish) "🔕 Notification off" else "🔕 Thông báo đã tắt"
             },
             fontSize = 10.sp,
             color = if (item.notificationEnabled) Primary.copy(alpha = 0.85f) else OnSurfaceVariant.copy(alpha = 0.5f),
@@ -889,7 +889,7 @@ fun AnniversaryDateRow(
         ) {
           Icon(
             imageVector = if (item.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
-            contentDescription = "Thông báo kỷ niệm",
+            contentDescription = if (isEnglish) "Anniversary notification" else "Thông báo kỷ niệm",
             tint = if (item.notificationEnabled) Primary else OnSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.size(18.dp)
           )
@@ -901,7 +901,7 @@ fun AnniversaryDateRow(
         ) {
           Icon(
             imageVector = Icons.Filled.Delete,
-            contentDescription = "Xóa ngày kỷ niệm",
+            contentDescription = if (isEnglish) "Delete anniversary" else "Xóa ngày kỷ niệm",
             tint = OnSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.size(18.dp)
           )
@@ -914,6 +914,7 @@ fun AnniversaryDateRow(
 @Composable
 fun MilestoneCard(
   milestone: MilestoneEntity,
+  isEnglish: Boolean = false,
   onGiftClick: () -> Unit,
   onNotificationToggle: () -> Unit,
   onEditClick: () -> Unit,
@@ -994,7 +995,7 @@ fun MilestoneCard(
               color = PrimaryFixed.copy(alpha = 0.9f)
             ) {
               Text(
-                text = "Tự tạo (Room)",
+                text = if (isEnglish) "Custom" else "Tự tạo (Room)",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
@@ -1009,7 +1010,7 @@ fun MilestoneCard(
               color = TertiaryFixed.copy(alpha = 0.8f)
             ) {
               Text(
-                text = "Đã qua 268 ngày",
+                text = if (isEnglish) "268 days ago" else "Đã qua 268 ngày",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Tertiary,
@@ -1035,7 +1036,7 @@ fun MilestoneCard(
           ) {
             Icon(
               imageVector = Icons.Filled.Alarm,
-              contentDescription = "Cài báo thức kỷ niệm",
+              contentDescription = if (isEnglish) "Set milestone alarm" else "Cài báo thức kỷ niệm",
               tint = Primary,
               modifier = Modifier.size(17.dp)
             )
@@ -1071,7 +1072,7 @@ fun MilestoneCard(
           ) {
             Icon(
               imageVector = Icons.Filled.Close,
-              contentDescription = "Xóa kỷ niệm",
+              contentDescription = if (isEnglish) "Delete milestone" else "Xóa kỷ niệm",
               tint = OnSurfaceVariant,
               modifier = Modifier.size(17.dp)
             )
@@ -1153,7 +1154,7 @@ fun MilestoneCard(
                 modifier = Modifier.size(18.dp)
               )
               Text(
-                text = "Đã lưu",
+                text = if (isEnglish) "Saved" else "Đã lưu",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
                 color = OnSurfaceVariant
@@ -1183,7 +1184,7 @@ fun MilestoneCard(
           ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
               Text(
-                text = "CÒN",
+                text = if (isEnglish) "LEFT" else "CÒN",
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (milestone.isImportant) Color.White.copy(alpha = 0.9f) else OnSurfaceVariant
@@ -1196,7 +1197,7 @@ fun MilestoneCard(
                 lineHeight = 26.sp
               )
               Text(
-                text = "ngày",
+                text = if (isEnglish) "days" else "ngày",
                 fontSize = 9.sp,
                 color = if (milestone.isImportant) Color.White.copy(alpha = 0.9f) else OnSurfaceVariant
               )
@@ -1213,7 +1214,7 @@ fun MilestoneCard(
           horizontalArrangement = Arrangement.SpaceBetween
         ) {
           Text(
-            text = "Tiến trình mốc lớn",
+            text = if (isEnglish) "Milestone Progress" else "Tiến trình mốc lớn",
             fontSize = 11.sp,
             color = OnSurfaceVariant
           )
@@ -1266,7 +1267,7 @@ fun MilestoneCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Gợi ý quà tặng",
+                  text = if (isEnglish) "Gift Ideas" else "Gợi ý quà tặng",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnPrimaryFixedVariant
@@ -1292,7 +1293,7 @@ fun MilestoneCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                  text = "Chỉnh sửa",
+                  text = if (isEnglish) "Edit" else "Chỉnh sửa",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Medium,
                   color = OnSurfaceVariant
@@ -1326,7 +1327,7 @@ fun MilestoneCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Ý tưởng bất ngờ & Quà",
+                  text = if (isEnglish) "Surprise Ideas & Gifts" else "Ý tưởng bất ngờ & Quà",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnSurface
@@ -1373,7 +1374,7 @@ fun MilestoneCard(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = "Xem lại album kỷ niệm (12 ảnh)",
+                text = if (isEnglish) "View memories album (12 photos)" else "Xem lại album kỷ niệm (12 ảnh)",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
@@ -1402,7 +1403,7 @@ fun MilestoneCard(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = "Lên kế hoạch hẹn hò",
+                text = if (isEnglish) "Plan a date" else "Lên kế hoạch hẹn hò",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnPrimaryFixedVariant
@@ -1418,6 +1419,7 @@ fun MilestoneCard(
 @Composable
 fun FirestoreMilestonesSchedulerCard(
   upcomingMilestones: List<com.example.alarm.LoveMilestoneInfo>,
+  isEnglish: Boolean = false,
   onTestNotification: () -> Unit,
   onSyncFirestore: () -> Unit
 ) {
@@ -1461,13 +1463,13 @@ fun FirestoreMilestonesSchedulerCard(
           }
           Column {
             Text(
-              text = "Lịch Báo Cột Mốc Tình Yêu",
+              text = if (isEnglish) "Love Milestones Schedule" else "Lịch Báo Cột Mốc Tình Yêu",
               fontWeight = FontWeight.Bold,
               fontSize = 15.sp,
               color = OnSurface
             )
             Text(
-              text = "Tự động lên lịch từ Ngày Yêu Firestore",
+              text = if (isEnglish) "Auto-scheduled from anniversary" else "Tự động lên lịch từ Ngày Yêu Firestore",
               fontSize = 11.sp,
               color = OnSurfaceVariant
             )
@@ -1479,7 +1481,7 @@ fun FirestoreMilestonesSchedulerCard(
           color = PrimaryContainer.copy(alpha = 0.8f)
         ) {
           Text(
-            text = "3 Cấp Báo Thức",
+            text = if (isEnglish) "3 Alert Tiers" else "3 Cấp Báo Thức",
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
             color = Primary,
@@ -1506,7 +1508,7 @@ fun FirestoreMilestonesSchedulerCard(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
           ) {
             Text("🔔", fontSize = 12.sp)
-            Text("Trước 3 ngày", fontSize = 11.sp, color = OnSurfaceVariant)
+            Text(if (isEnglish) "3 days before" else "Trước 3 ngày", fontSize = 11.sp, color = OnSurfaceVariant)
           }
           Text("•", color = OnSurfaceVariant.copy(alpha = 0.4f))
           Row(
@@ -1514,7 +1516,7 @@ fun FirestoreMilestonesSchedulerCard(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
           ) {
             Text("🌹", fontSize = 12.sp)
-            Text("Trước 1 ngày", fontSize = 11.sp, color = OnSurfaceVariant)
+            Text(if (isEnglish) "1 day before" else "Trước 1 ngày", fontSize = 11.sp, color = OnSurfaceVariant)
           }
           Text("•", color = OnSurfaceVariant.copy(alpha = 0.4f))
           Row(
@@ -1522,7 +1524,7 @@ fun FirestoreMilestonesSchedulerCard(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
           ) {
             Text("🎉", fontSize = 12.sp)
-            Text("Đúng ngày", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Bold)
+            Text(if (isEnglish) "On the day" else "Đúng ngày", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Bold)
           }
         }
       }
@@ -1538,7 +1540,7 @@ fun FirestoreMilestonesSchedulerCard(
           contentAlignment = Alignment.Center
         ) {
           Text(
-            text = "Đang đồng bộ các cột mốc tiếp theo từ ngày yêu Firestore... 💕",
+            text = if (isEnglish) "Syncing upcoming milestones from anniversary... 💕" else "Đang đồng bộ các cột mốc tiếp theo từ ngày yêu Firestore... 💕",
             fontSize = 12.sp,
             color = OnSurfaceVariant
           )
@@ -1583,7 +1585,7 @@ fun FirestoreMilestonesSchedulerCard(
                   color = if (ms.daysRemaining <= 7) Primary.copy(alpha = 0.15f) else SurfaceContainerHigh
                 ) {
                   Text(
-                    text = if (ms.daysRemaining == 0) "Hôm nay! 🎉" else "Còn ${ms.daysRemaining} ngày",
+                    text = if (ms.daysRemaining == 0) (if (isEnglish) "Today! 🎉" else "Hôm nay! 🎉") else (if (isEnglish) "${ms.daysRemaining} days left" else "Còn ${ms.daysRemaining} ngày"),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (ms.daysRemaining <= 7) Primary else OnSurfaceVariant,
@@ -1617,7 +1619,7 @@ fun FirestoreMilestonesSchedulerCard(
             modifier = Modifier.size(16.dp)
           )
           Spacer(modifier = Modifier.width(6.dp))
-          Text(text = "Thử Chuông Báo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+          Text(text = if (isEnglish) "Test Alert" else "Thử Chuông Báo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
 
         OutlinedButton(
@@ -1635,7 +1637,7 @@ fun FirestoreMilestonesSchedulerCard(
             modifier = Modifier.size(16.dp)
           )
           Spacer(modifier = Modifier.width(6.dp))
-          Text(text = "Đồng Bộ Firestore", fontSize = 12.sp, color = Primary, fontWeight = FontWeight.SemiBold)
+          Text(text = if (isEnglish) "Sync Firestore" else "Đồng Bộ Firestore", fontSize = 12.sp, color = Primary, fontWeight = FontWeight.SemiBold)
         }
       }
     }

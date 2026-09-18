@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
  */
 class Firebase3NFService(
   private val dao: InLoveDao,
-  private val context: Context
+  context: Context
 ) {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private var firestore: FirebaseFirestore? = null
@@ -92,32 +92,7 @@ class Firebase3NFService(
           )
         }
       } else {
-        listOf(
-          FirebaseUser3NF(
-            uid = "user_123",
-            email = "hoang.inlove@gmail.com",
-            displayName = "Hoàng",
-            coupleCode = "LOVE-8821",
-            avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop",
-            gender = "MALE",
-            birthDate = "15/10/2004",
-            age = 22,
-            zodiac = "Thiên Bình",
-            bio = "Yêu thương và luôn ở bên em 💕"
-          ),
-          FirebaseUser3NF(
-            uid = "user_456",
-            email = "khanhlinh.inlove@gmail.com",
-            displayName = "Khánh Linh",
-            coupleCode = "LOVE-9966",
-            avatarUrl = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=600&auto=format&fit=crop",
-            gender = "FEMALE",
-            birthDate = "24/07/2003",
-            age = 23,
-            zodiac = "Sư Tử",
-            bio = "Mỗi ngày trôi qua đều là một ngày hạnh phúc ✨"
-          )
-        )
+        emptyList()
       }
       _users.value = userList
 
@@ -136,17 +111,7 @@ class Firebase3NFService(
           )
         }
       } else {
-        listOf(
-          FirebaseRelationship3NF(
-            relationshipId = "rel_789",
-            user1Uid = "user_123",
-            user2Uid = "user_456",
-            startDate = 1671321600000L,
-            startDateText = "18/12/2022",
-            loveTitle = "Bámmmm",
-            status = "ACTIVE"
-          )
-        )
+        emptyList()
       }
       _relationships.value = relList
 
@@ -172,8 +137,8 @@ class Firebase3NFService(
       val memoryList = dbMemories.map { m ->
         FirebaseMemory3NF(
           memoryId = m.id.toString(),
-          relationshipId = m.relationshipId ?: "rel_789",
-          authorUid = if (m.authorId.isNotEmpty()) m.authorId else "user_123",
+          relationshipId = m.relationshipId ?: "",
+          authorUid = m.authorId,
           title = m.title,
           dateText = m.dateText,
           note = m.note,
@@ -190,7 +155,7 @@ class Firebase3NFService(
       val anniList = dbAnni.map { a ->
         FirebaseAnniversary3NF(
           anniversaryId = a.id.toString(),
-          relationshipId = a.relationshipId ?: "rel_789",
+          relationshipId = a.relationshipId ?: "",
           title = a.title,
           dateText = a.dateText,
           type = a.type,
@@ -206,7 +171,7 @@ class Firebase3NFService(
       val badgeList = dbBadges.map { b ->
         FirebaseBadge3NF(
           badgeId = b.id,
-          relationshipId = "rel_789",
+          relationshipId = "",
           badgeKey = b.id,
           targetDays = b.targetDays,
           tier = b.tier,
@@ -222,7 +187,7 @@ class Firebase3NFService(
       val giftList = dbGifts.map { g ->
         FirebaseGift3NF(
           giftId = g.id.toString(),
-          relationshipId = "rel_789",
+          relationshipId = "",
           title = g.title,
           recipient = g.recipient,
           occasion = g.occasion,

@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -29,9 +31,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Key
@@ -102,6 +106,7 @@ import com.example.ui.util.PasswordStrengthLevel
 import com.example.ui.viewmodel.InLoveViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun authTextFieldColors() = OutlinedTextFieldDefaults.colors(
@@ -119,11 +124,11 @@ fun authTextFieldColors() = OutlinedTextFieldDefaults.colors(
   cursorColor = Color(0xFFE91E63)
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
   viewModel: InLoveViewModel,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  onBackToGuest: () -> Unit = {}
 ) {
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
@@ -150,6 +155,31 @@ fun AuthScreen(
   var agreeToTerms by remember { mutableStateOf(true) }
   var isRegistering by remember { mutableStateOf(false) }
 
+  // Email Queue OTP States
+  var regOtpCode by remember { mutableStateOf("") }
+  var isSendingOtp by remember { mutableStateOf(false) }
+  var otpCooldownSeconds by remember { mutableIntStateOf(0) }
+  var isOtpSent by remember { mutableStateOf(false) }
+  var otpNotificationBanner by remember { mutableStateOf<String?>(null) }
+
+  // Listen to Email Queue OTP events for instant emulator/testing visibility
+  LaunchedEffect(Unit) {
+    viewModel.authRepo.emailQueueService.otpEvents.collect { event ->
+      otpNotificationBanner = "💌 Đã gửi mã vào hàng đợi [${event.email}]: ${event.otpCode}"
+      if (regEmail.trim().equals(event.email, ignoreCase = true)) {
+        regOtpCode = event.otpCode // Auto-fill for seamless testing
+      }
+    }
+  }
+
+  // OTP Cooldown Countdown
+  LaunchedEffect(otpCooldownSeconds) {
+    if (otpCooldownSeconds > 0) {
+      delay(1.seconds)
+      otpCooldownSeconds -= 1
+    }
+  }
+
   // Lockout & Brute-force local tracker
   var isLockedOut by remember { mutableStateOf(false) }
   var lockoutCountdownSeconds by remember { mutableLongStateOf(0L) }
@@ -161,7 +191,7 @@ fun AuthScreen(
   // Countdown timer for lockout
   LaunchedEffect(isLockedOut, lockoutCountdownSeconds) {
     if (isLockedOut && lockoutCountdownSeconds > 0) {
-      delay(1000L)
+      delay(1.seconds)
       lockoutCountdownSeconds -= 1
       if (lockoutCountdownSeconds <= 0) {
         isLockedOut = false
@@ -199,16 +229,47 @@ fun AuthScreen(
         .navigationBarsPadding()
         .imePadding()
         .verticalScroll(rememberScrollState())
-        .padding(horizontal = 24.dp, vertical = 16.dp),
+        .padding(horizontal = 20.dp, vertical = 8.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Spacer(modifier = Modifier.height(12.dp))
+      // Back to Guest / Offline mode button
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(bottom = 6.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        TextButton(
+          onClick = {
+            viewModel.closeAuthScreen()
+            onBackToGuest()
+          },
+          shape = RoundedCornerShape(12.dp)
+        ) {
+          Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Quay lại",
+            tint = Color(0xFFC2185B),
+            modifier = Modifier.size(20.dp)
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = "Quay lại chế độ Khách (Offline)",
+            color = Color(0xFFC2185B),
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.5.sp
+          )
+        }
+      }
+
+      Spacer(modifier = Modifier.height(4.dp))
 
       // App Logo & Romantic Branding
       Box(
         modifier = Modifier
-          .size(80.dp)
-          .shadow(12.dp, CircleShape)
+          .size(64.dp)
+          .shadow(8.dp, CircleShape)
           .background(
             Brush.linearGradient(
               colors = listOf(Color(0xFFFF4081), Color(0xFFE91E63), Color(0xFFFF80AB))
@@ -221,26 +282,27 @@ fun AuthScreen(
           imageVector = Icons.Default.Favorite,
           contentDescription = "InLove Logo",
           tint = Color.White,
-          modifier = Modifier.size(44.dp)
+          modifier = Modifier.size(36.dp)
         )
       }
 
-      Spacer(modifier = Modifier.height(12.dp))
+      Spacer(modifier = Modifier.height(8.dp))
 
       Text(
         text = "InLove",
-        style = MaterialTheme.typography.headlineMedium.copy(
+        style = MaterialTheme.typography.titleLarge.copy(
           fontWeight = FontWeight.ExtraBold,
-          letterSpacing = 1.sp
+          letterSpacing = 1.sp,
+          fontSize = 24.sp
         ),
         color = Color(0xFFC2185B)
       )
 
       Text(
         text = "Đếm ngày yêu thương & Gắn kết trái tim",
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
         color = Color(0xFF757575),
-        modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
+        modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
       )
 
       // Tab selector: Đăng Nhập / Đăng Ký
@@ -495,6 +557,8 @@ fun AuthScreen(
                     }
                   } else {
                     viewModel.showToast(result.second)
+                    viewModel.closeAuthScreen()
+                    onBackToGuest()
                   }
                 }
               },
@@ -532,72 +596,74 @@ fun AuthScreen(
               }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Quick Demo Accounts Section for Evaluation
-            Card(
-              shape = RoundedCornerShape(16.dp),
-              colors = CardDefaults.cardColors(containerColor = Color(0xFFFCE4EC).copy(alpha = 0.6f)),
-              modifier = Modifier.fillMaxWidth()
+            // Fast Test Login for QA / Developers (Uses Cloud Firestore Fixtures)
+            Text(
+              text = "Tài khoản kiểm thử nhanh (Cloud Fixtures):",
+              fontSize = 11.5.sp,
+              color = Color.Gray,
+              fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-              Column(
-                modifier = Modifier.padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+              OutlinedButton(
+                onClick = {
+                  isLoggingIn = true
+                  scope.launch {
+                    val res = viewModel.authRepo.loginTestUser(isPartner = false)
+                    isLoggingIn = false
+                    viewModel.showToast(res.second)
+                    if (res.first) {
+                      viewModel.closeAuthScreen()
+                      onBackToGuest()
+                    }
+                  }
+                },
+                enabled = !isLoggingIn,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                  .weight(1f)
+                  .testTag("btn_quick_login_tester_a")
               ) {
-                Text(
-                  text = "⚡ Đăng nhập thử nghiệm nhanh (1 chạm):",
-                  style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                  color = Color(0xFF880E4F)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                  OutlinedButton(
-                    onClick = {
-                      loginEmail = "hoang.inlove@gmail.com"
-                      loginPassword = "Hoang@2026"
-                      scope.launch {
-                        viewModel.authRepo.loginDemoUser("A")
-                        viewModel.showToast("Đã đăng nhập tài khoản Hoàng!")
-                      }
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1976D2)),
-                    modifier = Modifier.weight(1f)
-                  ) {
-                    Text("👨 Hoàng", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                  }
+                Text("Tester A 👨", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+              }
 
-                  OutlinedButton(
-                    onClick = {
-                      loginEmail = "khanhlinh.inlove@gmail.com"
-                      loginPassword = "Linh@2026"
-                      scope.launch {
-                        viewModel.authRepo.loginDemoUser("B")
-                        viewModel.showToast("Đã đăng nhập tài khoản Khánh Linh!")
-                      }
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE91E63)),
-                    modifier = Modifier.weight(1f)
-                  ) {
-                    Text("👩 Khánh Linh", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+              OutlinedButton(
+                onClick = {
+                  isLoggingIn = true
+                  scope.launch {
+                    val res = viewModel.authRepo.loginTestUser(isPartner = true)
+                    isLoggingIn = false
+                    viewModel.showToast(res.second)
+                    if (res.first) {
+                      viewModel.closeAuthScreen()
+                      onBackToGuest()
+                    }
                   }
-                }
+                },
+                enabled = !isLoggingIn,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                  .weight(1f)
+                  .testTag("btn_quick_login_tester_b")
+              ) {
+                Text("Tester B 👩", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
               }
             }
           } else {
             // ==================== TAB 1: ĐĂNG KÝ ====================
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Input: Display Name
             OutlinedTextField(
               value = regName,
               onValueChange = { regName = it },
               label = { Text("Tên hiển thị / Biệt danh") },
-              placeholder = { Text("vd: Hoàng, Khánh Linh...") },
+              placeholder = { Text("Nhập họ tên hoặc biệt danh...") },
               leadingIcon = {
                 Icon(
                   imageVector = Icons.Default.Person,
@@ -642,6 +708,108 @@ fun AuthScreen(
                 .fillMaxWidth()
                 .testTag("input_reg_email")
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Email Verification Queue OTP Section
+            Card(
+              shape = RoundedCornerShape(14.dp),
+              colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically
+                ) {
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                      imageVector = Icons.Default.Shield,
+                      contentDescription = null,
+                      tint = Color(0xFFE91E63),
+                      modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                      text = "Xác thực Email (Hàng đợi OTP)",
+                      style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                      color = Color(0xFF880E4F)
+                    )
+                  }
+
+                  OutlinedButton(
+                    onClick = {
+                      if (!AuthSecurityManager.isValidEmail(regEmail)) {
+                        viewModel.showToast("Vui lòng nhập địa chỉ email hợp lệ trước khi gửi mã!")
+                        return@OutlinedButton
+                      }
+                      focusManager.clearFocus()
+                      isSendingOtp = true
+                      scope.launch {
+                        val result = viewModel.authRepo.requestRegistrationOtp(regEmail)
+                        isSendingOtp = false
+                        result.onSuccess { code ->
+                          isOtpSent = true
+                          otpCooldownSeconds = 60
+                          viewModel.showToast("Đã đưa email vào hàng đợi gửi mã OTP! Mã: $code")
+                        }.onFailure { err ->
+                          viewModel.showToast(err.message ?: "Lỗi gửi mã OTP")
+                        }
+                      }
+                    },
+                    enabled = !isSendingOtp && otpCooldownSeconds == 0 && regEmail.isNotBlank(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE91E63)),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.height(36.dp)
+                  ) {
+                    if (isSendingOtp) {
+                      CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = Color(0xFFE91E63))
+                    } else {
+                      Text(
+                        text = if (otpCooldownSeconds > 0) "Gửi lại (${otpCooldownSeconds}s)" else if (isOtpSent) "Gửi lại mã" else "Gửi mã OTP 📩",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                      )
+                    }
+                  }
+                }
+
+                if (isOtpSent || regOtpCode.isNotEmpty()) {
+                  Spacer(modifier = Modifier.height(8.dp))
+                  OutlinedTextField(
+                    value = regOtpCode,
+                    onValueChange = { if (it.length <= 6) regOtpCode = it.filter { char -> char.isDigit() } },
+                    label = { Text("Mã xác thực OTP (6 số)") },
+                    placeholder = { Text("Nhập 6 số được gửi qua email") },
+                    leadingIcon = {
+                      Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = Color(0xFFE91E63))
+                    },
+                    trailingIcon = {
+                      if (regOtpCode.length == 6) {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF43A047))
+                      }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = authTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth().testTag("input_reg_otp")
+                  )
+                }
+
+                if (otpNotificationBanner != null) {
+                  Spacer(modifier = Modifier.height(6.dp))
+                  Text(
+                    text = otpNotificationBanner!!,
+                    fontSize = 10.sp,
+                    color = Color(0xFF2E7D32),
+                    fontWeight = FontWeight.SemiBold
+                  )
+                }
+              }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -745,6 +913,7 @@ fun AuthScreen(
                 regEmail.isNotBlank() &&
                 regPassword.length >= 6 &&
                 passwordsMatch &&
+                (!isOtpSent || regOtpCode.length == 6) &&
                 !isRegistering
 
             Button(
@@ -756,10 +925,15 @@ fun AuthScreen(
                     displayNameInput = regName,
                     emailInput = regEmail,
                     passwordInput = regPassword,
-                    confirmPasswordInput = regConfirmPassword
+                    confirmPasswordInput = regConfirmPassword,
+                    otpCodeInput = regOtpCode
                   )
                   isRegistering = false
                   viewModel.showToast(result.second)
+                  if (result.first) {
+                    viewModel.closeAuthScreen()
+                    onBackToGuest()
+                  }
                 }
               },
               enabled = canRegister,
@@ -868,7 +1042,6 @@ private fun PasswordCriteriaBadge(
   }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordDialog(
   viewModel: InLoveViewModel,
@@ -892,7 +1065,7 @@ fun ForgotPasswordDialog(
   // OTP Countdown
   LaunchedEffect(otpTimerSeconds) {
     if (otpTimerSeconds > 0) {
-      delay(1000L)
+      delay(1.seconds)
       otpTimerSeconds -= 1
     }
   }

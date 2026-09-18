@@ -34,7 +34,11 @@ data class GiftIdeaEntity(
   val imageUrl: String,
   val isFavorited: Boolean = false,
   val detailsSnippet: String = "",
-  val actionText: String = ""
+  val actionText: String = "",
+  val isAiGenerated: Boolean = false,
+  val targetInterests: String = "",
+  val suggestedOccasion: String = "",
+  val priceRange: String = ""
 )
 
 @Entity(tableName = "checklist_items")
@@ -70,16 +74,16 @@ data class CoupleProfileEntity(
   val partner1Name: String,
   val partner1Birthday: String,
   val partner1ProfilePicture: String,
-  val partner1Age: Int = 20,
-  val partner1Zodiac: String = "Thiên Bình",
+  val partner1Age: Int = 0,
+  val partner1Zodiac: String = "",
   val partner2Name: String,
   val partner2Birthday: String,
   val partner2ProfilePicture: String,
-  val partner2Age: Int = 21,
-  val partner2Zodiac: String = "Cự Giải",
-  val loveTitle: String = "Bámmmm",
-  val loveDays: Int = 1349,
-  val anniversaryDate: String = "18/12/2022",
+  val partner2Age: Int = 0,
+  val partner2Zodiac: String = "",
+  val loveTitle: String = "InLove",
+  val loveDays: Int = 0,
+  val anniversaryDate: String = "",
   val updatedAt: Long = System.currentTimeMillis()
 )
 
@@ -92,7 +96,7 @@ data class SharedMemoryEntity(
   val photoUri: String,
   val location: String = "",
   val isFavorite: Boolean = false,
-  val anniversaryTitle: String = "18/12 - Ngày Yêu Nhau",
+  val anniversaryTitle: String = "Kỷ Niệm Ngày Yêu",
   val createdAt: Long = System.currentTimeMillis(),
   val relationshipId: String? = null,
   val authorId: String = "",
@@ -131,7 +135,7 @@ data class LoveBadgeEntity(
 data class AnniversaryDateEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
-  val dateText: String, // e.g. "18/12/2022"
+  val dateText: String,
   val type: String = "LOVE", // "LOVE", "FIRST_DATE", "FIRST_KISS", "PROPOSAL", "WEDDING", "CUSTOM"
   val description: String = "",
   val isAnnual: Boolean = true,
@@ -149,8 +153,8 @@ data class GiftReminderEntity(
   val title: String,
   val recipient: String = "Người ấy",
   val occasion: String = "Kỷ niệm ngày yêu",
-  val dueDateText: String = "11 Tháng 9, 2026",
-  val estimatedBudget: String = "500.000đ",
+  val dueDateText: String = "",
+  val estimatedBudget: String = "",
   val notes: String = "",
   val isCompleted: Boolean = false,
   val alarmTimeMillis: Long? = null,
@@ -195,13 +199,25 @@ data class OnlineUserEntity(
   val zodiac: String = "",
   val bio: String = "",
   val isProfileSetup: Boolean = false,
-  val isCurrentUser: Boolean = false
+  val isCurrentUser: Boolean = false,
+  val role: String = "USER_FREE",
+  val subscriptionTier: String = "FREE",
+  val isVip: Boolean = false
 ) {
   val interests: List<String>
     get() = interestsCsv.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
   val effectiveDisplayName: String
     get() = if (!isProfileSetup || displayName.isBlank()) "Vô danh" else displayName
+
+  val userRole: UserRole
+    get() = UserRole.fromCode(role)
+
+  val tier: SubscriptionTier
+    get() = SubscriptionTier.fromCode(subscriptionTier)
+
+  val isAdFree: Boolean
+    get() = isVip || RbacPolicy.isAdFree(userRole, tier)
 }
 
 @Entity(tableName = "online_relationships")
@@ -238,7 +254,7 @@ data class OnlineInviteEntity(
   val createdAt: Long = System.currentTimeMillis()
 ) {
   val effectiveSenderName: String
-    get() = if (senderName.isBlank()) "Vô danh" else senderName
+    get() = senderName.ifBlank { "Vô danh" }
 }
 
 @Entity(tableName = "user_accounts")
@@ -258,8 +274,20 @@ data class UserAccountEntity(
   val securityAnswerHash: String = "",
   val appPin: String = "",
   val isPinEnabled: Boolean = false,
-  val sessionToken: String = ""
-)
+  val sessionToken: String = "",
+  val role: String = "USER_FREE",
+  val subscriptionTier: String = "FREE",
+  val isVip: Boolean = false
+) {
+  val userRole: UserRole
+    get() = UserRole.fromCode(role)
+
+  val tier: SubscriptionTier
+    get() = SubscriptionTier.fromCode(subscriptionTier)
+
+  val isAdFree: Boolean
+    get() = isVip || RbacPolicy.isAdFree(userRole, tier)
+}
 
 @Entity(tableName = "security_audit_logs")
 data class SecurityAuditLogEntity(

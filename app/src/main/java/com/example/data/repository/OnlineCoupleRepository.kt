@@ -26,19 +26,19 @@ import kotlinx.coroutines.withContext
 
 class OnlineCoupleRepository(
   private val dao: InLoveDao,
-  private val context: Context
+  context: Context
 ) {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
   // Demo user IDs for seamless 1-1 testing on device
   companion object {
-    const val USER_A_ID = "user_123"
-    const val USER_A_CODE = "LOVE-8821"
-    const val USER_A_NAME = "Hoàng"
+    const val USER_A_ID = "test_user_a"
+    const val USER_A_CODE = "TEST-8888"
+    const val USER_A_NAME = "Tester A"
 
-    const val USER_B_ID = "user_456"
-    const val USER_B_CODE = "LOVE-9966"
-    const val USER_B_NAME = "Khánh Linh"
+    const val USER_B_ID = "test_user_b"
+    const val USER_B_CODE = "TEST-9999"
+    const val USER_B_NAME = "Tester B"
 
     val AVAILABLE_INTERESTS = listOf(
       "coffee" to "Cà phê ☕",
@@ -52,69 +52,40 @@ class OnlineCoupleRepository(
       "books" to "Sách & Thơ 📚",
       "gaming" to "Chơi game 🎮"
     )
+
+    fun createEmptyUser(uid: String = "guest_user"): OnlineUserEntity {
+      return OnlineUserEntity(
+        uid = uid,
+        displayName = "Bạn",
+        email = "",
+        coupleCode = ProfileUtils.generateRandomCoupleCode(),
+        partnerId = null,
+        relationshipId = null,
+        status = OnlineStatus.SINGLE,
+        interestsCsv = "coffee,travel",
+        avatarUrl = "",
+        gender = "MALE",
+        birthDate = "",
+        age = 0,
+        zodiac = "",
+        bio = "Chào mừng bạn đến với InLove 💕",
+        isProfileSetup = false,
+        isCurrentUser = true
+      )
+    }
   }
 
   // Active User StateFlows
-  private val _currentUserId = MutableStateFlow(USER_A_ID)
+  private val _currentUserId = MutableStateFlow("guest_user")
   val currentUserId: StateFlow<String> = _currentUserId.asStateFlow()
 
-  private val _currentUser = MutableStateFlow(
-    OnlineUserEntity(
-      uid = USER_A_ID,
-      displayName = USER_A_NAME,
-      email = "hoang.inlove@gmail.com",
-      coupleCode = USER_A_CODE,
-      partnerId = USER_B_ID,
-      relationshipId = "rel_789",
-      status = OnlineStatus.COUPLED,
-      interestsCsv = "coffee,cycling,technology,travel",
-      avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop",
-      gender = "MALE",
-      birthDate = "15/10/2004",
-      age = 22,
-      zodiac = "Thiên Bình",
-      bio = "Yêu thương và luôn ở bên em 💕",
-      isProfileSetup = true,
-      isCurrentUser = true
-    )
-  )
+  private val _currentUser = MutableStateFlow(createEmptyUser())
   val currentUser: StateFlow<OnlineUserEntity> = _currentUser.asStateFlow()
 
-  private val _partnerUser = MutableStateFlow<OnlineUserEntity?>(
-    OnlineUserEntity(
-      uid = USER_B_ID,
-      displayName = USER_B_NAME,
-      email = "khanhlinh.inlove@gmail.com",
-      coupleCode = USER_B_CODE,
-      partnerId = USER_A_ID,
-      relationshipId = "rel_789",
-      status = OnlineStatus.COUPLED,
-      interestsCsv = "coffee,travel,fashion,cinema,music",
-      avatarUrl = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=600&auto=format&fit=crop",
-      gender = "FEMALE",
-      birthDate = "24/07/2003",
-      age = 23,
-      zodiac = "Sư Tử",
-      bio = "Mỗi ngày trôi qua đều là một ngày hạnh phúc ✨",
-      isProfileSetup = true,
-      isCurrentUser = false
-    )
-  )
+  private val _partnerUser = MutableStateFlow<OnlineUserEntity?>(null)
   val partnerUser: StateFlow<OnlineUserEntity?> = _partnerUser.asStateFlow()
 
-  private val _activeRelationship = MutableStateFlow<OnlineRelationshipEntity?>(
-    OnlineRelationshipEntity(
-      relationshipId = "rel_789",
-      user1 = USER_A_ID,
-      user2 = USER_B_ID,
-      startDate = 1671321600000L, // 18/12/2022
-      startDateText = "18/12/2022",
-      status = RelationshipStatus.ACTIVE,
-      breakupRequestedBy = null,
-      breakupRequestedAt = null,
-      createdAt = 1671321600000L
-    )
-  )
+  private val _activeRelationship = MutableStateFlow<OnlineRelationshipEntity?>(null)
   val activeRelationship: StateFlow<OnlineRelationshipEntity?> = _activeRelationship.asStateFlow()
 
   private val _incomingInvite = MutableStateFlow<OnlineInviteEntity?>(null)
@@ -123,10 +94,10 @@ class OnlineCoupleRepository(
   private val _outgoingInvite = MutableStateFlow<OnlineInviteEntity?>(null)
   val outgoingInvite: StateFlow<OnlineInviteEntity?> = _outgoingInvite.asStateFlow()
 
-  private val _relationshipStatus = MutableStateFlow(OnlineStatus.COUPLED)
+  private val _relationshipStatus = MutableStateFlow(OnlineStatus.SINGLE)
   val relationshipStatus: StateFlow<String> = _relationshipStatus.asStateFlow()
 
-  private val _mutualInterests = MutableStateFlow<Set<String>>(setOf("coffee", "travel"))
+  private val _mutualInterests = MutableStateFlow<Set<String>>(emptySet())
   val mutualInterests: StateFlow<Set<String>> = _mutualInterests.asStateFlow()
 
   // Optional Firestore instance
@@ -142,72 +113,31 @@ class OnlineCoupleRepository(
     }
 
     scope.launch {
-      seedInitialOnlineDataIfEmpty()
       refreshState()
     }
   }
 
-  private suspend fun seedInitialOnlineDataIfEmpty() = withContext(Dispatchers.IO) {
-    val existingUser = dao.getOnlineUserByUidSync(USER_A_ID)
-    if (existingUser == null) {
-      val userA = OnlineUserEntity(
-        uid = USER_A_ID,
-        displayName = USER_A_NAME,
-        email = "hoang.inlove@gmail.com",
-        coupleCode = USER_A_CODE,
-        partnerId = USER_B_ID,
-        relationshipId = "rel_789",
-        status = OnlineStatus.COUPLED,
-        interestsCsv = "coffee,cycling,technology,travel",
-        avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop",
-        gender = "MALE",
-        birthDate = "15/10/2004",
-        age = 22,
-        zodiac = "Thiên Bình",
-        bio = "Yêu thương và luôn ở bên em 💕",
-        isProfileSetup = true,
-        isCurrentUser = true
-      )
-
-      val userB = OnlineUserEntity(
-        uid = USER_B_ID,
-        displayName = USER_B_NAME,
-        email = "khanhlinh.inlove@gmail.com",
-        coupleCode = USER_B_CODE,
-        partnerId = USER_A_ID,
-        relationshipId = "rel_789",
-        status = OnlineStatus.COUPLED,
-        interestsCsv = "coffee,travel,fashion,cinema,music",
-        avatarUrl = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=600&auto=format&fit=crop",
-        gender = "FEMALE",
-        birthDate = "24/07/2003",
-        age = 23,
-        zodiac = "Sư Tử",
-        bio = "Mỗi ngày trôi qua đều là một ngày hạnh phúc ✨",
-        isProfileSetup = true,
-        isCurrentUser = false
-      )
-
-      val defaultRel = OnlineRelationshipEntity(
-        relationshipId = "rel_789",
-        user1 = USER_A_ID,
-        user2 = USER_B_ID,
-        startDate = 1671321600000L,
-        startDateText = "18/12/2022",
-        status = RelationshipStatus.ACTIVE,
-        breakupRequestedBy = null,
-        breakupRequestedAt = null,
-        createdAt = 1671321600000L
-      )
-
-      dao.insertOnlineUsers(listOf(userA, userB))
-      dao.insertOnlineRelationship(defaultRel)
+  suspend fun setCurrentUserId(uid: String) = withContext(Dispatchers.IO) {
+    if (uid.isBlank()) {
+      _currentUserId.value = "guest_user"
+      _currentUser.value = createEmptyUser()
+      _partnerUser.value = null
+      _activeRelationship.value = null
+      _relationshipStatus.value = OnlineStatus.SINGLE
+      return@withContext
     }
+    _currentUserId.value = uid
+    refreshState()
   }
 
   suspend fun refreshState() = withContext(Dispatchers.IO) {
     val currentUid = _currentUserId.value
-    val me = dao.getOnlineUserByUidSync(currentUid) ?: return@withContext
+    var me = dao.getOnlineUserByUidSync(currentUid)
+    if (me == null) {
+      val defaultUser = createEmptyUser(currentUid)
+      dao.insertOnlineUser(defaultUser)
+      me = defaultUser
+    }
     _currentUser.value = me
     _relationshipStatus.value = me.status
 
@@ -239,7 +169,6 @@ class OnlineCoupleRepository(
   }
 
   suspend fun ensureInitialized() = withContext(Dispatchers.IO) {
-    seedInitialOnlineDataIfEmpty()
     refreshState()
   }
 
@@ -344,14 +273,7 @@ class OnlineCoupleRepository(
     if (results.isNotEmpty()) {
       return@withContext results.first()
     }
-    // Fallback search against demo profiles if not found yet
-    if (trimmed.contains("hoang", ignoreCase = true) || trimmed.contains("nam", ignoreCase = true) || trimmed.contains("9966")) {
-      dao.getOnlineUserByUidSync(USER_A_ID)
-    } else if (trimmed.contains("linh", ignoreCase = true) || trimmed.contains("nu", ignoreCase = true) || trimmed.contains("2026")) {
-      dao.getOnlineUserByUidSync(USER_B_ID)
-    } else {
-      null
-    }
+    null
   }
 
   suspend fun getAllPotentialPartners(): List<OnlineUserEntity> = withContext(Dispatchers.IO) {
@@ -380,9 +302,7 @@ class OnlineCoupleRepository(
     }
 
     val targetUser = dao.getOnlineUserByCoupleCodeSync(trimmedCode)
-    if (targetUser == null) {
-      return@withContext false to "Không tìm thấy người dùng với mã $trimmedCode. Hãy kiểm tra lại mã!"
-    }
+      ?: return@withContext false to "Không tìm thấy người dùng với mã $trimmedCode. Hãy kiểm tra lại mã!"
     if (targetUser.status == OnlineStatus.COUPLED) {
       return@withContext false to "Người này đã có đôi có cặp (Set Love) với người khác!"
     }
@@ -416,8 +336,8 @@ class OnlineCoupleRepository(
     _currentUser.value = updatedMe
     _relationshipStatus.value = OnlineStatus.PENDING_INVITE
 
-    // If target is the other demo user, set their incoming invite
-    if (targetUser.uid == _partnerUser.value?.uid || targetUser.uid == USER_B_ID || targetUser.uid == USER_A_ID) {
+    // If target is currently loaded partner, update incoming invite
+    if (targetUser.uid == _partnerUser.value?.uid) {
       _incomingInvite.value = invite
     }
 
@@ -438,13 +358,13 @@ class OnlineCoupleRepository(
   ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     val me = _currentUser.value
     val incoming = _incomingInvite.value ?: dao.getInviteByIdSync(inviteId)
+      ?: return@withContext false to "Không tìm thấy thông tin lời mời!"
 
-    val senderUid = incoming?.senderUid ?: if (me.uid == USER_A_ID) USER_B_ID else USER_A_ID
-    val sender = dao.getOnlineUserByUidSync(senderUid) ?: return@withContext false to "Không tìm thấy người gửi lời mời!"
+    val sender = dao.getOnlineUserByUidSync(incoming.senderUid)
+      ?: return@withContext false to "Không tìm thấy người gửi lời mời!"
 
-    // Determine final agreed anniversary date
     val finalStartDate = confirmedStartDateMillis
-      ?: if (incoming != null && incoming.proposedStartDate > 0) incoming.proposedStartDate
+      ?: if (incoming.proposedStartDate > 0) incoming.proposedStartDate
       else System.currentTimeMillis()
     val finalStartDateText = ProfileUtils.formatDate(finalStartDate)
     val finalLoveDays = ProfileUtils.calculateLoveDays(finalStartDate)
@@ -488,9 +408,7 @@ class OnlineCoupleRepository(
     _relationshipStatus.value = OnlineStatus.COUPLED
 
     // Clean up invite
-    if (incoming != null) {
-      dao.deleteOnlineInvite(incoming.inviteId)
-    }
+    dao.deleteOnlineInvite(incoming.inviteId)
     _incomingInvite.value = null
     _outgoingInvite.value = null
 
@@ -512,7 +430,7 @@ class OnlineCoupleRepository(
       partner2ProfilePicture = p2.avatarUrl,
       partner2Age = p2.age,
       partner2Zodiac = p2.zodiac,
-      loveTitle = currentProfile?.loveTitle ?: "Bámmmm",
+      loveTitle = currentProfile?.loveTitle?.ifBlank { "InLove" } ?: "InLove",
       loveDays = finalLoveDays,
       anniversaryDate = finalStartDateText,
       updatedAt = System.currentTimeMillis()

@@ -1,6 +1,8 @@
 package com.example.ui.viewmodel
 
+import android.app.Activity
 import android.app.Application
+import com.android.billingclient.api.ProductDetails
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.db.AppDatabase
@@ -23,6 +25,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +69,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val loveBadges: StateFlow<List<LoveBadgeEntity>>
   val anniversaryDates: StateFlow<List<AnniversaryDateEntity>>
   val giftReminders: StateFlow<List<GiftReminderEntity>>
+  val presetPhotos: StateFlow<List<String>>
+  val presetAvatars: StateFlow<List<String>>
+  val presetWallpapers: StateFlow<List<String>>
 
   // Online 1-1 Set Love StateFlows
   val currentOnlineUser: StateFlow<com.example.data.model.OnlineUserEntity>
@@ -75,6 +81,18 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val mutualInterests: StateFlow<Set<String>>
   val incomingInvite: StateFlow<com.example.data.model.OnlineInviteEntity?>
   val outgoingInvite: StateFlow<com.example.data.model.OnlineInviteEntity?>
+
+  // RBAC & VIP Subscription StateFlows
+  val userRole: StateFlow<com.example.data.model.UserRole>
+  val subscriptionTier: StateFlow<com.example.data.model.SubscriptionTier>
+  val isVip: StateFlow<Boolean>
+
+  private val _showVipDialog = MutableStateFlow(false)
+  val showVipDialog: StateFlow<Boolean> = _showVipDialog.asStateFlow()
+
+  fun setVipDialogVisible(visible: Boolean) {
+    _showVipDialog.value = visible
+  }
 
   private val _showPairingScreen = MutableStateFlow(false)
   val showPairingScreen: StateFlow<Boolean> = _showPairingScreen.asStateFlow()
@@ -134,9 +152,18 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   private val _sweetNoteLiked = MutableStateFlow(false)
   val sweetNoteLiked: StateFlow<Boolean> = _sweetNoteLiked.asStateFlow()
 
-  // App Language (VI or EN)
-  private val _appLanguage = MutableStateFlow(AppLanguage.VI)
+  // App Language (VI or EN) - dynamically detected from device locale or saved preferences
+  private val _appLanguage = MutableStateFlow(com.example.ui.util.LocaleManager.getInitialLanguage(application))
   val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+  // First-run / Onboarding state
+  private val _isFirstLaunch = MutableStateFlow(com.example.ui.util.LocaleManager.isFirstLaunch(application))
+  val isFirstLaunch: StateFlow<Boolean> = _isFirstLaunch.asStateFlow()
+
+  fun completeFirstLaunch() {
+    _isFirstLaunch.value = false
+    com.example.ui.util.LocaleManager.setFirstLaunchCompleted(getApplication())
+  }
 
   // Language Dialog State (Shown on entry or when tapped)
   private val _showLanguageDialog = MutableStateFlow(false)
@@ -185,47 +212,78 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val showBadgeShowcaseDialog: StateFlow<Boolean> = _showBadgeShowcaseDialog.asStateFlow()
 
   // Couple Profile State (as shown in user's image.png: Mhoang & TLinh)
-  private val _boyName = MutableStateFlow("Mhoang")
+  // Couple Profile State (Default clean state for production)
+  private val _boyName = MutableStateFlow("Bạn")
   val boyName: StateFlow<String> = _boyName.asStateFlow()
 
-  private val _boyBirthDate = MutableStateFlow("15/10/2004")
+  private val _boyBirthDate = MutableStateFlow("")
   val boyBirthDate: StateFlow<String> = _boyBirthDate.asStateFlow()
 
-  private val _boyAge = MutableStateFlow(20)
+  private val _boyAge = MutableStateFlow(0)
   val boyAge: StateFlow<Int> = _boyAge.asStateFlow()
 
-  private val _boyZodiac = MutableStateFlow("Thiên Bình")
+  private val _boyZodiac = MutableStateFlow("")
   val boyZodiac: StateFlow<String> = _boyZodiac.asStateFlow()
 
-  private val _boyAvatarUrl = MutableStateFlow("https://lh3.googleusercontent.com/aida-public/AB6AXuCg-PmA8kAH3aEsx4nS5akuDkkWQeWMutmW8Lc76ASO-JMvtiwMNbsTfuYqBGpez7bHTAYekQNilJ5X5BHaP78pQf4tATX48UynvtOeQWG8kcCF-v9OqIdcm1OAjLGtZsO1ygTFLVd9qW-yngUnwCmOtlFWn_wzhCPvYfzMcFLVzeEoOX9NuP8fk911cjdlzd0yv0FvSo3h7qg26BWqyaqSpVwTuvKoKaZ20NJLOUWeBfHbRlqMZcIwfI1FL31cw1WGBrQ")
+  private val _boyAvatarUrl = MutableStateFlow("")
   val boyAvatarUrl: StateFlow<String> = _boyAvatarUrl.asStateFlow()
 
-  private val _girlName = MutableStateFlow("TLinh")
+  private val _girlName = MutableStateFlow("Người Thương")
   val girlName: StateFlow<String> = _girlName.asStateFlow()
 
-  private val _girlBirthDate = MutableStateFlow("24/07/2003")
+  private val _girlBirthDate = MutableStateFlow("")
   val girlBirthDate: StateFlow<String> = _girlBirthDate.asStateFlow()
 
-  private val _girlAge = MutableStateFlow(21)
+  private val _girlAge = MutableStateFlow(0)
   val girlAge: StateFlow<Int> = _girlAge.asStateFlow()
 
-  private val _girlZodiac = MutableStateFlow("Cự Giải")
+  private val _girlZodiac = MutableStateFlow("")
   val girlZodiac: StateFlow<String> = _girlZodiac.asStateFlow()
 
-  private val _girlAvatarUrl = MutableStateFlow("https://lh3.googleusercontent.com/aida-public/AB6AXuA7FGhAVlT3aua6tzpkBgh-_XXVsY-hCGooIPxOJ0acYyvZV9FZpASsMTgGO0vBFJLrLojRgwwnQEjfWAniwj2FAiKNpUjSRFNIQgmOhVN8fFSYwpOqLF8hAnWk3UM0dWxSVT1FwaK9ovXMP7Jwi-gjfRbUm2ISX1qyUY6bpBKBZnBYk7YIorizTPWI5c6w9XUdTTsMLFWT3c5ns8lYQooC0eEvt6S5zJNNobW_pn1PTJOb0K2REgdfTQ")
+  private val _girlAvatarUrl = MutableStateFlow("")
   val girlAvatarUrl: StateFlow<String> = _girlAvatarUrl.asStateFlow()
 
-  private val _loveTitle = MutableStateFlow("Bámmmm")
+  private val _loveTitle = MutableStateFlow("Hành Trình Yêu Thương")
   val loveTitle: StateFlow<String> = _loveTitle.asStateFlow()
 
-  private val _loveDays = MutableStateFlow(1349)
+  private val _loveDays = MutableStateFlow(1)
   val loveDays: StateFlow<Int> = _loveDays.asStateFlow()
 
-  private val _anniversaryDate = MutableStateFlow("18/12/2022")
+  private val _anniversaryDate = MutableStateFlow("Hôm nay")
   val anniversaryDate: StateFlow<String> = _anniversaryDate.asStateFlow()
 
   private val _showEditCoupleDialog = MutableStateFlow(false)
   val showEditCoupleDialog: StateFlow<Boolean> = _showEditCoupleDialog.asStateFlow()
+
+  private val _showAuthScreen = MutableStateFlow(false)
+  val showAuthScreen: StateFlow<Boolean> = _showAuthScreen.asStateFlow()
+
+  fun openAuthScreen() {
+    _showAuthScreen.value = true
+  }
+
+  fun closeAuthScreen() {
+    _showAuthScreen.value = false
+  }
+
+  fun saveLocalAvatar(uri: android.net.Uri, isPartner: Boolean): String {
+    return try {
+      val context = getApplication<Application>()
+      val avatarsDir = java.io.File(context.filesDir, "avatars").apply { if (!exists()) mkdirs() }
+      val fileName = if (isPartner) "partner_avatar_${System.currentTimeMillis()}.jpg" else "user_avatar_${System.currentTimeMillis()}.jpg"
+      val destFile = java.io.File(avatarsDir, fileName)
+
+      context.contentResolver.openInputStream(uri)?.use { input ->
+        destFile.outputStream().use { output ->
+          input.copyTo(output)
+        }
+      }
+      destFile.toURI().toString()
+    } catch (e: Exception) {
+      android.util.Log.e("InLoveViewModel", "Error saving local avatar: ${e.message}")
+      uri.toString()
+    }
+  }
 
   init {
     val database = AppDatabase.getDatabase(application)
@@ -242,6 +300,71 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     mutualInterests = onlineRepo.mutualInterests
     incomingInvite = onlineRepo.incomingInvite
     outgoingInvite = onlineRepo.outgoingInvite
+
+    userRole = combine(currentOnlineUser, authState) { user, auth ->
+      if (auth is com.example.data.repository.AuthState.Authenticated) {
+        auth.account.userRole
+      } else {
+        user.userRole
+      }
+    }.stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      com.example.data.model.UserRole.USER_FREE
+    )
+
+    subscriptionTier = combine(currentOnlineUser, authState) { user, auth ->
+      if (auth is com.example.data.repository.AuthState.Authenticated) {
+        auth.account.tier
+      } else {
+        user.tier
+      }
+    }.stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      com.example.data.model.SubscriptionTier.FREE
+    )
+
+    com.example.di.AppServiceLocator.initialize(application)
+    val billingManager = com.example.di.AppServiceLocator.billingManager
+    val adsManager = com.example.di.AppServiceLocator.adsManager
+
+    isVip = combine(currentOnlineUser, authState, billingManager.isVipUser) { user, auth, billingVip ->
+      billingVip || user.isAdFree || (auth is com.example.data.repository.AuthState.Authenticated && auth.account.isVip)
+    }.stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      false
+    )
+
+    // Tự động đồng bộ trạng thái VIP với AdsManager để dọn cache ads
+    viewModelScope.launch {
+      isVip.collect { vip ->
+        adsManager.setVipStatus(vip)
+      }
+    }
+
+    // Khi thanh toán qua Google Play thành công, tự động cập nhật Firestore
+    viewModelScope.launch {
+      billingManager.isVipUser.collect { isBillingVip ->
+        if (isBillingVip) {
+          val currentAuth = authState.value
+          val uid = if (currentAuth is com.example.data.repository.AuthState.Authenticated) {
+            currentAuth.account.uid
+          } else {
+            currentOnlineUser.value.uid
+          }
+          if (uid.isNotBlank()) {
+            authRepo.updateUserSubscription(
+              uid,
+              com.example.data.model.UserRole.USER_VIP,
+              com.example.data.model.SubscriptionTier.VIP_YEARLY
+            )
+            onlineRepo.setCurrentUserId(uid)
+          }
+        }
+      }
+    }
 
     milestones = repository.milestones.stateIn(
       viewModelScope,
@@ -303,6 +426,18 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       emptyList()
     )
 
+    presetPhotos = repository.presetPhotos
+    presetAvatars = repository.presetAvatars
+    presetWallpapers = repository.presetWallpapers
+
+    viewModelScope.launch {
+      presetWallpapers.collect { wallpapers ->
+        if (wallpapers.isNotEmpty() && _selectedWallpaperUrl.value.isBlank()) {
+          _selectedWallpaperUrl.value = wallpapers.first()
+        }
+      }
+    }
+
     viewModelScope.launch {
       repository.initializeDefaultDataIfEmpty()
       // Automatically schedule all stored anniversaries & milestones in Room DB
@@ -329,6 +464,41 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       }
     }
 
+    // Sync online user and partner data dynamically into couple profile state
+    viewModelScope.launch {
+      currentOnlineUser.collect { user ->
+        if (user.displayName.isNotBlank() && user.displayName != "Bạn") {
+          _boyName.value = user.displayName
+        }
+        if (user.birthDate.isNotBlank()) _boyBirthDate.value = user.birthDate
+        if (user.avatarUrl.isNotBlank()) _boyAvatarUrl.value = user.avatarUrl
+        if (user.age > 0) _boyAge.value = user.age
+        if (user.zodiac.isNotBlank()) _boyZodiac.value = user.zodiac
+      }
+    }
+
+    viewModelScope.launch {
+      partnerOnlineUser.collect { partner ->
+        if (partner != null) {
+          _girlName.value = partner.displayName
+          if (partner.birthDate.isNotBlank()) _girlBirthDate.value = partner.birthDate
+          if (partner.avatarUrl.isNotBlank()) _girlAvatarUrl.value = partner.avatarUrl
+          if (partner.age > 0) _girlAge.value = partner.age
+          if (partner.zodiac.isNotBlank()) _girlZodiac.value = partner.zodiac
+        }
+      }
+    }
+
+    viewModelScope.launch {
+      activeRelationship.collect { rel ->
+        if (rel != null) {
+          if (rel.startDateText.isNotBlank()) _anniversaryDate.value = rel.startDateText
+          val days = com.example.ui.util.ProfileUtils.calculateLoveDays(rel.startDate)
+          if (days > 0) _loveDays.value = days
+        }
+      }
+    }
+
     // Automatically schedule upcoming love anniversary milestones based on Firestore start date
     viewModelScope.launch {
       combine(
@@ -339,7 +509,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         Triple(rel, annDate, partner)
       }.collect { (rel, annDate, partner) ->
         val startMillis = rel?.startDate ?: 0L
-        val startDateText = if (rel?.startDateText.isNullOrBlank()) annDate else rel!!.startDateText
+        val startDateText = if (rel?.startDateText.isNullOrBlank()) annDate else rel.startDateText
         val partnerName = partner?.effectiveDisplayName ?: "người ấy"
 
         // Recalculate upcoming milestones list
@@ -522,14 +692,15 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       showToast("Vui lòng nhập tiêu đề kỷ niệm!")
       return
     }
+    val defaultFallback = presetPhotos.value.firstOrNull() ?: ""
     viewModelScope.launch {
       val ms = MilestoneEntity(
         title = title,
         dateText = dateText,
         subtitle = subtitle,
-        categoryTag = if (categoryTag.isNotBlank()) categoryTag else "Kỷ Niệm",
-        secondaryTag = if (secondaryTag.isNotBlank()) secondaryTag else "Ý Nghĩa",
-        imageUrl = if (imageUrl.isNotBlank()) imageUrl else "https://lh3.googleusercontent.com/aida-public/AB6AXuANA2ChG6LS0d4msPLYL4g-4W2BU_q52b1udp8NDaY4NJSzyw4NZnx6e2qKT1oMKzYrc76_1-nMndDIrMSO7k1QXvz66V8WEt7D3GuZmigotLqTpeJbbAdYrKyOPyUV1W-RxHRZbCo09c24vQC-5ZIS2iG1PM6s7V5_nejLv9V0-tTQujYKsbrgGRbfxlS_JvPgXqa_zXWfABTSL3rCM-VVaw2iIyPJ43vA8jK5bjWCrVYznx4hzUS6_w",
+        categoryTag = categoryTag.ifBlank { "Kỷ Niệm" },
+        secondaryTag = secondaryTag.ifBlank { "Ý Nghĩa" },
+        imageUrl = imageUrl.ifBlank { defaultFallback },
         daysRemaining = daysRemaining,
         isPast = daysRemaining < 0,
         isImportant = isImportant,
@@ -588,19 +759,19 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     girlZod: String,
     title: String,
     days: Int,
-    anniversary: String = "18/12/2022"
+    anniversary: String = ""
   ) {
-    val cleanBoy = boy.trim().ifEmpty { "Mhoang" }
-    val cleanBoyBirth = boyBirth.trim().ifEmpty { "15/10/2004" }
+    val cleanBoy = boy.trim().ifEmpty { _boyName.value.ifBlank { "Bạn" } }
+    val cleanBoyBirth = boyBirth.trim().ifEmpty { _boyBirthDate.value }
     val cleanBoyAvatar = boyAvatar.trim().ifEmpty { _boyAvatarUrl.value }
-    val cleanBoyZod = boyZod.trim().ifEmpty { "Thiên Bình" }
+    val cleanBoyZod = boyZod.trim().ifEmpty { _boyZodiac.value }
 
-    val cleanGirl = girl.trim().ifEmpty { "TLinh" }
-    val cleanGirlBirth = girlBirth.trim().ifEmpty { "24/07/2003" }
+    val cleanGirl = girl.trim().ifEmpty { _girlName.value.ifBlank { "Người thương" } }
+    val cleanGirlBirth = girlBirth.trim().ifEmpty { _girlBirthDate.value }
     val cleanGirlAvatar = girlAvatar.trim().ifEmpty { _girlAvatarUrl.value }
-    val cleanGirlZod = girlZod.trim().ifEmpty { "Cự Giải" }
+    val cleanGirlZod = girlZod.trim().ifEmpty { _girlZodiac.value }
 
-    val cleanTitle = title.trim().ifEmpty { "Bámmmm" }
+    val cleanTitle = title.trim().ifEmpty { _loveTitle.value.ifBlank { "Hành Trình Yêu Thương" } }
 
     viewModelScope.launch {
       val entity = CoupleProfileEntity(
@@ -644,7 +815,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
   /**
    * Calculates the exact number of days a couple has been together given their
-   * anniversary/start date string (e.g. "18/12/2022").
+   * anniversary/start date string (e.g. "14/02/2023").
    * Counts the start day as day 1 so today is included in the streak.
    */
   fun calculateLoveDaysFromDate(dateStr: String): Int {
@@ -679,7 +850,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
    * Room Database and UI StateFlows, and gives celebratory romantic feedback.
    */
   fun setAnniversaryAndRecalculateDays(newDate: String) {
-    val cleanDate = newDate.trim().ifEmpty { "18/12/2022" }
+    val cleanDate = newDate.trim().ifEmpty { _anniversaryDate.value.ifBlank { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()) } }
     val calcDays = calculateLoveDaysFromDate(cleanDate)
     _anniversaryDate.value = cleanDate
     _loveDays.value = calcDays
@@ -704,6 +875,88 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       )
     }
   }
+
+  /**
+   * Upgrade user to VIP tier and remove all banner advertisements.
+   */
+  fun upgradeSubscription(tier: com.example.data.model.SubscriptionTier) {
+    viewModelScope.launch {
+      val currentAuth = authState.value
+      val uid = if (currentAuth is com.example.data.repository.AuthState.Authenticated) {
+        currentAuth.account.uid
+      } else {
+        currentOnlineUser.value.uid
+      }
+      val role = if (tier != com.example.data.model.SubscriptionTier.FREE) {
+        com.example.data.model.UserRole.USER_VIP
+      } else {
+        com.example.data.model.UserRole.USER_FREE
+      }
+      val success = authRepo.updateUserSubscription(uid, role, tier)
+      if (success) {
+        onlineRepo.setCurrentUserId(uid)
+        showToast("✨ Chúc mừng bạn đã nâng cấp ${tier.titleVi}! Toàn bộ quảng cáo đã được ẩn.")
+      } else {
+        showToast("Không thể cập nhật gói đăng ký. Vui lòng thử lại sau.")
+      }
+    }
+  }
+
+  /**
+   * Mở giao diện thanh toán Google Play Billing cho gói đăng ký VIP.
+   */
+  fun upgradeWithBilling(
+    activity: Activity,
+    productDetails: ProductDetails,
+    offerToken: String = ""
+  ) {
+    com.example.di.AppServiceLocator.billingManager.launchPurchaseFlow(activity, productDetails, offerToken)
+  }
+
+  /**
+   * Khôi phục giao dịch đã mua từ Google Play (Restore Purchases).
+   */
+  fun restorePurchases(onComplete: ((Boolean) -> Unit)? = null) {
+    com.example.di.AppServiceLocator.billingManager.queryExistingPurchases { success ->
+      if (success) {
+        showToast("✅ Đã khôi phục thành công gói VIP!")
+      } else {
+        showToast("Không tìm thấy giao dịch VIP nào cho tài khoản này.")
+      }
+      onComplete?.invoke(success)
+    }
+  }
+
+  /**
+   * Hiển thị quảng cáo xen kẽ Interstitial Ad với cơ chế tự động capping 30 giây.
+   */
+  fun showInterstitialAd(activity: Activity, onDismissed: () -> Unit = {}) {
+    com.example.di.AppServiceLocator.adsManager.showInterstitial(activity, onDismissed)
+  }
+
+  /**
+   * Generates AI-powered gift suggestions tailored to partner and mutual interests.
+   */
+  fun triggerAiGiftSuggestions(occasion: String = "Kỷ niệm ngày yêu") {
+    viewModelScope.launch {
+      val partner = partnerOnlineUser.value
+      val partnerName = partner?.effectiveDisplayName ?: girlName.value
+      val interests = mutualInterests.value
+      showToast("🤖 Trợ lý AI đang sáng tạo ý tưởng quà tặng theo sở thích...")
+      val result = repository.generateAiGiftSuggestions(
+        partnerName = partnerName,
+        mutualInterests = interests,
+        occasion = occasion
+      )
+      if (result.isSuccess) {
+        showToast("✨ Đã tạo ${result.getOrNull()?.size ?: 0} gợi ý quà tặng AI mới!")
+      } else {
+        showToast("Trợ lý AI đang cập nhật. Đã nạp danh mục quà tặng lãng mạn mặc định.")
+      }
+    }
+  }
+
+
 
   /**
    * Direct sync of calculated days to the couple profile and database.
@@ -825,9 +1078,10 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
   fun setLanguage(lang: AppLanguage) {
     _appLanguage.value = lang
+    com.example.ui.util.LocaleManager.saveLanguage(getApplication(), lang)
     val resId = if (lang == AppLanguage.VI) com.example.R.string.toast_switched_vi else com.example.R.string.toast_switched_en
     val config = android.content.res.Configuration(getApplication<Application>().resources.configuration).apply {
-      setLocale(if (lang == AppLanguage.VI) java.util.Locale("vi") else java.util.Locale("en"))
+      setLocale(java.util.Locale.forLanguageTag(if (lang == AppLanguage.VI) "vi" else "en"))
     }
     val localizedContext = getApplication<Application>().createConfigurationContext(config)
     val notice = localizedContext.getString(resId)
@@ -878,9 +1132,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun saveMemory(note: String, photoUrl: String) {
     viewModelScope.launch {
       val cleanNote = note.trim().ifEmpty { "Kỷ niệm ngày yêu ngọt ngào cùng nhau" }
-      val cleanUrl = photoUrl.trim().ifEmpty {
-        "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=1080&auto=format&fit=crop"
-      }
+      val defaultFallback = presetPhotos.value.firstOrNull() ?: ""
+      val cleanUrl = photoUrl.trim().ifEmpty { defaultFallback }
       repository.addMilestone(
         MilestoneEntity(
           title = "Khoảnh Khắc: ${cleanNote.take(24)}",
@@ -907,7 +1160,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     photoUri: String,
     note: String = "",
     location: String = "",
-    anniversaryTitle: String = "18/12 - Ngày Yêu Nhau",
+    anniversaryTitle: String = "Kỷ Niệm Ngày Yêu",
     mediaType: String = "IMAGE",
     videoUri: String? = null,
     cloudinaryPublicId: String? = null,
@@ -920,10 +1173,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     viewModelScope.launch {
       val validTitle = title.trim().ifEmpty { "Khoảnh Khắc Ngọt Ngào" }
       val validDate = dateText.trim().ifEmpty { "Hôm nay" }
-      val validUri = photoUri.trim().ifEmpty {
-        "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=1080&auto=format&fit=crop"
-      }
-      val validAnniversary = anniversaryTitle.trim().ifEmpty { "18/12 - Ngày Yêu Nhau" }
+      val defaultFallback = presetPhotos.value.firstOrNull() ?: ""
+      val validUri = photoUri.trim().ifEmpty { defaultFallback }
+      val validAnniversary = anniversaryTitle.trim().ifEmpty { "Kỷ Niệm Ngày Yêu" }
       val myUid = currentOnlineUser.value.uid.ifBlank { "user_123" }
       val myName = currentOnlineUser.value.effectiveDisplayName.ifBlank { "Bạn" }
 
@@ -1164,7 +1416,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun syncUpcomingMilestonesFromFirestore() {
     val rel = activeRelationship.value
     val startMillis = rel?.startDate ?: 0L
-    val startDateText = if (rel?.startDateText.isNullOrBlank()) anniversaryDate.value else rel!!.startDateText
+    val startDateText = if (rel?.startDateText.isNullOrBlank()) anniversaryDate.value else rel.startDateText
     val partnerName = partnerOnlineUser.value?.effectiveDisplayName ?: "người ấy"
 
     val count = com.example.alarm.LoveAnniversaryMilestoneScheduler.scheduleMilestonesFromFirestore(
@@ -1178,6 +1430,20 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       startDateText = startDateText
     )
     showToast("🔔 Đã đồng bộ & kích hoạt $count thông báo cột mốc từ Firestore!")
+  }
+
+  /**
+   * Synchronize all enriched presets (milestones, gifts, badges, checklists, assets) from Cloud Firestore.
+   */
+  fun syncCloudData() {
+    viewModelScope.launch {
+      val success = repository.syncAllCloudPresets()
+      if (success) {
+        showToast("✨ Đã làm giàu & đồng bộ dữ liệu mới nhất từ Cloud Firestore!")
+      } else {
+        showToast("⚠️ Không thể kết nối Cloud Firestore, đang dùng dữ liệu lưu trữ.")
+      }
+    }
   }
 
   fun triggerTestMilestoneNotification() {

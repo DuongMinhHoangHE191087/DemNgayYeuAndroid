@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Properties
 
 plugins {
   alias(libs.plugins.android.application)
@@ -13,6 +14,21 @@ android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
+  val envFile = rootProject.file(".env")
+  val envExampleFile = rootProject.file(".env.example")
+  val envProps = Properties()
+  if (envExampleFile.exists()) {
+    envExampleFile.inputStream().use { stream -> envProps.load(stream) }
+  }
+  if (envFile.exists()) {
+    envFile.inputStream().use { stream -> envProps.load(stream) }
+  }
+
+  fun getEnv(key: String, default: String = ""): String {
+    val raw = envProps.getProperty(key, default) ?: default
+    return raw.trim().removeSurrounding("\"").removeSurrounding("'")
+  }
+
   defaultConfig {
     applicationId = "com.aistudio.inlove.kmrv"
     minSdk = 24
@@ -21,6 +37,27 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    buildConfigField("String", "SMTP_HOST", "\"${getEnv("SMTP_HOST", "smtp.gmail.com")}\"")
+    buildConfigField("String", "SMTP_PORT", "\"${getEnv("SMTP_PORT", "587")}\"")
+    buildConfigField("String", "SMTP_SENDER_EMAIL", "\"${getEnv("SMTP_SENDER_EMAIL", "")}\"")
+    buildConfigField("String", "SMTP_SENDER_PASSWORD", "\"${getEnv("SMTP_SENDER_PASSWORD", "")}\"")
+    buildConfigField("String", "SMTP_SENDER_NAME", "\"${getEnv("SMTP_SENDER_NAME", "InLove App")}\"")
+
+    buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${getEnv("CLOUDINARY_CLOUD_NAME", "dt6p7wm6i")}\"")
+    buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${getEnv("CLOUDINARY_UPLOAD_PRESET", "inlove_unsigned")}\"")
+    buildConfigField("String", "CLOUDINARY_FOLDER", "\"${getEnv("CLOUDINARY_FOLDER", "inlove_memories")}\"")
+  }
+
+  packaging {
+    resources {
+      excludes += listOf(
+        "META-INF/LICENSE.md",
+        "META-INF/LICENSE.txt",
+        "META-INF/NOTICE.md",
+        "META-INF/NOTICE.txt"
+      )
+    }
   }
 
   signingConfigs {
@@ -49,9 +86,10 @@ android {
     debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
+
   buildFeatures {
     compose = true
     buildConfig = true
@@ -68,7 +106,19 @@ android {
 secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
-  ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
+  ignoreList.addAll(
+    listOf(
+      "FIREBASE_APPCHECK_DEBUG_TOKEN",
+      "SMTP_HOST",
+      "SMTP_PORT",
+      "SMTP_SENDER_EMAIL",
+      "SMTP_SENDER_PASSWORD",
+      "SMTP_SENDER_NAME",
+      "CLOUDINARY_CLOUD_NAME",
+      "CLOUDINARY_UPLOAD_PRESET",
+      "CLOUDINARY_FOLDER"
+    )
+  )
 }
 
 googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
@@ -94,6 +144,7 @@ dependencies {
   // implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)
+  implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   // implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
@@ -104,12 +155,11 @@ dependencies {
   // Firestore support
   implementation(libs.firebase.firestore)
 
-  // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google
-  // Sign-In via Credential Manager:
-  // implementation(libs.firebase.auth)
-  // implementation(libs.androidx.credentials)
-  // implementation(libs.androidx.credentials.play.services)
-  // implementation(libs.googleid)
+  // Firebase Auth and Google Sign-In via Credential Manager:
+  implementation(libs.firebase.auth)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services)
+  implementation(libs.googleid)
   implementation(libs.firebase.appcheck.recaptcha)
   implementation(libs.firebase.appcheck.debug)
   implementation(libs.kotlinx.coroutines.android)
@@ -119,6 +169,17 @@ dependencies {
   implementation(libs.okhttp)
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
+
+  // SMTP Real Email Sending Client
+  implementation("com.sun.mail:android-mail:1.6.7")
+  implementation("com.sun.mail:android-activation:1.6.7")
+
+  // Google Mobile Ads SDK (AdMob) — Banner, Interstitial, App Open Ad
+  implementation(libs.google.play.services.ads)
+
+  // Google Play Billing Client KTX v7 — Subscriptions & In-App Purchases
+  implementation(libs.google.play.billing.ktx)
+
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

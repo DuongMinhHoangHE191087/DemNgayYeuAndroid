@@ -6,11 +6,15 @@ import android.util.Log
 import com.example.data.db.InLoveDao
 import com.example.data.model.OnlineStatus
 import com.example.data.model.OnlineUserEntity
+import com.example.data.model.RbacPolicy
 import com.example.data.model.SecurityAuditLogEntity
+import com.example.data.model.SubscriptionTier
 import com.example.data.model.UserAccountEntity
+import com.example.data.model.UserRole
 import com.example.ui.util.AuthSecurityManager
 import com.example.ui.util.PasswordStrengthLevel
 import com.example.ui.util.ProfileUtils
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,7 +23,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+
+import com.example.data.email.EmailQueueService
+import com.example.data.email.OtpPurpose
+
+import com.example.BuildConfig
 
 sealed class AuthState {
   data object Unauthenticated : AuthState()
@@ -27,10 +37,22 @@ sealed class AuthState {
   data class PinLocked(val account: UserAccountEntity) : AuthState()
 }
 
+/**
+ * Cloud-driven Test Fixture model stored in Firebase Firestore (collection: test_fixtures).
+ * Zero credentials bundled in the APK binary.
+ */
+data class CloudTestFixture(
+  val email: String,
+  val password: String,
+  val displayName: String,
+  val role: String = "USER_VIP",
+  val tier: String = "VIP_YEARLY"
+)
+
 class AuthRepository(
   private val dao: InLoveDao,
   private val onlineRepo: OnlineCoupleRepository,
-  private val context: Context
+  context: Context
 ) {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val prefs: SharedPreferences =
@@ -39,13 +61,9 @@ class AuthRepository(
   private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
   val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-  // Pre-configured demo accounts matching OnlineCoupleRepository
-  companion object {
-    const val DEMO_A_EMAIL = "hoang.inlove@gmail.com"
-    const val DEMO_A_PASS = "Hoang@2026"
-    const val DEMO_B_EMAIL = "khanhlinh.inlove@gmail.com"
-    const val DEMO_B_PASS = "Linh@2026"
+  val emailQueueService: EmailQueueService = EmailQueueService.getInstance(context)
 
+  companion object {
     private const val KEY_SESSION_TOKEN = "key_session_token"
     private const val KEY_REMEMBER_ME = "key_remember_me"
     private const val KEY_SAVED_EMAIL = "key_saved_email"
@@ -53,72 +71,106 @@ class AuthRepository(
 
   init {
     scope.launch {
-      seedDefaultAccountsIfEmpty()
       restoreSession()
     }
   }
 
   /**
-   * Seeds demo accounts so testers can immediately log in or test 1-1 pairing.
+   * Fetches test account fixtures dynamically from Firebase Firestore over the network if available.
+   * Zero hardcoded credentials bundled in the APK binary.
    */
-  private suspend fun seedDefaultAccountsIfEmpty() = withContext(Dispatchers.IO) {
-    val existingA = dao.getUserAccountByEmail(DEMO_A_EMAIL)
-    if (existingA == null) {
-      val saltA = AuthSecurityManager.generateSalt()
-      val hashA = AuthSecurityManager.hashPassword(DEMO_A_PASS, saltA)
-      val secAnswerHashA = AuthSecurityManager.hashSecurityAnswer("Đà Lạt", saltA)
+  suspend fun fetchTestAccountFromFirebase(isPartner: Boolean = false): Result<CloudTestFixture> =
+    fetchTestFixtureByDocId(if (!isPartner) "tester_primary" else "tester_partner")
 
-      val accountA = UserAccountEntity(
-        uid = OnlineCoupleRepository.USER_A_ID,
-        email = DEMO_A_EMAIL,
-        passwordHash = hashA,
-        salt = saltA,
-        displayName = OnlineCoupleRepository.USER_A_NAME,
-        coupleCode = OnlineCoupleRepository.USER_A_CODE,
-        avatarUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop",
-        securityQuestion = AuthSecurityManager.SECURITY_QUESTIONS[0],
-        securityAnswerHash = secAnswerHashA,
-        appPin = "1234",
-        isPinEnabled = false
-      )
-      dao.insertUserAccount(accountA)
-      dao.insertSecurityLog(
-        SecurityAuditLogEntity(
-          accountEmail = DEMO_A_EMAIL,
-          action = "REGISTER",
-          detail = "Khởi tạo tài khoản mẫu Hoàng"
+  /**
+   * Fetches any test account fixture dynamically by docId from Firebase Firestore over the network.
+   * Zero hardcoded credentials bundled in the APK binary.
+   */
+  suspend fun fetchTestFixtureByDocId(docId: String): Result<CloudTestFixture> = withContext(Dispatchers.IO) {
+    try {
+      val firestore = FirebaseFirestore.getInstance()
+      val snapshot = firestore.collection("test_fixtures").document(docId).get().await()
+
+      if (snapshot.exists()) {
+        val email = snapshot.getString("email") ?: return@withContext Result.failure(IllegalStateException("No email in cloud fixture"))
+        val password = snapshot.getString("password") ?: return@withContext Result.failure(IllegalStateException("No password in cloud fixture"))
+        val fixture = CloudTestFixture(
+          email = email,
+          password = password,
+          displayName = snapshot.getString("displayName") ?: "Tester",
+          role = snapshot.getString("role") ?: "USER_VIP",
+          tier = snapshot.getString("tier") ?: "VIP_YEARLY"
         )
-      )
+        ensureTestAccountInDatabase(fixture)
+        Result.success(fixture)
+      } else {
+        Result.failure(IllegalStateException("Tài khoản kiểm thử không tồn tại trên Cloud Firestore ($docId)."))
+      }
+    } catch (e: Exception) {
+      Log.w("AuthRepo", "Firebase test fixture retrieval error: ${e.message}")
+      Result.failure(e)
     }
+  }
 
-    val existingB = dao.getUserAccountByEmail(DEMO_B_EMAIL)
-    if (existingB == null) {
-      val saltB = AuthSecurityManager.generateSalt()
-      val hashB = AuthSecurityManager.hashPassword(DEMO_B_PASS, saltB)
-      val secAnswerHashB = AuthSecurityManager.hashSecurityAnswer("Hà Nội", saltB)
+  private suspend fun ensureTestAccountInDatabase(fixture: CloudTestFixture) {
+    val existing = dao.getUserAccountByEmail(fixture.email)
+    if (existing == null) {
+      val salt = AuthSecurityManager.generateSalt()
+      val hash = AuthSecurityManager.hashPassword(fixture.password, salt)
+      val secAnswerHash = AuthSecurityManager.hashSecurityAnswer("InLove", salt)
 
-      val accountB = UserAccountEntity(
-        uid = OnlineCoupleRepository.USER_B_ID,
-        email = DEMO_B_EMAIL,
-        passwordHash = hashB,
-        salt = saltB,
-        displayName = OnlineCoupleRepository.USER_B_NAME,
-        coupleCode = OnlineCoupleRepository.USER_B_CODE,
-        avatarUrl = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=600&auto=format&fit=crop",
+      val account = UserAccountEntity(
+        uid = "uid_" + (fixture.email.hashCode().toUInt().toString()),
+        email = fixture.email,
+        passwordHash = hash,
+        salt = salt,
+        displayName = fixture.displayName,
+        coupleCode = ProfileUtils.generateRandomCoupleCode(),
+        avatarUrl = "",
         securityQuestion = AuthSecurityManager.SECURITY_QUESTIONS[0],
-        securityAnswerHash = secAnswerHashB,
-        appPin = "1234",
-        isPinEnabled = false
+        securityAnswerHash = secAnswerHash,
+        appPin = "",
+        isPinEnabled = false,
+        role = fixture.role,
+        subscriptionTier = fixture.tier,
+        isVip = (fixture.role == "USER_VIP" || fixture.tier != "FREE")
       )
-      dao.insertUserAccount(accountB)
-      dao.insertSecurityLog(
-        SecurityAuditLogEntity(
-          accountEmail = DEMO_B_EMAIL,
-          action = "REGISTER",
-          detail = "Khởi tạo tài khoản mẫu Khánh Linh"
-        )
-      )
+      dao.insertUserAccount(account)
     }
+  }
+
+  suspend fun seedTestScenarioAccounts(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+    val resA = fetchTestAccountFromFirebase(isPartner = false)
+    val resB = fetchTestAccountFromFirebase(isPartner = true)
+    if (resA.isSuccess) {
+      return@withContext true to "Đã đồng bộ tài khoản kiểm thử từ Firebase Firestore (${resA.getOrNull()?.email}) ✨"
+    } else {
+      return@withContext false to "Không thể kết nối Firestore để tải tài khoản test."
+    }
+  }
+
+  /**
+   * Requests a 6-digit OTP verification code sent via the asynchronous Email Queue.
+   */
+  suspend fun requestRegistrationOtp(email: String): Result<String> {
+    if (!AuthSecurityManager.isValidEmail(email)) {
+      return Result.failure(IllegalArgumentException("Địa chỉ Email không đúng định dạng!"))
+    }
+    return emailQueueService.enqueueVerificationEmail(email, OtpPurpose.REGISTRATION)
+  }
+
+  /**
+   * Verifies the 6-digit OTP code against the active queue record.
+   */
+  fun verifyOtp(email: String, code: String): Pair<Boolean, String> {
+    return emailQueueService.verifyOtp(email, code)
+  }
+
+  /**
+   * Returns remaining cooldown in seconds before the user can request another OTP.
+   */
+  fun getOtpCooldown(email: String): Int {
+    return emailQueueService.getCooldownSeconds(email)
   }
 
   /**
@@ -161,11 +213,7 @@ class AuthRepository(
       return@withContext false to "Vui lòng nhập mật khẩu!"
     }
 
-    var account = dao.getUserAccountByEmail(email)
-    if (account == null) {
-      seedDefaultAccountsIfEmpty()
-      account = dao.getUserAccountByEmail(email)
-    }
+    val account = dao.getUserAccountByEmail(email)
     if (account == null) {
       dao.insertSecurityLog(
         SecurityAuditLogEntity(
@@ -260,14 +308,63 @@ class AuthRepository(
     return@withContext true to "Đăng nhập thành công! Chào mừng ${updatedAccount.displayName} 💕"
   }
 
+  suspend fun loginUser(
+    emailInput: String,
+    passwordInput: String,
+    rememberMe: Boolean = true
+  ): Pair<Boolean, String> = login(emailInput, passwordInput, rememberMe)
+
   /**
-   * Fast Demo Login for immediate showcase & testing.
+   * Fast Test Login for QA/Developers using cloud fixtures on Firebase Firestore.
    */
-  suspend fun loginDemoUser(userAOrB: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    seedDefaultAccountsIfEmpty()
-    val email = if (userAOrB == "A") DEMO_A_EMAIL else DEMO_B_EMAIL
-    val pass = if (userAOrB == "A") DEMO_A_PASS else DEMO_B_PASS
-    return@withContext login(email, pass, rememberMe = true)
+  suspend fun loginTestUser(isPartner: Boolean = false): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+    val fixtureResult = fetchTestAccountFromFirebase(isPartner)
+    val fixture = fixtureResult.getOrNull() ?: return@withContext false to "Không thể tải tài khoản test từ Firebase."
+    return@withContext login(fixture.email, fixture.password, rememberMe = true)
+  }
+
+  suspend fun loginDemoUser(userAOrB: String): Pair<Boolean, String> =
+    loginTestUser(isPartner = (userAOrB == "B"))
+
+  /**
+   * Update RBAC user role and subscription tier.
+   */
+  suspend fun updateUserSubscription(
+    uid: String,
+    role: UserRole,
+    tier: SubscriptionTier
+  ): Boolean = withContext(Dispatchers.IO) {
+    try {
+      val account = dao.getUserAccountByUid(uid)
+      if (account != null) {
+        val isVipFlag = RbacPolicy.isAdFree(role, tier)
+        val updated = account.copy(
+          role = role.code,
+          subscriptionTier = tier.code,
+          isVip = isVipFlag
+        )
+        dao.updateUserAccount(updated)
+        if (_authState.value is AuthState.Authenticated) {
+          _authState.value = AuthState.Authenticated(updated)
+        }
+      }
+      val onlineUser = dao.getOnlineUserByUidSync(uid)
+      if (onlineUser != null) {
+        val isVipFlag = RbacPolicy.isAdFree(role, tier)
+        dao.updateOnlineUser(
+          onlineUser.copy(
+            role = role.code,
+            subscriptionTier = tier.code,
+            isVip = isVipFlag
+          )
+        )
+      }
+      onlineRepo.refreshState()
+      true
+    } catch (e: Exception) {
+      Log.e("AuthRepo", "Failed to update subscription", e)
+      false
+    }
   }
 
   /**
@@ -280,7 +377,8 @@ class AuthRepository(
     passwordInput: String,
     confirmPasswordInput: String,
     securityQuestionInput: String = "",
-    securityAnswerInput: String = ""
+    securityAnswerInput: String = "",
+    otpCodeInput: String = ""
   ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     val name = displayNameInput.trim()
     val email = emailInput.trim().lowercase()
@@ -290,6 +388,14 @@ class AuthRepository(
     }
     if (!AuthSecurityManager.isValidEmail(email)) {
       return@withContext false to "Địa chỉ Email không hợp lệ! Vui lòng kiểm tra lại."
+    }
+
+    // Verify OTP if provided
+    if (otpCodeInput.isNotEmpty()) {
+      val (isOtpValid, otpMsg) = verifyOtp(email, otpCodeInput)
+      if (!isOtpValid) {
+        return@withContext false to otpMsg
+      }
     }
 
     // Check email uniqueness
@@ -381,6 +487,24 @@ class AuthRepository(
     return@withContext true to "Tạo tài khoản thành công! Chào mừng $name tham gia InLove."
   }
 
+  suspend fun registerUser(
+    displayNameInput: String,
+    emailInput: String,
+    passwordInput: String,
+    confirmPasswordInput: String,
+    securityQuestionInput: String = "",
+    securityAnswerInput: String = "",
+    otpCodeInput: String = ""
+  ): Pair<Boolean, String> = register(
+    displayNameInput = displayNameInput,
+    emailInput = emailInput,
+    passwordInput = passwordInput,
+    confirmPasswordInput = confirmPasswordInput,
+    securityQuestionInput = securityQuestionInput,
+    securityAnswerInput = securityAnswerInput,
+    otpCodeInput = otpCodeInput
+  )
+
   /**
    * Generates a 6-digit OTP for password recovery.
    */
@@ -388,9 +512,7 @@ class AuthRepository(
     withContext(Dispatchers.IO) {
       val email = emailInput.trim().lowercase()
       val account = dao.getUserAccountByEmail(email)
-      if (account == null) {
-        return@withContext false to ("" to "Không tìm thấy tài khoản tương ứng với email này!")
-      }
+        ?: return@withContext false to ("" to "Không tìm thấy tài khoản tương ứng với email này!")
 
       val otp = AuthSecurityManager.generateOtpCode()
       dao.insertSecurityLog(
@@ -511,8 +633,7 @@ class AuthRepository(
     newPasswordInput: String,
     confirmPasswordInput: String
   ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val currentAuth = _authState.value
-    val currentAccount = when (currentAuth) {
+    val currentAccount = when (val currentAuth = _authState.value) {
       is AuthState.Authenticated -> currentAuth.account
       is AuthState.PinLocked -> currentAuth.account
       else -> return@withContext false to "Bạn chưa đăng nhập!"
@@ -556,8 +677,7 @@ class AuthRepository(
     if (pin.length != 4 || !pin.all { it.isDigit() }) {
       return@withContext false to "Mã PIN phải gồm đúng 4 chữ số!"
     }
-    val currentAuth = _authState.value
-    val currentAccount = when (currentAuth) {
+    val currentAccount = when (val currentAuth = _authState.value) {
       is AuthState.Authenticated -> currentAuth.account
       is AuthState.PinLocked -> currentAuth.account
       else -> return@withContext false to "Bạn chưa đăng nhập!"
@@ -582,8 +702,7 @@ class AuthRepository(
    * Toggles PIN lock feature on/off.
    */
   suspend fun togglePinEnabled(enabled: Boolean): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val currentAuth = _authState.value
-    val currentAccount = when (currentAuth) {
+    val currentAccount = when (val currentAuth = _authState.value) {
       is AuthState.Authenticated -> currentAuth.account
       is AuthState.PinLocked -> currentAuth.account
       else -> return@withContext false to "Bạn chưa đăng nhập!"
@@ -612,8 +731,7 @@ class AuthRepository(
    * Unlocks app using PIN.
    */
   fun unlockWithPin(pinInput: String): Boolean {
-    val currentAuth = _authState.value
-    val currentAccount = when (currentAuth) {
+    val currentAccount = when (val currentAuth = _authState.value) {
       is AuthState.PinLocked -> currentAuth.account
       is AuthState.Authenticated -> currentAuth.account
       else -> return false
@@ -630,8 +748,7 @@ class AuthRepository(
    * Fallback unlock using account password.
    */
   fun unlockWithAccountPassword(passwordInput: String): Boolean {
-    val currentAuth = _authState.value
-    val currentAccount = when (currentAuth) {
+    val currentAccount = when (val currentAuth = _authState.value) {
       is AuthState.PinLocked -> currentAuth.account
       is AuthState.Authenticated -> currentAuth.account
       else -> return false
@@ -659,8 +776,7 @@ class AuthRepository(
    * Secure Logout: clears tokens, resets state to Unauthenticated.
    */
   suspend fun logout() = withContext(Dispatchers.IO) {
-    val current = _authState.value
-    val email = when (current) {
+    val email = when (val current = _authState.value) {
       is AuthState.Authenticated -> current.account.email
       is AuthState.PinLocked -> current.account.email
       else -> ""
@@ -692,8 +808,7 @@ class AuthRepository(
    * Gets audit logs for account.
    */
   fun getAuditLogsForCurrentAccount(): Flow<List<SecurityAuditLogEntity>> {
-    val current = _authState.value
-    val email = when (current) {
+    val email = when (val current = _authState.value) {
       is AuthState.Authenticated -> current.account.email
       is AuthState.PinLocked -> current.account.email
       else -> ""
@@ -702,6 +817,7 @@ class AuthRepository(
   }
 
   private suspend fun syncOnlineUserWithAccount(account: UserAccountEntity) {
+    onlineRepo.setCurrentUserId(account.uid)
     val existingOnlineUser = dao.getOnlineUserByUidSync(account.uid)
     if (existingOnlineUser == null) {
       val newOnlineUser = OnlineUserEntity(
@@ -719,7 +835,10 @@ class AuthRepository(
         zodiac = "",
         bio = "Chào mừng bạn đến với InLove ✨",
         isProfileSetup = true,
-        isCurrentUser = true
+        isCurrentUser = true,
+        role = account.role,
+        subscriptionTier = account.subscriptionTier,
+        isVip = account.isVip
       )
       dao.insertOnlineUser(newOnlineUser)
     } else {
@@ -729,10 +848,13 @@ class AuthRepository(
           email = account.email,
           coupleCode = account.coupleCode,
           avatarUrl = account.avatarUrl.ifEmpty { existingOnlineUser.avatarUrl },
-          isCurrentUser = true
+          isCurrentUser = true,
+          role = account.role,
+          subscriptionTier = account.subscriptionTier,
+          isVip = account.isVip
         )
       )
     }
-    onlineRepo.ensureInitialized()
+    onlineRepo.setCurrentUserId(account.uid)
   }
 }

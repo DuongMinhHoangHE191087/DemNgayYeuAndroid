@@ -24,9 +24,9 @@ import java.util.concurrent.TimeUnit
  * to love anniversary memories via Cloudinary Cloud Storage.
  */
 class CloudinaryMediaService(
-  private val cloudName: String = "inlove-couple",
-  private val uploadPreset: String = "inlove_unsigned",
-  private val folderName: String = "inlove_memories"
+  private val cloudName: String = try { com.example.BuildConfig.CLOUDINARY_CLOUD_NAME.ifEmpty { "dt6p7wm6i" } } catch (_: Throwable) { "dt6p7wm6i" },
+  private val uploadPreset: String = try { com.example.BuildConfig.CLOUDINARY_UPLOAD_PRESET.ifEmpty { "inlove_unsigned" } } catch (_: Throwable) { "inlove_unsigned" },
+  private val folderName: String = try { com.example.BuildConfig.CLOUDINARY_FOLDER.ifEmpty { "inlove_memories" } } catch (_: Throwable) { "inlove_memories" }
 ) : ICloudinaryMediaService {
 
   companion object {

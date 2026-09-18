@@ -28,7 +28,7 @@ class DatePickerTest {
     val labels = presets.map { it.first }
     assertTrue("Should contain 'Hôm nay'", labels.contains("Hôm nay"))
     assertTrue("Should contain '1 tháng trước'", labels.contains("1 tháng trước"))
-    assertTrue("Should contain default '18/12/2022'", labels.contains("18/12/2022"))
+    assertTrue("Should contain '3 năm trước'", labels.contains("3 năm trước"))
   }
 
   @Test

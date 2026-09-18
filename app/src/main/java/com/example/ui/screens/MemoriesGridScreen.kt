@@ -282,10 +282,12 @@ fun MemoriesGridScreen(
     }
 
     // Add Memory Dialog with Cloudinary & Video support & Permissions
+    val dynamicPresetPhotos by viewModel.presetPhotos.collectAsState()
     if (showAddDialog) {
       AddMemoryDialog(
         strings = strings,
         currentLanguage = currentLanguage,
+        presetPhotos = dynamicPresetPhotos,
         onDismiss = { showAddDialog = false },
         onSaveMemory = { title, dateText, photoUri, note, location, mediaType, videoUri, cloudinaryPublicId, cloudinaryUrl, isCloudinaryStored, fileSizeFormatted, durationSeconds, privacyLevel ->
           viewModel.addSharedMemory(
@@ -813,6 +815,7 @@ private fun EmptyMemoriesCard(
 private fun AddMemoryDialog(
   strings: com.example.ui.util.AppStrings,
   currentLanguage: AppLanguage,
+  presetPhotos: List<String> = emptyList(),
   onDismiss: () -> Unit,
   onSaveMemory: (
     title: String,
@@ -844,8 +847,8 @@ private fun AddMemoryDialog(
   var note by remember { mutableStateOf("") }
   var privacyLevel by remember { mutableStateOf("COUPLE_ONLY") } // "COUPLE_ONLY", "PRIVATE", "PUBLIC"
 
-  var selectedMediaUri by remember {
-    mutableStateOf("https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=1080&auto=format&fit=crop")
+  var selectedMediaUri by remember(presetPhotos) {
+    mutableStateOf(presetPhotos.firstOrNull() ?: "")
   }
   var rawSelectedUri by remember { mutableStateOf<Uri?>(null) }
   var validationResult by remember { mutableStateOf<MediaValidationResult?>(null) }
@@ -899,16 +902,6 @@ private fun AddMemoryDialog(
       }
     }
   }
-
-  // Romantic Photo Presets for quick selection
-  val presetPhotos = listOf(
-    "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1529636798458-92182e662485?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?q=80&w=800&auto=format&fit=crop"
-  )
 
   Dialog(onDismissRequest = { if (!isUploadingToCloudinary) onDismiss() }) {
     Surface(
@@ -1180,8 +1173,8 @@ private fun AddMemoryDialog(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Preset Thumbnails Row (if photo)
-        if (mediaType == "IMAGE") {
+        // Preset Thumbnails Row (if photo and presets available)
+        if (mediaType == "IMAGE" && presetPhotos.isNotEmpty()) {
           Text(
             text = "Hoặc chọn nhanh ảnh mẫu lãng mạn:",
             fontSize = 11.5.sp,
@@ -1906,6 +1899,7 @@ private fun MemoryDetailDialog(
                 IconButton(
                   onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    @Suppress("UsePropertyAccessSyntax")
                     clipboard.setPrimaryClip(ClipData.newPlainText("Cloudinary URL", memory.cloudinaryUrl))
                   },
                   modifier = Modifier.size(24.dp)

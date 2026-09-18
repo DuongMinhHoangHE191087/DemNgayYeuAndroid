@@ -38,7 +38,7 @@ import com.example.data.model.UserAccountEntity
     UserAccountEntity::class,
     SecurityAuditLogEntity::class
   ],
-  version = 11,
+  version = 12,
   exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -54,7 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
           context.applicationContext,
           AppDatabase::class.java,
           "inlove_database"
-        ).fallbackToDestructiveMigration().build()
+        ).fallbackToDestructiveMigration(dropAllTables = true).build()
         INSTANCE = instance
         instance
       }
