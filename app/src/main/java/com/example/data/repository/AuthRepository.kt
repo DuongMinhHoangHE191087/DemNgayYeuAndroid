@@ -506,40 +506,49 @@ class AuthRepository(
   )
 
   /**
-   * Generates a 6-digit OTP for password recovery.
+   * Generates a 6-digit OTP for password recovery via EmailQueueService.
+   * Does not store plaintext OTP in audit logs and does not leak it to client.
    */
-  suspend fun requestPasswordResetOtp(emailInput: String): Pair<Boolean, Pair<String, String>> =
+  suspend fun requestPasswordResetOtp(emailInput: String): Pair<Boolean, String> =
     withContext(Dispatchers.IO) {
       val email = emailInput.trim().lowercase()
+      if (!AuthSecurityManager.isValidEmail(email)) {
+        return@withContext false to "Địa chỉ Email không đúng định dạng!"
+      }
       val account = dao.getUserAccountByEmail(email)
-        ?: return@withContext false to ("" to "Không tìm thấy tài khoản tương ứng với email này!")
+        ?: return@withContext false to "Không tìm thấy tài khoản tương ứng với email này!"
 
-      val otp = AuthSecurityManager.generateOtpCode()
-      dao.insertSecurityLog(
-        SecurityAuditLogEntity(
-          accountEmail = email,
-          action = "PASSWORD_RESET",
-          detail = "Yêu cầu mã xác thực đặt lại mật khẩu OTP: $otp"
+      val result = emailQueueService.enqueueVerificationEmail(email, OtpPurpose.PASSWORD_RESET)
+      return@withContext if (result.isSuccess) {
+        dao.insertSecurityLog(
+          SecurityAuditLogEntity(
+            accountEmail = email,
+            action = "PASSWORD_RESET_REQUEST",
+            detail = "Yêu cầu mã xác thực đặt lại mật khẩu qua email"
+          )
         )
-      )
-      return@withContext true to (otp to "Mã xác thực bảo mật OTP 6 số đã được tạo thành công.")
+        true to "Mã xác thực OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!"
+      } else {
+        false to (result.exceptionOrNull()?.message ?: "Gửi mã xác thực thất bại. Vui lòng thử lại!")
+      }
     }
 
   /**
-   * Resets password using OTP code and enforces new password strength.
+   * Resets password using OTP code verified securely on repository/queue level.
+   * Single-use OTP prevents replay attacks.
    */
   suspend fun resetPasswordWithOtp(
     emailInput: String,
     enteredOtp: String,
-    expectedOtp: String,
     newPasswordInput: String,
     confirmPasswordInput: String
   ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     val email = emailInput.trim().lowercase()
     val account = dao.getUserAccountByEmail(email) ?: return@withContext false to "Tài khoản không tồn tại!"
 
-    if (enteredOtp.trim() != expectedOtp.trim()) {
-      return@withContext false to "Mã xác thực OTP không chính xác!"
+    val (otpValid, otpMessage) = emailQueueService.verifyOtp(email, enteredOtp)
+    if (!otpValid) {
+      return@withContext false to otpMessage
     }
 
     val strength = AuthSecurityManager.evaluatePasswordStrength(newPasswordInput)
@@ -575,6 +584,7 @@ class AuthRepository(
 
   /**
    * Resets password using Security Question Answer.
+   * Strictly verifies that account has configured security questions.
    */
   suspend fun resetPasswordWithSecurityAnswer(
     emailInput: String,
@@ -586,9 +596,12 @@ class AuthRepository(
     val account = dao.getUserAccountByEmail(email) ?: return@withContext false to "Tài khoản không tồn tại!"
 
     val expectedAnswerHash = account.securityAnswerHash
-    val providedHash = AuthSecurityManager.hashSecurityAnswer(securityAnswerInput, account.salt)
+    if (expectedAnswerHash.isBlank()) {
+      return@withContext false to "Tài khoản chưa thiết lập câu hỏi bảo mật! Vui lòng sử dụng phương thức đặt lại qua mã OTP email."
+    }
 
-    if (expectedAnswerHash.isNotEmpty() && expectedAnswerHash != providedHash) {
+    val providedHash = AuthSecurityManager.hashSecurityAnswer(securityAnswerInput, account.salt)
+    if (expectedAnswerHash != providedHash) {
       return@withContext false to "Câu trả lời bảo mật không chính xác!"
     }
 
@@ -671,7 +684,8 @@ class AuthRepository(
   }
 
   /**
-   * Sets or updates 4-digit PIN for app lock.
+   * Sets or updates 4-digit PIN for app lock with salted hashing.
+   * Never stores plaintext PIN in Room database.
    */
   suspend fun setAppPin(pin: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     if (pin.length != 4 || !pin.all { it.isDigit() }) {
@@ -683,14 +697,15 @@ class AuthRepository(
       else -> return@withContext false to "Bạn chưa đăng nhập!"
     }
 
-    val updated = currentAccount.copy(appPin = pin, isPinEnabled = true)
+    val hashedPin = AuthSecurityManager.hashPin(pin, currentAccount.salt)
+    val updated = currentAccount.copy(appPin = hashedPin, isPinEnabled = true)
     dao.updateUserAccount(updated)
 
     dao.insertSecurityLog(
       SecurityAuditLogEntity(
         accountEmail = currentAccount.email,
         action = "PIN_CHANGED",
-        detail = "Kích hoạt và cập nhật mã PIN bảo vệ ứng dụng"
+        detail = "Kích hoạt và cập nhật mã PIN bảo vệ ứng dụng (đã mã hóa)"
       )
     )
 
@@ -728,7 +743,8 @@ class AuthRepository(
   }
 
   /**
-   * Unlocks app using PIN.
+   * Unlocks app using hashed PIN comparison.
+   * Automatically migrates legacy plaintext 4-digit PINs upon first successful unlock.
    */
   fun unlockWithPin(pinInput: String): Boolean {
     val currentAccount = when (val currentAuth = _authState.value) {
@@ -737,10 +753,22 @@ class AuthRepository(
       else -> return false
     }
 
-    if (pinInput == currentAccount.appPin) {
+    val hashedInput = AuthSecurityManager.hashPin(pinInput, currentAccount.salt)
+    if (hashedInput == currentAccount.appPin) {
       _authState.value = AuthState.Authenticated(currentAccount)
       return true
     }
+
+    // Migration fallback: if account previously stored legacy unhashed 4-digit PIN
+    if (pinInput == currentAccount.appPin && currentAccount.appPin.length == 4) {
+      scope.launch {
+        val migrated = currentAccount.copy(appPin = hashedInput)
+        dao.updateUserAccount(migrated)
+      }
+      _authState.value = AuthState.Authenticated(currentAccount)
+      return true
+    }
+
     return false
   }
 
@@ -802,6 +830,35 @@ class AuthRepository(
       .apply()
 
     _authState.value = AuthState.Unauthenticated
+  }
+
+  /**
+   * Google Play Policy compliant Account Deletion:
+   * Permanently deletes user account, clears audit logs, tokens, and resets session.
+   */
+  suspend fun deleteCurrentAccount(): Result<Unit> = withContext(Dispatchers.IO) {
+    try {
+      val email = when (val current = _authState.value) {
+        is AuthState.Authenticated -> current.account.email
+        is AuthState.PinLocked -> current.account.email
+        else -> ""
+      }
+
+      if (email.isNotEmpty()) {
+        val account = dao.getUserAccountByEmail(email)
+        if (account != null) {
+          dao.deleteUserAccount(account)
+        }
+        dao.deleteSecurityLogsForAccount(email)
+      }
+
+      prefs.edit().clear().apply()
+      _authState.value = AuthState.Unauthenticated
+      Result.success(Unit)
+    } catch (e: Exception) {
+      Log.e("AuthRepo", "Error deleting account: ${e.message}", e)
+      Result.failure(e)
+    }
   }
 
   /**

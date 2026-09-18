@@ -58,11 +58,15 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
     private val _isVipUser = MutableStateFlow(false)
     val isVipUser: StateFlow<Boolean> = _isVipUser.asStateFlow()
 
+    /** Product ID đang hoạt động của người dùng (null nếu không có gói VIP) */
+    private val _activeProductId = MutableStateFlow<String?>(null)
+    val activeProductId: StateFlow<String?> = _activeProductId.asStateFlow()
+
     /** Danh sách ProductDetails từ Google Play Store (giá, ưu đãi, offer tokens) */
     private val _productDetailsList = MutableStateFlow<List<ProductDetails>>(emptyList())
     val productDetailsList: StateFlow<List<ProductDetails>> = _productDetailsList.asStateFlow()
 
-    /** Sự kiện lỗi thanh toán — UI lắng nghe để hiển thị thông báo */
+    /** Sự kiện thanh toán — UI lắng nghe để hiển thị thông báo */
     private val _purchaseEvent = MutableSharedFlow<PurchaseEvent>(replay = 0)
     val purchaseEvent: SharedFlow<PurchaseEvent> = _purchaseEvent.asSharedFlow()
 
@@ -178,7 +182,9 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
             }
 
             if (activeSubPurchases.isNotEmpty()) {
+                val purchasedSub = activeSubPurchases.first()
                 _isVipUser.value = true
+                _activeProductId.value = purchasedSub.products.firstOrNull() ?: PRODUCT_VIP_YEARLY
                 // Đảm bảo acknowledge các giao dịch cũ chưa được xác nhận
                 activeSubPurchases.forEach { handlePurchase(it) }
                 onComplete?.invoke(true)
@@ -195,8 +201,15 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
                     it.purchaseState == Purchase.PurchaseState.PURCHASED
                 }
                 val hasLifetime = lifetimePurchases.isNotEmpty()
-                if (hasLifetime) _isVipUser.value = true
-                lifetimePurchases.forEach { handlePurchase(it) }
+                if (hasLifetime) {
+                    _isVipUser.value = true
+                    _activeProductId.value = PRODUCT_VIP_LIFETIME
+                    lifetimePurchases.forEach { handlePurchase(it) }
+                } else {
+                    // Không có gói VIP hợp lệ nào (đã hết hạn hoặc chưa mua) -> Thu hồi VIP
+                    _isVipUser.value = false
+                    _activeProductId.value = null
+                }
                 onComplete?.invoke(hasLifetime)
             }
         }
@@ -276,32 +289,57 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
     // ─── Purchase Handler ─────────────────────────────────────────────────────
 
     /**
-     * Xử lý giao dịch hợp lệ:
-     *  1. Mở khóa trạng thái VIP ngay lập tức.
-     *  2. BẮT BUỘC gọi [acknowledgePurchase] nếu chưa xác nhận.
+     * Xử lý giao dịch:
+     *  1. Trạng thái PENDING: thông báo người dùng thanh toán đang chờ xử lý ngoài app.
+     *  2. Trạng thái PURCHASED: Mở khóa VIP ngay lập tức.
+     *  3. BẮT BUỘC gọi [acknowledgePurchase] nếu chưa xác nhận.
      *     Nếu không acknowledge trong 3 ngày, Google Play SẼ TỰ ĐỘNG hoàn tiền và thu hồi VIP.
      */
     private fun handlePurchase(purchase: Purchase) {
-        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
+        when (purchase.purchaseState) {
+            Purchase.PurchaseState.PENDING -> {
+                billingScope.launch {
+                    _purchaseEvent.emit(PurchaseEvent.Pending)
+                }
+            }
+            Purchase.PurchaseState.PURCHASED -> {
+                // Mở khóa VIP ngay lập tức để trải nghiệm không bị gián đoạn
+                _isVipUser.value = true
+                _activeProductId.value = purchase.products.firstOrNull() ?: PRODUCT_VIP_YEARLY
 
-        // Mở khóa VIP ngay lập tức để trải nghiệm không bị gián đoạn
-        _isVipUser.value = true
+                // Emit success event cho UI
+                billingScope.launch {
+                    _purchaseEvent.emit(PurchaseEvent.Success)
+                }
 
-        // Emit success event cho UI
-        billingScope.launch {
-            _purchaseEvent.emit(PurchaseEvent.Success)
+                // Acknowledge bắt buộc nếu chưa được xác nhận
+                if (!purchase.isAcknowledged) {
+                    acknowledgePurchaseWithRetry(purchase.purchaseToken, maxRetries = 3)
+                }
+            }
+            else -> {
+                // Unspecified or unknown state
+            }
         }
+    }
 
-        // Acknowledge bắt buộc nếu chưa được xác nhận
-        if (!purchase.isAcknowledged) {
-            val ackParams = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
+    private fun acknowledgePurchaseWithRetry(token: String, maxRetries: Int) {
+        val ackParams = AcknowledgePurchaseParams.newBuilder()
+            .setPurchaseToken(token)
+            .build()
 
-            billingScope.launch {
+        billingScope.launch {
+            var attempts = 0
+            var acknowledged = false
+            while (attempts < maxRetries && !acknowledged) {
+                attempts++
                 billingClient.acknowledgePurchase(ackParams) { ackResult ->
-                    // Đã xác nhận thành công với Google Play — giao dịch được bảo toàn
-                    // Nếu ackResult.responseCode != OK, Google sẽ retry tự động
+                    if (ackResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        acknowledged = true
+                    }
+                }
+                if (!acknowledged && attempts < maxRetries) {
+                    delay((attempts * 2).seconds)
                 }
             }
         }
@@ -311,5 +349,6 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
 /** Sealed class đại diện cho các sự kiện thanh toán được emit lên UI */
 sealed class PurchaseEvent {
     data object Success : PurchaseEvent()
+    data object Pending : PurchaseEvent()
     data class Error(val message: String) : PurchaseEvent()
 }

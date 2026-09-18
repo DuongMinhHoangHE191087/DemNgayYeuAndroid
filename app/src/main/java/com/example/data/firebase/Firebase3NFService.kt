@@ -269,29 +269,35 @@ class Firebase3NFService(
 
   /**
    * Synchronize 3NF tables to Firebase Firestore cloud collections and update local state.
+   * Accurately reports whether sync succeeded or fell back to offline local storage.
    */
   suspend fun syncToFirebaseCloud(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     _isSyncing.value = true
     try {
       loadInitialData()
       val fs = firestore
-      if (fs != null) {
-        // Sync Users
-        _users.value.forEach { user ->
-          fs.collection("users_3nf").document(user.uid).set(user)
-        }
-        // Sync Relationships
-        _relationships.value.forEach { rel ->
-          fs.collection("relationships_3nf").document(rel.relationshipId).set(rel)
-        }
-        // Sync Invites
-        _invites.value.forEach { inv ->
-          fs.collection("invites_3nf").document(inv.inviteId).set(inv)
-        }
-        // Sync Memories
-        _memories.value.forEach { mem ->
-          fs.collection("memories_3nf").document(mem.memoryId).set(mem)
-        }
+      if (fs == null) {
+        validateIntegrity()
+        _lastSyncMessage.value = "Đã lưu trữ an toàn trên bộ nhớ cục bộ (Offline)"
+        _isSyncing.value = false
+        return@withContext false to "Firebase Cloud chưa sẵn sàng. Dữ liệu được lưu trữ offline an toàn trên thiết bị."
+      }
+
+      // Sync Users
+      _users.value.forEach { user ->
+        fs.collection("users_3nf").document(user.uid).set(user)
+      }
+      // Sync Relationships
+      _relationships.value.forEach { rel ->
+        fs.collection("relationships_3nf").document(rel.relationshipId).set(rel)
+      }
+      // Sync Invites
+      _invites.value.forEach { inv ->
+        fs.collection("invites_3nf").document(inv.inviteId).set(inv)
+      }
+      // Sync Memories
+      _memories.value.forEach { mem ->
+        fs.collection("memories_3nf").document(mem.memoryId).set(mem)
       }
 
       validateIntegrity()
@@ -299,11 +305,12 @@ class Firebase3NFService(
       _isSyncing.value = false
       return@withContext true to "Đã đồng bộ toàn bộ dữ liệu lên Firebase thành công!"
     } catch (e: Exception) {
-      Log.e("Firebase3NFService", "Cloud sync fallback", e)
+      Log.w("Firebase3NFService", "Cloud sync failure, data kept locally", e)
       validateIntegrity()
-      _lastSyncMessage.value = "Đã lưu trữ an toàn trên bộ nhớ cục bộ (Offline)"
+      val errorMsg = e.localizedMessage ?: "Lỗi kết nối mạng"
+      _lastSyncMessage.value = "Chế độ offline - Dữ liệu lưu an toàn trên máy"
       _isSyncing.value = false
-      return@withContext true to "Đã lưu trữ và đồng bộ dữ liệu hoàn tất!"
+      return@withContext false to "Không thể đồng bộ lên Cloud ($errorMsg). Dữ liệu đã được lưu cục bộ an toàn."
     }
   }
 }

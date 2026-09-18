@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -59,6 +60,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -128,6 +130,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   var showSetPinDialog by remember { mutableStateOf(false) }
   var showSecurityAuditLogsDialog by remember { mutableStateOf(false) }
   var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+  var showDeleteAccountConfirmDialog by remember { mutableStateOf(false) }
 
   val notifEnabledToast = stringResource(R.string.settings_notif_enabled_toast)
   val notifDisabledToast = stringResource(R.string.settings_notif_disabled_toast)
@@ -1018,6 +1021,26 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               Spacer(modifier = Modifier.width(8.dp))
               Text("Đăng Xuất Tài Khoản (Về Chế Độ Khách)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+              onClick = { showDeleteAccountConfirmDialog = true },
+              colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828)),
+              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF9A9A)),
+              shape = RoundedCornerShape(12.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("btn_delete_account")
+            ) {
+              Icon(
+                imageVector = Icons.Default.DeleteForever,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text("Xóa Vĩnh Viễn Tài Khoản & Dữ Liệu", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            }
           }
         }
       }
@@ -1115,6 +1138,61 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       dismissButton = {
         OutlinedButton(onClick = { showLogoutConfirmDialog = false }) {
           Text("Hủy")
+        }
+      }
+    )
+  }
+
+  // Delete Account Confirmation Dialog (Google Play Policy Compliance)
+  if (showDeleteAccountConfirmDialog) {
+    AlertDialog(
+      onDismissRequest = { showDeleteAccountConfirmDialog = false },
+      icon = {
+        Icon(
+          imageVector = Icons.Default.DeleteForever,
+          contentDescription = null,
+          tint = Color(0xFFC62828),
+          modifier = Modifier.size(36.dp)
+        )
+      },
+      title = {
+        Text("Xóa tài khoản & dữ liệu?", fontWeight = FontWeight.Bold, color = Color(0xFFC62828))
+      },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(
+            "CẢNH BÁO: Toàn bộ thông tin tài khoản, mật khẩu, nhật ký tình yêu và ảnh kỷ niệm sẽ bị xóa vĩnh viễn không thể phục hồi.",
+            fontSize = 13.sp
+          )
+          Text(
+            "Tuân thủ chính sách bảo mật Google Play: Bạn cũng có thể yêu cầu xóa tài khoản qua liên kết Web:",
+            fontSize = 12.sp,
+            color = Color.Gray
+          )
+          TextButton(
+            onClick = {
+              uriHandler.openUri("https://inlove-app.web.app/delete-account")
+            },
+            contentPadding = PaddingValues(0.dp)
+          ) {
+            Text("https://inlove-app.web.app/delete-account", fontSize = 12.sp, color = Color(0xFF1976D2))
+          }
+        }
+      },
+      confirmButton = {
+        Button(
+          onClick = {
+            showDeleteAccountConfirmDialog = false
+            viewModel.deleteAccountAndData()
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+        ) {
+          Text("Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold)
+        }
+      },
+      dismissButton = {
+        OutlinedButton(onClick = { showDeleteAccountConfirmDialog = false }) {
+          Text("Hủy Bỏ")
         }
       }
     )

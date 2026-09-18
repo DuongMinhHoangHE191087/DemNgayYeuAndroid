@@ -25,20 +25,6 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     Log.d(TAG, "onReceive triggered with action: $action")
 
     when (action) {
-      Intent.ACTION_BOOT_COMPLETED -> {
-        val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-          try {
-            Log.d(TAG, "Device booted. Rescheduling all anniversary alarms from Room DB...")
-            AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context)
-          } catch (e: Exception) {
-            Log.e(TAG, "Error rescheduling on boot: ${e.message}", e)
-          } finally {
-            pendingResult.finish()
-          }
-        }
-      }
-
       ACTION_DAILY_ANNIVERSARY_CHECK -> {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {

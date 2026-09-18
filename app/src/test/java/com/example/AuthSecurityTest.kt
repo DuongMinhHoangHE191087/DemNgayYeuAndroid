@@ -78,4 +78,16 @@ class AuthSecurityTest {
     val masked = AuthSecurityManager.maskEmail("hoang@gmail.com")
     assertEquals("h***g@gmail.com", masked)
   }
+
+  @Test
+  fun hashPin_producesDeterministicHash() {
+    val salt = AuthSecurityManager.generateSalt()
+    val pinHash1 = AuthSecurityManager.hashPin("1234", salt)
+    val pinHash2 = AuthSecurityManager.hashPin("1234", salt)
+    val pinHashOther = AuthSecurityManager.hashPin("5678", salt)
+
+    assertEquals(pinHash1, pinHash2)
+    assertNotEquals(pinHash1, pinHashOther)
+    assertEquals(64, pinHash1.length)
+  }
 }

@@ -117,13 +117,12 @@ class EmailQueueService private constructor(private val context: Context? = null
    * Also broadcasts to UI event stream and displays local toast for QA visibility.
    */
   private suspend fun processEmailTask(task: EmailTask) = withContext(Dispatchers.IO) {
-    Log.d("EmailQueueService", "Processing queued email for ${task.email} with OTP: ${task.otpCode}")
+    Log.d("EmailQueueService", "Processing queued verification request for ${task.email}")
 
     var realEmailSent = false
     var realEmailError: String? = null
 
     if (realSmtpSender.isReady()) {
-      Log.i("EmailQueueService", "Cấu hình SMTP hợp lệ. Tiến hành kết nối gửi email THẬT tới [${task.email}]...")
       val sendResult = realSmtpSender.sendOtpEmail(
         recipientEmail = task.email,
         otpCode = task.otpCode,
@@ -131,27 +130,20 @@ class EmailQueueService private constructor(private val context: Context? = null
       )
       sendResult.onSuccess {
         realEmailSent = true
-        Log.i("EmailQueueService", "✅ ĐÃ GỬI EMAIL THẬT THÀNH CÔNG tới ${task.email}!")
       }.onFailure { error ->
         realEmailError = error.message
-        Log.e("EmailQueueService", "❌ Gửi email THẬT thất bại: ${error.message}", error)
+        Log.e("EmailQueueService", "Gửi email xác thực thất bại: ${error.message}", error)
       }
     } else {
-      Log.w(
-        "EmailQueueService",
-        "⚠️ SMTP chưa được cấu hình (SMTP_SENDER_EMAIL / PASSWORD trống trong .env). " +
-          "Để gửi email THẬT đến khách, hãy điền tài khoản Gmail & App Password vào .env. " +
-          "Đang hoạt động ở chế độ mô phỏng / debug cục bộ."
-      )
-      delay(400.milliseconds) // Brief delay for simulated queue
+      delay(400.milliseconds)
     }
 
     val message = if (realEmailSent) {
-      "Đã gửi email THẬT thành công đến hòm thư [${task.email}]! Vui lòng kiểm tra hộp thư (inbox/spam)."
+      "Đã gửi mã xác thực thành công đến hòm thư [${task.email}]! Vui lòng kiểm tra hộp thư (inbox/spam)."
     } else if (realEmailError != null) {
-      "Lỗi kết nối SMTP gửi email: $realEmailError (Mã OTP tạm: ${task.otpCode})"
+      "Lỗi kết nối gửi email xác thực. Vui lòng thử lại sau!"
     } else {
-      "Mã xác thực ${task.purpose.titleVi} của bạn là: ${task.otpCode} (Hiệu lực 5 phút)"
+      "Mã xác thực ${task.purpose.titleVi} đã được gửi đến [${task.email}] (Hiệu lực 5 phút)."
     }
 
     // Notify listeners via SharedFlow
@@ -164,15 +156,11 @@ class EmailQueueService private constructor(private val context: Context? = null
       )
     )
 
-    // On Android devices/emulators, show visual notification toast for seamless QA
+    // On Android devices/emulators, show visual notification toast for user feedback without exposing OTP
     context?.let { ctx ->
       withContext(Dispatchers.Main) {
         try {
-          val toastText = if (realEmailSent) {
-            "✉️ Đã gửi thư THẬT tới [${task.email}]. Vui lòng kiểm tra Inbox!"
-          } else {
-            "💌 InLove OTP: [${task.otpCode}] gửi đến ${task.email}"
-          }
+          val toastText = "✉️ Mã xác thực đã được gửi tới [${task.email}]. Vui lòng kiểm tra Inbox!"
           Toast.makeText(ctx, toastText, Toast.LENGTH_LONG).show()
         } catch (_: Throwable) {}
       }

@@ -93,9 +93,12 @@ fun VipSubscriptionDialog(
     billingManager?.purchaseEvent?.collect { event ->
       when (event) {
         is PurchaseEvent.Success -> {
-          statusMessage = "\uD83C\uDF89 Thanh toán thành công! VIP đã được kích hoạt."
+          statusMessage = "🎉 Thanh toán thành công! VIP đã được kích hoạt."
           delay(1500.milliseconds)
           onDismiss()
+        }
+        is PurchaseEvent.Pending -> {
+          statusMessage = "⏳ Giao dịch đang được xử lý. Gói VIP sẽ tự động kích hoạt khi Google Play hoàn tất."
         }
         is PurchaseEvent.Error -> {
           statusMessage = event.message
@@ -313,8 +316,24 @@ fun VipSubscriptionDialog(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
+                val formattedPrice = when (tier) {
+                  SubscriptionTier.VIP_MONTHLY -> {
+                    productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_MONTHLY }
+                      ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                  }
+                  SubscriptionTier.VIP_YEARLY -> {
+                    productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_YEARLY }
+                      ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+                  }
+                  SubscriptionTier.LIFETIME -> {
+                    productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_LIFETIME }
+                      ?.oneTimePurchaseOfferDetails?.formattedPrice
+                  }
+                  SubscriptionTier.FREE -> null
+                } ?: tier.priceVi
+
                 Text(
-                  text = tier.priceVi,
+                  text = formattedPrice,
                   fontWeight = FontWeight.ExtraBold,
                   fontSize = 13.sp,
                   color = if (isSelected) Primary else Color(0xFF424242)
@@ -330,14 +349,14 @@ fun VipSubscriptionDialog(
         statusMessage?.let { msg ->
           androidx.compose.material3.Surface(
             shape = RoundedCornerShape(10.dp),
-            color = if (msg.contains("\uD83C\uDF89") || msg.contains("\u2705")) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+            color = if (msg.contains("\uD83C\uDF89") || msg.contains("\u2705") || msg.contains("🎉")) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
             modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
           ) {
             Text(
               text = msg,
               fontSize = 12.sp,
               textAlign = TextAlign.Center,
-              color = if (msg.contains("\uD83C\uDF89") || msg.contains("\u2705")) Color(0xFF2E7D32) else Color(0xFFE65100),
+              color = if (msg.contains("\uD83C\uDF89") || msg.contains("\u2705") || msg.contains("🎉")) Color(0xFF2E7D32) else Color(0xFFE65100),
               modifier = Modifier.padding(10.dp)
             )
           }
@@ -349,8 +368,7 @@ fun VipSubscriptionDialog(
         Button(
           onClick = {
             if (activity == null || billingManager == null) {
-              onUpgrade(selectedTier)
-              onDismiss()
+              statusMessage = "Không thể kết nối Google Play Billing lúc này. Vui lòng thử lại sau."
               return@Button
             }
             val productId = when (selectedTier) {

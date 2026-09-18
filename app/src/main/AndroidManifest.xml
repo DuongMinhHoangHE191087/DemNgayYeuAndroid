@@ -16,7 +16,7 @@
     <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -44,14 +44,24 @@
             </intent-filter>
         </activity>
 
-        <!-- Alarm BroadcastReceiver for Anniversaries and Dates -->
+        <!-- Boot completed receiver (exported to receive system boot, guarded by RECEIVE_BOOT_COMPLETED) -->
         <receiver
-            android:name=".alarm.ReminderAlarmReceiver"
+            android:name=".alarm.BootCompletedReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Internal alarm receiver (NOT exported for security to prevent intent spoofing) -->
+        <receiver
+            android:name=".alarm.ReminderAlarmReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
                 <action android:name="com.example.inlove.ACTION_REMINDER_ALARM" />
                 <action android:name="com.example.inlove.ACTION_ANNIVERSARY_ALARM" />
                 <action android:name="com.example.inlove.ACTION_DAILY_ANNIVERSARY_CHECK" />

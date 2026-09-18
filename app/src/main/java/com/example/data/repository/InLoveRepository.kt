@@ -65,6 +65,8 @@ class InLoveRepository(private val dao: InLoveDao) {
 
     if (!hasMilestones || !hasGifts || !hasBadges) {
       syncAllCloudPresets()
+      // If offline on cold start, populate safe seed data so the app is immediately usable
+      seedOfflineDataIfStillEmpty()
     } else {
       fetchPresetAssetsFromFirestore()
     }
@@ -585,6 +587,140 @@ class InLoveRepository(private val dao: InLoveDao) {
     } catch (e: Exception) {
       Log.e("InLoveRepository", "Error generating AI gifts: ${e.message}", e)
       Result.failure(e)
+    }
+  }
+
+  suspend fun seedOfflineDataIfStillEmpty() {
+    if (dao.getAllMilestones().first().isEmpty()) {
+      dao.insertMilestones(
+        listOf(
+          MilestoneEntity(
+            id = 1,
+            title = "100 Ngày Bên Nhau",
+            dateText = "Cột mốc đáng nhớ",
+            subtitle = "Tròn 100 ngày đong đầy yêu thương",
+            categoryTag = "Cột Mốc",
+            secondaryTag = "100 Days",
+            daysRemaining = 100,
+            progressPercent = 0.3f,
+            imageUrl = "",
+            isImportant = true,
+            notificationEnabled = true
+          ),
+          MilestoneEntity(
+            id = 2,
+            title = "1 Năm Yêu Nhau",
+            dateText = "Kỷ niệm 1 năm",
+            subtitle = "365 ngày cùng nhau vượt qua mọi khoảnh khắc",
+            categoryTag = "Kỷ Niệm",
+            secondaryTag = "1 Year",
+            daysRemaining = 365,
+            progressPercent = 0.1f,
+            imageUrl = "",
+            isImportant = true,
+            notificationEnabled = true
+          ),
+          MilestoneEntity(
+            id = 3,
+            title = "Lễ Tình Nhân Valentine",
+            dateText = "14 Tháng 2",
+            subtitle = "Ngày ngọt ngào dành riêng cho hai ta",
+            categoryTag = "Ngày Lễ",
+            secondaryTag = "Valentine",
+            daysRemaining = 14,
+            progressPercent = 0.8f,
+            imageUrl = "",
+            isImportant = false,
+            notificationEnabled = true
+          )
+        )
+      )
+    }
+
+    if (dao.getAllGiftIdeas().first().isEmpty()) {
+      dao.insertGiftIdeas(
+        listOf(
+          GiftIdeaEntity(
+            title = "Bó Hoa Hồng Sáp Kèm Thiệp Thư Tay",
+            category = "Lãng Mạn",
+            badgeText = "Được yêu thích nhất 💖",
+            tag = "Kỷ niệm",
+            description = "Món quà tinh tế, vĩnh cửu cùng lời nhắn gửi chân thành từ tận đáy lòng.",
+            imageUrl = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop",
+            detailsSnippet = "Hương hoa hồng dịu nhẹ, lưu giữ trọn vẹn theo thời gian",
+            actionText = "Xem gợi ý chi tiết",
+            isAiGenerated = false
+          ),
+          GiftIdeaEntity(
+            title = "Bữa Tối Nến Lãng Mạn Tự Nấu",
+            category = "Trải Nghiệm",
+            badgeText = "Ấm áp & Riêng tư ✨",
+            tag = "Hẹn hò",
+            description = "Chuẩn bị món ăn người ấy yêu thích với ánh nến lung linh và giai điệu acoustic.",
+            imageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop",
+            detailsSnippet = "Không gian chỉ có hai bạn, lắng đọng từng cảm xúc",
+            actionText = "Lên thực đơn yêu thương",
+            isAiGenerated = false
+          )
+        )
+      )
+    }
+
+    if (dao.getAllLoveBadges().first().isEmpty()) {
+      dao.insertLoveBadges(
+        listOf(
+          LoveBadgeEntity(
+            id = "badge_seed_1",
+            targetDays = 7,
+            titleVi = "Mầm Tình Yêu",
+            titleEn = "Love Sprout",
+            descVi = "Cột mốc 7 ngày đầu tiên bên nhau tràn ngập bỡ ngỡ ngọt ngào.",
+            descEn = "First 7 days together filled with sweet wonders.",
+            tier = "BRONZE",
+            iconType = "sprout_heart",
+            rewardQuoteVi = "Mỗi hành trình vạn dặm đều bắt đầu từ một cái nắm tay.",
+            rewardQuoteEn = "Every journey begins with holding hands.",
+            isClaimed = true,
+            claimedTimestamp = System.currentTimeMillis()
+          ),
+          LoveBadgeEntity(
+            id = "badge_seed_2",
+            targetDays = 30,
+            titleVi = "Gắn Kết Ngọt Ngào",
+            titleEn = "Sweet Connection",
+            descVi = "1 tháng bên nhau chia sẻ những thói quen và câu chuyện nhỏ.",
+            descEn = "1 month together sharing little daily stories.",
+            tier = "SILVER",
+            iconType = "star_heart",
+            rewardQuoteVi = "Tình yêu là khi có ai đó cùng ta đi qua những ngày bình dị.",
+            rewardQuoteEn = "Love is having someone walk through simple days together.",
+            isClaimed = false
+          ),
+          LoveBadgeEntity(
+            id = "badge_seed_3",
+            targetDays = 100,
+            titleVi = "Vàng Son Đượm Nồng",
+            titleEn = "Golden Romance",
+            descVi = "100 ngày kỷ niệm ngọt ngào và bền chặt.",
+            descEn = "100 days of sweet and steady love.",
+            tier = "GOLD",
+            iconType = "crown_heart",
+            rewardQuoteVi = "Trăm năm là cõi người ta, trăm ngày là cõi đôi ta bên nhau.",
+            rewardQuoteEn = "100 days marking our forever story.",
+            isClaimed = false
+          )
+        )
+      )
+    }
+
+    if (dao.getAllChecklistItems().first().isEmpty()) {
+      dao.insertChecklistItems(
+        listOf(
+          ChecklistItemEntity(id = 1, text = "Cùng nhau xem phim và ăn bắp rang bơ", iconName = "movie", isCompleted = false),
+          ChecklistItemEntity(id = 2, text = "Cùng chụp một bức ảnh check-in dưới hoàng hôn", iconName = "camera", isCompleted = false),
+          ChecklistItemEntity(id = 3, text = "Nấu một bữa tối ấm cúng cùng nhau", iconName = "restaurant", isCompleted = false)
+        )
+      )
     }
   }
 }

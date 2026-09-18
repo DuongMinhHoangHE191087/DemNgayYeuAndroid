@@ -14,11 +14,35 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Check if user is a member of the relationship
+    // Check if user is a member of the relationship (supports partnerA/B and user1/2)
     function isRelationshipMember(relData) {
       return isAuthenticated() && (
         request.auth.uid == relData.partnerAId ||
-        request.auth.uid == relData.partnerBId
+        request.auth.uid == relData.partnerBId ||
+        request.auth.uid == relData.user1 ||
+        request.auth.uid == relData.user2
+      );
+    }
+
+    // Check if user is authorized for a memory item
+    function isMemoryMember(memData) {
+      return isAuthenticated() && (
+        request.auth.uid == memData.authorUid ||
+        request.auth.uid == memData.partnerUid ||
+        (memData.relationshipId != null && memData.relationshipId != "" &&
+         exists(/databases/$(database)/documents/relationships/$(memData.relationshipId)) &&
+         isRelationshipMember(get(/databases/$(database)/documents/relationships/$(memData.relationshipId)).data))
+      );
+    }
+
+    // Check if user is authorized for an anniversary item
+    function isAnniversaryMember(anniData) {
+      return isAuthenticated() && (
+        request.auth.uid == anniData.authorUid ||
+        request.auth.uid == anniData.userId ||
+        (anniData.relationshipId != null && anniData.relationshipId != "" &&
+         exists(/databases/$(database)/documents/relationships/$(anniData.relationshipId)) &&
+         isRelationshipMember(get(/databases/$(database)/documents/relationships/$(anniData.relationshipId)).data))
       );
     }
 
@@ -28,12 +52,11 @@ service cloud.firestore {
     }
 
     // ===============================================================
-    // Users Collection
+    // Users Collection (Strict privacy: owner-only access)
     // ===============================================================
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create, update, delete: if isOwner(userId);
     }
 
     // ===============================================================
@@ -45,54 +68,95 @@ service cloud.firestore {
       );
       allow create: if isAuthenticated() && (
         request.resource.data.partnerAId == request.auth.uid ||
-        request.resource.data.partnerBId == request.auth.uid
+        request.resource.data.partnerBId == request.auth.uid ||
+        request.resource.data.user1 == request.auth.uid ||
+        request.resource.data.user2 == request.auth.uid
       );
       allow update: if isAuthenticated() && isRelationshipMember(resource.data);
       allow delete: if isAuthenticated() && isRelationshipMember(resource.data);
     }
 
     // ===============================================================
-    // Invites Collection (Couple Pairing)
+    // Invites Collection (Couple Pairing: only sender and receiver)
     // ===============================================================
     match /invites/{inviteId} {
       allow read: if isAuthenticated() && (
         resource.data.senderUid == request.auth.uid ||
         resource.data.receiverUid == request.auth.uid ||
-        resource.data.receiverCoupleCode != null
+        resource.data.targetUid == request.auth.uid
       );
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
       allow update: if isAuthenticated() && (
         resource.data.senderUid == request.auth.uid ||
-        resource.data.receiverUid == request.auth.uid
+        resource.data.receiverUid == request.auth.uid ||
+        resource.data.targetUid == request.auth.uid
       );
       allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
     }
 
     // ===============================================================
-    // Memories Collection (Anniversary Photos & Videos via Cloudinary)
+    // Memories Collection (Strict membership check: author or partner only)
     // ===============================================================
     match /memories/{memoryId} {
-      allow read: if isAuthenticated();
+      allow read: if isMemoryMember(resource.data);
       allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
       allow update: if isAuthenticated() && (
         resource.data.authorUid == request.auth.uid ||
-        resource.data.relationshipId == request.resource.data.relationshipId
+        isMemoryMember(resource.data)
       );
       allow delete: if isAuthenticated() && resource.data.authorUid == request.auth.uid;
     }
 
     // ===============================================================
-    // Anniversaries Collection
+    // Anniversaries Collection (Author or Relationship Member only)
     // ===============================================================
     match /anniversaries/{anniversaryId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if isAnniversaryMember(resource.data);
+      allow create: if isAuthenticated() && (
+        request.resource.data.authorUid == request.auth.uid ||
+        request.resource.data.userId == request.auth.uid ||
+        (request.resource.data.relationshipId != null &&
+         exists(/databases/$(database)/documents/relationships/$(request.resource.data.relationshipId)) &&
+         isRelationshipMember(get(/databases/$(database)/documents/relationships/$(request.resource.data.relationshipId)).data))
+      );
+      allow update, delete: if isAnniversaryMember(resource.data);
     }
 
     // ===============================================================
-    // Public / Shared Catalog Collections (Enriched Dynamic Content)
-    // Read: All authenticated users or public read
-    // Write: Denied to clients (Admin & Seeder script only)
+    // 3NF Normalized Collections
+    // ===============================================================
+    match /users_3nf/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /relationships_3nf/{relId} {
+      allow read, write: if isAuthenticated() && (
+        resource == null ||
+        isRelationshipMember(resource.data) ||
+        request.resource.data.user1Uid == request.auth.uid ||
+        request.resource.data.user2Uid == request.auth.uid
+      );
+    }
+
+    match /invites_3nf/{inviteId} {
+      allow read, write: if isAuthenticated() && (
+        resource == null ||
+        resource.data.senderUid == request.auth.uid ||
+        resource.data.targetUid == request.auth.uid ||
+        request.resource.data.senderUid == request.auth.uid
+      );
+    }
+
+    match /memories_3nf/{memoryId} {
+      allow read, write: if isAuthenticated() && (
+        resource == null ||
+        resource.data.authorUid == request.auth.uid ||
+        request.resource.data.authorUid == request.auth.uid
+      );
+    }
+
+    // ===============================================================
+    // Public / Shared Catalog Collections (Read: Public, Write: Denied)
     // ===============================================================
     match /gift_ideas/{giftId} {
       allow read: if true;
@@ -120,13 +184,10 @@ service cloud.firestore {
     }
 
     // ===============================================================
-    // Test Account Fixtures (Zero credentials stored in APK)
-    // Read: Allowed for test login sync
-    // Write: Denied to clients
+    // Test Account Fixtures (Locked down: zero client access)
     // ===============================================================
     match /test_fixtures/{fixtureId} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if false;
     }
   }
 }

@@ -355,10 +355,15 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
             currentOnlineUser.value.uid
           }
           if (uid.isNotBlank()) {
+            val mappedTier = when (billingManager.activeProductId.value) {
+              com.example.billing.BillingManager.PRODUCT_VIP_MONTHLY -> com.example.data.model.SubscriptionTier.VIP_MONTHLY
+              com.example.billing.BillingManager.PRODUCT_VIP_LIFETIME -> com.example.data.model.SubscriptionTier.LIFETIME
+              else -> com.example.data.model.SubscriptionTier.VIP_YEARLY
+            }
             authRepo.updateUserSubscription(
               uid,
               com.example.data.model.UserRole.USER_VIP,
-              com.example.data.model.SubscriptionTier.VIP_YEARLY
+              mappedTier
             )
             onlineRepo.setCurrentUserId(uid)
           }
@@ -1686,6 +1691,18 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     viewModelScope.launch {
       authRepo.logout()
       showToast("Đã đăng xuất an toàn")
+    }
+  }
+
+  fun deleteAccountAndData(onComplete: (() -> Unit)? = null) {
+    viewModelScope.launch {
+      val result = authRepo.deleteCurrentAccount()
+      if (result.isSuccess) {
+        showToast("Đã xóa toàn bộ tài khoản và dữ liệu thành công")
+        onComplete?.invoke()
+      } else {
+        showToast("Không thể xóa tài khoản: ${result.exceptionOrNull()?.message ?: "Lỗi không xác định"}")
+      }
     }
   }
 

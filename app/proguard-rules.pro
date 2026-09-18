@@ -38,13 +38,10 @@
 -keep class com.example.data.cloudinary.** { *; }
 -keep class com.example.data.firebase.** { *; }
 
-# 6. Keep JavaMail / Activation for SMTP Email Sending
--keep class javax.mail.** { *; }
--keep class com.sun.mail.** { *; }
--keep class javax.activation.** { *; }
--dontwarn javax.mail.**
--dontwarn com.sun.mail.**
--dontwarn javax.activation.**
+# 6. Keep Google Play Billing Client and Google Mobile Ads
+-keep class com.android.billingclient.api.** { *; }
+-keep class com.google.android.gms.ads.** { *; }
+-dontwarn com.google.android.gms.ads.**
 
 # 7. Preserve Line Numbers for Play Console Crash Reporting (De-obfuscation)
 -keepattributes SourceFile,LineNumberTable

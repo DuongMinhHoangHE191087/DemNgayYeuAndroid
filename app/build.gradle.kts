@@ -38,12 +38,6 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    buildConfigField("String", "SMTP_HOST", "\"${getEnv("SMTP_HOST", "smtp.gmail.com")}\"")
-    buildConfigField("String", "SMTP_PORT", "\"${getEnv("SMTP_PORT", "587")}\"")
-    buildConfigField("String", "SMTP_SENDER_EMAIL", "\"${getEnv("SMTP_SENDER_EMAIL", "")}\"")
-    buildConfigField("String", "SMTP_SENDER_PASSWORD", "\"${getEnv("SMTP_SENDER_PASSWORD", "")}\"")
-    buildConfigField("String", "SMTP_SENDER_NAME", "\"${getEnv("SMTP_SENDER_NAME", "InLove App")}\"")
-
     buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${getEnv("CLOUDINARY_CLOUD_NAME", "dt6p7wm6i")}\"")
     buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${getEnv("CLOUDINARY_UPLOAD_PRESET", "inlove_unsigned")}\"")
     buildConfigField("String", "CLOUDINARY_FOLDER", "\"${getEnv("CLOUDINARY_FOLDER", "inlove_memories")}\"")
@@ -109,11 +103,6 @@ secrets {
   ignoreList.addAll(
     listOf(
       "FIREBASE_APPCHECK_DEBUG_TOKEN",
-      "SMTP_HOST",
-      "SMTP_PORT",
-      "SMTP_SENDER_EMAIL",
-      "SMTP_SENDER_PASSWORD",
-      "SMTP_SENDER_NAME",
       "CLOUDINARY_CLOUD_NAME",
       "CLOUDINARY_UPLOAD_PRESET",
       "CLOUDINARY_FOLDER"
@@ -169,10 +158,6 @@ dependencies {
   implementation(libs.okhttp)
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
-
-  // SMTP Real Email Sending Client
-  implementation("com.sun.mail:android-mail:1.6.7")
-  implementation("com.sun.mail:android-activation:1.6.7")
 
   // Google Mobile Ads SDK (AdMob) — Banner, Interstitial, App Open Ad
   implementation(libs.google.play.services.ads)

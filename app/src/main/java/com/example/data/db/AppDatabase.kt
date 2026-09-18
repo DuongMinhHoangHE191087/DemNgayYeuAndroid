@@ -54,7 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
           context.applicationContext,
           AppDatabase::class.java,
           "inlove_database"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+        ).fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false).build()
         INSTANCE = instance
         instance
       }

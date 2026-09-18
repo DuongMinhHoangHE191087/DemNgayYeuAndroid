@@ -159,6 +159,10 @@ fun PaywallScreen(
                 is PurchaseEvent.Success -> {
                     statusMessage = context.getString(R.string.paywall_restore_success)
                 }
+                is PurchaseEvent.Pending -> {
+                    statusMessage = "⏳ Giao dịch đang được xử lý bởi Google Play."
+                    isRestoring = false
+                }
                 is PurchaseEvent.Error -> {
                     statusMessage = event.message
                     isRestoring = false
@@ -219,44 +223,42 @@ fun PaywallScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color.White, shape = CircleShape)
-                        .border(1.dp, Color(0xFFFFD1E7), CircleShape)
-                ) {
+                IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Đóng Paywall",
-                        tint = Color(0xFF4A1934)
+                        contentDescription = "Đóng",
+                        tint = Color(0xFF8A2E5B)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Icon trung tâm lấp lánh ───────────────────────────────────────
-            Surface(
-                shape = CircleShape,
-                color = Color(0xFFFFE6F1),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.5.dp,
-                    Color(0xFFFF2D75).copy(alpha = sparkleAlpha)
-                ),
-                modifier = Modifier.size(80.dp)
+            // ── Badge & Icon Vương Miện ──────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFFF80AB),
+                                Color(0xFFFF2D75)
+                            )
+                        )
+                    )
+                    .graphicsLayer { alpha = sparkleAlpha },
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = null,
-                        tint = Color(0xFFE91E63),
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.WorkspacePremium,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(44.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // ── Tiêu đề ───────────────────────────────────────────────────────
             Text(
@@ -321,12 +323,25 @@ fun PaywallScreen(
 
             Spacer(modifier = Modifier.height(22.dp))
 
+            // Dynamic prices from Google Play Store ProductDetails
+            val dynamicYearlyPrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_YEARLY }
+                ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+                ?: stringResource(R.string.paywall_plan_yearly_price)
+
+            val dynamicMonthlyPrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_MONTHLY }
+                ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                ?: stringResource(R.string.paywall_plan_monthly_price)
+
+            val dynamicLifetimePrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_LIFETIME }
+                ?.oneTimePurchaseOfferDetails?.formattedPrice
+                ?: stringResource(R.string.paywall_plan_lifetime_price)
+
             // ── Các gói đăng ký ───────────────────────────────────────────────
 
             // Gói NĂM — nổi bật nhất (recommended)
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_yearly_title),
-                price = stringResource(R.string.paywall_plan_yearly_price),
+                price = dynamicYearlyPrice,
                 subText = stringResource(R.string.paywall_plan_yearly_sub),
                 badge = stringResource(R.string.paywall_plan_yearly_badge),
                 badgeColor = Color(0xFFFF2D75),
@@ -339,7 +354,7 @@ fun PaywallScreen(
             // Gói THÁNG
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_monthly_title),
-                price = stringResource(R.string.paywall_plan_monthly_price),
+                price = dynamicMonthlyPrice,
                 subText = stringResource(R.string.paywall_plan_monthly_sub),
                 badge = null,
                 badgeColor = Color.Transparent,
@@ -352,7 +367,7 @@ fun PaywallScreen(
             // Gói TRỌN ĐỜI (LIFETIME)
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_lifetime_title),
-                price = stringResource(R.string.paywall_plan_lifetime_price),
+                price = dynamicLifetimePrice,
                 subText = stringResource(R.string.paywall_plan_lifetime_sub),
                 badge = stringResource(R.string.paywall_plan_lifetime_badge),
                 badgeColor = Color(0xFFFF9800),

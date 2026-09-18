@@ -1052,7 +1052,6 @@ fun ForgotPasswordDialog(
 
   var emailInput by remember { mutableStateOf("") }
   var otpCodeInput by remember { mutableStateOf("") }
-  var generatedOtp by remember { mutableStateOf<String?>(null) }
   var otpTimerSeconds by remember { mutableIntStateOf(0) }
   var isSendingOtp by remember { mutableStateOf(false) }
 
@@ -1204,13 +1203,9 @@ fun ForgotPasswordDialog(
                 scope.launch {
                   val res = viewModel.authRepo.requestPasswordResetOtp(emailInput)
                   isSendingOtp = false
+                  viewModel.showToast(res.second)
                   if (res.first) {
-                    val code = res.second.first
-                    generatedOtp = code
                     otpTimerSeconds = 60
-                    viewModel.showToast("Mã xác thực OTP của bạn là: $code (hiệu lực 60s)")
-                  } else {
-                    viewModel.showToast(res.second.second)
                   }
                 }
               },
@@ -1225,24 +1220,6 @@ fun ForgotPasswordDialog(
               } else {
                 Text("Gửi mã", fontSize = 12.sp)
               }
-            }
-          }
-
-          if (generatedOtp != null) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Surface(
-              shape = RoundedCornerShape(8.dp),
-              color = Color(0xFFE8F5E9),
-              modifier = Modifier.fillMaxWidth()
-            ) {
-              Text(
-                text = "💡 Mã OTP mô phỏng: $generatedOtp",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2E7D32),
-                modifier = Modifier.padding(8.dp),
-                textAlign = TextAlign.Center
-              )
             }
           }
         } else {
@@ -1319,7 +1296,6 @@ fun ForgotPasswordDialog(
                   viewModel.authRepo.resetPasswordWithOtp(
                     emailInput = emailInput,
                     enteredOtp = otpCodeInput,
-                    expectedOtp = generatedOtp.orEmpty(),
                     newPasswordInput = newPasswordInput,
                     confirmPasswordInput = confirmNewPasswordInput
                   )

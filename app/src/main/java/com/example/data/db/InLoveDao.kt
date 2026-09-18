@@ -1,6 +1,7 @@
 package com.example.data.db
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -273,4 +274,16 @@ interface InLoveDao {
 
   @Query("SELECT * FROM security_audit_logs ORDER BY timestamp DESC LIMIT 20")
   fun getAllRecentSecurityLogs(): Flow<List<com.example.data.model.SecurityAuditLogEntity>>
+
+  @Delete
+  suspend fun deleteUserAccount(account: com.example.data.model.UserAccountEntity)
+
+  @Query("DELETE FROM security_audit_logs WHERE accountEmail = :email")
+  suspend fun deleteSecurityLogsForAccount(email: String)
+
+  @Query("DELETE FROM shared_memories")
+  suspend fun clearAllSharedMemories()
+
+  @Query("DELETE FROM couple_profile")
+  suspend fun clearCoupleProfile()
 }

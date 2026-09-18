@@ -91,6 +91,13 @@ object AuthSecurityManager {
   }
 
   /**
+   * Hashes a numeric PIN with salt to prevent storing plaintext PIN in Room database.
+   */
+  fun hashPin(pin: String, salt: String): String {
+    return hashPassword("PIN_${pin.trim()}", salt)
+  }
+
+  /**
    * Validates standard email address syntax.
    */
   fun isValidEmail(email: String): Boolean {

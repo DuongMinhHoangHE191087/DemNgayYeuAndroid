@@ -142,16 +142,18 @@ class AuthRepositoryTest {
     authRepo.register("Tester", email, oldPassword, oldPassword)
 
     // Request reset OTP
-    val (reqSuccess, otpData) = authRepo.requestPasswordResetOtp(email)
-    assertTrue(reqSuccess)
-    val otp = otpData.first
-    assertEquals("OTP phải có độ dài 6 ký tự số", 6, otp.length)
+    val (reqSuccess, reqMsg) = authRepo.requestPasswordResetOtp(email)
+    assertTrue("Yêu cầu gửi OTP phải thành công: $reqMsg", reqSuccess)
 
-    // Reset password with OTP
+    // Retrieve active OTP securely via test helper
+    val otp = authRepo.emailQueueService.getActiveOtpForTesting(email)
+    assertNotNull("OTP phải được tạo trong queue bảo mật", otp)
+    assertEquals("OTP phải có độ dài 6 ký tự số", 6, otp!!.length)
+
+    // Reset password with OTP (no expectedOtp argument allowed from client)
     val (resetSuccess, resetMsg) = authRepo.resetPasswordWithOtp(
       emailInput = email,
       enteredOtp = otp,
-      expectedOtp = otp,
       newPasswordInput = newPassword,
       confirmPasswordInput = newPassword
     )
@@ -165,6 +167,30 @@ class AuthRepositoryTest {
     authRepo.logout()
     val (oldLoginSuccess, _) = authRepo.login(email, oldPassword, rememberMe = false)
     assertFalse("Mật khẩu cũ không thể đăng nhập", oldLoginSuccess)
+  }
+
+  @Test
+  fun testPasswordReset_withSecurityAnswer_unconfiguredAccount_fails() = runBlocking {
+    val email = "no_sec_answer@inlove.app"
+    val password = "SecurePassword@123"
+    authRepo.register(
+      displayNameInput = "No Sec Tester",
+      emailInput = email,
+      passwordInput = password,
+      confirmPasswordInput = password,
+      securityQuestionInput = "",
+      securityAnswerInput = ""
+    )
+
+    // Attempt password reset with security answer on unconfigured account
+    val (success, msg) = authRepo.resetPasswordWithSecurityAnswer(
+      emailInput = email,
+      securityAnswerInput = "anything",
+      newPasswordInput = "NewPassword@2026",
+      confirmPasswordInput = "NewPassword@2026"
+    )
+    assertFalse("Không được phép bypass đặt lại mật khẩu khi chưa thiết lập câu hỏi bảo mật", success)
+    assertTrue(msg.contains("chưa thiết lập câu hỏi") || msg.contains("bảo mật"))
   }
 
   @Test
@@ -194,6 +220,11 @@ class AuthRepositoryTest {
     // Set 4-digit PIN
     val (pinSetSuccess, _) = authRepo.setAppPin("8888")
     assertTrue("Đặt mã PIN thành công", pinSetSuccess)
+
+    // Verify PIN is hashed in database, not stored in plaintext
+    val savedAccount = db.inLoveDao().getUserAccountByEmail(email)
+    assertNotEquals("Mã PIN tuyệt đối không được lưu plain text trong Room", "8888", savedAccount?.appPin)
+    assertTrue("Mã PIN phải được lưu dưới dạng hash an toàn", savedAccount?.appPin?.isNotEmpty() == true)
 
     // Lock app
     authRepo.lockApp()
