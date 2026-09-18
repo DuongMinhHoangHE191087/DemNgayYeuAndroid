@@ -44,18 +44,14 @@ class EmailQueueServiceTest {
   }
 
   @Test
-  fun enqueueVerificationEmail_enqueuesTaskAndReturnsOtp() = runBlocking {
+  fun enqueueVerificationEmail_enqueuesTaskAndProtectsOtp() = runBlocking {
     val email = "test.couple@inlove.app"
     val result = emailService.enqueueVerificationEmail(email, OtpPurpose.REGISTRATION)
 
     assertTrue(result.isSuccess)
-    val otp = result.getOrNull()
-    assertNotNull(otp)
-    assertEquals(6, otp!!.length)
-
-    // Verify stored active OTP matches
     val activeOtp = emailService.getActiveOtpForTesting(email)
-    assertEquals(otp, activeOtp)
+    assertNotNull(activeOtp)
+    assertEquals(6, activeOtp!!.length)
   }
 
   @Test
@@ -79,7 +75,9 @@ class EmailQueueServiceTest {
   @Test
   fun verifyOtp_succeedsWithCorrectCode() = runBlocking {
     val email = "verify.success@inlove.app"
-    val otp = emailService.enqueueVerificationEmail(email, OtpPurpose.REGISTRATION).getOrThrow()
+    val result = emailService.enqueueVerificationEmail(email, OtpPurpose.REGISTRATION)
+    assertTrue(result.isSuccess)
+    val otp = emailService.getActiveOtpForTesting(email)!!
 
     val (isSuccess, message) = emailService.verifyOtp(email, otp)
     assertTrue(isSuccess)
@@ -93,7 +91,8 @@ class EmailQueueServiceTest {
   @Test
   fun verifyOtp_failsWithWrongCode_andEnforcesMaxAttempts() = runBlocking {
     val email = "verify.wrong@inlove.app"
-    val realOtp = emailService.enqueueVerificationEmail(email, OtpPurpose.REGISTRATION).getOrThrow()
+    emailService.enqueueVerificationEmail(email, OtpPurpose.REGISTRATION)
+    val realOtp = emailService.getActiveOtpForTesting(email)!!
 
     // 1st wrong attempt
     val attempt1 = emailService.verifyOtp(email, "000000")

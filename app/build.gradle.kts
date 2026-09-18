@@ -76,8 +76,19 @@ android {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
+      manifestPlaceholders["admobAppId"] = project.findProperty("ADMOB_APP_ID_RELEASE")?.toString()
+        ?: "ca-app-pub-3940256099942544~3347511713"
+      buildConfigField("String", "ADMOB_BANNER_ID", "\"${project.findProperty("ADMOB_BANNER_ID_RELEASE")?.toString() ?: "ca-app-pub-3940256099942544/6300978111"}\"")
+      buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"${project.findProperty("ADMOB_INTERSTITIAL_ID_RELEASE")?.toString() ?: "ca-app-pub-3940256099942544/1033173712"}\"")
+      buildConfigField("String", "ADMOB_AOA_ID", "\"${project.findProperty("ADMOB_AOA_ID_RELEASE")?.toString() ?: "ca-app-pub-3940256099942544/9257395921"}\"")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      signingConfig = signingConfigs.getByName("debugConfig")
+      manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+      buildConfigField("String", "ADMOB_BANNER_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+      buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+      buildConfigField("String", "ADMOB_AOA_ID", "\"ca-app-pub-3940256099942544/9257395921\"")
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -105,7 +116,12 @@ secrets {
       "FIREBASE_APPCHECK_DEBUG_TOKEN",
       "CLOUDINARY_CLOUD_NAME",
       "CLOUDINARY_UPLOAD_PRESET",
-      "CLOUDINARY_FOLDER"
+      "CLOUDINARY_FOLDER",
+      "SMTP_HOST",
+      "SMTP_PORT",
+      "SMTP_SENDER_EMAIL",
+      "SMTP_SENDER_PASSWORD",
+      "SMTP_SENDER_NAME"
     )
   )
 }
@@ -149,8 +165,8 @@ dependencies {
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.credentials.play.services)
   implementation(libs.googleid)
+  implementation(libs.firebase.appcheck.playintegrity)
   implementation(libs.firebase.appcheck.recaptcha)
-  implementation(libs.firebase.appcheck.debug)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.logging.interceptor)
@@ -181,6 +197,7 @@ dependencies {
   androidTestImplementation(libs.androidx.runner)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
+  debugImplementation(libs.firebase.appcheck.debug)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
 }

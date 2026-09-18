@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 /**
@@ -283,22 +284,21 @@ class Firebase3NFService(
         return@withContext false to "Firebase Cloud chưa sẵn sàng. Dữ liệu được lưu trữ offline an toàn trên thiết bị."
       }
 
-      // Sync Users
+      // Batch sync all entities atomically to avoid silent async failures or fake success
+      val batch = fs.batch()
       _users.value.forEach { user ->
-        fs.collection("users_3nf").document(user.uid).set(user)
+        batch.set(fs.collection("users_3nf").document(user.uid), user)
       }
-      // Sync Relationships
       _relationships.value.forEach { rel ->
-        fs.collection("relationships_3nf").document(rel.relationshipId).set(rel)
+        batch.set(fs.collection("relationships_3nf").document(rel.relationshipId), rel)
       }
-      // Sync Invites
       _invites.value.forEach { inv ->
-        fs.collection("invites_3nf").document(inv.inviteId).set(inv)
+        batch.set(fs.collection("invites_3nf").document(inv.inviteId), inv)
       }
-      // Sync Memories
       _memories.value.forEach { mem ->
-        fs.collection("memories_3nf").document(mem.memoryId).set(mem)
+        batch.set(fs.collection("memories_3nf").document(mem.memoryId), mem)
       }
+      batch.commit().await()
 
       validateIntegrity()
       _lastSyncMessage.value = "Đồng bộ Firebase thành công (${System.currentTimeMillis() % 10000})"

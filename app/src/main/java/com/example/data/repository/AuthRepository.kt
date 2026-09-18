@@ -152,7 +152,7 @@ class AuthRepository(
   /**
    * Requests a 6-digit OTP verification code sent via the asynchronous Email Queue.
    */
-  suspend fun requestRegistrationOtp(email: String): Result<String> {
+  suspend fun requestRegistrationOtp(email: String): Result<Unit> {
     if (!AuthSecurityManager.isValidEmail(email)) {
       return Result.failure(IllegalArgumentException("Địa chỉ Email không đúng định dạng!"))
     }
@@ -297,6 +297,15 @@ class AuthRepository(
       )
     )
 
+    // Synchronize authoritative identity with FirebaseAuth for Firestore access
+    try {
+      val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+      fbAuth.signInWithEmailAndPassword(email, passwordInput).await()
+      Log.i("AuthRepo", "Firebase Auth signed in: ${fbAuth.currentUser?.uid}")
+    } catch (e: Exception) {
+      Log.w("AuthRepo", "Firebase Auth sign-in notice: ${e.message}")
+    }
+
     syncOnlineUserWithAccount(updatedAccount)
 
     if (updatedAccount.isPinEnabled && updatedAccount.appPin.isNotEmpty()) {
@@ -422,7 +431,20 @@ class AuthRepository(
       ""
     }
     val coupleCode = ProfileUtils.generateRandomCoupleCode()
-    val uid = "user_${System.currentTimeMillis()}"
+    var firebaseUid = "user_${System.currentTimeMillis()}"
+    try {
+      val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+      val fbResult = fbAuth.createUserWithEmailAndPassword(email, passwordInput).await()
+      val user = fbResult.user
+      if (user != null) {
+        firebaseUid = user.uid
+        user.sendEmailVerification()
+        Log.i("AuthRepo", "Firebase Auth user registered: $firebaseUid")
+      }
+    } catch (e: Exception) {
+      Log.w("AuthRepo", "Firebase Auth registration notice: ${e.message}")
+    }
+    val uid = firebaseUid
     val sessionToken = AuthSecurityManager.generateSessionToken()
 
     val newAccount = UserAccountEntity(
@@ -518,16 +540,23 @@ class AuthRepository(
       val account = dao.getUserAccountByEmail(email)
         ?: return@withContext false to "Không tìm thấy tài khoản tương ứng với email này!"
 
+      // Send real password reset email via Firebase Auth if available
+      try {
+        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase password reset notice: ${e.message}")
+      }
+
       val result = emailQueueService.enqueueVerificationEmail(email, OtpPurpose.PASSWORD_RESET)
       return@withContext if (result.isSuccess) {
         dao.insertSecurityLog(
           SecurityAuditLogEntity(
             accountEmail = email,
             action = "PASSWORD_RESET_REQUEST",
-            detail = "Yêu cầu mã xác thực đặt lại mật khẩu qua email"
+            detail = "Yêu cầu đặt lại mật khẩu qua email"
           )
         )
-        true to "Mã xác thực OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!"
+        true to "Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!"
       } else {
         false to (result.exceptionOrNull()?.message ?: "Gửi mã xác thực thất bại. Vui lòng thử lại!")
       }
@@ -829,12 +858,17 @@ class AuthRepository(
       .putBoolean(KEY_REMEMBER_ME, false)
       .apply()
 
+    try {
+      com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+    } catch (_: Exception) {}
+
     _authState.value = AuthState.Unauthenticated
   }
 
   /**
    * Google Play Policy compliant Account Deletion:
-   * Permanently deletes user account, clears audit logs, tokens, and resets session.
+   * Permanently deletes user account, cloud documents, Firebase Auth user,
+   * audit logs, local memories/profiles, and resets session.
    */
   suspend fun deleteCurrentAccount(): Result<Unit> = withContext(Dispatchers.IO) {
     try {
@@ -843,7 +877,46 @@ class AuthRepository(
         is AuthState.PinLocked -> current.account.email
         else -> ""
       }
+      val uid = when (val current = _authState.value) {
+        is AuthState.Authenticated -> current.account.uid
+        is AuthState.PinLocked -> current.account.uid
+        else -> ""
+      }
 
+      // 1. Delete Cloud Firestore documents if available
+      if (uid.isNotEmpty()) {
+        try {
+          val fs = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+          fs.collection("users").document(uid).delete().await()
+          fs.collection("users_3nf").document(uid).delete().await()
+
+          // Clean up user's memories in Firestore
+          val userMemories = fs.collection("memories").whereEqualTo("authorUid", uid).get().await()
+          userMemories.documents.forEach { doc ->
+            try { doc.reference.delete().await() } catch (_: Exception) {}
+          }
+
+          val userMemories3nf = fs.collection("memories_3nf").whereEqualTo("authorUid", uid).get().await()
+          userMemories3nf.documents.forEach { doc ->
+            try { doc.reference.delete().await() } catch (_: Exception) {}
+          }
+        } catch (e: Exception) {
+          Log.w("AuthRepo", "Firestore account documents deletion notice: ${e.message}")
+        }
+      }
+
+      // 2. Delete Firebase Auth identity
+      try {
+        val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+        val fbUser = fbAuth.currentUser
+        if (fbUser != null) {
+          fbUser.delete().await()
+        }
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase Auth account deletion notice: ${e.message}")
+      }
+
+      // 3. Delete Local Room records, online cache, and memories
       if (email.isNotEmpty()) {
         val account = dao.getUserAccountByEmail(email)
         if (account != null) {
@@ -851,7 +924,15 @@ class AuthRepository(
         }
         dao.deleteSecurityLogsForAccount(email)
       }
+      if (uid.isNotEmpty()) {
+        dao.deleteOnlineUser(uid)
+        dao.deleteOnlineRelationshipsForUser(uid)
+        dao.deleteOnlineInvitesForUser(uid)
+      }
+      dao.clearAllSharedMemories()
+      dao.clearCoupleProfile()
 
+      // 4. Clear all preferences and reset session
       prefs.edit().clear().apply()
       _authState.value = AuthState.Unauthenticated
       Result.success(Unit)

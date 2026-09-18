@@ -14,13 +14,15 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Check if user is a member of the relationship (supports partnerA/B and user1/2)
+    // Check if user is a member of the relationship (supports partnerA/B, user1/2, and 3NF user1Uid/user2Uid)
     function isRelationshipMember(relData) {
       return isAuthenticated() && (
         request.auth.uid == relData.partnerAId ||
         request.auth.uid == relData.partnerBId ||
         request.auth.uid == relData.user1 ||
-        request.auth.uid == relData.user2
+        request.auth.uid == relData.user2 ||
+        request.auth.uid == relData.user1Uid ||
+        request.auth.uid == relData.user2Uid
       );
     }
 
@@ -55,7 +57,7 @@ service cloud.firestore {
     // Users Collection (Strict privacy: owner-only access)
     // ===============================================================
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      allow get, list: if isOwner(userId);
       allow create, update, delete: if isOwner(userId);
     }
 
@@ -63,28 +65,30 @@ service cloud.firestore {
     // Relationships Collection
     // ===============================================================
     match /relationships/{relationshipId} {
-      allow read: if isAuthenticated() && (
-        resource == null || isRelationshipMember(resource.data)
-      );
+      allow get: if isRelationshipMember(resource.data);
+      allow list: if isAuthenticated();
       allow create: if isAuthenticated() && (
         request.resource.data.partnerAId == request.auth.uid ||
         request.resource.data.partnerBId == request.auth.uid ||
         request.resource.data.user1 == request.auth.uid ||
-        request.resource.data.user2 == request.auth.uid
+        request.resource.data.user2 == request.auth.uid ||
+        request.resource.data.user1Uid == request.auth.uid ||
+        request.resource.data.user2Uid == request.auth.uid
       );
-      allow update: if isAuthenticated() && isRelationshipMember(resource.data);
-      allow delete: if isAuthenticated() && isRelationshipMember(resource.data);
+      allow update: if isRelationshipMember(resource.data);
+      allow delete: if isRelationshipMember(resource.data);
     }
 
     // ===============================================================
     // Invites Collection (Couple Pairing: only sender and receiver)
     // ===============================================================
     match /invites/{inviteId} {
-      allow read: if isAuthenticated() && (
+      allow get: if isAuthenticated() && (
         resource.data.senderUid == request.auth.uid ||
         resource.data.receiverUid == request.auth.uid ||
         resource.data.targetUid == request.auth.uid
       );
+      allow list: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
       allow update: if isAuthenticated() && (
         resource.data.senderUid == request.auth.uid ||
@@ -98,7 +102,8 @@ service cloud.firestore {
     // Memories Collection (Strict membership check: author or partner only)
     // ===============================================================
     match /memories/{memoryId} {
-      allow read: if isMemoryMember(resource.data);
+      allow get: if isMemoryMember(resource.data);
+      allow list: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
       allow update: if isAuthenticated() && (
         resource.data.authorUid == request.auth.uid ||
@@ -111,7 +116,8 @@ service cloud.firestore {
     // Anniversaries Collection (Author or Relationship Member only)
     // ===============================================================
     match /anniversaries/{anniversaryId} {
-      allow read: if isAnniversaryMember(resource.data);
+      allow get: if isAnniversaryMember(resource.data);
+      allow list: if isAuthenticated();
       allow create: if isAuthenticated() && (
         request.resource.data.authorUid == request.auth.uid ||
         request.resource.data.userId == request.auth.uid ||
@@ -126,33 +132,46 @@ service cloud.firestore {
     // 3NF Normalized Collections
     // ===============================================================
     match /users_3nf/{userId} {
-      allow read, write: if isOwner(userId);
+      allow get, list: if isOwner(userId);
+      allow create, update, delete: if isOwner(userId);
     }
 
     match /relationships_3nf/{relId} {
-      allow read, write: if isAuthenticated() && (
-        resource == null ||
-        isRelationshipMember(resource.data) ||
+      allow get: if isRelationshipMember(resource.data);
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && (
         request.resource.data.user1Uid == request.auth.uid ||
         request.resource.data.user2Uid == request.auth.uid
       );
+      allow update: if isRelationshipMember(resource.data);
+      allow delete: if isRelationshipMember(resource.data);
     }
 
     match /invites_3nf/{inviteId} {
-      allow read, write: if isAuthenticated() && (
-        resource == null ||
+      allow get: if isAuthenticated() && (
         resource.data.senderUid == request.auth.uid ||
-        resource.data.targetUid == request.auth.uid ||
-        request.resource.data.senderUid == request.auth.uid
+        resource.data.targetUid == request.auth.uid
       );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.senderUid == request.auth.uid ||
+        resource.data.targetUid == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
     }
 
     match /memories_3nf/{memoryId} {
-      allow read, write: if isAuthenticated() && (
-        resource == null ||
+      allow get: if isAuthenticated() && (
         resource.data.authorUid == request.auth.uid ||
-        request.resource.data.authorUid == request.auth.uid
+        (resource.data.relationshipId != null && resource.data.relationshipId != "" &&
+         exists(/databases/$(database)/documents/relationships_3nf/$(resource.data.relationshipId)) &&
+         isRelationshipMember(get(/databases/$(database)/documents/relationships_3nf/$(resource.data.relationshipId)).data))
       );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.authorUid == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.authorUid == request.auth.uid;
     }
 
     // ===============================================================

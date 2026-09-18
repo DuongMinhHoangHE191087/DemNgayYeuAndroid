@@ -80,6 +80,8 @@ import com.android.billingclient.api.ProductDetails
 import com.example.ads.AdsManager
 import com.example.billing.BillingManager
 import com.example.billing.PurchaseEvent
+import com.example.billing.findBestOffer
+import com.example.billing.getFormattedPrice
 
 // ─── Nội dung chọn gói ───────────────────────────────────────────────────────
 private enum class PaywallPlan { YEARLY, MONTHLY, LIFETIME }
@@ -325,15 +327,15 @@ fun PaywallScreen(
 
             // Dynamic prices from Google Play Store ProductDetails
             val dynamicYearlyPrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_YEARLY }
-                ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+                ?.getFormattedPrice(preferFreeTrial = false)
                 ?: stringResource(R.string.paywall_plan_yearly_price)
 
             val dynamicMonthlyPrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_MONTHLY }
-                ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                ?.getFormattedPrice(preferFreeTrial = false)
                 ?: stringResource(R.string.paywall_plan_monthly_price)
 
             val dynamicLifetimePrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_LIFETIME }
-                ?.oneTimePurchaseOfferDetails?.formattedPrice
+                ?.getFormattedPrice()
                 ?: stringResource(R.string.paywall_plan_lifetime_price)
 
             // ── Các gói đăng ký ───────────────────────────────────────────────
@@ -419,9 +421,9 @@ fun PaywallScreen(
 
                     val details = productDetailsList.find { it.productId == productId }
                     if (details != null) {
-                        // Lấy offer token cho gói subscription (SUBS)
-                        val offerToken = details.subscriptionOfferDetails
-                            ?.firstOrNull()?.offerToken ?: ""
+                        // Lấy offer token cho gói subscription (SUBS) ưu tiên free trial nếu có
+                        val offerToken = details.findBestOffer(preferFreeTrial = (selectedPlan == PaywallPlan.YEARLY))
+                            ?.offerToken ?: ""
                         billingManager.launchPurchaseFlow(activity, details, offerToken)
                     } else {
                         // Sản phẩm chưa load — thử kết nối lại

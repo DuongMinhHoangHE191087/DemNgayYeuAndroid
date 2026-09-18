@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.example.BuildConfig
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -16,6 +17,8 @@ import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
 
 /**
  * Triển khai chuẩn production của [AdsManager] — Thread-safe & Lifecycle-aware.
@@ -70,25 +73,50 @@ class AdsManagerImpl : AdsManager,
     // Activity hiện tại (được cập nhật qua ActivityLifecycleCallbacks)
     @Volatile private var currentActivity: Activity? = null
 
-    // ─── Ad Unit IDs (Test) ───────────────────────────────────────────────────
-    // ⚠️ PRODUCTION: Thay bằng Ad Unit ID thật từ AdMob Console trước khi release.
-    // Các ID dưới đây là Google Test IDs — an toàn 100% trong môi trường dev/test.
-    private val testInterstitialAdUnitId = "ca-app-pub-3940256099942544/1033173712"
-    private val testAppOpenAdUnitId = "ca-app-pub-3940256099942544/9257395921"
+    // ─── Ad Unit IDs ──────────────────────────────────────────────────────────
+    // Injected automatically from Gradle build types (debug vs release)
+    private val defaultInterstitialAdUnitId = BuildConfig.ADMOB_INTERSTITIAL_ID
+    private val defaultAppOpenAdUnitId = BuildConfig.ADMOB_AOA_ID
 
     // ─── Test Device IDs ──────────────────────────────────────────────────────
-    // Thêm Hashed Device ID của thiết bị dev vào đây để tránh gian lận traffic.
-    // Lấy Hashed ID từ Logcat khi chạy app lần đầu (tag: "Ads").
     private val testDeviceIds: List<String> = listOf(
         AdRequest.DEVICE_ID_EMULATOR
-        // "YOUR_PHYSICAL_DEVICE_HASHED_ID_HERE" // <- thêm ID thật vào đây
     )
 
-    // ─── Initialize ──────────────────────────────────────────────────────────
+    // ─── Initialize & UMP Consent ─────────────────────────────────────────────
+
+    override fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: () -> Unit) {
+        val params = ConsentRequestParameters.Builder()
+            .setTagForUnderAgeOfConsent(false)
+            .build()
+
+        val consentInformation = UserMessagingPlatform.getConsentInformation(activity)
+        consentInformation.requestConsentInfoUpdate(
+            activity,
+            params,
+            {
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { _ ->
+                    if (consentInformation.canRequestAds()) {
+                        initialize(activity.applicationContext)
+                    }
+                    onConsentCompleted()
+                }
+            },
+            { _ ->
+                if (consentInformation.canRequestAds()) {
+                    initialize(activity.applicationContext)
+                }
+                onConsentCompleted()
+            }
+        )
+
+        if (consentInformation.canRequestAds()) {
+            initialize(activity.applicationContext)
+        }
+    }
 
     override fun initialize(context: Context) {
         // 1. Cấu hình Test Device IDs để tránh vi phạm Invalid Traffic Policy.
-        //    Google sẽ không đếm các click/impression từ các thiết bị test này.
         val requestConfig = RequestConfiguration.Builder()
             .setTestDeviceIds(testDeviceIds)
             .build()
@@ -98,8 +126,8 @@ class AdsManagerImpl : AdsManager,
         MobileAds.initialize(context) {
             // 3. Preload sẵn quảng cáo (chỉ khi không phải VIP)
             if (!isVipUser) {
-                preloadInterstitial(context.applicationContext, testInterstitialAdUnitId)
-                preloadAppOpenAd(context.applicationContext, testAppOpenAdUnitId)
+                preloadInterstitial(context.applicationContext, defaultInterstitialAdUnitId)
+                preloadAppOpenAd(context.applicationContext, defaultAppOpenAdUnitId)
             }
         }
     }
@@ -157,7 +185,7 @@ class AdsManagerImpl : AdsManager,
             onAdDismissed()
             // Kích hoạt load lại nếu ad chưa sẵn sàng
             if (!isVipUser && currentAd == null) {
-                preloadInterstitial(activity.applicationContext, testInterstitialAdUnitId)
+                preloadInterstitial(activity.applicationContext, defaultInterstitialAdUnitId)
             }
             return
         }
@@ -172,7 +200,7 @@ class AdsManagerImpl : AdsManager,
                 lastInterstitialShownTime = System.currentTimeMillis()
                 isAoaSuppressed = false
                 // Preload sẵn cho lần tiếp theo ở chế độ nền
-                preloadInterstitial(activity.applicationContext, testInterstitialAdUnitId)
+                preloadInterstitial(activity.applicationContext, defaultInterstitialAdUnitId)
                 onAdDismissed()
             }
 
@@ -180,7 +208,7 @@ class AdsManagerImpl : AdsManager,
                 // Ad không hiển thị được — cho người dùng tiếp tục ngay
                 interstitialAd = null
                 isAoaSuppressed = false
-                preloadInterstitial(activity.applicationContext, testInterstitialAdUnitId)
+                preloadInterstitial(activity.applicationContext, defaultInterstitialAdUnitId)
                 onAdDismissed()
             }
 
@@ -245,7 +273,7 @@ class AdsManagerImpl : AdsManager,
         // 3. Ad chưa load xong hoặc đã hết hạn → bỏ qua
         if (isVipUser || isAoaSuppressed || !isAppOpenAdAvailable()) {
             if (!isVipUser && appOpenAd == null && !isAppOpenLoading) {
-                preloadAppOpenAd(activity.applicationContext, testAppOpenAdUnitId)
+                preloadAppOpenAd(activity.applicationContext, defaultAppOpenAdUnitId)
             }
             return
         }
@@ -256,12 +284,12 @@ class AdsManagerImpl : AdsManager,
             override fun onAdDismissedFullScreenContent() {
                 appOpenAd = null
                 // Preload ad tiếp theo ở chế độ nền
-                preloadAppOpenAd(activity.applicationContext, testAppOpenAdUnitId)
+                preloadAppOpenAd(activity.applicationContext, defaultAppOpenAdUnitId)
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 appOpenAd = null
-                preloadAppOpenAd(activity.applicationContext, testAppOpenAdUnitId)
+                preloadAppOpenAd(activity.applicationContext, defaultAppOpenAdUnitId)
             }
         }
 

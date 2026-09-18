@@ -52,7 +52,6 @@ data class OtpRecord(
  */
 data class OtpEvent(
   val email: String,
-  val otpCode: String,
   val purpose: OtpPurpose,
   val message: String
 )
@@ -150,7 +149,6 @@ class EmailQueueService private constructor(private val context: Context? = null
     _otpEvents.emit(
       OtpEvent(
         email = task.email,
-        otpCode = task.otpCode,
         purpose = task.purpose,
         message = message
       )
@@ -158,11 +156,8 @@ class EmailQueueService private constructor(private val context: Context? = null
 
     // On Android devices/emulators, show visual notification toast for user feedback without exposing OTP
     context?.let { ctx ->
-      withContext(Dispatchers.Main) {
-        try {
-          val toastText = "✉️ Mã xác thực đã được gửi tới [${task.email}]. Vui lòng kiểm tra Inbox!"
-          Toast.makeText(ctx, toastText, Toast.LENGTH_LONG).show()
-        } catch (_: Throwable) {}
+      CoroutineScope(Dispatchers.Main).launch {
+        Toast.makeText(ctx, message, Toast.LENGTH_LONG).show()
       }
     }
   }
@@ -178,9 +173,9 @@ class EmailQueueService private constructor(private val context: Context? = null
 
   /**
    * Enqueues a verification email request.
-   * Returns Result.success(otpCode) or Result.failure with cooldown remaining seconds.
+   * Returns Result.success(Unit) or Result.failure with cooldown remaining seconds.
    */
-  suspend fun enqueueVerificationEmail(emailInput: String, purpose: OtpPurpose): Result<String> {
+  suspend fun enqueueVerificationEmail(emailInput: String, purpose: OtpPurpose): Result<Unit> {
     val email = emailInput.trim().lowercase()
     val now = System.currentTimeMillis()
 
@@ -207,7 +202,7 @@ class EmailQueueService private constructor(private val context: Context? = null
     // 3. Queue task into the channel
     emailChannel.send(EmailTask(email = email, otpCode = otpCode, purpose = purpose))
 
-    return Result.success(otpCode)
+    return Result.success(Unit)
   }
 
   /**

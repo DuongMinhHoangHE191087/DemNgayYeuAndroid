@@ -75,10 +75,10 @@ class MainActivity : ComponentActivity() {
     // Khởi tạo AppServiceLocator & Ads / Billing Services
     com.example.di.AppServiceLocator.initialize(applicationContext)
     val adsManager = com.example.di.AppServiceLocator.adsManager
-    adsManager.initialize(this)
+    adsManager.requestConsentAndInitialize(this)
     adsManager.registerAppOpenAdLifecycle(application)
-    adsManager.preloadInterstitial(this, "ca-app-pub-3940256099942544/1033173712") // Test Interstitial ID
-    adsManager.preloadAppOpenAd(this, "ca-app-pub-3940256099942544/9257395921")   // Test App Open ID
+    adsManager.preloadInterstitial(this, BuildConfig.ADMOB_INTERSTITIAL_ID)
+    adsManager.preloadAppOpenAd(this, BuildConfig.ADMOB_AOA_ID)
     com.example.di.AppServiceLocator.billingManager.startBillingConnection()
 
     setContent {

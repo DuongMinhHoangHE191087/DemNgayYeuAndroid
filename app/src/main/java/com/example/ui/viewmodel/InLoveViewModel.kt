@@ -329,8 +329,12 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     val billingManager = com.example.di.AppServiceLocator.billingManager
     val adsManager = com.example.di.AppServiceLocator.adsManager
 
-    isVip = combine(currentOnlineUser, authState, billingManager.isVipUser) { user, auth, billingVip ->
-      billingVip || user.isAdFree || (auth is com.example.data.repository.AuthState.Authenticated && auth.account.isVip)
+    // BillingManager is the authoritative Single Source of Truth for VIP entitlements.
+    // Cached local DB flags cannot grant VIP if Google Play Billing reports inactive/expired subscription.
+    isVip = combine(currentOnlineUser, authState, billingManager.isVipUser) { _, auth, billingVip ->
+      val isAdmin = auth is com.example.data.repository.AuthState.Authenticated &&
+          auth.account.userRole == com.example.data.model.UserRole.ADMIN
+      billingVip || isAdmin
     }.stateIn(
       viewModelScope,
       SharingStarted.WhileSubscribed(5000),
@@ -344,17 +348,20 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       }
     }
 
-    // Khi thanh toán qua Google Play thành công, tự động cập nhật Firestore
+    // Khi thanh toán qua Google Play thành công hoặc hết hạn, tự động đồng bộ Room DB
     viewModelScope.launch {
       billingManager.isVipUser.collect { isBillingVip ->
-        if (isBillingVip) {
-          val currentAuth = authState.value
-          val uid = if (currentAuth is com.example.data.repository.AuthState.Authenticated) {
-            currentAuth.account.uid
-          } else {
-            currentOnlineUser.value.uid
-          }
-          if (uid.isNotBlank()) {
+        val currentAuth = authState.value
+        val uid = if (currentAuth is com.example.data.repository.AuthState.Authenticated) {
+          currentAuth.account.uid
+        } else {
+          currentOnlineUser.value.uid
+        }
+
+        if (uid.isNotBlank()) {
+          val isAdmin = currentAuth is com.example.data.repository.AuthState.Authenticated &&
+              currentAuth.account.userRole == com.example.data.model.UserRole.ADMIN
+          if (isBillingVip) {
             val mappedTier = when (billingManager.activeProductId.value) {
               com.example.billing.BillingManager.PRODUCT_VIP_MONTHLY -> com.example.data.model.SubscriptionTier.VIP_MONTHLY
               com.example.billing.BillingManager.PRODUCT_VIP_LIFETIME -> com.example.data.model.SubscriptionTier.LIFETIME
@@ -366,6 +373,13 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
               mappedTier
             )
             onlineRepo.setCurrentUserId(uid)
+          } else if (!isAdmin) {
+            // Revoke local entitlement when Google Play subscription expires or is revoked
+            authRepo.updateUserSubscription(
+              uid,
+              com.example.data.model.UserRole.USER_FREE,
+              com.example.data.model.SubscriptionTier.FREE
+            )
           }
         }
       }

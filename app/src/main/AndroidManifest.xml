@@ -25,12 +25,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
 
-        <!-- Google Mobile Ads (AdMob) Application ID
-             ⚠️ PRODUCTION: Thay ca-app-pub-3940256099942544~3347511713 bằng App ID thật từ AdMob Console.
-             Giá trị hiện tại là Google Test App ID — an toàn trong môi trường dev/test. -->
+        <!-- Google Mobile Ads (AdMob) Application ID configured via build variants -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"

@@ -63,6 +63,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.android.billingclient.api.ProductDetails
 import com.example.billing.BillingManager
 import com.example.billing.PurchaseEvent
+import com.example.billing.findBestOffer
+import com.example.billing.getFormattedPrice
 import com.example.data.model.SubscriptionTier
 import com.example.di.AppServiceLocator
 import com.example.ui.theme.Primary
@@ -319,15 +321,15 @@ fun VipSubscriptionDialog(
                 val formattedPrice = when (tier) {
                   SubscriptionTier.VIP_MONTHLY -> {
                     productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_MONTHLY }
-                      ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                      ?.getFormattedPrice(preferFreeTrial = false)
                   }
                   SubscriptionTier.VIP_YEARLY -> {
                     productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_YEARLY }
-                      ?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+                      ?.getFormattedPrice(preferFreeTrial = false)
                   }
                   SubscriptionTier.LIFETIME -> {
                     productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_LIFETIME }
-                      ?.oneTimePurchaseOfferDetails?.formattedPrice
+                      ?.getFormattedPrice()
                   }
                   SubscriptionTier.FREE -> null
                 } ?: tier.priceVi
@@ -379,7 +381,7 @@ fun VipSubscriptionDialog(
             }
             val details: ProductDetails? = productDetailsList.find { it.productId == productId }
             if (details != null) {
-              val offerToken = details.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: ""
+              val offerToken = details.findBestOffer(preferFreeTrial = (selectedTier == SubscriptionTier.VIP_YEARLY))?.offerToken ?: ""
               billingManager.launchPurchaseFlow(activity, details, offerToken)
             } else {
               billingManager.startBillingConnection()

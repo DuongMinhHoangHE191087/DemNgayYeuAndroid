@@ -162,13 +162,10 @@ fun AuthScreen(
   var isOtpSent by remember { mutableStateOf(false) }
   var otpNotificationBanner by remember { mutableStateOf<String?>(null) }
 
-  // Listen to Email Queue OTP events for instant emulator/testing visibility
+  // Listen to Email Queue OTP events
   LaunchedEffect(Unit) {
     viewModel.authRepo.emailQueueService.otpEvents.collect { event ->
-      otpNotificationBanner = "💌 Đã gửi mã vào hàng đợi [${event.email}]: ${event.otpCode}"
-      if (regEmail.trim().equals(event.email, ignoreCase = true)) {
-        regOtpCode = event.otpCode // Auto-fill for seamless testing
-      }
+      otpNotificationBanner = "💌 Đã gửi mã xác nhận đến [${event.email}]. Vui lòng kiểm tra hộp thư!"
     }
   }
 
@@ -749,10 +746,10 @@ fun AuthScreen(
                       scope.launch {
                         val result = viewModel.authRepo.requestRegistrationOtp(regEmail)
                         isSendingOtp = false
-                        result.onSuccess { code ->
+                        result.onSuccess {
                           isOtpSent = true
                           otpCooldownSeconds = 60
-                          viewModel.showToast("Đã đưa email vào hàng đợi gửi mã OTP! Mã: $code")
+                          viewModel.showToast("Đã gửi mã xác nhận đến $regEmail! Vui lòng kiểm tra hộp thư đến hoặc thư rác.")
                         }.onFailure { err ->
                           viewModel.showToast(err.message ?: "Lỗi gửi mã OTP")
                         }

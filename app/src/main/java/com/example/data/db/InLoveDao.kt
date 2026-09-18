@@ -286,4 +286,13 @@ interface InLoveDao {
 
   @Query("DELETE FROM couple_profile")
   suspend fun clearCoupleProfile()
+
+  @Query("DELETE FROM online_users WHERE uid = :uid")
+  suspend fun deleteOnlineUser(uid: String)
+
+  @Query("DELETE FROM online_relationships WHERE user1 = :uid OR user2 = :uid")
+  suspend fun deleteOnlineRelationshipsForUser(uid: String)
+
+  @Query("DELETE FROM online_invites WHERE senderUid = :uid OR targetUid = :uid")
+  suspend fun deleteOnlineInvitesForUser(uid: String)
 }

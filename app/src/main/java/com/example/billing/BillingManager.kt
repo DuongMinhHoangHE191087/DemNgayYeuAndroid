@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -323,6 +325,15 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 
+    private suspend fun acknowledgePurchaseSuspend(ackParams: AcknowledgePurchaseParams): BillingResult =
+        suspendCancellableCoroutine { continuation ->
+            billingClient.acknowledgePurchase(ackParams) { billingResult ->
+                if (continuation.isActive) {
+                    continuation.resume(billingResult)
+                }
+            }
+        }
+
     private fun acknowledgePurchaseWithRetry(token: String, maxRetries: Int) {
         val ackParams = AcknowledgePurchaseParams.newBuilder()
             .setPurchaseToken(token)
@@ -333,17 +344,40 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
             var acknowledged = false
             while (attempts < maxRetries && !acknowledged) {
                 attempts++
-                billingClient.acknowledgePurchase(ackParams) { ackResult ->
-                    if (ackResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        acknowledged = true
-                    }
-                }
-                if (!acknowledged && attempts < maxRetries) {
+                val result = acknowledgePurchaseSuspend(ackParams)
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                    acknowledged = true
+                } else if (attempts < maxRetries) {
                     delay((attempts * 2).seconds)
                 }
             }
         }
     }
+}
+
+/** Helper extensions for selecting subscription offers and dynamic price formatting */
+fun ProductDetails.findBestOffer(preferFreeTrial: Boolean = false): ProductDetails.SubscriptionOfferDetails? {
+    val offers = subscriptionOfferDetails ?: return null
+    if (offers.isEmpty()) return null
+
+    if (preferFreeTrial) {
+        // Locate offer containing a free trial phase (priceAmountMicros == 0)
+        val trialOffer = offers.firstOrNull { offer ->
+            offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
+        }
+        if (trialOffer != null) return trialOffer
+    }
+
+    // Default: base plan (without promotional offerId) or first available offer
+    return offers.firstOrNull { it.offerId == null } ?: offers.firstOrNull()
+}
+
+fun ProductDetails.getFormattedPrice(preferFreeTrial: Boolean = false): String? {
+    oneTimePurchaseOfferDetails?.formattedPrice?.let { return it }
+    val offer = findBestOffer(preferFreeTrial)
+    val phases = offer?.pricingPhases?.pricingPhaseList
+    return phases?.lastOrNull { it.priceAmountMicros > 0 }?.formattedPrice
+        ?: phases?.firstOrNull()?.formattedPrice
 }
 
 /** Sealed class đại diện cho các sự kiện thanh toán được emit lên UI */

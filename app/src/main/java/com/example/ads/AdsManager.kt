@@ -21,6 +21,12 @@ interface AdsManager {
     fun initialize(context: Context)
 
     /**
+     * Yêu cầu cập nhật thông tin đồng thuận UMP (User Messaging Platform / GDPR CMP)
+     * và tự động hiển thị form consent nếu cần trước khi khởi tạo quảng cáo.
+     */
+    fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: () -> Unit = {})
+
+    /**
      * Đồng bộ trạng thái VIP. Khi [isVip] = true, toàn bộ cache quảng cáo
      * sẽ bị giải phóng và không bao giờ được nạp lại cho đến khi gói hết hạn.
      */

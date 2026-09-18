@@ -35,7 +35,7 @@ import com.google.android.gms.ads.AdView
 @Composable
 fun ComposeBannerAd(
     isVip: Boolean,
-    adUnitId: String = "ca-app-pub-3940256099942544/6300978111", // Test Banner ID
+    adUnitId: String = com.example.BuildConfig.ADMOB_BANNER_ID,
     modifier: Modifier = Modifier
 ) {
     // Guard: người dùng VIP không bao giờ thấy quảng cáo → return sớm, không tốn layout
