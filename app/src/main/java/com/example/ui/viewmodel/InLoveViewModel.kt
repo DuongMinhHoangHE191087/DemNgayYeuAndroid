@@ -127,6 +127,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   private val _showAddAnniversaryDialog = MutableStateFlow(false)
   val showAddAnniversaryDialog: StateFlow<Boolean> = _showAddAnniversaryDialog.asStateFlow()
 
+  private val _prefilledAnniversaryDate = MutableStateFlow<String?>(null)
+  val prefilledAnniversaryDate: StateFlow<String?> = _prefilledAnniversaryDate.asStateFlow()
+
   private val _showAddGiftReminderDialog = MutableStateFlow(false)
   val showAddGiftReminderDialog: StateFlow<Boolean> = _showAddGiftReminderDialog.asStateFlow()
 
@@ -833,6 +836,39 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   }
 
   /**
+   * Update and persist custom Love Journey Title ("Hành Trình Yêu Thương")
+   */
+  fun updateLoveTitle(newTitle: String) {
+    val cleanTitle = newTitle.trim().ifEmpty { "Hành Trình Yêu Thương" }
+    viewModelScope.launch {
+      _loveTitle.value = cleanTitle
+      val current = repository.getCoupleProfileSync() ?: CoupleProfileEntity(
+        id = 1,
+        partner1Name = _boyName.value,
+        partner1Birthday = _boyBirthDate.value,
+        partner1ProfilePicture = _boyAvatarUrl.value,
+        partner1Age = _boyAge.value,
+        partner1Zodiac = _boyZodiac.value,
+        partner2Name = _girlName.value,
+        partner2Birthday = _girlBirthDate.value,
+        partner2ProfilePicture = _girlAvatarUrl.value,
+        partner2Age = _girlAge.value,
+        partner2Zodiac = _girlZodiac.value,
+        loveTitle = cleanTitle,
+        loveDays = _loveDays.value,
+        anniversaryDate = _anniversaryDate.value
+      )
+      repository.saveCoupleProfile(current.copy(loveTitle = cleanTitle))
+      val msg = if (_appLanguage.value == AppLanguage.EN) {
+        "Love Journey title updated: \"$cleanTitle\" ❤️"
+      } else {
+        "Đã đổi tên hành trình: \"$cleanTitle\" ❤️"
+      }
+      showToast(msg)
+    }
+  }
+
+  /**
    * Calculates the exact number of days a couple has been together given their
    * anniversary/start date string (e.g. "14/02/2023").
    * Counts the start day as day 1 so today is included in the streak.
@@ -1063,12 +1099,14 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _showAddChecklistDialog.value = false
   }
 
-  fun openAddAnniversaryDialog() {
+  fun openAddAnniversaryDialog(initialDate: String? = null) {
+    _prefilledAnniversaryDate.value = initialDate
     _showAddAnniversaryDialog.value = true
   }
 
   fun closeAddAnniversaryDialog() {
     _showAddAnniversaryDialog.value = false
+    _prefilledAnniversaryDate.value = null
   }
 
   fun openAddGiftReminderDialog() {

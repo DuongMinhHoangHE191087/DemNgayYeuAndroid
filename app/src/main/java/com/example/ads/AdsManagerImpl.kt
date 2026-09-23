@@ -7,6 +7,9 @@ import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.app.plugin.ads.AdsHelper
+import com.app.plugin.brain.AdsBrain
+import com.app.plugin.consent.ConsentManager
 import com.example.BuildConfig
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
@@ -19,6 +22,9 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Triển khai chuẩn production của [AdsManager] — Thread-safe & Lifecycle-aware.
@@ -37,6 +43,10 @@ import com.google.android.ump.UserMessagingPlatform
 class AdsManagerImpl : AdsManager,
     Application.ActivityLifecycleCallbacks,
     DefaultLifecycleObserver {
+
+    // ─── UMP Consent State ───────────────────────────────────────────────────
+    private val _canRequestAds = MutableStateFlow(false)
+    override val canRequestAds: StateFlow<Boolean> = _canRequestAds.asStateFlow()
 
     // ─── Trạng thái VIP ──────────────────────────────────────────────────────
     @Volatile private var isVipUser: Boolean = false
@@ -85,32 +95,19 @@ class AdsManagerImpl : AdsManager,
 
     // ─── Initialize & UMP Consent ─────────────────────────────────────────────
 
-    override fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: () -> Unit) {
-        val params = ConsentRequestParameters.Builder()
-            .setTagForUnderAgeOfConsent(false)
-            .build()
-
-        val consentInformation = UserMessagingPlatform.getConsentInformation(activity)
-        consentInformation.requestConsentInfoUpdate(
-            activity,
-            params,
-            {
-                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { _ ->
-                    if (consentInformation.canRequestAds()) {
-                        initialize(activity.applicationContext)
-                    }
-                    onConsentCompleted()
-                }
-            },
-            { _ ->
-                if (consentInformation.canRequestAds()) {
-                    initialize(activity.applicationContext)
-                }
-                onConsentCompleted()
+    override fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: (canRequestAds: Boolean) -> Unit) {
+        ConsentManager.request(activity) { _ ->
+            val canRequest = ConsentManager.canRequestAds()
+            _canRequestAds.value = canRequest
+            if (canRequest) {
+                initialize(activity.applicationContext)
             }
-        )
+            onConsentCompleted(canRequest)
+        }
 
-        if (consentInformation.canRequestAds()) {
+        val canRequestNow = ConsentManager.canRequestAds()
+        _canRequestAds.value = canRequestNow
+        if (canRequestNow) {
             initialize(activity.applicationContext)
         }
     }
@@ -124,8 +121,8 @@ class AdsManagerImpl : AdsManager,
 
         // 2. Khởi tạo SDK. Callback fire sau khi tất cả ad network adapters sẵn sàng.
         MobileAds.initialize(context) {
-            // 3. Preload sẵn quảng cáo (chỉ khi không phải VIP)
-            if (!isVipUser) {
+            // 3. Preload sẵn quảng cáo (chỉ khi có consent UMP và không phải VIP)
+            if (!isVipUser && _canRequestAds.value) {
                 preloadInterstitial(context.applicationContext, defaultInterstitialAdUnitId)
                 preloadAppOpenAd(context.applicationContext, defaultAppOpenAdUnitId)
             }
@@ -136,6 +133,7 @@ class AdsManagerImpl : AdsManager,
 
     override fun setVipStatus(isVip: Boolean) {
         this.isVipUser = isVip
+        AdsHelper.instance.setRemoveAds(if (isVip) 1 else 0)
         if (isVip) {
             // Giải phóng toàn bộ cache quảng cáo ngay lập tức khi mua VIP thành công.
             // Người dùng VIP sẽ không bao giờ thấy quảng cáo cho đến khi gói hết hạn.
@@ -149,8 +147,8 @@ class AdsManagerImpl : AdsManager,
     // ─── Interstitial Ad ─────────────────────────────────────────────────────
 
     override fun preloadInterstitial(context: Context, adUnitId: String) {
-        // Guard: không nạp nếu VIP, đang có ad sẵn, hoặc đang load dở
-        if (isVipUser || interstitialAd != null || isInterstitialLoading) return
+        // Guard: không nạp nếu VIP, chưa có consent UMP, adUnitId rỗng, đang có ad sẵn, hoặc đang load dở
+        if (isVipUser || !_canRequestAds.value || adUnitId.isBlank() || interstitialAd != null || isInterstitialLoading) return
 
         isInterstitialLoading = true
         val adRequest = AdRequest.Builder().build()
@@ -179,6 +177,12 @@ class AdsManagerImpl : AdsManager,
         val isIntervalOk = (currentTime - lastInterstitialShownTime) >= minIntervalMs
         val currentAd = interstitialAd
 
+        // Monetization Brain: nếu brain đang hoạt động và đánh giá không nên hiển thị, bỏ qua ngay
+        if (AdsBrain.enabled && !AdsBrain.shouldShowInterstitial()) {
+            onAdDismissed()
+            return
+        }
+
         // Guard: bỏ qua nếu VIP, chưa đủ interval 30s, hoặc ad chưa load xong
         if (isVipUser || currentAd == null || !isIntervalOk) {
             // Callback ngay để người dùng tiếp tục thao tác — không bao giờ block UI
@@ -195,6 +199,9 @@ class AdsManagerImpl : AdsManager,
 
         currentAd.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                // Ghi nhận tín hiệu hiển thị cho Monetization Brain
+                AdsBrain.onInterstitialShown()
+
                 // Người dùng đóng ad — tiếp tục luồng
                 interstitialAd = null
                 lastInterstitialShownTime = System.currentTimeMillis()
@@ -230,8 +237,8 @@ class AdsManagerImpl : AdsManager,
     }
 
     override fun preloadAppOpenAd(context: Context, adUnitId: String) {
-        // Guard: không nạp nếu VIP, ad còn hợp lệ, hoặc đang load dở
-        if (isVipUser || isAppOpenAdAvailable() || isAppOpenLoading) return
+        // Guard: không nạp nếu VIP, chưa có consent UMP, adUnitId rỗng, ad còn hợp lệ, hoặc đang load dở
+        if (isVipUser || !_canRequestAds.value || adUnitId.isBlank() || isAppOpenAdAvailable() || isAppOpenLoading) return
 
         isAppOpenLoading = true
         AppOpenAd.load(

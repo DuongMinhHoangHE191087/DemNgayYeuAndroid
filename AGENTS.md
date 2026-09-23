@@ -15,6 +15,22 @@
 <!-- SKILLS_INDEX_START -->
 ## Available Skills & Triggers
 
+- **codegraph** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/codegraph/SKILL.md)
+  - (triggers: codegraph, code intelligence, ast, symbol, callers, callees, impact analysis)
+- **brainstorming** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/brainstorming/SKILL.md)
+  - (triggers: brainstorm, brainstorming, explore idea, design spec, feature design)
+- **test-driven-development** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/test-driven-development/SKILL.md)
+  - (triggers: tdd, test first, red green refactor, failing test)
+- **requesting-code-review** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/requesting-code-review/SKILL.md)
+  - (triggers: request code review, pre-merge review, pr review)
+- **receiving-code-review** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/receiving-code-review/SKILL.md)
+  - (triggers: receive review, address review comments, review feedback)
+- **systematic-debugging** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/systematic-debugging/SKILL.md)
+  - (triggers: systematic debug, root cause analysis, 5 whys, bug investigation)
+- **writing-plans** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/writing-plans/SKILL.md)
+  - (triggers: write plan, implementation plan, work breakdown)
+- **executing-plans** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/executing-plans/SKILL.md)
+  - (triggers: execute plan, implementation execution, plan runner)
 - **android-clean-architecture** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/android-clean-architecture/SKILL.md)
   - (triggers: android architecture, usecase, repository, room, data layer, domain layer, viewModel, hilt, kmp)
 - **compose-multiplatform-patterns** (file:///d:/DMHoang/Project_GitHub/DemNgayYeuAndroid/.agents/skills/compose-multiplatform-patterns/SKILL.md)

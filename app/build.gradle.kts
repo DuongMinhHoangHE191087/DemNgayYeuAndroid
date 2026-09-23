@@ -31,7 +31,7 @@ android {
 
   defaultConfig {
     applicationId = "com.aistudio.inlove.kmrv"
-    minSdk = 24
+    minSdk = 26
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
@@ -75,12 +75,15 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
-      manifestPlaceholders["admobAppId"] = project.findProperty("ADMOB_APP_ID_RELEASE")?.toString()
-        ?: "ca-app-pub-3940256099942544~3347511713"
-      buildConfigField("String", "ADMOB_BANNER_ID", "\"${project.findProperty("ADMOB_BANNER_ID_RELEASE")?.toString() ?: "ca-app-pub-3940256099942544/6300978111"}\"")
-      buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"${project.findProperty("ADMOB_INTERSTITIAL_ID_RELEASE")?.toString() ?: "ca-app-pub-3940256099942544/1033173712"}\"")
-      buildConfigField("String", "ADMOB_AOA_ID", "\"${project.findProperty("ADMOB_AOA_ID_RELEASE")?.toString() ?: "ca-app-pub-3940256099942544/9257395921"}\"")
+      val releaseAppId = project.findProperty("ADMOB_APP_ID_RELEASE")?.toString() ?: ""
+      val releaseBannerId = project.findProperty("ADMOB_BANNER_ID_RELEASE")?.toString() ?: ""
+      val releaseInterstitialId = project.findProperty("ADMOB_INTERSTITIAL_ID_RELEASE")?.toString() ?: ""
+      val releaseAoaId = project.findProperty("ADMOB_AOA_ID_RELEASE")?.toString() ?: ""
+
+      manifestPlaceholders["admobAppId"] = releaseAppId
+      buildConfigField("String", "ADMOB_BANNER_ID", "\"$releaseBannerId\"")
+      buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$releaseInterstitialId\"")
+      buildConfigField("String", "ADMOB_AOA_ID", "\"$releaseAoaId\"")
     }
     debug {
       signingConfig = signingConfigs.getByName("debugConfig")
@@ -131,6 +134,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
+  implementation(project(":appplugin"))
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
@@ -175,8 +179,9 @@ dependencies {
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
 
-  // Google Mobile Ads SDK (AdMob) — Banner, Interstitial, App Open Ad
+  // Google Mobile Ads SDK (AdMob) & UMP (User Messaging Platform)
   implementation(libs.google.play.services.ads)
+  implementation(libs.user.messaging.platform)
 
   // Google Play Billing Client KTX v7 — Subscriptions & In-App Purchases
   implementation(libs.google.play.billing.ktx)

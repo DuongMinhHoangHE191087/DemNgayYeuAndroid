@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -41,10 +42,16 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -97,7 +104,9 @@ import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
 
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 
 @Composable
 fun SettingsScreen(viewModel: InLoveViewModel) {
@@ -109,11 +118,21 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   val girlName by viewModel.girlName.collectAsState()
   val boyAvatarUrl by viewModel.boyAvatarUrl.collectAsState()
   val girlAvatarUrl by viewModel.girlAvatarUrl.collectAsState()
+  val boyBirthDate by viewModel.boyBirthDate.collectAsState()
+  val boyAge by viewModel.boyAge.collectAsState()
+  val boyZodiac by viewModel.boyZodiac.collectAsState()
+  val girlBirthDate by viewModel.girlBirthDate.collectAsState()
+  val girlAge by viewModel.girlAge.collectAsState()
+  val girlZodiac by viewModel.girlZodiac.collectAsState()
   val loveDays by viewModel.loveDays.collectAsState()
+  val loveTitle by viewModel.loveTitle.collectAsState()
+  var showEditLoveTitleDialog by remember { mutableStateOf(false) }
 
   val appLanguage by viewModel.appLanguage.collectAsState()
+  val isEnglish = appLanguage == AppLanguage.EN
   val context = LocalContext.current
   val uriHandler = LocalUriHandler.current
+  val clipboardManager = LocalClipboardManager.current
 
   // Online 1-1 Set Love States
   val currentUser by viewModel.currentOnlineUser.collectAsState()
@@ -129,6 +148,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   var showChangePasswordDialog by remember { mutableStateOf(false) }
   var showSetPinDialog by remember { mutableStateOf(false) }
   var showSecurityAuditLogsDialog by remember { mutableStateOf(false) }
+  var showDevicesDialog by remember { mutableStateOf(false) }
+  var showPrivacyVaultInfoDialog by remember { mutableStateOf(false) }
   var showLogoutConfirmDialog by remember { mutableStateOf(false) }
   var showDeleteAccountConfirmDialog by remember { mutableStateOf(false) }
 
@@ -144,15 +165,23 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
     contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
-    // 0. My Personal Profile Card (User Intent: user only adjusts their own profile, age and zodiac auto-calculated)
+    // 1. User's Own Profile Card (Unified Single Card with Search/Couple Code & Copy)
     item {
+      Text(
+        text = if (isEnglish) "YOUR PROFILE" else "HỒ SƠ CỦA BẠN",
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
+        color = Primary
+      )
+      Spacer(modifier = Modifier.height(6.dp))
+
       Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
           containerColor = Color.White.copy(alpha = 0.95f)
         ),
         border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFFB6C1)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
           .fillMaxWidth()
           .clickable { viewModel.openEditProfileDialog() }
@@ -163,64 +192,65 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
           ) {
-            AsyncImage(
-              model = currentUser.avatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
-              contentDescription = "My Avatar",
-              contentScale = ContentScale.Crop,
-              modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .border(2.dp, Color(0xFFE91E63), CircleShape)
-            )
+            Box(modifier = Modifier.size(56.dp)) {
+              AsyncImage(
+                model = currentUser.avatarUrl.ifEmpty { boyAvatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" } },
+                contentDescription = if (isEnglish) "Your Avatar" else "Ảnh của bạn",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                  .size(56.dp)
+                  .clip(CircleShape)
+                  .border(2.dp, Primary, CircleShape)
+              )
+              Surface(
+                shape = CircleShape,
+                color = Primary,
+                modifier = Modifier
+                  .size(18.dp)
+                  .align(Alignment.BottomEnd)
+              ) {
+                Icon(
+                  imageVector = Icons.Filled.Edit,
+                  contentDescription = null,
+                  tint = Color.White,
+                  modifier = Modifier.padding(3.dp)
+                )
+              }
+            }
 
             Column(modifier = Modifier.weight(1f)) {
-              Row(verticalAlignment = Alignment.CenterVertically) {
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+              ) {
                 Text(
-                  text = currentUser.effectiveDisplayName,
+                  text = currentUser.effectiveDisplayName.ifEmpty { boyName.ifEmpty { if (isEnglish) "You" else "Bạn" } },
                   fontSize = 17.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnSurface
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                if (!currentUser.isProfileSetup) {
-                  Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFFFEBEE)
-                  ) {
-                    Text(
-                      text = "VÔ DANH",
-                      fontSize = 9.sp,
-                      fontWeight = FontWeight.ExtraBold,
-                      color = Color(0xFFD32F2F),
-                      modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                    )
-                  }
+                Surface(
+                  shape = RoundedCornerShape(6.dp),
+                  color = Primary.copy(alpha = 0.12f)
+                ) {
+                  Text(
+                    text = if (isEnglish) "YOU" else "BẠN",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Primary,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                  )
                 }
               }
-
               Spacer(modifier = Modifier.height(2.dp))
-              Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (currentUser.age > 0) {
-                  Text(
-                    text = "${currentUser.age} tuổi",
-                    fontSize = 12.sp,
-                    color = Color(0xFFE91E63),
-                    fontWeight = FontWeight.SemiBold
-                  )
-                }
-                if (currentUser.zodiac.isNotBlank()) {
-                  Text(
-                    text = "• Cung ${currentUser.zodiac}",
-                    fontSize = 12.sp,
-                    color = Color(0xFF880E4F),
-                    fontWeight = FontWeight.SemiBold
-                  )
-                }
-              }
-
+              val boySub = listOfNotNull(
+                if (currentUser.age > 0) "${currentUser.age}t" else if (boyAge > 0) "${boyAge}t" else null,
+                currentUser.zodiac.ifBlank { boyZodiac.ifBlank { null } },
+                boyBirthDate.ifBlank { null }
+              ).joinToString(" • ")
               Text(
-                text = "Mã của bạn: ${currentUser.coupleCode}",
-                fontSize = 11.sp,
+                text = boySub.ifEmpty { if (isEnglish) "Tap to edit personal info" else "Chạm để chỉnh sửa thông tin cá nhân" },
+                fontSize = 12.sp,
                 color = OnSurfaceVariant
               )
             }
@@ -231,21 +261,83 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             ) {
               Icon(
                 imageVector = Icons.Filled.Edit,
-                contentDescription = "Chỉnh sửa hồ sơ của tôi",
+                contentDescription = if (isEnglish) "Edit personal profile" else "Chỉnh sửa hồ sơ cá nhân",
                 tint = Primary
               )
             }
           }
 
+          // Search / Couple Code Row with 1-Tap Copy
+          val coupleCode = currentUser.coupleCode.ifBlank { "INLOVE-${currentUser.uid.take(6).uppercase()}" }
+          Spacer(modifier = Modifier.height(10.dp))
+          Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFFFFF0F5),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF80AB).copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+              Column(modifier = Modifier.weight(1f)) {
+                Text(
+                  text = if (isEnglish) "Your Pairing / Search Code:" else "Mã tìm kiếm ghép đôi của bạn:",
+                  fontSize = 11.sp,
+                  color = Color(0xFF880E4F),
+                  fontWeight = FontWeight.Medium
+                )
+                Text(
+                  text = coupleCode,
+                  fontSize = 14.sp,
+                  fontWeight = FontWeight.ExtraBold,
+                  color = Color(0xFFC2185B),
+                  letterSpacing = 1.sp
+                )
+              }
+
+              Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFE91E63),
+                modifier = Modifier.clickable {
+                  clipboardManager.setText(AnnotatedString(coupleCode))
+                  viewModel.showToast(if (isEnglish) "Copied code: $coupleCode" else "Đã sao chép mã: $coupleCode")
+                }
+              ) {
+                Row(
+                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "Copy code",
+                    tint = Color.White,
+                    modifier = Modifier.size(13.dp)
+                  )
+                  Text(
+                    text = if (isEnglish) "Copy" else "Sao chép",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                  )
+                }
+              }
+            }
+          }
+
           if (!currentUser.isProfileSetup) {
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Surface(
               shape = RoundedCornerShape(10.dp),
               color = Color(0xFFFFF3E0),
               modifier = Modifier.fillMaxWidth()
             ) {
               Text(
-                text = "👉 Bạn chưa cập nhật hồ sơ. Hãy bấm vào đây để nhập tên & ngày sinh!",
+                text = if (isEnglish) "👉 Tap here to update your name, birthday & zodiac!" else "👉 Bạn chưa cập nhật hồ sơ. Hãy bấm vào đây để nhập tên & ngày sinh!",
                 fontSize = 11.sp,
                 color = Color(0xFFE65100),
                 modifier = Modifier.padding(8.dp)
@@ -255,102 +347,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         }
       }
     }
-    // 1. Couple Profile Card
+
+    // 2. Partner & Relationship Status (Unified Offline & Online 1-1)
     item {
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = SurfaceContainerLowest.copy(alpha = 0.95f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable { viewModel.openEditCoupleDialog() }
-          .testTag("settings_couple_profile_card")
-      ) {
-        Row(
-          modifier = Modifier.padding(16.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-          // Both avatars side by side
-          Box(modifier = Modifier.size(68.dp)) {
-            Box(
-              modifier = Modifier
-                .size(46.dp)
-                .clip(CircleShape)
-                .border(2.dp, Color(0xFF4DD0E1), CircleShape)
-                .align(Alignment.TopStart)
-            ) {
-              AsyncImage(
-                model = boyAvatarUrl,
-                contentDescription = "Partner 1 Avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-              )
-            }
-            Box(
-              modifier = Modifier
-                .size(46.dp)
-                .clip(CircleShape)
-                .border(2.dp, Color(0xFFFF8A65), CircleShape)
-                .align(Alignment.BottomEnd)
-            ) {
-              AsyncImage(
-                model = girlAvatarUrl,
-                contentDescription = "Partner 2 Avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-              )
-            }
-          }
-
-          Column(modifier = Modifier.weight(1f)) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-              Text(
-                text = "$boyName & $girlName",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = OnSurface
-              )
-              Icon(
-                imageVector = Icons.Filled.Edit,
-                contentDescription = stringResource(R.string.settings_profile_card_edit),
-                tint = Primary,
-                modifier = Modifier.size(16.dp)
-              )
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-              text = stringResource(R.string.settings_sweet_days_format, loveDays),
-              fontSize = 12.sp,
-              color = Primary,
-              fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-              text = stringResource(R.string.settings_db_secured),
-              fontSize = 11.sp,
-              color = OnSurfaceVariant
-            )
-          }
-
-          Icon(
-            imageVector = Icons.Filled.ChevronRight,
-            contentDescription = null,
-            tint = OnSurfaceVariant
-          )
-        }
-      }
-    }
-
-    // 2. Set Love 1-1 Online Partner Card & Breakup Management
-    item {
+      Spacer(modifier = Modifier.height(6.dp))
       Text(
-        text = "TRẠNG THÁI TÌNH CẢM (SET LOVE 1-1)",
+        text = if (isEnglish) "PARTNER & LOVE STATUS (SET LOVE 1-1)" else "NGƯỜI THƯƠNG & TRẠNG THÁI TÌNH CẢM (SET LOVE 1-1)",
         fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
         color = Color(0xFFC2185B)
@@ -365,16 +367,17 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         modifier = Modifier.fillMaxWidth().testTag("partner_relationship_card")
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
-          // Partner header info
+          val isCoupled = relationshipStatus == OnlineStatus.COUPLED && partnerUser != null
+
           Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
           ) {
             AsyncImage(
-              model = partnerUser?.avatarUrl ?: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200",
+              model = if (isCoupled) partnerUser!!.avatarUrl.ifEmpty { girlAvatarUrl } else girlAvatarUrl.ifEmpty { "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" },
               contentDescription = "Partner Avatar",
               modifier = Modifier
-                .size(52.dp)
+                .size(54.dp)
                 .clip(CircleShape)
                 .border(2.dp, Color(0xFFFF4081), CircleShape),
               contentScale = ContentScale.Crop
@@ -385,30 +388,36 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Column(modifier = Modifier.weight(1f)) {
               Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                  text = partnerUser?.displayName ?: "Chưa có đối phương",
+                  text = if (isCoupled) partnerUser!!.displayName else girlName.ifEmpty { if (isEnglish) "Partner" else "Người thương" },
                   fontWeight = FontWeight.Bold,
                   fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                   shape = RoundedCornerShape(6.dp),
-                  color = if (relationshipStatus == OnlineStatus.COUPLED) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+                  color = if (isCoupled) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
                 ) {
                   Text(
-                    text = if (relationshipStatus == OnlineStatus.COUPLED) "COUPLED" else "CHƯA GHÉP ĐÔI",
+                    text = if (isCoupled) "COUPLED" else (if (isEnglish) "OFFLINE" else "CHẾ ĐỘ MÁY"),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (relationshipStatus == OnlineStatus.COUPLED) Color(0xFF2E7D32) else Color(0xFFE65100),
+                    color = if (isCoupled) Color(0xFF2E7D32) else Color(0xFFE65100),
                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                   )
                 }
               }
 
-              val loveSince = activeRelationship?.startDateText?.ifBlank { null }
-              val partnerSubtitle = if (partnerUser != null) {
-                if (!loveSince.isNullOrBlank()) "Mã: ${partnerUser!!.coupleCode} • Yêu từ $loveSince" else "Mã: ${partnerUser!!.coupleCode}"
+              val partnerSubtitle = if (isCoupled) {
+                val loveSince = activeRelationship?.startDateText?.ifBlank { null }
+                if (!loveSince.isNullOrBlank()) (if (isEnglish) "Code: ${partnerUser!!.coupleCode} • In love since $loveSince" else "Mã: ${partnerUser!!.coupleCode} • Yêu từ $loveSince")
+                else (if (isEnglish) "Code: ${partnerUser!!.coupleCode}" else "Mã: ${partnerUser!!.coupleCode}")
               } else {
-                "Mã của bạn: ${currentUser.coupleCode}"
+                val girlSub = listOfNotNull(
+                  if (girlAge > 0) "${girlAge}t" else null,
+                  girlZodiac.ifBlank { null },
+                  girlBirthDate.ifBlank { null }
+                ).joinToString(" • ")
+                girlSub.ifEmpty { if (isEnglish) "Offline partner configured on device" else "Người thương thiết lập trên máy" }
               }
               Text(
                 text = partnerSubtitle,
@@ -442,7 +451,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   )
                   Spacer(modifier = Modifier.width(8.dp))
                   Text(
-                    text = "Đối phương đã gửi yêu cầu hủy Set Love!",
+                    text = if (isEnglish) "Partner requested to end Set Love!" else "Đối phương đã gửi yêu cầu hủy Set Love!",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = Color(0xFFB71C1C)
@@ -450,7 +459,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                  text = "Bạn có đồng ý hủy ghép đôi và trở về trạng thái Độc thân?",
+                  text = if (isEnglish) "Do you agree to cancel pairing and return to Single status?" else "Bạn có đồng ý hủy ghép đôi và trở về trạng thái Độc thân?",
                   fontSize = 12.sp,
                   color = Color.DarkGray
                 )
@@ -464,7 +473,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.weight(1f).testTag("reject_breakup_button")
                   ) {
-                    Text("Từ chối chia tay", fontSize = 12.sp)
+                    Text(if (isEnglish) "Reject" else "Từ chối", fontSize = 12.sp)
                   }
                   Button(
                     onClick = { viewModel.confirmBreakup() },
@@ -472,16 +481,9 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.weight(1f).testTag("confirm_breakup_button")
                   ) {
-                    Text("Xác nhận chia tay", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isEnglish) "Confirm" else "Xác nhận", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                   }
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                  text = "Cưỡng chế hủy sau 7-14 ngày nếu một bên không phản hồi.",
-                  fontSize = 10.sp,
-                  color = Color.Gray,
-                  modifier = Modifier.clickable { viewModel.forceBreakup() }
-                )
               }
             }
           } else if (requestedByMe) {
@@ -493,7 +495,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             ) {
               Column(modifier = Modifier.padding(12.dp)) {
                 Text(
-                  text = "⏳ Đang chờ đối phương xác nhận yêu cầu hủy Set Love...",
+                  text = if (isEnglish) "⏳ Waiting for partner to confirm breakup..." else "⏳ Đang chờ đối phương xác nhận yêu cầu hủy Set Love...",
                   fontWeight = FontWeight.Bold,
                   fontSize = 13.sp,
                   color = Color(0xFFE65100)
@@ -504,14 +506,14 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                     onClick = { viewModel.rejectBreakup() },
                     shape = RoundedCornerShape(10.dp)
                   ) {
-                    Text("Rút lại yêu cầu", fontSize = 12.sp)
+                    Text(if (isEnglish) "Withdraw" else "Rút lại yêu cầu", fontSize = 12.sp)
                   }
                   Button(
                     onClick = { viewModel.forceBreakup() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
                     shape = RoundedCornerShape(10.dp)
                   ) {
-                    Text("Cưỡng chế hủy ngay", fontSize = 12.sp)
+                    Text(if (isEnglish) "Force Cancel" else "Cưỡng chế hủy ngay", fontSize = 12.sp)
                   }
                 }
               }
@@ -536,7 +538,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   )
                   Spacer(modifier = Modifier.width(6.dp))
                   Text(
-                    text = "Lời mời ghép đôi từ ${incomingInvite!!.effectiveSenderName}",
+                    text = if (isEnglish) "Couple invitation from ${incomingInvite!!.effectiveSenderName}" else "Lời mời ghép đôi từ ${incomingInvite!!.effectiveSenderName}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = Color(0xFF880E4F)
@@ -544,7 +546,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                  text = "Đề xuất ngày bắt đầu: ${incomingInvite!!.proposedStartDateText.ifEmpty { "Chưa đặt" }}",
+                  text = (if (isEnglish) "Proposed start date: " else "Đề xuất ngày bắt đầu: ") + (incomingInvite!!.proposedStartDateText.ifEmpty { if (isEnglish) "Not set" else "Chưa đặt" }),
                   fontSize = 12.sp,
                   color = Color.DarkGray
                 )
@@ -555,48 +557,82 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   shape = RoundedCornerShape(10.dp),
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Text("Kiểm tra danh tính & Xác nhận ngày yêu", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                  Text(if (isEnglish) "Inspect Identity & Confirm" else "Kiểm tra danh tính & Xác nhận", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
               }
             }
           }
 
-          // Action Buttons: Open Pairing Screen or Request Breakup
+          // Action Buttons:
+          // In Offline mode: "Chỉnh sửa người thương" & "Ghép đôi Online 1-1"
+          // In Online coupled mode: "Trang Ghép Đôi" & "Hủy Set Love"
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
-            OutlinedButton(
-              onClick = { viewModel.openPairingScreen() },
-              shape = RoundedCornerShape(12.dp),
-              modifier = Modifier.weight(1f).testTag("open_pairing_screen_button")
-            ) {
-              Icon(
-                imageVector = Icons.Default.Link,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-              )
-              Spacer(modifier = Modifier.width(4.dp))
-              Text("Trang Ghép Đôi", fontSize = 12.sp)
-            }
-
-            if (relationshipStatus == OnlineStatus.COUPLED && !isPendingBreakup) {
-              Button(
-                onClick = { showConfirmBreakupDialog = true },
-                colors = ButtonDefaults.buttonColors(
-                  containerColor = Color(0xFFFFEBEE),
-                  contentColor = Color(0xFFC62828)
-                ),
+            if (isCoupled) {
+              OutlinedButton(
+                onClick = { viewModel.openPairingScreen() },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f).testTag("request_breakup_button")
+                modifier = Modifier.weight(1f).testTag("open_pairing_screen_button")
               ) {
                 Icon(
-                  imageVector = Icons.Default.HeartBroken,
+                  imageVector = Icons.Default.Link,
                   contentDescription = null,
                   modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Hủy Set Love", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(if (isEnglish) "Pairing Page" else "Trang Ghép Đôi", fontSize = 12.sp)
+              }
+
+              if (!isPendingBreakup) {
+                Button(
+                  onClick = { showConfirmBreakupDialog = true },
+                  colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFEBEE),
+                    contentColor = Color(0xFFC62828)
+                  ),
+                  shape = RoundedCornerShape(12.dp),
+                  modifier = Modifier.weight(1f).testTag("request_breakup_button")
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.HeartBroken,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                  )
+                  Spacer(modifier = Modifier.width(4.dp))
+                  Text(if (isEnglish) "Cancel Set Love" else "Hủy Set Love", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+              }
+            } else {
+              OutlinedButton(
+                onClick = { viewModel.openEditCoupleDialog() },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).testTag("edit_offline_partner_button")
+              ) {
+                Icon(
+                  imageVector = Icons.Filled.Edit,
+                  contentDescription = null,
+                  modifier = Modifier.size(16.dp),
+                  tint = Primary
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (isEnglish) "Edit Partner" else "Chỉnh Người Thương", fontSize = 12.sp)
+              }
+
+              Button(
+                onClick = { viewModel.openPairingScreen() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.weight(1f).testTag("go_online_pairing_button")
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Link,
+                  contentDescription = null,
+                  modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (isEnglish) "Pair Online 1-1" else "Ghép Đôi 1-1", fontSize = 12.sp, fontWeight = FontWeight.Bold)
               }
             }
           }
@@ -652,15 +688,15 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
               Text(
-                text = if (isVip) "Thành Viên InLove VIP 👑" else "Nâng Cấp Gói VIP Tình Yêu ✨",
+                text = if (isVip) (if (isEnglish) "InLove VIP Member 👑" else "Thành Viên InLove VIP 👑") else (if (isEnglish) "Upgrade to Love VIP ✨" else "Nâng Cấp Gói VIP Tình Yêu ✨"),
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 color = if (isVip) Color(0xFFB78103) else Primary
               )
               Spacer(modifier = Modifier.height(2.dp))
               Text(
-                text = if (isVip) "Không quảng cáo • Cloud lưu trữ • AI không giới hạn"
-                       else "Tắt sạch quảng cáo • Thử miễn phí 3 ngày gói Năm",
+                text = if (isVip) (if (isEnglish) "No ads • Cloud sync • Unlimited AI" else "Không quảng cáo • Cloud lưu trữ • AI không giới hạn")
+                       else (if (isEnglish) "Ad-free experience • 3-day free trial on Annual plan" else "Tắt sạch quảng cáo • Thử miễn phí 3 ngày gói Năm"),
                 fontSize = 12.sp,
                 color = OnSurfaceVariant
               )
@@ -693,7 +729,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = "Quản lý & Hủy gói cước trên Google Play",
+            text = if (isEnglish) "Manage & Cancel Google Play Subscriptions" else "Quản lý & Hủy gói cước trên Google Play",
             fontSize = 12.5.sp,
             color = Color(0xFF8A2E5B),
             fontWeight = FontWeight.Medium,
@@ -705,7 +741,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       }
     }
 
-    // 3. Settings Group: Quản Lý Hồ Sơ & Kỷ Niệm
+    // 3. Settings Group: Quản Lý Kỷ Niệm & Dữ Liệu
     item {
       Text(
         text = stringResource(R.string.settings_section_profile),
@@ -722,13 +758,6 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-          SettingClickableRow(
-            icon = Icons.Filled.Favorite,
-            title = stringResource(R.string.settings_edit_profile_title),
-            subtitle = stringResource(R.string.settings_edit_profile_sub),
-            onClick = { viewModel.openEditCoupleDialog() }
-          )
-
           SettingClickableRow(
             icon = Icons.Filled.CameraAlt,
             title = stringResource(R.string.settings_capture_memory_title),
@@ -763,6 +792,13 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          SettingClickableRow(
+            icon = Icons.Filled.Favorite,
+            title = if (isEnglish) "Customize Love Journey Title" else "Đổi Tiêu Đề Hành Trình Yêu",
+            subtitle = loveTitle,
+            onClick = { showEditLoveTitleDialog = true }
+          )
+
           SettingClickableRow(
             icon = Icons.Filled.Wallpaper,
             title = stringResource(R.string.settings_wallpaper_title),
@@ -819,26 +855,107 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       }
     }
 
-    // 6. Settings Group: Dữ Liệu & Bảo Mật
+    // 6. Settings Group: Dữ Liệu & Bảo Mật Nâng Cao (Security & Privacy Center)
     item {
       Text(
-        text = "Tài Khoản & Bảo Mật Nâng Cao",
-        fontSize = 14.sp,
+        text = if (isEnglish) "ACCOUNT & ADVANCED SECURITY" else "TÀI KHOẢN & BẢO MẬT NÂNG CAO",
+        fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
         color = Primary
       )
       Spacer(modifier = Modifier.height(8.dp))
 
       val currentAccount = (authState as? com.example.data.repository.AuthState.Authenticated)?.account
+      val isPinActive = currentAccount?.isPinEnabled == true
+
+      // Dynamic Security Health Score Calculation (0 - 100)
+      val securityScore = remember(currentAccount, isPinActive, biometricEnabled) {
+        var score = 40 // Base encryption score
+        if (currentAccount != null) score += 25
+        if (isPinActive) score += 20
+        if (biometricEnabled) score += 15
+        score
+      }
+
+      val (scoreColor, scoreGrade) = when {
+        securityScore >= 90 -> Color(0xFF2E7D32) to if (isEnglish) "Excellent" else "Rất an toàn"
+        securityScore >= 70 -> Color(0xFF1976D2) to if (isEnglish) "Good" else "Khá an toàn"
+        securityScore >= 50 -> Color(0xFFF57C00) to if (isEnglish) "Fair" else "Mức trung bình"
+        else -> Color(0xFFD32F2F) to if (isEnglish) "Needs Attention" else "Cần nâng cấp"
+      }
 
       Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f)),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFFD1DC)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
-          // Account Profile Header / Guest Mode Status
+          // --- Security Health Assessment Header Card ---
+          Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = scoreColor.copy(alpha = 0.08f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, scoreColor.copy(alpha = 0.25f)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(
+              modifier = Modifier.padding(12.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f)
+              ) {
+                Box(
+                  modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(scoreColor.copy(alpha = 0.15f)),
+                  contentAlignment = Alignment.Center
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.VerifiedUser,
+                    contentDescription = null,
+                    tint = scoreColor,
+                    modifier = Modifier.size(24.dp)
+                  )
+                }
+                Column {
+                  Text(
+                    text = if (isEnglish) "Security Health: $scoreGrade" else "Đánh giá an toàn: $scoreGrade",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.5.sp,
+                    color = scoreColor
+                  )
+                  Text(
+                    text = if (isEnglish) "Score: $securityScore/100 • End-to-End Encrypted" else "Điểm: $securityScore/100 • Mã hóa đầu-cuối",
+                    fontSize = 11.5.sp,
+                    color = Color(0xFF616161)
+                  )
+                }
+              }
+
+              Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = scoreColor
+              ) {
+                Text(
+                  text = "$securityScore%",
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.ExtraBold,
+                  color = Color.White,
+                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(14.dp))
+
+          // --- Account Profile Header / Guest Mode Status ---
           if (currentAccount != null) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
@@ -877,7 +994,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 color = Color(0xFFE8F5E9)
               ) {
                 Text(
-                  text = "Đã xác thực",
+                  text = if (isEnglish) "Verified" else "Đã xác thực",
                   fontSize = 9.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color(0xFF2E7D32),
@@ -907,16 +1024,19 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   )
                   Spacer(modifier = Modifier.width(8.dp))
                   Text(
-                    text = "Chế độ Khách (Offline)",
+                    text = if (isEnglish) "Guest Mode (Offline)" else "Chế độ Khách (Offline)",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = Color(0xFF880E4F)
                   )
                 }
                 Text(
-                  text = "Dữ liệu đếm ngày yêu và kỷ niệm của bạn đang được lưu trữ an toàn riêng tư trực tiếp trên máy.",
-                  fontSize = 12.5.sp,
-                  lineHeight = 18.sp,
+                  text = if (isEnglish)
+                    "Your love days and memories are stored safely and privately on this local device."
+                  else
+                    "Dữ liệu đếm ngày yêu và kỷ niệm của bạn đang được lưu trữ an toàn riêng tư trực tiếp trên máy.",
+                  fontSize = 12.sp,
+                  lineHeight = 17.sp,
                   color = Color(0xFF424242)
                 )
                 Button(
@@ -927,18 +1047,26 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 ) {
                   Icon(imageVector = Icons.Filled.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
                   Spacer(modifier = Modifier.width(8.dp))
-                  Text("Đăng Nhập / Đăng Ký để Đồng Bộ Đám Mây", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                  Text(
+                    text = if (isEnglish) "Sign In / Register for Cloud Sync" else "Đăng Nhập / Đăng Ký để Đồng Bộ Đám Mây",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.5.sp
+                  )
                 }
               }
             }
           }
 
-          // PIN Protection Switch
-          val isPinActive = currentAccount?.isPinEnabled == true
+          // --- Protection Controls: PIN, Biometrics, Vault ---
+          // 1. PIN Protection Switch
           SettingSwitchRow(
             icon = Icons.Filled.Lock,
-            title = "Khóa ứng dụng bằng PIN",
-            subtitle = if (isPinActive) "Đang bật mã PIN 4 số bảo vệ" else "Chưa bật bảo vệ PIN",
+            title = if (isEnglish) "App Lock with 4-Digit PIN" else "Khóa ứng dụng bằng PIN",
+            subtitle = if (isPinActive) {
+              if (isEnglish) "4-digit passcode protection active" else "Đang bật mã PIN 4 số bảo vệ"
+            } else {
+              if (isEnglish) "Passcode protection disabled" else "Chưa bật bảo vệ PIN"
+            },
             checked = isPinActive,
             onCheckedChange = { enabled ->
               if (enabled && (currentAccount?.appPin.isNullOrEmpty())) {
@@ -949,29 +1077,63 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             }
           )
 
-          // Change PIN Button
+          // 2. Change PIN Button
           SettingClickableRow(
             icon = Icons.Filled.Key,
-            title = "Cài đặt / Đổi mã PIN",
-            subtitle = "Thiết lập mã 4 số riêng tư mở khóa nhanh",
+            title = if (isEnglish) "Setup / Change PIN Passcode" else "Cài đặt / Đổi mã PIN",
+            subtitle = if (isEnglish) "Configure 4-digit quick unlock passcode" else "Thiết lập mã 4 số riêng tư mở khóa nhanh",
             onClick = { showSetPinDialog = true }
           )
 
-          // Account-specific options
+          // 3. Biometric Authentication Toggle (Fingerprint / Face Unlock)
+          SettingSwitchRow(
+            icon = Icons.Filled.Fingerprint,
+            title = if (isEnglish) "Biometric Authentication" else "Xác thực sinh trắc học",
+            subtitle = if (isEnglish) "Fingerprint & Face Unlock for quick access" else "Mở khóa bằng vân tay hoặc nhận diện khuôn mặt",
+            checked = biometricEnabled,
+            onCheckedChange = { enabled ->
+              biometricEnabled = enabled
+              viewModel.showToast(
+                if (enabled) {
+                  if (isEnglish) "Biometric authentication enabled" else "Đã kích hoạt xác thực sinh trắc học"
+                } else {
+                  if (isEnglish) "Biometric authentication disabled" else "Đã tắt xác thực sinh trắc học"
+                }
+              )
+            }
+          )
+
+          // 4. Privacy Vault Information
+          SettingClickableRow(
+            icon = Icons.Filled.VisibilityOff,
+            title = if (isEnglish) "Privacy Vault & App Concealment" else "Két an toàn & Chế độ riêng tư",
+            subtitle = if (isEnglish) "Conceal sensitive dates, notes, and photos" else "Bảo vệ ẩn dữ liệu nhật ký và kỷ niệm nhạy cảm",
+            onClick = { showPrivacyVaultInfoDialog = true }
+          )
+
+          // 5. Active Sessions & Connected Devices
+          SettingClickableRow(
+            icon = Icons.Filled.Devices,
+            title = if (isEnglish) "Active Devices & Sessions" else "Thiết bị & Phiên hoạt động",
+            subtitle = if (isEnglish) "Manage authorized devices accessing this account" else "Quản lý các thiết bị đang đăng nhập tài khoản",
+            onClick = { showDevicesDialog = true }
+          )
+
+          // Account-specific options (Change Password & Audit Logs)
           if (currentAccount != null) {
             // Change Password Button
             SettingClickableRow(
               icon = Icons.Filled.Shield,
-              title = "Đổi mật khẩu tài khoản",
-              subtitle = "Yêu cầu mật khẩu cũ & đánh giá độ mạnh",
+              title = if (isEnglish) "Change Account Password" else "Đổi mật khẩu tài khoản",
+              subtitle = if (isEnglish) "Require current password & strength check" else "Yêu cầu mật khẩu cũ & đánh giá độ mạnh",
               onClick = { showChangePasswordDialog = true }
             )
 
             // Security Audit Logs
             SettingClickableRow(
               icon = Icons.Filled.History,
-              title = "Nhật ký bảo mật",
-              subtitle = "Xem lịch sử đăng nhập, cảnh báo thử sai và đổi mật khẩu",
+              title = if (isEnglish) "Security Audit Logs" else "Nhật ký bảo mật",
+              subtitle = if (isEnglish) "Review sign-in history and lockout alerts" else "Xem lịch sử đăng nhập, cảnh báo thử sai và đổi mật khẩu",
               onClick = { showSecurityAuditLogsDialog = true }
             )
           }
@@ -979,9 +1141,9 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           // Lock App Now (if PIN enabled)
           if (isPinActive) {
             SettingClickableRow(
-              icon = Icons.Filled.Lock,
-              title = "Khóa ứng dụng ngay",
-              subtitle = "Yêu cầu nhập mã PIN khi dùng tiếp",
+              icon = Icons.Filled.LockOpen,
+              title = if (isEnglish) "Lock Application Now" else "Khóa ứng dụng ngay",
+              subtitle = if (isEnglish) "Immediately require PIN when resuming app" else "Yêu cầu nhập mã PIN khi dùng tiếp",
               onClick = { viewModel.lockApp() }
             )
           }
@@ -989,8 +1151,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           // Sync Enriched Cloud Presets from Firestore
           SettingClickableRow(
             icon = Icons.Filled.CloudSync,
-            title = "Đồng bộ dữ liệu Cloud Firestore",
-            subtitle = "Làm mới gợi ý quà tặng, huy hiệu và mốc kỷ niệm",
+            title = if (isEnglish) "Sync Cloud Firestore Data" else "Đồng bộ dữ liệu Cloud Firestore",
+            subtitle = if (isEnglish) "Refresh gift ideas, badges, and milestones" else "Làm mới gợi ý quà tặng, huy hiệu và mốc kỷ niệm",
             onClick = { viewModel.syncCloudData() }
           )
 
@@ -1002,7 +1164,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           )
 
           if (currentAccount != null) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Logout Button
             OutlinedButton(
@@ -1019,7 +1181,11 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 modifier = Modifier.size(16.dp)
               )
               Spacer(modifier = Modifier.width(8.dp))
-              Text("Đăng Xuất Tài Khoản (Về Chế Độ Khách)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+              Text(
+                text = if (isEnglish) "Sign Out (Switch to Guest Mode)" else "Đăng Xuất Tài Khoản (Về Chế Độ Khách)",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+              )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -1039,7 +1205,11 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 modifier = Modifier.size(16.dp)
               )
               Spacer(modifier = Modifier.width(8.dp))
-              Text("Xóa Vĩnh Viễn Tài Khoản & Dữ Liệu", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+              Text(
+                text = if (isEnglish) "Permanently Delete Account & Data" else "Xóa Vĩnh Viễn Tài Khoản & Dữ Liệu",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+              )
             }
           }
         }
@@ -1060,10 +1230,10 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         )
       },
       title = {
-        Text(text = "Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold)
+        Text(text = if (isEnglish) "Send request to cancel Set Love?" else "Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold)
       },
       text = {
-        Text("Hệ thống sẽ gửi thông báo hủy ghép đôi đến ${partnerUser?.displayName ?: "đối phương"}. Khi đối phương đồng ý (hoặc sau thời gian chờ), trạng thái sẽ chuyển về Độc thân và tạm khóa kỷ niệm chung.")
+        Text(if (isEnglish) "The system will notify ${partnerUser?.displayName ?: "partner"} to confirm ending Set Love. Once confirmed, your status will return to Single." else "Hệ thống sẽ gửi thông báo hủy ghép đôi đến ${partnerUser?.displayName ?: "đối phương"}. Khi đối phương đồng ý (hoặc sau thời gian chờ), trạng thái sẽ chuyển về Độc thân và tạm khóa kỷ niệm chung.")
       },
       confirmButton = {
         Button(
@@ -1073,12 +1243,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           },
           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
         ) {
-          Text("Gửi yêu cầu")
+          Text(if (isEnglish) "Send Request" else "Gửi yêu cầu")
         }
       },
       dismissButton = {
         OutlinedButton(onClick = { showConfirmBreakupDialog = false }) {
-          Text("Hủy bỏ")
+          Text(if (isEnglish) "Cancel" else "Hủy bỏ")
         }
       }
     )
@@ -1106,6 +1276,177 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
     )
   }
 
+  // Active Devices Dialog
+  if (showDevicesDialog) {
+    AlertDialog(
+      onDismissRequest = { showDevicesDialog = false },
+      icon = {
+        Icon(
+          imageVector = Icons.Default.Devices,
+          contentDescription = null,
+          tint = Primary,
+          modifier = Modifier.size(32.dp)
+        )
+      },
+      title = {
+        Text(
+          text = if (isEnglish) "Active Devices & Sessions" else "Thiết Bị & Phiên Đăng Nhập",
+          fontWeight = FontWeight.Bold,
+          fontSize = 17.sp
+        )
+      },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFFF5F5F5),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(
+              modifier = Modifier.padding(12.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+              Box(
+                modifier = Modifier
+                  .size(36.dp)
+                  .background(Color(0xFFE8F5E9), CircleShape),
+                contentAlignment = Alignment.Center
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Devices,
+                  contentDescription = null,
+                  tint = Color(0xFF2E7D32),
+                  modifier = Modifier.size(20.dp)
+                )
+              }
+              Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                  Text(
+                    text = android.os.Build.MODEL ?: "Android Device",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                  )
+                  Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE8F5E9)) {
+                    Text(
+                      text = if (isEnglish) "THIS DEVICE" else "THIẾT BỊ NÀY",
+                      fontSize = 8.5.sp,
+                      fontWeight = FontWeight.Bold,
+                      color = Color(0xFF2E7D32),
+                      modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                  }
+                }
+                Text(
+                  text = if (isEnglish) "Android ${android.os.Build.VERSION.RELEASE} • Active now" else "Android ${android.os.Build.VERSION.RELEASE} • Đang hoạt động",
+                  fontSize = 11.sp,
+                  color = Color.Gray
+                )
+              }
+            }
+          }
+
+          Text(
+            text = if (isEnglish)
+              "Your account is protected by hardware-backed token encryption. Only authorized devices can decrypt your shared love logs."
+            else
+              "Tài khoản của bạn được bảo vệ bằng mã hóa token trên thiết bị. Chỉ các thiết bị được cấp quyền mới có thể truy cập nhật ký tình yêu.",
+            fontSize = 12.sp,
+            color = Color(0xFF616161),
+            lineHeight = 16.sp
+          )
+        }
+      },
+      confirmButton = {
+        Button(
+          onClick = { showDevicesDialog = false },
+          colors = ButtonDefaults.buttonColors(containerColor = Primary)
+        ) {
+          Text(if (isEnglish) "Got It" else "Đã Hiểu")
+        }
+      }
+    )
+  }
+
+  // Privacy Vault Info Dialog
+  if (showPrivacyVaultInfoDialog) {
+    AlertDialog(
+      onDismissRequest = { showPrivacyVaultInfoDialog = false },
+      icon = {
+        Icon(
+          imageVector = Icons.Default.VisibilityOff,
+          contentDescription = null,
+          tint = Primary,
+          modifier = Modifier.size(32.dp)
+        )
+      },
+      title = {
+        Text(
+          text = if (isEnglish) "Privacy Vault & Concealment" else "Két An Toàn & Chế Độ Riêng Tư",
+          fontWeight = FontWeight.Bold,
+          fontSize = 17.sp
+        )
+      },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFFFFF0F5),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+              Text(
+                text = if (isEnglish) "🛡️ AES-256 Encrypted Local Storage" else "🛡️ Mã hóa dữ liệu lưu trữ AES-256",
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.5.sp,
+                color = Color(0xFF880E4F)
+              )
+              Text(
+                text = if (isEnglish)
+                  "All memories, offline notes, and personal anniversary dates are encrypted in your private sandbox."
+                else
+                  "Tất cả kỷ niệm, ghi chú offline và ngày kỷ niệm đều được mã hóa an toàn trong bộ nhớ máy.",
+                fontSize = 11.5.sp,
+                color = Color(0xFF424242)
+              )
+            }
+          }
+
+          Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFFF3E5F5),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+              Text(
+                text = if (isEnglish) "🔒 Couple 1-1 Restricted Channel" else "🔒 Kênh truyền dữ liệu khép kín 1-1",
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.5.sp,
+                color = Color(0xFF4A148C)
+              )
+              Text(
+                text = if (isEnglish)
+                  "Memories marked as 'Couple Only' can only be viewed by you and your paired partner. No third-party access allowed."
+                else
+                  "Kỷ niệm đặt chế độ 'Chỉ 2 người' chỉ duy nhất bạn và đối phương được xem. Không một ai khác có thể truy cập.",
+                fontSize = 11.5.sp,
+                color = Color(0xFF424242)
+              )
+            }
+          }
+        }
+      },
+      confirmButton = {
+        Button(
+          onClick = { showPrivacyVaultInfoDialog = false },
+          colors = ButtonDefaults.buttonColors(containerColor = Primary)
+        ) {
+          Text(if (isEnglish) "Close" else "Đóng")
+        }
+      }
+    )
+  }
+
   // Logout Confirmation Dialog
   if (showLogoutConfirmDialog) {
     AlertDialog(
@@ -1119,10 +1460,10 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         )
       },
       title = {
-        Text("Đăng xuất tài khoản?", fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "Sign out of account?" else "Đăng xuất tài khoản?", fontWeight = FontWeight.Bold)
       },
       text = {
-        Text("Bạn sẽ cần đăng nhập lại bằng email và mật khẩu để tiếp tục sử dụng InLove.")
+        Text(if (isEnglish) "You will need to sign in again with your email and password to access synced data." else "Bạn sẽ cần đăng nhập lại bằng email và mật khẩu để tiếp tục sử dụng InLove.")
       },
       confirmButton = {
         Button(
@@ -1132,12 +1473,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           },
           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
         ) {
-          Text("Đăng xuất")
+          Text(if (isEnglish) "Sign Out" else "Đăng xuất")
         }
       },
       dismissButton = {
         OutlinedButton(onClick = { showLogoutConfirmDialog = false }) {
-          Text("Hủy")
+          Text(if (isEnglish) "Cancel" else "Hủy")
         }
       }
     )
@@ -1156,16 +1497,18 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         )
       },
       title = {
-        Text("Xóa tài khoản & dữ liệu?", fontWeight = FontWeight.Bold, color = Color(0xFFC62828))
+        Text(if (isEnglish) "Delete account & data?" else "Xóa tài khoản & dữ liệu?", fontWeight = FontWeight.Bold, color = Color(0xFFC62828))
       },
       text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(
-            "CẢNH BÁO: Toàn bộ thông tin tài khoản, mật khẩu, nhật ký tình yêu và ảnh kỷ niệm sẽ bị xóa vĩnh viễn không thể phục hồi.",
+            if (isEnglish) "WARNING: All account information, love logs, and memories will be permanently deleted and cannot be recovered."
+            else "CẢNH BÁO: Toàn bộ thông tin tài khoản, mật khẩu, nhật ký tình yêu và ảnh kỷ niệm sẽ bị xóa vĩnh viễn không thể phục hồi.",
             fontSize = 13.sp
           )
           Text(
-            "Tuân thủ chính sách bảo mật Google Play: Bạn cũng có thể yêu cầu xóa tài khoản qua liên kết Web:",
+            if (isEnglish) "Google Play Policy Compliance: You can also request account deletion via the Web link:"
+            else "Tuân thủ chính sách bảo mật Google Play: Bạn cũng có thể yêu cầu xóa tài khoản qua liên kết Web:",
             fontSize = 12.sp,
             color = Color.Gray
           )
@@ -1187,13 +1530,25 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           },
           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
         ) {
-          Text("Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold)
+          Text(if (isEnglish) "Permanently Delete" else "Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold)
         }
       },
       dismissButton = {
         OutlinedButton(onClick = { showDeleteAccountConfirmDialog = false }) {
-          Text("Hủy Bỏ")
+          Text(if (isEnglish) "Cancel" else "Hủy Bỏ")
         }
+      }
+    )
+  }
+
+  if (showEditLoveTitleDialog) {
+    EditLoveTitleDialog(
+      currentTitle = loveTitle,
+      isEnglish = isEnglish,
+      onDismiss = { showEditLoveTitleDialog = false },
+      onConfirm = { newTitle ->
+        viewModel.updateLoveTitle(newTitle)
+        showEditLoveTitleDialog = false
       }
     )
   }

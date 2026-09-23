@@ -2,6 +2,8 @@
 package com.example.ui.screens
 
 import com.example.ui.util.AppLanguage
+import java.util.Calendar
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -112,6 +114,126 @@ import com.example.ui.theme.Tertiary
 import com.example.ui.theme.TertiaryFixed
 import com.example.ui.viewmodel.InLoveViewModel
 
+enum class CalendarViewMode {
+  WEEK,
+  MONTH
+}
+
+private fun matchesCalendarDay(dateText: String, day: Int, month: Int): Boolean {
+  val trimmed = dateText.trim()
+  if (trimmed.contains("/")) {
+    val parts = trimmed.split("/")
+    if (parts.size >= 2) {
+      val d = parts[0].toIntOrNull()
+      val m = parts[1].toIntOrNull()
+      if (d == day && m == (month + 1)) return true
+    }
+  } else if (trimmed.contains("-")) {
+    val parts = trimmed.split("-")
+    if (parts.size >= 3) {
+      val m = parts[1].toIntOrNull()
+      val d = parts[2].toIntOrNull()
+      if (d == day && m == (month + 1)) return true
+    }
+  }
+  return false
+}
+
+private fun computeMonthMatrix(calendar: Calendar): List<List<Calendar>> {
+  val cal = calendar.clone() as Calendar
+  cal.set(Calendar.DAY_OF_MONTH, 1)
+  cal.firstDayOfWeek = Calendar.MONDAY
+
+  val startDayOffset = (cal.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + 7) % 7
+  val startCal = (cal.clone() as Calendar).apply {
+    add(Calendar.DAY_OF_MONTH, -startDayOffset)
+  }
+
+  val matrix = mutableListOf<List<Calendar>>()
+  var currentPointer = startCal.clone() as Calendar
+
+  for (w in 0..5) {
+    val week = mutableListOf<Calendar>()
+    for (d in 0..6) {
+      week.add(currentPointer.clone() as Calendar)
+      currentPointer.add(Calendar.DAY_OF_MONTH, 1)
+    }
+    matrix.add(week)
+    if (w >= 4 && currentPointer.get(Calendar.MONTH) != cal.get(Calendar.MONTH)) {
+      break
+    }
+  }
+  return matrix
+}
+
+@Composable
+private fun CalendarDayCell(
+  dayNum: Int,
+  isToday: Boolean,
+  isSelected: Boolean,
+  isMilestoneDay: Boolean,
+  isCurrentMonth: Boolean,
+  isSunday: Boolean,
+  onClick: () -> Unit
+) {
+  val alpha = if (isCurrentMonth) 1f else 0.35f
+  Box(
+    modifier = Modifier
+      .width(38.dp)
+      .height(48.dp)
+      .clip(RoundedCornerShape(14.dp))
+      .then(
+        when {
+          isMilestoneDay && isCurrentMonth -> Modifier
+            .shadow(6.dp, RoundedCornerShape(14.dp))
+            .background(Brush.verticalGradient(listOf(RoseGradientStart, RoseGradientMid)))
+          isSelected && isCurrentMonth -> Modifier
+            .background(PrimaryFixed.copy(alpha = 0.7f))
+            .border(1.5.dp, Primary, RoundedCornerShape(14.dp))
+          isToday && isCurrentMonth -> Modifier
+            .background(SurfaceContainerLow)
+            .border(1.dp, Primary.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+          else -> Modifier
+        }
+      )
+      .clickable(onClick = onClick),
+    contentAlignment = Alignment.Center
+  ) {
+    Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center
+    ) {
+      Text(
+        text = String.format("%02d", dayNum),
+        fontSize = 13.sp,
+        fontWeight = if ((isMilestoneDay || isToday || isSelected) && isCurrentMonth) FontWeight.Bold else FontWeight.Medium,
+        color = when {
+          isMilestoneDay && isCurrentMonth -> Color.White
+          isSunday && isCurrentMonth -> Secondary
+          else -> OnSurface.copy(alpha = alpha)
+        }
+      )
+      if (isMilestoneDay && isCurrentMonth) {
+        Icon(
+          imageVector = Icons.Filled.Favorite,
+          contentDescription = null,
+          tint = Color.White,
+          modifier = Modifier.size(10.dp)
+        )
+      } else if (isToday && isCurrentMonth) {
+        Box(
+          modifier = Modifier
+            .size(5.dp)
+            .clip(CircleShape)
+            .background(Secondary)
+        )
+      } else {
+        Spacer(modifier = Modifier.size(5.dp))
+      }
+    }
+  }
+}
+
 @Composable
 fun CalendarScreen(
   viewModel: InLoveViewModel,
@@ -125,7 +247,26 @@ fun CalendarScreen(
   val loveDays by viewModel.loveDays.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
   val isEnglish = appLanguage == AppLanguage.EN
-  var selectedDay by remember { mutableIntStateOf(11) }
+  var activeViewMode by remember { mutableStateOf(CalendarViewMode.WEEK) }
+  var calendarNavTick by remember { mutableIntStateOf(0) }
+  var activeCalendar by remember {
+    val c = Calendar.getInstance().apply {
+      set(Calendar.HOUR_OF_DAY, 0)
+      set(Calendar.MINUTE, 0)
+      set(Calendar.SECOND, 0)
+      set(Calendar.MILLISECOND, 0)
+    }
+    mutableStateOf(c)
+  }
+  var selectedDateMillis by remember {
+    val c = Calendar.getInstance().apply {
+      set(Calendar.HOUR_OF_DAY, 0)
+      set(Calendar.MINUTE, 0)
+      set(Calendar.SECOND, 0)
+      set(Calendar.MILLISECOND, 0)
+    }
+    mutableLongStateOf(c.timeInMillis)
+  }
   var milestoneToDelete by remember { mutableStateOf<MilestoneEntity?>(null) }
   var anniversaryToDelete by remember { mutableStateOf<AnniversaryDateEntity?>(null) }
 
@@ -177,6 +318,24 @@ fun CalendarScreen(
     ) {
       // 1. Month Bar & Navigation
       item {
+        val displayYear = activeCalendar.get(Calendar.YEAR)
+        val displayMonth = activeCalendar.get(Calendar.MONTH)
+        val monthNamesEn = listOf(
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+        )
+        val monthNamesVi = listOf(
+          "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+          "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+        )
+        val monthShortEn = listOf(
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        )
+        val monthShortVi = listOf(
+          "T1", "T2", "T3", "T4", "T5", "T6",
+          "T7", "T8", "T9", "T10", "T11", "T12"
+        )
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.SpaceBetween,
@@ -193,7 +352,7 @@ fun CalendarScreen(
               modifier = Modifier.size(24.dp)
             )
             Text(
-              text = if (isEnglish) "September 2026" else "Tháng 9, 2026",
+              text = if (isEnglish) "${monthNamesEn[displayMonth]} $displayYear" else "${monthNamesVi[displayMonth]}, $displayYear",
               fontSize = 20.sp,
               fontWeight = FontWeight.Bold,
               color = OnSurface
@@ -210,30 +369,48 @@ fun CalendarScreen(
               modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
               IconButton(
-                onClick = { viewModel.showToast(if (isEnglish) "View August 2026" else "Xem tháng 8/2026") },
-                modifier = Modifier.size(32.dp)
+                onClick = {
+                  if (activeViewMode == CalendarViewMode.MONTH) {
+                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
+                    activeCalendar = nextCal
+                  } else {
+                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, -1) }
+                    activeCalendar = nextCal
+                  }
+                  calendarNavTick++
+                },
+                modifier = Modifier.size(32.dp).testTag("btn_calendar_prev")
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronLeft,
-                  contentDescription = if (isEnglish) "Previous month" else "Tháng trước",
+                  contentDescription = if (isEnglish) "Previous" else "Trước",
                   tint = OnSurfaceVariant,
                   modifier = Modifier.size(18.dp)
                 )
               }
               Text(
-                text = if (isEnglish) "Sep" else "T9",
+                text = if (isEnglish) monthShortEn[displayMonth] else monthShortVi[displayMonth],
                 color = Primary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = 4.dp)
               )
               IconButton(
-                onClick = { viewModel.showToast(if (isEnglish) "View October 2026" else "Xem tháng 10/2026") },
-                modifier = Modifier.size(32.dp)
+                onClick = {
+                  if (activeViewMode == CalendarViewMode.MONTH) {
+                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
+                    activeCalendar = nextCal
+                  } else {
+                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, 1) }
+                    activeCalendar = nextCal
+                  }
+                  calendarNavTick++
+                },
+                modifier = Modifier.size(32.dp).testTag("btn_calendar_next")
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronRight,
-                  contentDescription = if (isEnglish) "Next month" else "Tháng sau",
+                  contentDescription = if (isEnglish) "Next" else "Sau",
                   tint = OnSurfaceVariant,
                   modifier = Modifier.size(18.dp)
                 )
@@ -312,16 +489,115 @@ fun CalendarScreen(
         }
       }
 
-      // 3. Frosted Mini Calendar Strip
+      // 3. Dynamic Interactive Calendar (Week Mode & Month Mode with Prev/Next Navigation)
       item {
         Card(
           shape = RoundedCornerShape(24.dp),
-          colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.85f)),
+          colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
           elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-          modifier = Modifier.fillMaxWidth()
+          modifier = Modifier.fillMaxWidth().testTag("interactive_calendar_card")
         ) {
           Column(modifier = Modifier.padding(14.dp)) {
-            // Day names row
+            // 3.1 Mode Selector (Week vs Month) + Today Button
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              // Toggle: Week vs Month
+              Surface(
+                shape = RoundedCornerShape(50.dp),
+                color = SurfaceContainerLow,
+                border = BorderStroke(1.dp, Primary.copy(alpha = 0.15f)),
+                modifier = Modifier.height(34.dp)
+              ) {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier = Modifier.padding(2.dp)
+                ) {
+                  // Week Mode Button
+                  val isWeek = activeViewMode == CalendarViewMode.WEEK
+                  Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = if (isWeek) Primary else Color.Transparent,
+                    modifier = Modifier
+                      .clip(RoundedCornerShape(50.dp))
+                      .clickable { activeViewMode = CalendarViewMode.WEEK }
+                      .testTag("btn_mode_week")
+                  ) {
+                    Text(
+                      text = if (isEnglish) "Week" else "Tuần",
+                      fontSize = 12.sp,
+                      fontWeight = if (isWeek) FontWeight.Bold else FontWeight.Medium,
+                      color = if (isWeek) Color.White else OnSurfaceVariant,
+                      modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                    )
+                  }
+
+                  // Month Mode Button
+                  val isMonth = activeViewMode == CalendarViewMode.MONTH
+                  Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = if (isMonth) Primary else Color.Transparent,
+                    modifier = Modifier
+                      .clip(RoundedCornerShape(50.dp))
+                      .clickable { activeViewMode = CalendarViewMode.MONTH }
+                      .testTag("btn_mode_month")
+                  ) {
+                    Text(
+                      text = if (isEnglish) "Month" else "Tháng",
+                      fontSize = 12.sp,
+                      fontWeight = if (isMonth) FontWeight.Bold else FontWeight.Medium,
+                      color = if (isMonth) Color.White else OnSurfaceVariant,
+                      modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                    )
+                  }
+                }
+              }
+
+              // Today Action Chip
+              Surface(
+                shape = RoundedCornerShape(50.dp),
+                color = PrimaryFixed.copy(alpha = 0.4f),
+                modifier = Modifier
+                  .clip(RoundedCornerShape(50.dp))
+                  .clickable {
+                    val today = Calendar.getInstance().apply {
+                      set(Calendar.HOUR_OF_DAY, 0)
+                      set(Calendar.MINUTE, 0)
+                      set(Calendar.SECOND, 0)
+                      set(Calendar.MILLISECOND, 0)
+                    }
+                    activeCalendar = today
+                    selectedDateMillis = today.timeInMillis
+                    viewModel.showToast(if (isEnglish) "Jumped to Today" else "Đã về ngày hôm nay")
+                  }
+                  .testTag("btn_jump_today")
+              ) {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                  horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                  Icon(
+                    imageVector = Icons.Filled.CalendarToday,
+                    contentDescription = null,
+                    tint = Primary,
+                    modifier = Modifier.size(13.dp)
+                  )
+                  Text(
+                    text = if (isEnglish) "Today" else "Hôm nay",
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = OnPrimaryFixed
+                  )
+                }
+              }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Day Names Header
             val dayNames = if (isEnglish) listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun") else listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
             Row(
               modifier = Modifier.fillMaxWidth(),
@@ -346,80 +622,134 @@ fun CalendarScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Day numbers row (07 to 13)
-            val days = listOf(7, 8, 9, 10, 11, 12, 13)
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceAround,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              days.forEach { dayNum ->
-                val isMilestoneDay = dayNum == 11
-                val isToday = dayNum == 9
-                val isSelected = selectedDay == dayNum
+            // 3.2 Calendar Body: WEEK vs MONTH
+            val todayCal = remember {
+              Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+              }
+            }
+            val selectedCal = remember(selectedDateMillis) {
+              Calendar.getInstance().apply {
+                timeInMillis = selectedDateMillis
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+              }
+            }
 
-                Box(
-                  modifier = Modifier
-                    .width(38.dp)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .then(
+            if (activeViewMode == CalendarViewMode.WEEK) {
+              // --- WEEK VIEW ---
+              val weekDays = remember(activeCalendar.timeInMillis, calendarNavTick) {
+                val cal = activeCalendar.clone() as Calendar
+                cal.firstDayOfWeek = Calendar.MONDAY
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                (0..6).map { offset ->
+                  (cal.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, offset) }
+                }
+              }
+
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                weekDays.forEach { dayCal ->
+                  val dayNum = dayCal.get(Calendar.DAY_OF_MONTH)
+                  val dayMonth = dayCal.get(Calendar.MONTH)
+                  val isToday = dayCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) &&
+                    dayCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)
+                  val isSelected = dayCal.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
+                    dayCal.get(Calendar.DAY_OF_YEAR) == selectedCal.get(Calendar.DAY_OF_YEAR)
+                  val matchingMilestone = milestones.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
+                  val matchingAnniversary = anniversaryDates.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
+                  val isMilestoneDay = matchingMilestone != null || matchingAnniversary != null
+
+                  CalendarDayCell(
+                    dayNum = dayNum,
+                    isToday = isToday,
+                    isSelected = isSelected,
+                    isMilestoneDay = isMilestoneDay,
+                    isCurrentMonth = true,
+                    isSunday = dayCal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY,
+                    onClick = {
+                      selectedDateMillis = dayCal.timeInMillis
+                      activeCalendar = dayCal.clone() as Calendar
                       when {
-                        isMilestoneDay -> Modifier
-                          .shadow(6.dp, RoundedCornerShape(14.dp))
-                          .background(
-                            Brush.verticalGradient(
-                              listOf(RoseGradientStart, RoseGradientMid)
-                            )
-                          )
-                        isSelected && !isMilestoneDay -> Modifier
-                          .background(PrimaryFixed.copy(alpha = 0.6f))
-                        isToday -> Modifier
-                          .background(SurfaceContainerLow)
-                          .border(1.dp, Primary.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
-                        else -> Modifier
+                        matchingMilestone != null -> viewModel.showToast(
+                          if (isEnglish) "${dayNum}/${dayMonth + 1}: ${matchingMilestone.title}!" else "${dayNum}/${dayMonth + 1}: ${matchingMilestone.title}!"
+                        )
+                        matchingAnniversary != null -> viewModel.showToast(
+                          if (isEnglish) "Anniversary: ${matchingAnniversary.title} ❤️" else "Kỷ niệm: ${matchingAnniversary.title} ❤️"
+                        )
+                        isToday -> viewModel.showToast(
+                          if (isEnglish) "Today: ${dayNum}/${dayMonth + 1}/${dayCal.get(Calendar.YEAR)}" else "Hôm nay: Ngày ${dayNum}/${dayMonth + 1}/${dayCal.get(Calendar.YEAR)}"
+                        )
+                        else -> viewModel.showToast(
+                          if (isEnglish) "Selected: ${dayNum}/${dayMonth + 1}/${dayCal.get(Calendar.YEAR)}" else "Đã chọn: Ngày ${dayNum}/${dayMonth + 1}/${dayCal.get(Calendar.YEAR)}"
+                        )
                       }
-                    )
-                    .clickable {
-                      selectedDay = dayNum
-                      if (dayNum == 11) {
-                        viewModel.showToast(if (isEnglish) "Sep 11: 1,000 Days Anniversary together!" else "11/09: Cột mốc 1.000 ngày bên nhau!")
-                      } else if (dayNum == 9) {
-                        viewModel.showToast(if (isEnglish) "Today: Sep 09, 2026" else "Hôm nay: Ngày 09/09/2026")
-                      }
-                    },
-                  contentAlignment = Alignment.Center
-                ) {
-                  Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    }
+                  )
+                }
+              }
+            } else {
+              // --- MONTH VIEW ---
+              val monthMatrix = remember(activeCalendar.timeInMillis, calendarNavTick) {
+                computeMonthMatrix(activeCalendar)
+              }
+
+              Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+              ) {
+                monthMatrix.forEach { weekList ->
+                  Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
                   ) {
-                    Text(
-                      text = String.format("%02d", dayNum),
-                      fontSize = 13.sp,
-                      fontWeight = if (isMilestoneDay || isToday || isSelected) FontWeight.Bold else FontWeight.Medium,
-                      color = when {
-                        isMilestoneDay -> Color.White
-                        dayNum == 13 -> Secondary
-                        else -> OnSurface
-                      }
-                    )
-                    if (isMilestoneDay) {
-                      Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(10.dp)
+                    weekList.forEach { cellCal ->
+                      val dayNum = cellCal.get(Calendar.DAY_OF_MONTH)
+                      val dayMonth = cellCal.get(Calendar.MONTH)
+                      val isCurrentMonth = dayMonth == activeCalendar.get(Calendar.MONTH)
+                      val isToday = cellCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) &&
+                        cellCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)
+                      val isSelected = cellCal.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
+                        cellCal.get(Calendar.DAY_OF_YEAR) == selectedCal.get(Calendar.DAY_OF_YEAR)
+                      val matchingMilestone = milestones.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
+                      val matchingAnniversary = anniversaryDates.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
+                      val isMilestoneDay = matchingMilestone != null || matchingAnniversary != null
+
+                      CalendarDayCell(
+                        dayNum = dayNum,
+                        isToday = isToday,
+                        isSelected = isSelected,
+                        isMilestoneDay = isMilestoneDay,
+                        isCurrentMonth = isCurrentMonth,
+                        isSunday = cellCal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY,
+                        onClick = {
+                          selectedDateMillis = cellCal.timeInMillis
+                          activeCalendar = cellCal.clone() as Calendar
+                          when {
+                            matchingMilestone != null -> viewModel.showToast(
+                              if (isEnglish) "${dayNum}/${dayMonth + 1}: ${matchingMilestone.title}!" else "${dayNum}/${dayMonth + 1}: ${matchingMilestone.title}!"
+                            )
+                            matchingAnniversary != null -> viewModel.showToast(
+                              if (isEnglish) "Anniversary: ${matchingAnniversary.title} ❤️" else "Kỷ niệm: ${matchingAnniversary.title} ❤️"
+                            )
+                            isToday -> viewModel.showToast(
+                              if (isEnglish) "Today: ${dayNum}/${dayMonth + 1}/${cellCal.get(Calendar.YEAR)}" else "Hôm nay: Ngày ${dayNum}/${dayMonth + 1}/${cellCal.get(Calendar.YEAR)}"
+                            )
+                            else -> viewModel.showToast(
+                              if (isEnglish) "Selected: ${dayNum}/${dayMonth + 1}/${cellCal.get(Calendar.YEAR)}" else "Đã chọn: Ngày ${dayNum}/${dayMonth + 1}/${cellCal.get(Calendar.YEAR)}"
+                            )
+                          }
+                        }
                       )
-                    } else if (isToday) {
-                      Box(
-                        modifier = Modifier
-                          .size(5.dp)
-                          .clip(CircleShape)
-                          .background(Secondary)
-                      )
-                    } else {
-                      Spacer(modifier = Modifier.size(5.dp))
                     }
                   }
                 }
@@ -428,44 +758,135 @@ fun CalendarScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Quick Status Note inside Calendar
+            // 3.3 Interactive Selected Day Schedule Card & Quick Reminder Upgrade
+            val selDay = selectedCal.get(Calendar.DAY_OF_MONTH)
+            val selMonth = selectedCal.get(Calendar.MONTH)
+            val selYear = selectedCal.get(Calendar.YEAR)
+            val formattedSelectedDate = String.format("%02d/%02d/%04d", selDay, selMonth + 1, selYear)
+            val dayMatchingMilestones = milestones.filter { matchesCalendarDay(it.dateText, selDay, selMonth) }
+            val dayMatchingAnniversaries = anniversaryDates.filter { matchesCalendarDay(it.dateText, selDay, selMonth) }
+
             Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = PrimaryFixed.copy(alpha = 0.5f),
-              modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                  viewModel.showToast(if (isEnglish) "Approaching 1,000 days of love!" else "Sắp đến mốc 1.000 ngày yêu nhau!")
-                }
+              shape = RoundedCornerShape(18.dp),
+              color = Color(0xFFFFF0F5),
+              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFC0D3)),
+              modifier = Modifier.fillMaxWidth()
             ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+              Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
               ) {
+                // Header: Selected Date Title & Event Count
                 Row(
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(6.dp)
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically
                 ) {
-                  Icon(
-                    imageVector = Icons.Filled.Stars,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(16.dp)
-                  )
+                  Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                  ) {
+                    Icon(
+                      imageVector = Icons.Filled.CalendarToday,
+                      contentDescription = null,
+                      tint = Primary,
+                      modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                      text = if (isEnglish) "Schedule for $formattedSelectedDate" else "Lịch hẹn ngày $formattedSelectedDate",
+                      fontWeight = FontWeight.Bold,
+                      fontSize = 13.sp,
+                      color = Primary
+                    )
+                  }
+
+                  val eventCount = dayMatchingMilestones.size + dayMatchingAnniversaries.size
+                  Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = if (eventCount > 0) Primary else Color(0xFFE0E0E0)
+                  ) {
+                    Text(
+                      text = if (isEnglish) "$eventCount events" else "$eventCount sự kiện",
+                      fontSize = 10.5.sp,
+                      fontWeight = FontWeight.Bold,
+                      color = if (eventCount > 0) Color.White else Color(0xFF616161),
+                      modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                  }
+                }
+
+                // Event list for this day if any
+                if (dayMatchingMilestones.isNotEmpty() || dayMatchingAnniversaries.isNotEmpty()) {
+                  dayMatchingMilestones.forEach { m ->
+                    Surface(
+                      shape = RoundedCornerShape(10.dp),
+                      color = Color.White,
+                      modifier = Modifier.fillMaxWidth()
+                    ) {
+                      Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                      ) {
+                        Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color(0xFFFF2D75), modifier = Modifier.size(15.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                          Text(m.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF26071B))
+                          if (m.subtitle.isNotBlank()) {
+                            Text(m.subtitle, fontSize = 11.sp, color = OnSurfaceVariant)
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  dayMatchingAnniversaries.forEach { a ->
+                    Surface(
+                      shape = RoundedCornerShape(10.dp),
+                      color = Color.White,
+                      modifier = Modifier.fillMaxWidth()
+                    ) {
+                      Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                      ) {
+                        Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = Color(0xFF8E24AA), modifier = Modifier.size(15.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                          Text(a.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF26071B))
+                          if (a.description.isNotBlank()) {
+                            Text(a.description, fontSize = 11.sp, color = OnSurfaceVariant)
+                          }
+                        }
+                      }
+                    }
+                  }
+                } else {
                   Text(
-                    text = if (isEnglish) "Only 3 days left until 1,000th Love Anniversary!" else "Chỉ còn 3 ngày đến Kỷ niệm 1.000 ngày yêu nhau!",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = OnPrimaryFixed
+                    text = if (isEnglish) "No reminders or milestones yet for this date." else "Chưa có lời nhắc hoặc kỷ niệm nào trong ngày này.",
+                    fontSize = 11.5.sp,
+                    color = OnSurfaceVariant
                   )
                 }
-                Icon(
-                  imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(14.dp)
-                )
+
+                // Quick Action Button: Add Reminder with pre-filled selected date
+                Button(
+                  onClick = { viewModel.openAddAnniversaryDialog(formattedSelectedDate) },
+                  shape = RoundedCornerShape(12.dp),
+                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .height(38.dp)
+                    .testTag("btn_quick_add_reminder_date")
+                ) {
+                  Icon(Icons.Filled.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(15.dp))
+                  Spacer(modifier = Modifier.width(6.dp))
+                  Text(
+                    text = if (isEnglish) "Add Reminder for This Day" else "Thêm Nhắc Hẹn Cho Ngày Này",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                  )
+                }
               }
             }
           }
@@ -747,12 +1168,45 @@ fun CalendarScreen(
       }
     }
 
-    // 6. Floating Action Button "+ Thêm Kỷ Niệm"
-    Box(
+    // 6. Floating Action Buttons: "+ Nhắc Hẹn" & "+ Cột Mốc"
+    Row(
       modifier = Modifier
         .align(Alignment.BottomEnd)
-        .padding(end = 16.dp, bottom = 85.dp)
+        .padding(end = 16.dp, bottom = 85.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically
     ) {
+      // "+ Nhắc Hẹn" Button
+      Surface(
+        shape = RoundedCornerShape(50.dp),
+        shadowElevation = 8.dp,
+        color = Color(0xFFFF2D75),
+        modifier = Modifier
+          .clip(RoundedCornerShape(50.dp))
+          .clickable { viewModel.openAddAnniversaryDialog() }
+          .testTag("btn_fab_add_anniversary")
+      ) {
+        Row(
+          modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+          Icon(
+            imageVector = Icons.Filled.NotificationsActive,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(18.dp)
+          )
+          Text(
+            text = if (isEnglish) "+ Reminder" else "+ Nhắc Hẹn",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+          )
+        }
+      }
+
+      // "+ Cột Mốc" Button
       Surface(
         shape = RoundedCornerShape(50.dp),
         shadowElevation = 8.dp,
@@ -773,21 +1227,21 @@ fun CalendarScreen(
                 listOf(RoseGradientStart, RoseGradientMid, RoseGradientEnd)
               )
             )
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
           verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
+          horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
           Icon(
             imageVector = Icons.Filled.Add,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(18.dp)
           )
           Text(
-            text = if (isEnglish) "Add Milestone" else "Thêm Kỷ Niệm",
+            text = if (isEnglish) "+ Milestone" else "+ Cột Mốc",
             color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp
+            fontSize = 13.sp
           )
         }
       }

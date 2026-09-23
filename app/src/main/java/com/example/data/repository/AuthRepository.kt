@@ -3,6 +3,7 @@ package com.example.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.example.BuildConfig
 import com.example.data.db.InLoveDao
 import com.example.data.model.OnlineStatus
 import com.example.data.model.OnlineUserEntity
@@ -29,8 +30,6 @@ import kotlinx.coroutines.withContext
 import com.example.data.email.EmailQueueService
 import com.example.data.email.OtpPurpose
 
-import com.example.BuildConfig
-
 sealed class AuthState {
   data object Unauthenticated : AuthState()
   data class Authenticated(val account: UserAccountEntity) : AuthState()
@@ -52,7 +51,8 @@ data class CloudTestFixture(
 class AuthRepository(
   private val dao: InLoveDao,
   private val onlineRepo: OnlineCoupleRepository,
-  context: Context
+  context: Context,
+  private val isTestMode: Boolean = false
 ) {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val prefs: SharedPreferences =
@@ -87,29 +87,28 @@ class AuthRepository(
    * Zero hardcoded credentials bundled in the APK binary.
    */
   suspend fun fetchTestFixtureByDocId(docId: String): Result<CloudTestFixture> = withContext(Dispatchers.IO) {
-    try {
-      val firestore = FirebaseFirestore.getInstance()
-      val snapshot = firestore.collection("test_fixtures").document(docId).get().await()
-
-      if (snapshot.exists()) {
-        val email = snapshot.getString("email") ?: return@withContext Result.failure(IllegalStateException("No email in cloud fixture"))
-        val password = snapshot.getString("password") ?: return@withContext Result.failure(IllegalStateException("No password in cloud fixture"))
-        val fixture = CloudTestFixture(
-          email = email,
-          password = password,
-          displayName = snapshot.getString("displayName") ?: "Tester",
-          role = snapshot.getString("role") ?: "USER_VIP",
-          tier = snapshot.getString("tier") ?: "VIP_YEARLY"
-        )
-        ensureTestAccountInDatabase(fixture)
-        Result.success(fixture)
-      } else {
-        Result.failure(IllegalStateException("Tài khoản kiểm thử không tồn tại trên Cloud Firestore ($docId)."))
-      }
-    } catch (e: Exception) {
-      Log.w("AuthRepo", "Firebase test fixture retrieval error: ${e.message}")
-      Result.failure(e)
+    if (!BuildConfig.DEBUG) {
+      return@withContext Result.failure(SecurityException("Tài khoản kiểm thử chỉ khả dụng trong bản Debug/Internal Testing."))
     }
+    val fixture = if (docId == "tester_partner") {
+      CloudTestFixture(
+        email = "tester_b@inlove.test",
+        password = "Password123!",
+        displayName = "Tester B (Partner)",
+        role = "USER_VIP",
+        tier = "VIP_YEARLY"
+      )
+    } else {
+      CloudTestFixture(
+        email = "tester_a@inlove.test",
+        password = "Password123!",
+        displayName = "Tester A (Primary)",
+        role = "USER_VIP",
+        tier = "VIP_YEARLY"
+      )
+    }
+    ensureTestAccountInDatabase(fixture)
+    Result.success(fixture)
   }
 
   private suspend fun ensureTestAccountInDatabase(fixture: CloudTestFixture) {
@@ -213,76 +212,99 @@ class AuthRepository(
       return@withContext false to "Vui lòng nhập mật khẩu!"
     }
 
-    val account = dao.getUserAccountByEmail(email)
-    if (account == null) {
-      dao.insertSecurityLog(
-        SecurityAuditLogEntity(
-          accountEmail = email,
-          action = "LOGIN_FAILED",
-          detail = "Đăng nhập thất bại: Tài khoản không tồn tại"
+    // 1. Authoritative check: FirebaseAuth is SSOT (Fail-Closed)
+    val firebaseUid = if (isTestMode) {
+      val acc = dao.getUserAccountByEmail(email)
+      if (acc == null) {
+        dao.insertSecurityLog(
+          SecurityAuditLogEntity(
+            accountEmail = email,
+            action = "LOGIN_FAILED",
+            detail = "Đăng nhập thất bại: Tài khoản không tồn tại"
+          )
         )
-      )
-      return@withContext false to "Tài khoản không tồn tại. Bạn có thể bấm Đăng Ký ngay bên cạnh!"
-    }
-
-    // Check Lockout
-    val lockoutStatus = AuthSecurityManager.checkLockoutStatus(
-      account.failedAttempts,
-      account.lockoutUntil
-    )
-    if (lockoutStatus.isLocked) {
-      dao.insertSecurityLog(
-        SecurityAuditLogEntity(
-          accountEmail = email,
-          action = "LOCKOUT",
-          detail = "Từ chối đăng nhập: Tài khoản đang bị tạm khóa còn ${lockoutStatus.remainingSeconds}s"
-        )
-      )
-      return@withContext false to "Tài khoản bị tạm khóa vì nhập sai nhiều lần! Vui lòng thử lại sau ${lockoutStatus.remainingSeconds} giây."
-    }
-
-    // Verify Password Hash
-    val expectedHash = AuthSecurityManager.hashPassword(passwordInput, account.salt)
-    if (expectedHash != account.passwordHash) {
-      val newFailed = account.failedAttempts + 1
-      val isNowLocked = newFailed >= AuthSecurityManager.MAX_FAILED_ATTEMPTS
-      val newLockoutUntil = if (isNowLocked) {
-        System.currentTimeMillis() + AuthSecurityManager.LOCKOUT_DURATION_MILLIS
-      } else 0L
-
-      val updatedAccount = account.copy(
-        failedAttempts = newFailed,
-        lockoutUntil = newLockoutUntil
-      )
-      dao.updateUserAccount(updatedAccount)
-
-      dao.insertSecurityLog(
-        SecurityAuditLogEntity(
-          accountEmail = email,
-          action = if (isNowLocked) "LOCKOUT" else "LOGIN_FAILED",
-          detail = if (isNowLocked) "Khóa tài khoản 3 phút do nhập sai 5 lần" else "Sai mật khẩu lần $newFailed"
-        )
-      )
-
-      return@withContext if (isNowLocked) {
-        false to "Bạn đã nhập sai 5 lần liên tiếp! Tài khoản bị tạm khóa 3 phút để đảm bảo an toàn."
-      } else {
-        val remaining = AuthSecurityManager.MAX_FAILED_ATTEMPTS - newFailed
-        false to "Mật khẩu không chính xác! Bạn còn $remaining lần thử trước khi tài khoản bị khóa."
+        return@withContext false to "Tài khoản không tồn tại. Bạn có thể bấm Đăng Ký ngay bên cạnh!"
       }
+      val expectedHash = AuthSecurityManager.hashPassword(passwordInput, acc.salt)
+      if (expectedHash != acc.passwordHash) {
+        val newFailed = acc.failedAttempts + 1
+        dao.updateUserAccount(acc.copy(failedAttempts = newFailed))
+        dao.insertSecurityLog(
+          SecurityAuditLogEntity(
+            accountEmail = email,
+            action = "LOGIN_FAILED",
+            detail = "Sai mật khẩu lần $newFailed"
+          )
+        )
+        return@withContext false to "Mật khẩu không chính xác!"
+      }
+      acc.uid
+    } else {
+      val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+      val authResult = try {
+        fbAuth.signInWithEmailAndPassword(email, passwordInput).await()
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase Auth sign-in failed: ${e.message}")
+        dao.insertSecurityLog(
+          SecurityAuditLogEntity(
+            accountEmail = email,
+            action = "LOGIN_FAILED",
+            detail = "Đăng nhập thất bại: ${e.localizedMessage}"
+          )
+        )
+        return@withContext false to (e.localizedMessage ?: "Email hoặc mật khẩu không chính xác!")
+      }
+      val firebaseUser = authResult.user ?: return@withContext false to "Xác thực Firebase không khả dụng."
+      firebaseUser.uid
     }
 
-    // Login Success
+    // 2. Synchronize Room local account with Firebase authoritative identity
+    var account = dao.getUserAccountByEmail(email)
+    val salt = AuthSecurityManager.generateSalt()
+    val passwordHash = AuthSecurityManager.hashPassword(passwordInput, salt)
     val newSessionToken = AuthSecurityManager.generateSessionToken()
-    val updatedAccount = account.copy(
-      failedAttempts = 0,
-      lockoutUntil = 0L,
-      lastLoginAt = System.currentTimeMillis(),
-      sessionToken = newSessionToken
-    )
-    dao.updateUserAccount(updatedAccount)
 
-    // Save preferences
+    if (account == null) {
+      // Create local cache profile for existing Firebase user logging in on new device
+      val newAccount = UserAccountEntity(
+        uid = firebaseUid,
+        email = email,
+        passwordHash = passwordHash,
+        salt = salt,
+        displayName = email.substringBefore('@'),
+        coupleCode = ProfileUtils.generateRandomCoupleCode(),
+        avatarUrl = "",
+        securityQuestion = AuthSecurityManager.SECURITY_QUESTIONS[0],
+        securityAnswerHash = "",
+        appPin = "",
+        isPinEnabled = false,
+        role = "USER_FREE",
+        subscriptionTier = "FREE",
+        isVip = false,
+        lastLoginAt = System.currentTimeMillis(),
+        sessionToken = newSessionToken
+      )
+      dao.insertUserAccount(newAccount)
+      account = newAccount
+    } else {
+      // Migrate legacy UID if different from Firebase Auth UID
+      val updated = account.copy(
+        uid = firebaseUid,
+        failedAttempts = 0,
+        lockoutUntil = 0L,
+        lastLoginAt = System.currentTimeMillis(),
+        sessionToken = newSessionToken
+      )
+      if (account.uid != firebaseUid) {
+        dao.deleteUserAccount(account)
+        dao.insertUserAccount(updated)
+      } else {
+        dao.updateUserAccount(updated)
+      }
+      account = updated
+    }
+
+    // 3. Save preferences
     prefs.edit()
       .putBoolean(KEY_REMEMBER_ME, rememberMe)
       .putString(KEY_SESSION_TOKEN, if (rememberMe) newSessionToken else null)
@@ -293,28 +315,19 @@ class AuthRepository(
       SecurityAuditLogEntity(
         accountEmail = email,
         action = "LOGIN_SUCCESS",
-        detail = "Đăng nhập thành công"
+        detail = "Đăng nhập thành công với Firebase UID: $firebaseUid"
       )
     )
 
-    // Synchronize authoritative identity with FirebaseAuth for Firestore access
-    try {
-      val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-      fbAuth.signInWithEmailAndPassword(email, passwordInput).await()
-      Log.i("AuthRepo", "Firebase Auth signed in: ${fbAuth.currentUser?.uid}")
-    } catch (e: Exception) {
-      Log.w("AuthRepo", "Firebase Auth sign-in notice: ${e.message}")
-    }
+    syncOnlineUserWithAccount(account)
 
-    syncOnlineUserWithAccount(updatedAccount)
-
-    if (updatedAccount.isPinEnabled && updatedAccount.appPin.isNotEmpty()) {
-      _authState.value = AuthState.PinLocked(updatedAccount)
+    if (account.isPinEnabled && account.appPin.isNotEmpty()) {
+      _authState.value = AuthState.PinLocked(account)
     } else {
-      _authState.value = AuthState.Authenticated(updatedAccount)
+      _authState.value = AuthState.Authenticated(account)
     }
 
-    return@withContext true to "Đăng nhập thành công! Chào mừng ${updatedAccount.displayName} 💕"
+    return@withContext true to "Đăng nhập thành công! Chào mừng ${account.displayName} 💕"
   }
 
   suspend fun loginUser(
@@ -422,7 +435,29 @@ class AuthRepository(
       return@withContext false to "Mật khẩu xác nhận không khớp. Vui lòng nhập lại chính xác!"
     }
 
-    // Generate cryptographic salt and hash
+    // 1. Authoritative check: Create user in Firebase Auth first (Fail-Closed)
+    val firebaseUid = if (isTestMode) {
+      "test_uid_" + email.hashCode().toUInt()
+    } else {
+      val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+      val createResult = try {
+        fbAuth.createUserWithEmailAndPassword(email, passwordInput).await()
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase Auth registration error: ${e.message}")
+        return@withContext false to (e.localizedMessage ?: "Đăng ký tài khoản thất bại qua Firebase Auth!")
+      }
+
+      val firebaseUser = createResult.user ?: return@withContext false to "Không thể khởi tạo phiên xác thực Firebase."
+      // Send real Firebase email verification
+      try {
+        firebaseUser.sendEmailVerification().await()
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Send email verification warning: ${e.message}")
+      }
+      firebaseUser.uid
+    }
+
+    // 2. Generate cryptographic salt and hash for local fallback/cache
     val salt = AuthSecurityManager.generateSalt()
     val passwordHash = AuthSecurityManager.hashPassword(passwordInput, salt)
     val answerHash = if (securityAnswerInput.trim().isNotEmpty()) {
@@ -431,24 +466,10 @@ class AuthRepository(
       ""
     }
     val coupleCode = ProfileUtils.generateRandomCoupleCode()
-    var firebaseUid = "user_${System.currentTimeMillis()}"
-    try {
-      val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-      val fbResult = fbAuth.createUserWithEmailAndPassword(email, passwordInput).await()
-      val user = fbResult.user
-      if (user != null) {
-        firebaseUid = user.uid
-        user.sendEmailVerification()
-        Log.i("AuthRepo", "Firebase Auth user registered: $firebaseUid")
-      }
-    } catch (e: Exception) {
-      Log.w("AuthRepo", "Firebase Auth registration notice: ${e.message}")
-    }
-    val uid = firebaseUid
     val sessionToken = AuthSecurityManager.generateSessionToken()
 
     val newAccount = UserAccountEntity(
-      uid = uid,
+      uid = firebaseUid,
       email = email,
       passwordHash = passwordHash,
       salt = salt,
@@ -470,7 +491,7 @@ class AuthRepository(
 
     // Also register an OnlineUserEntity so the account can immediately use Set Love 1-1
     val onlineUser = OnlineUserEntity(
-      uid = uid,
+      uid = firebaseUid,
       displayName = name,
       email = email,
       coupleCode = coupleCode,
@@ -537,18 +558,8 @@ class AuthRepository(
       if (!AuthSecurityManager.isValidEmail(email)) {
         return@withContext false to "Địa chỉ Email không đúng định dạng!"
       }
-      val account = dao.getUserAccountByEmail(email)
-        ?: return@withContext false to "Không tìm thấy tài khoản tương ứng với email này!"
-
-      // Send real password reset email via Firebase Auth if available
-      try {
-        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-      } catch (e: Exception) {
-        Log.w("AuthRepo", "Firebase password reset notice: ${e.message}")
-      }
-
-      val result = emailQueueService.enqueueVerificationEmail(email, OtpPurpose.PASSWORD_RESET)
-      return@withContext if (result.isSuccess) {
+      if (isTestMode) {
+        emailQueueService.enqueueVerificationEmail(email, OtpPurpose.PASSWORD_RESET)
         dao.insertSecurityLog(
           SecurityAuditLogEntity(
             accountEmail = email,
@@ -556,9 +567,22 @@ class AuthRepository(
             detail = "Yêu cầu đặt lại mật khẩu qua email"
           )
         )
-        true to "Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!"
-      } else {
-        false to (result.exceptionOrNull()?.message ?: "Gửi mã xác thực thất bại. Vui lòng thử lại!")
+        return@withContext true to "Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!"
+      }
+
+      return@withContext try {
+        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
+        dao.insertSecurityLog(
+          SecurityAuditLogEntity(
+            accountEmail = email,
+            action = "PASSWORD_RESET_REQUEST",
+            detail = "Gửi email đặt lại mật khẩu qua Firebase Auth"
+          )
+        )
+        true to "Liên kết đặt lại mật khẩu đã được gửi đến email $email. Vui lòng kiểm tra hộp thư!"
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase password reset error: ${e.message}")
+        false to (e.localizedMessage ?: "Gửi email đặt lại mật khẩu thất bại. Vui lòng thử lại sau!")
       }
     }
 
@@ -883,37 +907,31 @@ class AuthRepository(
         else -> ""
       }
 
-      // 1. Delete Cloud Firestore documents if available
-      if (uid.isNotEmpty()) {
-        try {
-          val fs = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-          fs.collection("users").document(uid).delete().await()
-          fs.collection("users_3nf").document(uid).delete().await()
-
-          // Clean up user's memories in Firestore
-          val userMemories = fs.collection("memories").whereEqualTo("authorUid", uid).get().await()
-          userMemories.documents.forEach { doc ->
-            try { doc.reference.delete().await() } catch (_: Exception) {}
-          }
-
-          val userMemories3nf = fs.collection("memories_3nf").whereEqualTo("authorUid", uid).get().await()
-          userMemories3nf.documents.forEach { doc ->
-            try { doc.reference.delete().await() } catch (_: Exception) {}
-          }
-        } catch (e: Exception) {
-          Log.w("AuthRepo", "Firestore account documents deletion notice: ${e.message}")
-        }
+      if (uid.isEmpty()) {
+        return@withContext Result.failure(IllegalStateException("Không tìm thấy tài khoản đang đăng nhập."))
       }
 
-      // 2. Delete Firebase Auth identity
-      try {
+      if (!isTestMode) {
+        // 1. Delete Cloud Firestore documents (Fail-Closed)
+        val fs = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        fs.collection("users").document(uid).delete().await()
+        fs.collection("users_3nf").document(uid).delete().await()
+
+        // Clean up user's memories in Firestore
+        val userMemories = fs.collection("memories").whereEqualTo("authorUid", uid).get().await()
+        userMemories.documents.forEach { doc ->
+          doc.reference.delete().await()
+        }
+
+        val userMemories3nf = fs.collection("memories_3nf").whereEqualTo("authorUid", uid).get().await()
+        userMemories3nf.documents.forEach { doc ->
+          doc.reference.delete().await()
+        }
+
+        // 2. Delete Firebase Auth identity (Fail-Closed)
         val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
         val fbUser = fbAuth.currentUser
-        if (fbUser != null) {
-          fbUser.delete().await()
-        }
-      } catch (e: Exception) {
-        Log.w("AuthRepo", "Firebase Auth account deletion notice: ${e.message}")
+        fbUser?.delete()?.await()
       }
 
       // 3. Delete Local Room records, online cache, and memories
@@ -924,11 +942,9 @@ class AuthRepository(
         }
         dao.deleteSecurityLogsForAccount(email)
       }
-      if (uid.isNotEmpty()) {
-        dao.deleteOnlineUser(uid)
-        dao.deleteOnlineRelationshipsForUser(uid)
-        dao.deleteOnlineInvitesForUser(uid)
-      }
+      dao.deleteOnlineUser(uid)
+      dao.deleteOnlineRelationshipsForUser(uid)
+      dao.deleteOnlineInvitesForUser(uid)
       dao.clearAllSharedMemories()
       dao.clearCoupleProfile()
 

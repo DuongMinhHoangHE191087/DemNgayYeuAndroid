@@ -75,10 +75,13 @@ class MainActivity : ComponentActivity() {
     // Khởi tạo AppServiceLocator & Ads / Billing Services
     com.example.di.AppServiceLocator.initialize(applicationContext)
     val adsManager = com.example.di.AppServiceLocator.adsManager
-    adsManager.requestConsentAndInitialize(this)
     adsManager.registerAppOpenAdLifecycle(application)
-    adsManager.preloadInterstitial(this, BuildConfig.ADMOB_INTERSTITIAL_ID)
-    adsManager.preloadAppOpenAd(this, BuildConfig.ADMOB_AOA_ID)
+    adsManager.requestConsentAndInitialize(this) { canRequestAds ->
+      if (canRequestAds) {
+        adsManager.preloadInterstitial(this, BuildConfig.ADMOB_INTERSTITIAL_ID)
+        adsManager.preloadAppOpenAd(this, BuildConfig.ADMOB_AOA_ID)
+      }
+    }
     com.example.di.AppServiceLocator.billingManager.startBillingConnection()
 
     setContent {
@@ -104,6 +107,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val showAddMilestoneDialog by viewModel.showAddMilestoneDialog.collectAsState()
   val showAddChecklistDialog by viewModel.showAddChecklistDialog.collectAsState()
   val showAddAnniversaryDialog by viewModel.showAddAnniversaryDialog.collectAsState()
+  val prefilledAnniversaryDate by viewModel.prefilledAnniversaryDate.collectAsState()
   val showAddGiftReminderDialog by viewModel.showAddGiftReminderDialog.collectAsState()
   val showEditCoupleDialog by viewModel.showEditCoupleDialog.collectAsState()
   val showAuthScreen by viewModel.showAuthScreen.collectAsState()
@@ -282,7 +286,21 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
             )
           }
         } else {
-          Column {
+          Column(modifier = Modifier.fillMaxWidth()) {
+            // Khoảng trắng phía trên ứng dụng dành cho Banner Quảng Cáo AdMob ở trên cùng
+            if (!isVip) {
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .statusBarsPadding()
+                  .padding(top = 4.dp, bottom = 2.dp)
+              ) {
+                ComposeBannerAd(
+                  isVip = false
+                )
+              }
+            }
+
             InLoveTopBar(
               title = screenTitle,
               onHeartClick = {
@@ -291,12 +309,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
               },
               onProfileClick = {
                 viewModel.setTab(4)
-              }
-            )
-
-            // Khoảng trắng phía trên ứng dụng dành cho Banner Quảng Cáo AdMob
-            ComposeBannerAd(
-              isVip = isVip
+              },
+              includeStatusBarPadding = isVip
             )
           }
         }
@@ -422,6 +436,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     if (showAddAnniversaryDialog) {
       AddAnniversaryDateDialog(
+        isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
+        initialDateText = prefilledAnniversaryDate,
         onDismiss = { viewModel.closeAddAnniversaryDialog() },
         onConfirm = { title, dateText, type, description, isAnnual, reminderDaysBefore ->
           viewModel.addAnniversaryDate(title, dateText, type, description, isAnnual, reminderDaysBefore)
@@ -527,10 +543,12 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsState()
     val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
     val dynamicPresetAvatars by viewModel.presetAvatars.collectAsState()
+    val appLanguage by viewModel.appLanguage.collectAsState()
     if (showEditProfileDialog) {
       EditMyProfileDialog(
         currentUser = currentOnlineUser,
         presetAvatars = dynamicPresetAvatars,
+        isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
         onDismiss = { viewModel.closeEditProfileDialog() },
         onSave = { name, birth, avatar, gender, bio ->
           viewModel.updateMyProfile(name, birth, avatar, gender, bio)

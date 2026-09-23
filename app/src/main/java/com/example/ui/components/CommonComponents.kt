@@ -68,7 +68,8 @@ const val COUPLE_AVATAR_URL =
 fun InLoveTopBar(
   title: String,
   onHeartClick: () -> Unit = {},
-  onProfileClick: () -> Unit = {}
+  onProfileClick: () -> Unit = {},
+  includeStatusBarPadding: Boolean = true
 ) {
   Surface(
     color = Color.White.copy(alpha = 0.98f),
@@ -79,7 +80,7 @@ fun InLoveTopBar(
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .statusBarsPadding()
+        .then(if (includeStatusBarPadding) Modifier.statusBarsPadding() else Modifier)
         .padding(horizontal = 16.dp, vertical = 8.dp),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.SpaceBetween

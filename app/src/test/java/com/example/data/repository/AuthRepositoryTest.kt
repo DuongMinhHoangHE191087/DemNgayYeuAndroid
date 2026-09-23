@@ -34,7 +34,7 @@ class AuthRepositoryTest {
       .allowMainThreadQueries()
       .build()
     onlineRepo = OnlineCoupleRepository(db.inLoveDao(), context)
-    authRepo = AuthRepository(db.inLoveDao(), onlineRepo, context)
+    authRepo = AuthRepository(db.inLoveDao(), onlineRepo, context, isTestMode = true)
   }
 
   @After

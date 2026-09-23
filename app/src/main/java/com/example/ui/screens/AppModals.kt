@@ -82,6 +82,12 @@ import com.example.ui.theme.PrimaryFixed
 import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
 
@@ -634,6 +640,46 @@ val WALLPAPER_PRESETS = listOf(
     "Vườn Hồng Mộng Mơ",
     "Rose Garden",
     "https://images.unsplash.com/photo-1496062031456-07b8f162a322?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Cực Quang Hồng",
+    "Pink Aurora",
+    "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Bầu Trời Pastel",
+    "Pastel Clouds",
+    "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Vườn Oải Hương",
+    "Lavender Dream",
+    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Ánh Đèn Lung Linh",
+    "Fairy Lights",
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Đêm Paris Lung Linh",
+    "Paris Twilight",
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Nắng Vàng Mùa Thu",
+    "Golden Autumn",
+    "https://images.unsplash.com/photo-1477414348463-c0eb7f1359b6?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Bình Minh Tình Yêu",
+    "Love Sunrise",
+    "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?q=80&w=1080&auto=format&fit=crop"
+  ),
+  WallpaperPreset(
+    "Ngọn Nến Lãng Mạn",
+    "Warm Candlelight",
+    "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=1080&auto=format&fit=crop"
   )
 )
 
@@ -645,29 +691,31 @@ fun WallpaperPickerDialog(
   onApplyWallpaper: (String) -> Unit,
   onDismiss: () -> Unit
 ) {
+  val context = LocalContext.current
   val strings = LocalizedStrings.get(language)
   var selectedUrl by remember { mutableStateOf(currentWallpaperUrl) }
-  var customUrlInput by remember { mutableStateOf("") }
+
+  val photoPickerLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.PickVisualMedia()
+  ) { uri: Uri? ->
+    uri?.let {
+      val savedPath = copyUriToInternalStorage(context, it)
+      selectedUrl = savedPath ?: it.toString()
+    }
+  }
 
   val activePresets = remember(presetWallpapers) {
     if (presetWallpapers.isNotEmpty()) {
-      presetWallpapers.mapIndexed { index, url ->
-        val titleVi = when (index % 5) {
-          0 -> "Hoa Anh Đào"
-          1 -> "Hoàng Hôn Hồng"
-          2 -> "Đêm Sao Lãng Mạn"
-          3 -> "Vườn Hồng Mộng Mơ"
-          else -> "Trái Tim Lãng Mạn"
-        }
-        val titleEn = when (index % 5) {
-          0 -> "Cherry Blossom"
-          1 -> "Sunset Rose"
-          2 -> "Starry Night"
-          3 -> "Rose Garden"
-          else -> "Romantic Heart"
-        }
-        WallpaperPreset(titleVi, titleEn, url)
+      val defaultPresets = WALLPAPER_PRESETS
+      val customPresets = presetWallpapers.mapIndexed { index, url ->
+        val fallback = defaultPresets.getOrNull(index % defaultPresets.size)
+        WallpaperPreset(
+          titleVi = fallback?.titleVi ?: "Hình nền ${index + 1}",
+          titleEn = fallback?.titleEn ?: "Wallpaper ${index + 1}",
+          url = url
+        )
       }
+      (customPresets + defaultPresets).distinctBy { it.url }
     } else {
       WALLPAPER_PRESETS
     }
@@ -692,6 +740,7 @@ fun WallpaperPickerDialog(
         modifier = Modifier
           .fillMaxWidth()
           .padding(20.dp)
+          .verticalScroll(rememberScrollState())
       ) {
         // Title
         Row(
@@ -739,9 +788,81 @@ fun WallpaperPickerDialog(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        // Button: Upload from Device (Primary custom option per user request)
+        Button(
+          onClick = {
+            photoPickerLauncher.launch(
+              PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+          },
+          shape = RoundedCornerShape(16.dp),
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp)
+            .testTag("btn_upload_wallpaper_device")
+        ) {
+          Icon(
+            imageVector = Icons.Filled.AddPhotoAlternate,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+            text = if (language == AppLanguage.VI) "🖼️ Tải ảnh từ thư viện máy" else "🖼️ Choose Photo from Device",
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.5.sp,
+            color = Color.White
+          )
+        }
+
+        // Custom image preview if picked from device
+        if (selectedUrl.startsWith("/") || selectedUrl.startsWith("file:") || selectedUrl.startsWith("content:")) {
+          Spacer(modifier = Modifier.height(10.dp))
+          Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = Color(0xFFFCE4EC),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Primary),
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(72.dp)
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.padding(8.dp)
+            ) {
+              AsyncImage(
+                model = selectedUrl,
+                contentDescription = "Custom wallpaper preview",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                  .size(56.dp)
+                  .clip(RoundedCornerShape(10.dp))
+              )
+              Spacer(modifier = Modifier.width(10.dp))
+              Column {
+                Text(
+                  text = if (language == AppLanguage.VI) "Ảnh cá nhân của bạn ✓" else "Your custom photo ✓",
+                  fontWeight = FontWeight.Bold,
+                  fontSize = 12.sp,
+                  color = Primary
+                )
+                Text(
+                  text = if (language == AppLanguage.VI) "Đã sẵn sàng áp dụng làm hình nền" else "Ready to apply as wallpaper",
+                  fontSize = 10.5.sp,
+                  color = Color(0xFF880E4F)
+                )
+              }
+            }
+          }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
         // Preset Grid / Rows
         Text(
-          text = if (language == AppLanguage.VI) "Bộ sưu tập phông nền lãng mạn:" else "Curated Romantic Presets:",
+          text = if (language == AppLanguage.VI) "Bộ sưu tập phông nền lãng mạn (${activePresets.size}):" else "Curated Romantic Presets (${activePresets.size}):",
           fontSize = 12.sp,
           fontWeight = FontWeight.Bold,
           color = Primary
@@ -770,39 +891,12 @@ fun WallpaperPickerDialog(
           Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Custom URL input
-        Text(
-          text = strings.wallpaperCustomUrl,
-          fontSize = 12.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = Color(0xFF26071B)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        OutlinedTextField(
-          value = customUrlInput,
-          onValueChange = {
-            customUrlInput = it
-            if (it.isNotBlank()) selectedUrl = it
-          },
-          placeholder = { Text("https://example.com/photo.jpg", fontSize = 12.sp) },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth(),
-          shape = RoundedCornerShape(14.dp),
-          colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Primary,
-            unfocusedBorderColor = Color(0xFFFFCDD2)
-          )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Apply Button
         Button(
           onClick = {
-            val finalUrl = if (customUrlInput.isNotBlank()) customUrlInput.trim() else selectedUrl
-            onApplyWallpaper(finalUrl)
+            onApplyWallpaper(selectedUrl)
             onDismiss()
           },
           shape = RoundedCornerShape(16.dp),

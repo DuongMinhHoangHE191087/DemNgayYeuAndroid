@@ -344,14 +344,23 @@ fun GiftScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Suggestions based on enriched gift ideas from Cloud Firestore
-            val suggestions = remember(giftIdeas) {
+            val suggestions = remember(giftIdeas, isEnglish) {
               if (giftIdeas.isNotEmpty()) {
                 giftIdeas.take(3).map { it.title to it.category }
               } else {
-                listOf(
-                  "Ý tưởng hẹn hò lãng mạn" to "Địa điểm",
-                  "Món quà kỷ vật tình yêu" to "Kỷ niệm"
-                )
+                if (isEnglish) {
+                  listOf(
+                    "Romantic Candlelight Dinner" to "Date Spot",
+                    "Customized Love Keepsake" to "Memory",
+                    "Surprise Rose Bouquet" to "Gifts"
+                  )
+                } else {
+                  listOf(
+                    "Ý tưởng hẹn hò lãng mạn" to "Địa điểm",
+                    "Món quà kỷ vật tình yêu" to "Kỷ niệm",
+                    "Bó hoa hồng bất ngờ" to "Quà tặng"
+                  )
+                }
               }
             }
 
@@ -952,6 +961,55 @@ fun GiftIdeaCard(
   onFavoriteToggle: () -> Unit,
   onActionClick: () -> Unit
 ) {
+  val displayBadgeText = if (isEnglish) {
+    when (idea.id) {
+      1L -> "MOST POPULAR"
+      2L -> "PERSONALIZED"
+      3L -> "ROMANTIC VIBE"
+      else -> "OUTDOORS"
+    }
+  } else idea.badgeText
+
+  val displayTitle = if (isEnglish) {
+    when (idea.id) {
+      1L -> "Couple Love Memory Scrapbook"
+      2L -> "Custom Engraved Love Silver Rings"
+      3L -> "Sunset Rooftop Candlelight Dinner"
+      4L -> "Weekend Camping & Stargazing Date"
+      else -> idea.title
+    }
+  } else idea.title
+
+  val displayTag = if (isEnglish) {
+    when (idea.id) {
+      1L -> "Handmade"
+      2L -> "Jewelry"
+      3L -> "Dinner Date"
+      4L -> "Outdoor Experience"
+      else -> idea.tag
+    }
+  } else idea.tag
+
+  val displayDescription = if (isEnglish) {
+    when (idea.id) {
+      1L -> "Print 20 of your favorite love photos and write sweet wishes together to create a lasting keepsake."
+      2L -> "Fine 925 sterling silver couple rings engraved with your initials and the start date of your love story."
+      3L -> "A romantic candlelight table with city sunset views, gentle music, and a warm private atmosphere."
+      4L -> "Pack warm cocoa and a picnic blanket for a cozy camping trip and stargazing in the cool pine breeze."
+      else -> idea.description
+    }
+  } else idea.description
+
+  val displayActionText = if (isEnglish) {
+    when (idea.id) {
+      1L -> "Prepare Photo Scrapbook"
+      2L -> "Preview Engraving Details"
+      3L -> "Reserve Table & Menu"
+      4L -> "View Camping Itinerary"
+      else -> idea.actionText
+    }
+  } else idea.actionText
+
   Card(
     shape = RoundedCornerShape(24.dp),
     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
@@ -1001,7 +1059,7 @@ fun GiftIdeaCard(
               modifier = Modifier.size(14.dp)
             )
             Text(
-              text = idea.badgeText,
+              text = displayBadgeText,
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
               color = if (idea.id == 2L) Tertiary else Secondary
@@ -1037,7 +1095,7 @@ fun GiftIdeaCard(
         verticalAlignment = Alignment.Top
       ) {
         Text(
-          text = idea.title,
+          text = displayTitle,
           fontSize = 15.sp,
           fontWeight = FontWeight.Bold,
           color = OnSurface,
@@ -1049,7 +1107,7 @@ fun GiftIdeaCard(
           color = if (idea.id == 2L) SecondaryFixed.copy(alpha = 0.7f) else PrimaryFixed.copy(alpha = 0.6f)
         ) {
           Text(
-            text = idea.tag,
+            text = displayTag,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             color = if (idea.id == 2L) Secondary else Primary,
@@ -1061,7 +1119,7 @@ fun GiftIdeaCard(
       Spacer(modifier = Modifier.height(4.dp))
 
       Text(
-        text = idea.description,
+        text = displayDescription,
         fontSize = 12.sp,
         color = OnSurfaceVariant,
         lineHeight = 17.sp
@@ -1254,7 +1312,7 @@ fun GiftIdeaCard(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = idea.actionText,
+            text = displayActionText,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Primary

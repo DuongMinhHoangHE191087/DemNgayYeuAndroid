@@ -93,8 +93,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
       val currentMonth = today.get(java.util.Calendar.MONTH) + 1 // 1-12
 
       for (ann in anniversaries) {
-        val parsed = AlarmNotificationScheduler.parseDateToMonthDayYear(ann.dateText) ?: continue
-        if (parsed.first == currentDay && parsed.second == currentMonth) {
+        val (day, month) = AlarmNotificationScheduler.parseDateToMonthDayYear(ann.dateText) ?: continue
+        if (day == currentDay && month == currentMonth) {
           // It's today!
           showNotification(
             context = context,

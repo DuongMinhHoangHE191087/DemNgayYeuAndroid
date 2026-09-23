@@ -284,21 +284,35 @@ class Firebase3NFService(
         return@withContext false to "Firebase Cloud chưa sẵn sàng. Dữ liệu được lưu trữ offline an toàn trên thiết bị."
       }
 
-      // Batch sync all entities atomically to avoid silent async failures or fake success
-      val batch = fs.batch()
-      _users.value.forEach { user ->
-        batch.set(fs.collection("users_3nf").document(user.uid), user)
+      // 1. Only sync owner's user_3nf document to obey isOwner(userId) Firestore rule
+      val currentAuthUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+      val usersToSync = if (!currentAuthUid.isNullOrBlank()) {
+        _users.value.filter { it.uid == currentAuthUid }
+      } else {
+        emptyList()
+      }
+
+      // 2. Prepare atomic write actions and execute in chunks of max 400 (Firestore limit is 500)
+      val writeActions = mutableListOf<(com.google.firebase.firestore.WriteBatch) -> Unit>()
+      usersToSync.forEach { user ->
+        writeActions.add { batch -> batch.set(fs.collection("users_3nf").document(user.uid), user) }
       }
       _relationships.value.forEach { rel ->
-        batch.set(fs.collection("relationships_3nf").document(rel.relationshipId), rel)
+        writeActions.add { batch -> batch.set(fs.collection("relationships_3nf").document(rel.relationshipId), rel) }
       }
       _invites.value.forEach { inv ->
-        batch.set(fs.collection("invites_3nf").document(inv.inviteId), inv)
+        writeActions.add { batch -> batch.set(fs.collection("invites_3nf").document(inv.inviteId), inv) }
       }
       _memories.value.forEach { mem ->
-        batch.set(fs.collection("memories_3nf").document(mem.memoryId), mem)
+        writeActions.add { batch -> batch.set(fs.collection("memories_3nf").document(mem.memoryId), mem) }
       }
-      batch.commit().await()
+
+      // Commit batches sequentially
+      writeActions.chunked(400).forEach { chunk ->
+        val batch = fs.batch()
+        chunk.forEach { writeAction -> writeAction(batch) }
+        batch.commit().await()
+      }
 
       validateIntegrity()
       _lastSyncMessage.value = "Đồng bộ Firebase thành công (${System.currentTimeMillis() % 10000})"

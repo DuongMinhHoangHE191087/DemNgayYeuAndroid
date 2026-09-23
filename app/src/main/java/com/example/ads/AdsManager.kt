@@ -16,6 +16,11 @@ import android.content.Context
  *  - App Open Ad không hiện khi Paywall/Splash/Permission dialog đang mở.
  */
 interface AdsManager {
+    /**
+     * Trạng thái đồng thuận hiển thị quảng cáo từ UMP (User Messaging Platform).
+     * Chỉ nạp hoặc hiển thị quảng cáo khi [canRequestAds] là true.
+     */
+    val canRequestAds: kotlinx.coroutines.flow.StateFlow<Boolean>
 
     /** Khởi tạo Google Mobile Ads SDK và cấu hình Test Device IDs */
     fun initialize(context: Context)
@@ -24,7 +29,7 @@ interface AdsManager {
      * Yêu cầu cập nhật thông tin đồng thuận UMP (User Messaging Platform / GDPR CMP)
      * và tự động hiển thị form consent nếu cần trước khi khởi tạo quảng cáo.
      */
-    fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: () -> Unit = {})
+    fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: (canRequestAds: Boolean) -> Unit = {})
 
     /**
      * Đồng bộ trạng thái VIP. Khi [isVip] = true, toàn bộ cache quảng cáo

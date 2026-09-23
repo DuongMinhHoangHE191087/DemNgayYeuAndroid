@@ -196,20 +196,23 @@ class InLoveRepository(private val dao: InLoveDao) {
    */
   suspend fun fetchPresetAssetsFromFirestore(): Result<Pair<List<String>, List<String>>> = withContext(Dispatchers.IO) {
     try {
-      val firestore = FirebaseFirestore.getInstance()
-      val photosDoc = firestore.collection("preset_assets").document("photos").get().await()
-      val avatarsDoc = firestore.collection("preset_assets").document("avatars").get().await()
-      val wallpapersDoc = firestore.collection("preset_assets").document("wallpapers").get().await()
+      val result = kotlinx.coroutines.withTimeoutOrNull(2000L) {
+        val firestore = FirebaseFirestore.getInstance()
+        val photosDoc = firestore.collection("preset_assets").document("photos").get().await()
+        val avatarsDoc = firestore.collection("preset_assets").document("avatars").get().await()
+        val wallpapersDoc = firestore.collection("preset_assets").document("wallpapers").get().await()
 
-      val photos = (photosDoc.get("urls") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
-      val avatars = (avatarsDoc.get("urls") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
-      val wallpapers = (wallpapersDoc.get("urls") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+        val photos = (photosDoc.get("urls") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+        val avatars = (avatarsDoc.get("urls") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
+        val wallpapers = (wallpapersDoc.get("urls") as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
 
-      if (photos.isNotEmpty()) _presetPhotos.value = photos
-      if (avatars.isNotEmpty()) _presetAvatars.value = avatars
-      if (wallpapers.isNotEmpty()) _presetWallpapers.value = wallpapers
+        if (photos.isNotEmpty()) _presetPhotos.value = photos
+        if (avatars.isNotEmpty()) _presetAvatars.value = avatars
+        if (wallpapers.isNotEmpty()) _presetWallpapers.value = wallpapers
 
-      Result.success(photos to avatars)
+        photos to avatars
+      }
+      if (result != null) Result.success(result) else Result.failure(Exception("Preset assets fetch timeout"))
     } catch (e: Exception) {
       Log.w("InLoveRepository", "Firestore preset assets notice: ${e.message}")
       Result.failure(e)
@@ -221,11 +224,13 @@ class InLoveRepository(private val dao: InLoveDao) {
    */
   suspend fun syncAllCloudPresets(): Boolean = withContext(Dispatchers.IO) {
     try {
-      fetchDynamicGiftIdeasFromFirestore()
-      fetchMilestonePresetsFromFirestore()
-      fetchBadgeDefinitionsFromFirestore()
-      fetchChecklistTemplatesFromFirestore()
-      fetchPresetAssetsFromFirestore()
+      kotlinx.coroutines.withTimeoutOrNull(2000L) {
+        fetchDynamicGiftIdeasFromFirestore()
+        fetchMilestonePresetsFromFirestore()
+        fetchBadgeDefinitionsFromFirestore()
+        fetchChecklistTemplatesFromFirestore()
+        fetchPresetAssetsFromFirestore()
+      }
       true
     } catch (e: Exception) {
       Log.w("InLoveRepository", "syncAllCloudPresets error: ${e.message}")

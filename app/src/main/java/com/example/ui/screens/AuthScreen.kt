@@ -155,28 +155,6 @@ fun AuthScreen(
   var agreeToTerms by remember { mutableStateOf(true) }
   var isRegistering by remember { mutableStateOf(false) }
 
-  // Email Queue OTP States
-  var regOtpCode by remember { mutableStateOf("") }
-  var isSendingOtp by remember { mutableStateOf(false) }
-  var otpCooldownSeconds by remember { mutableIntStateOf(0) }
-  var isOtpSent by remember { mutableStateOf(false) }
-  var otpNotificationBanner by remember { mutableStateOf<String?>(null) }
-
-  // Listen to Email Queue OTP events
-  LaunchedEffect(Unit) {
-    viewModel.authRepo.emailQueueService.otpEvents.collect { event ->
-      otpNotificationBanner = "💌 Đã gửi mã xác nhận đến [${event.email}]. Vui lòng kiểm tra hộp thư!"
-    }
-  }
-
-  // OTP Cooldown Countdown
-  LaunchedEffect(otpCooldownSeconds) {
-    if (otpCooldownSeconds > 0) {
-      delay(1.seconds)
-      otpCooldownSeconds -= 1
-    }
-  }
-
   // Lockout & Brute-force local tracker
   var isLockedOut by remember { mutableStateOf(false) }
   var lockoutCountdownSeconds by remember { mutableLongStateOf(0L) }
@@ -708,103 +686,29 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Email Verification Queue OTP Section
+            // Firebase Email Verification Notice
             Card(
               shape = RoundedCornerShape(14.dp),
               colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
               modifier = Modifier.fillMaxWidth()
             ) {
-              Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically
-                ) {
-                  Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                      imageVector = Icons.Default.Shield,
-                      contentDescription = null,
-                      tint = Color(0xFFE91E63),
-                      modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                      text = "Xác thực Email (Hàng đợi OTP)",
-                      style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                      color = Color(0xFF880E4F)
-                    )
-                  }
-
-                  OutlinedButton(
-                    onClick = {
-                      if (!AuthSecurityManager.isValidEmail(regEmail)) {
-                        viewModel.showToast("Vui lòng nhập địa chỉ email hợp lệ trước khi gửi mã!")
-                        return@OutlinedButton
-                      }
-                      focusManager.clearFocus()
-                      isSendingOtp = true
-                      scope.launch {
-                        val result = viewModel.authRepo.requestRegistrationOtp(regEmail)
-                        isSendingOtp = false
-                        result.onSuccess {
-                          isOtpSent = true
-                          otpCooldownSeconds = 60
-                          viewModel.showToast("Đã gửi mã xác nhận đến $regEmail! Vui lòng kiểm tra hộp thư đến hoặc thư rác.")
-                        }.onFailure { err ->
-                          viewModel.showToast(err.message ?: "Lỗi gửi mã OTP")
-                        }
-                      }
-                    },
-                    enabled = !isSendingOtp && otpCooldownSeconds == 0 && regEmail.isNotBlank(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE91E63)),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier.height(36.dp)
-                  ) {
-                    if (isSendingOtp) {
-                      CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = Color(0xFFE91E63))
-                    } else {
-                      Text(
-                        text = if (otpCooldownSeconds > 0) "Gửi lại (${otpCooldownSeconds}s)" else if (isOtpSent) "Gửi lại mã" else "Gửi mã OTP 📩",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                      )
-                    }
-                  }
-                }
-
-                if (isOtpSent || regOtpCode.isNotEmpty()) {
-                  Spacer(modifier = Modifier.height(8.dp))
-                  OutlinedTextField(
-                    value = regOtpCode,
-                    onValueChange = { if (it.length <= 6) regOtpCode = it.filter { char -> char.isDigit() } },
-                    label = { Text("Mã xác thực OTP (6 số)") },
-                    placeholder = { Text("Nhập 6 số được gửi qua email") },
-                    leadingIcon = {
-                      Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = Color(0xFFE91E63))
-                    },
-                    trailingIcon = {
-                      if (regOtpCode.length == 6) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF43A047))
-                      }
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = authTextFieldColors(),
-                    modifier = Modifier.fillMaxWidth().testTag("input_reg_otp")
-                  )
-                }
-
-                if (otpNotificationBanner != null) {
-                  Spacer(modifier = Modifier.height(6.dp))
-                  Text(
-                    text = otpNotificationBanner!!,
-                    fontSize = 10.sp,
-                    color = Color(0xFF2E7D32),
-                    fontWeight = FontWeight.SemiBold
-                  )
-                }
+              Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Shield,
+                  contentDescription = null,
+                  tint = Color(0xFFE91E63),
+                  modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                  text = "Hệ thống sẽ gửi email xác thực chính thức từ Firebase ngay sau khi đăng ký thành công.",
+                  style = MaterialTheme.typography.bodySmall,
+                  color = Color(0xFF880E4F),
+                  lineHeight = 16.sp
+                )
               }
             }
 
@@ -910,7 +814,6 @@ fun AuthScreen(
                 regEmail.isNotBlank() &&
                 regPassword.length >= 6 &&
                 passwordsMatch &&
-                (!isOtpSent || regOtpCode.length == 6) &&
                 !isRegistering
 
             Button(
@@ -922,8 +825,7 @@ fun AuthScreen(
                     displayNameInput = regName,
                     emailInput = regEmail,
                     passwordInput = regPassword,
-                    confirmPasswordInput = regConfirmPassword,
-                    otpCodeInput = regOtpCode
+                    confirmPasswordInput = regConfirmPassword
                   )
                   isRegistering = false
                   viewModel.showToast(result.second)

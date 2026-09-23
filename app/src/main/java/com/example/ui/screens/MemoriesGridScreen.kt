@@ -1,3 +1,4 @@
+@file:Suppress("FunctionName")
 package com.example.ui.screens
 
 import android.content.ClipData
@@ -39,6 +40,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -68,6 +70,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -132,6 +135,7 @@ fun MemoriesGridScreen(
   var selectedFilter by remember { mutableStateOf("all") } // "all", "couple", "mine", "partner", "video", "fav"
 
   val isCoupled = relationshipStatus == OnlineStatus.COUPLED
+  val isEnglish = currentLanguage == com.example.ui.util.AppLanguage.EN
 
   val filteredMemories = remember(memories, selectedFilter, currentOnlineUser) {
     val myUid = currentOnlineUser.uid
@@ -146,201 +150,141 @@ fun MemoriesGridScreen(
   }
 
   Box(modifier = modifier.fillMaxSize()) {
-    if (!isCoupled) {
-      // Single / Uncoupled State: Require 1-1 pairing to unlock shared memories
-      Column(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(horizontal = 24.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-      ) {
-        Box(
-          modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(Color(0xFFFFEBEE)),
-          contentAlignment = Alignment.Center
-        ) {
-          Icon(
-            imageVector = Icons.Default.Favorite,
-            contentDescription = null,
-            tint = Color(0xFFE91E63),
-            modifier = Modifier.size(52.dp)
-          )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-          text = "Chưa Kết Nối Người Thương",
-          fontWeight = FontWeight.Bold,
-          fontSize = 20.sp,
-          color = Color(0xFF880E4F),
-          textAlign = TextAlign.Center
+    LazyVerticalGrid(
+      columns = GridCells.Fixed(2),
+      contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
+      horizontalArrangement = Arrangement.spacedBy(14.dp),
+      verticalArrangement = Arrangement.spacedBy(14.dp),
+      modifier = Modifier.fillMaxSize().testTag("memories_grid")
+    ) {
+      // Sleek Header Section with Hero Card & Horizontal Category Pills
+      item(span = { GridItemSpan(2) }) {
+        MemoriesHeader(
+          strings = strings,
+          totalCount = memories.size,
+          selectedFilter = selectedFilter,
+          onFilterChanged = { selectedFilter = it },
+          onAddClick = { showAddDialog = true },
+          isCoupled = isCoupled,
+          isEnglish = isEnglish,
+          onOpenPairing = { viewModel.openPairingScreen() }
         )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Text(
-          text = "Bạn cần kết nối Set Love với người yêu để mở khóa và lưu giữ album kỷ niệm chung 1-1. Tải ảnh & video được bảo vệ an toàn trên Cloudinary và phân quyền rõ ràng giữa 2 bạn.",
-          fontSize = 14.sp,
-          color = Color.Gray,
-          textAlign = TextAlign.Center,
-          lineHeight = 20.sp
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-          onClick = { viewModel.openPairingScreen() },
-          shape = RoundedCornerShape(16.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-          modifier = Modifier.height(48.dp).testTag("btn_couple_now_memories")
-        ) {
-          Icon(
-            imageVector = Icons.Default.Favorite,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp)
-          )
-          Spacer(modifier = Modifier.width(8.dp))
-          Text(
-            text = "Ghép đôi Set Love ngay 💕",
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp
-          )
-        }
       }
-    } else {
-      LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 96.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = Modifier.fillMaxSize().testTag("memories_grid")
-      ) {
-        // Header Section with Filters & Cloudinary storage indicator
+
+      // Empty State
+      if (filteredMemories.isEmpty()) {
         item(span = { GridItemSpan(2) }) {
-          MemoriesHeader(
+          EmptyMemoriesCard(
             strings = strings,
-            totalCount = memories.size,
             selectedFilter = selectedFilter,
-            onFilterChanged = { selectedFilter = it },
-            onAddClick = { showAddDialog = true }
+            onAddClick = { showAddDialog = true },
+            isEnglish = isEnglish
           )
         }
-
-        // Empty State
-        if (filteredMemories.isEmpty()) {
-          item(span = { GridItemSpan(2) }) {
-            EmptyMemoriesCard(
-              strings = strings,
-              selectedFilter = selectedFilter,
-              onAddClick = { showAddDialog = true }
-            )
-          }
-        } else {
-          // Grid items
-          items(
-            items = filteredMemories,
-            key = { it.id }
-          ) { memory ->
-            MemoryCardItem(
-              memory = memory,
-              isAuthor = viewModel.isCurrentUserAuthor(memory),
-              onClick = { viewModel.openMemoryDetail(memory) },
-              onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) }
-            )
-          }
+      } else {
+        // Grid items
+        items(
+          items = filteredMemories,
+          key = { it.id }
+        ) { memory ->
+          MemoryCardItem(
+            memory = memory,
+            isAuthor = viewModel.isCurrentUserAuthor(memory),
+            isEnglish = isEnglish,
+            onClick = { viewModel.openMemoryDetail(memory) },
+            onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) }
+          )
         }
       }
-
-      // Floating Action Button to Add Photo or Video
-      ExtendedFloatingActionButton(
-        onClick = { showAddDialog = true },
-        containerColor = Color(0xFFFF2D75),
-        contentColor = Color.White,
-        shape = RoundedCornerShape(28.dp),
-        icon = {
-          Icon(
-            imageVector = Icons.Default.AddAPhoto,
-            contentDescription = strings.btnAddMemory
-          )
-        },
-        text = {
-          Text(
-            text = strings.btnAddMemory,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp
-          )
-        },
-        modifier = Modifier
-          .align(Alignment.BottomEnd)
-          .padding(end = 20.dp, bottom = 24.dp)
-          .testTag("btn_fab_add_memory")
-      )
     }
 
-    // Add Memory Dialog with Cloudinary & Video support & Permissions
-    val dynamicPresetPhotos by viewModel.presetPhotos.collectAsState()
-    if (showAddDialog) {
-      AddMemoryDialog(
-        strings = strings,
-        currentLanguage = currentLanguage,
-        presetPhotos = dynamicPresetPhotos,
-        onDismiss = { showAddDialog = false },
-        onSaveMemory = { title, dateText, photoUri, note, location, mediaType, videoUri, cloudinaryPublicId, cloudinaryUrl, isCloudinaryStored, fileSizeFormatted, durationSeconds, privacyLevel ->
-          viewModel.addSharedMemory(
-            title = title,
-            dateText = dateText,
-            photoUri = photoUri,
-            note = note,
-            location = location,
-            mediaType = mediaType,
-            videoUri = videoUri,
-            cloudinaryPublicId = cloudinaryPublicId,
-            cloudinaryUrl = cloudinaryUrl,
-            isCloudinaryStored = isCloudinaryStored,
-            fileSizeFormatted = fileSizeFormatted,
-            durationSeconds = durationSeconds,
-            privacyLevel = privacyLevel
-          )
-          showAddDialog = false
-        }
-      )
-    }
+    // Modern Floating Action Button with subtle shadow and heart accent
+    ExtendedFloatingActionButton(
+      onClick = { showAddDialog = true },
+      containerColor = Color(0xFFFF2D75),
+      contentColor = Color.White,
+      shape = RoundedCornerShape(28.dp),
+      elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp, pressedElevation = 10.dp),
+      icon = {
+        Icon(
+          imageVector = Icons.Default.AddAPhoto,
+          contentDescription = strings.btnAddMemory
+        )
+      },
+      text = {
+        Text(
+          text = if (isEnglish) "Add Memory" else strings.btnAddMemory,
+          fontWeight = FontWeight.Bold,
+          fontSize = 14.sp
+        )
+      },
+      modifier = Modifier
+        .align(Alignment.BottomEnd)
+        .padding(end = 20.dp, bottom = 24.dp)
+        .testTag("btn_fab_add_memory")
+    )
+  }
 
-    // Edit Memory Dialog (Author only)
-    if (memoryToEdit != null) {
-      EditMemoryDialog(
-        memory = memoryToEdit!!,
-        onDismiss = { memoryToEdit = null },
-        onSave = { updated ->
-          viewModel.updateSharedMemory(updated)
-          memoryToEdit = null
-        }
-      )
-    }
+  // Add Memory Dialog with Cloudinary & Video support & Permissions
+  val dynamicPresetPhotos by viewModel.presetPhotos.collectAsState()
+  if (showAddDialog) {
+    AddMemoryDialog(
+      strings = strings,
+      currentLanguage = currentLanguage,
+      presetPhotos = dynamicPresetPhotos,
+      onDismiss = { showAddDialog = false },
+      onSaveMemory = { title, dateText, photoUri, note, location, mediaType, videoUri, cloudinaryPublicId, cloudinaryUrl, isCloudinaryStored, fileSizeFormatted, durationSeconds, privacyLevel ->
+        viewModel.addSharedMemory(
+          title = title,
+          dateText = dateText,
+          photoUri = photoUri,
+          note = note,
+          location = location,
+          mediaType = mediaType,
+          videoUri = videoUri,
+          cloudinaryPublicId = cloudinaryPublicId,
+          cloudinaryUrl = cloudinaryUrl,
+          isCloudinaryStored = isCloudinaryStored,
+          fileSizeFormatted = fileSizeFormatted,
+          durationSeconds = durationSeconds,
+          privacyLevel = privacyLevel
+        )
+        showAddDialog = false
+      }
+    )
+  }
 
-    // Detail Dialog with full video playback, Cloudinary info & Permissions
-    selectedDetail?.let { memory ->
-      val isAuthor = viewModel.isCurrentUserAuthor(memory)
-      MemoryDetailDialog(
-        memory = memory,
-        isAuthor = isAuthor,
-        strings = strings,
-        currentLanguage = currentLanguage,
-        onDismiss = { viewModel.closeMemoryDetail() },
-        onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) },
-        onEdit = {
-          viewModel.closeMemoryDetail()
-          memoryToEdit = memory
-        },
-        onDelete = {
-          viewModel.deleteSharedMemory(memory.id)
-        }
-      )
-    }
+  // Edit Memory Dialog (Author only)
+  if (memoryToEdit != null) {
+    EditMemoryDialog(
+      memory = memoryToEdit!!,
+      isEnglish = isEnglish,
+      onDismiss = { memoryToEdit = null },
+      onSave = { updated ->
+        viewModel.updateSharedMemory(updated)
+        memoryToEdit = null
+      }
+    )
+  }
+
+  // Detail Dialog with full video playback, Cloudinary info & Permissions
+  selectedDetail?.let { memory ->
+    val isAuthor = viewModel.isCurrentUserAuthor(memory)
+    MemoryDetailDialog(
+      memory = memory,
+      isAuthor = isAuthor,
+      strings = strings,
+      currentLanguage = currentLanguage,
+      onDismiss = { viewModel.closeMemoryDetail() },
+      onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) },
+      onEdit = {
+        viewModel.closeMemoryDetail()
+        memoryToEdit = memory
+      },
+      onDelete = {
+        viewModel.deleteSharedMemory(memory.id)
+      }
+    )
   }
 }
 
@@ -350,171 +294,215 @@ private fun MemoriesHeader(
   totalCount: Int,
   selectedFilter: String,
   onFilterChanged: (String) -> Unit,
-  onAddClick: () -> Unit
+  onAddClick: () -> Unit,
+  isCoupled: Boolean = false,
+  isEnglish: Boolean = false,
+  onOpenPairing: () -> Unit = {}
 ) {
   Column(
     modifier = Modifier
       .fillMaxWidth()
       .padding(bottom = 6.dp)
   ) {
-    // Glass Banner Header with Cloudinary badge
+    // 1. Sleek Modern Romantic Hero Card
     Surface(
-      shape = RoundedCornerShape(24.dp),
-      color = Color.White.copy(alpha = 0.92f),
-      shadowElevation = 4.dp,
-      modifier = Modifier
-        .fillMaxWidth()
-        .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(24.dp))
+      shape = RoundedCornerShape(22.dp),
+      color = Color.White.copy(alpha = 0.98f),
+      shadowElevation = 3.dp,
+      border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFFD1DC)),
+      modifier = Modifier.fillMaxWidth()
     ) {
-      Box(
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
           .fillMaxWidth()
-          .background(
-            Brush.horizontalGradient(
-              colors = listOf(
-                Color(0xFFFFF0F5),
-                Color(0xFFFFE4EC),
-                Color(0xFFFFF5F8)
-              )
-            )
-          )
-          .padding(18.dp)
+          .padding(horizontal = 16.dp, vertical = 14.dp)
       ) {
-        Column {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+          Box(
+            modifier = Modifier
+              .size(44.dp)
+              .clip(CircleShape)
+              .background(
+                Brush.linearGradient(
+                  listOf(Color(0xFFFF80AB), Color(0xFFFF2D75))
+                )
+              ),
+            contentAlignment = Alignment.Center
           ) {
-            Column(modifier = Modifier.weight(1f)) {
-              Text(
-                text = strings.memoryAlbumTitle,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF880E4F)
-              )
-              Spacer(modifier = Modifier.height(3.dp))
-              Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                  imageVector = Icons.Default.CloudDone,
-                  contentDescription = null,
-                  tint = Color(0xFF00897B),
-                  modifier = Modifier.size(13.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                  text = "Lưu trữ đám mây Cloudinary • Phân quyền 1-1",
-                  fontSize = 11.5.sp,
-                  fontWeight = FontWeight.SemiBold,
-                  color = Color(0xFF00695C)
-                )
-              }
-            }
-
-            // Media Count Badge
-            Surface(
-              shape = RoundedCornerShape(16.dp),
-              color = Color(0xFFFF2D75).copy(alpha = 0.12f),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF2D75).copy(alpha = 0.3f))
-            ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Default.PhotoLibrary,
-                  contentDescription = null,
-                  tint = Color(0xFFFF2D75),
-                  modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                  text = "$totalCount",
-                  fontWeight = FontWeight.Bold,
-                  fontSize = 14.sp,
-                  color = Color(0xFFFF2D75)
-                )
-              }
-            }
+            Icon(
+              imageVector = Icons.Default.PhotoLibrary,
+              contentDescription = null,
+              tint = Color.White,
+              modifier = Modifier.size(22.dp)
+            )
           }
 
-          Spacer(modifier = Modifier.height(14.dp))
+          Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(
+                text = if (isEnglish) "Memories" else "Kho Kỷ Niệm",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF880E4F)
+              )
+              Spacer(modifier = Modifier.width(6.dp))
+              Surface(
+                shape = RoundedCornerShape(50.dp),
+                color = Color(0xFFFFF0F5),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB3C6))
+              ) {
+                Text(
+                  text = "$totalCount",
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color(0xFFE91E63),
+                  modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                )
+              }
+            }
 
-          // Filter Chips Row (Permissions & Categories)
-          Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .horizontalScroll(rememberScrollState())
-          ) {
-            FilterChip(
-              selected = selectedFilter == "all",
-              onClick = { onFilterChanged("all") },
-              label = { Text("Tất cả", fontSize = 12.sp) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFFFF2D75),
-                selectedLabelColor = Color.White
-              ),
-              shape = RoundedCornerShape(20.dp)
-            )
+            Spacer(modifier = Modifier.height(2.dp))
 
-            FilterChip(
-              selected = selectedFilter == "couple",
-              onClick = { onFilterChanged("couple") },
-              label = { Text("💑 Chỉ 2 người", fontSize = 12.sp) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFFE91E63),
-                selectedLabelColor = Color.White
-              ),
-              shape = RoundedCornerShape(20.dp)
-            )
-
-            FilterChip(
-              selected = selectedFilter == "mine",
-              onClick = { onFilterChanged("mine") },
-              label = { Text("👤 Của tôi", fontSize = 12.sp) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFF8E24AA),
-                selectedLabelColor = Color.White
-              ),
-              shape = RoundedCornerShape(20.dp)
-            )
-
-            FilterChip(
-              selected = selectedFilter == "partner",
-              onClick = { onFilterChanged("partner") },
-              label = { Text("💕 Của người ấy", fontSize = 12.sp) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFFD81B60),
-                selectedLabelColor = Color.White
-              ),
-              shape = RoundedCornerShape(20.dp)
-            )
-
-            FilterChip(
-              selected = selectedFilter == "video",
-              onClick = { onFilterChanged("video") },
-              label = { Text("🎬 Video", fontSize = 12.sp) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFF00897B),
-                selectedLabelColor = Color.White
-              ),
-              shape = RoundedCornerShape(20.dp)
-            )
-
-            FilterChip(
-              selected = selectedFilter == "fav",
-              onClick = { onFilterChanged("fav") },
-              label = { Text("⭐ Yêu thích", fontSize = 12.sp) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFFFFB300),
-                selectedLabelColor = Color(0xFF3E2723)
-              ),
-              shape = RoundedCornerShape(20.dp)
+            Text(
+              text = if (isCoupled) {
+                if (isEnglish) "Cloud Sync • Real-Time Couple" else "Đồng bộ đám mây • Ghép đôi 1-1"
+              } else {
+                if (isEnglish) "Local Storage • Device Only" else "Lưu trữ máy • Ngoại tuyến"
+              },
+              fontSize = 11.5.sp,
+              color = if (isCoupled) Color(0xFF00897B) else Color(0xFF7E57C2),
+              fontWeight = FontWeight.SemiBold
             )
           }
         }
       }
+    }
+
+    // 2. Offline Pairing Prompt Banner (If single/offline)
+    if (!isCoupled) {
+      Spacer(modifier = Modifier.height(10.dp))
+      Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = Color(0xFFFFF0F5),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCDD2)),
+        shadowElevation = 1.dp,
+        modifier = Modifier
+          .fillMaxWidth()
+          .clickable { onOpenPairing() }
+      ) {
+        Row(
+          modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f)
+          ) {
+            Icon(
+              imageVector = Icons.Default.Favorite,
+              contentDescription = null,
+              tint = Color(0xFFE91E63),
+              modifier = Modifier.size(17.dp)
+            )
+            Text(
+              text = if (isEnglish) "Offline Mode: Stored on device. Tap to Pair 1-1."
+                     else "Chế độ Ngoại Tuyến: Kỷ niệm lưu trên máy. Chạm để Ghép đôi 1-1.",
+              fontSize = 12.sp,
+              fontWeight = FontWeight.SemiBold,
+              color = Color(0xFFC2185B)
+            )
+          }
+          Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = Color(0xFFE91E63),
+            modifier = Modifier.size(16.dp)
+          )
+        }
+      }
+    }
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // 3. Filter Chips Row (Permissions & Categories)
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      modifier = Modifier
+        .fillMaxWidth()
+        .horizontalScroll(rememberScrollState())
+    ) {
+      FilterChip(
+        selected = selectedFilter == "all",
+        onClick = { onFilterChanged("all") },
+        label = { Text(if (isEnglish) "✨ All" else "✨ Tất cả", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = Color(0xFFFF2D75),
+          selectedLabelColor = Color.White
+        ),
+        shape = RoundedCornerShape(20.dp)
+      )
+
+      FilterChip(
+        selected = selectedFilter == "couple",
+        onClick = { onFilterChanged("couple") },
+        label = { Text(if (isEnglish) "💑 Couple Only" else "💑 Chỉ 2 người", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = Color(0xFFE91E63),
+          selectedLabelColor = Color.White
+        ),
+        shape = RoundedCornerShape(20.dp)
+      )
+
+      FilterChip(
+        selected = selectedFilter == "mine",
+        onClick = { onFilterChanged("mine") },
+        label = { Text(if (isEnglish) "👤 Mine" else "👤 Của tôi", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = Color(0xFF8E24AA),
+          selectedLabelColor = Color.White
+        ),
+        shape = RoundedCornerShape(20.dp)
+      )
+
+      FilterChip(
+        selected = selectedFilter == "partner",
+        onClick = { onFilterChanged("partner") },
+        label = { Text(if (isEnglish) "💕 Partner" else "💕 Của người ấy", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = Color(0xFFD81B60),
+          selectedLabelColor = Color.White
+        ),
+        shape = RoundedCornerShape(20.dp)
+      )
+
+      FilterChip(
+        selected = selectedFilter == "video",
+        onClick = { onFilterChanged("video") },
+        label = { Text(if (isEnglish) "🎬 Video" else "🎬 Video", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = Color(0xFF00897B),
+          selectedLabelColor = Color.White
+        ),
+        shape = RoundedCornerShape(20.dp)
+      )
+
+      FilterChip(
+        selected = selectedFilter == "fav",
+        onClick = { onFilterChanged("fav") },
+        label = { Text(if (isEnglish) "⭐ Favorites" else "⭐ Yêu thích", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = Color(0xFFFFB300),
+          selectedLabelColor = Color(0xFF3E2723)
+        ),
+        shape = RoundedCornerShape(20.dp)
+      )
     }
   }
 }
@@ -523,20 +511,21 @@ private fun MemoriesHeader(
 private fun MemoryCardItem(
   memory: SharedMemoryEntity,
   isAuthor: Boolean,
+  isEnglish: Boolean = false,
   onClick: () -> Unit,
   onToggleFavorite: () -> Unit
 ) {
   val isVideo = memory.mediaType == "VIDEO"
 
   Card(
-    shape = RoundedCornerShape(18.dp),
-    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    shape = RoundedCornerShape(20.dp),
+    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
     colors = CardDefaults.cardColors(containerColor = Color.White),
     modifier = Modifier
       .fillMaxWidth()
-      .aspectRatio(0.85f)
-      .clip(RoundedCornerShape(18.dp))
-      .border(1.dp, Color(0xFFFFE0E9), RoundedCornerShape(18.dp))
+      .aspectRatio(0.82f)
+      .clip(RoundedCornerShape(20.dp))
+      .border(1.2.dp, Color(0xFFFFE0E9), RoundedCornerShape(20.dp))
       .clickable { onClick() }
       .testTag("memory_card_${memory.id}")
   ) {
@@ -549,38 +538,37 @@ private fun MemoryCardItem(
         modifier = Modifier.fillMaxSize()
       )
 
-      // Top Shadow Gradient
+      // Top Shadow Gradient for readable badges
       Box(
         modifier = Modifier
           .fillMaxWidth()
-          .height(52.dp)
+          .height(56.dp)
           .align(Alignment.TopCenter)
           .background(
             Brush.verticalGradient(
-              colors = listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)
+              colors = listOf(Color.Black.copy(alpha = 0.55f), Color.Transparent)
             )
           )
       )
 
-      // Top Badges Row (Cloudinary badge & Video badge & Favorite)
+      // Top Badges Row (Cloud/Local badge & Video badge & Favorite)
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(6.dp)
+          .padding(8.dp)
           .align(Alignment.TopStart),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        // Left badges: Cloud & Video
+        // Left badges: Storage & Video
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-          // Cloudinary badge
           Surface(
-            shape = RoundedCornerShape(6.dp),
-            color = Color.Black.copy(alpha = 0.5f)
+            shape = RoundedCornerShape(8.dp),
+            color = Color.Black.copy(alpha = 0.55f)
           ) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
               Icon(
                 imageVector = Icons.Default.Cloud,
@@ -591,7 +579,7 @@ private fun MemoryCardItem(
               Spacer(modifier = Modifier.width(3.dp))
               Text(
                 text = "Cloud",
-                fontSize = 9.sp,
+                fontSize = 9.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
               )
@@ -600,12 +588,12 @@ private fun MemoryCardItem(
 
           if (isVideo) {
             Surface(
-              shape = RoundedCornerShape(6.dp),
-              color = Color(0xFF00897B).copy(alpha = 0.85f)
+              shape = RoundedCornerShape(8.dp),
+              color = Color(0xFF00897B).copy(alpha = 0.88f)
             ) {
               Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
               ) {
                 Icon(
                   imageVector = Icons.Default.Movie,
@@ -614,10 +602,10 @@ private fun MemoryCardItem(
                   modifier = Modifier.size(10.dp)
                 )
                 if (memory.durationSeconds > 0) {
-                  Spacer(modifier = Modifier.width(2.dp))
+                  Spacer(modifier = Modifier.width(3.dp))
                   Text(
                     text = "${memory.durationSeconds}s",
-                    fontSize = 9.sp,
+                    fontSize = 9.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                   )
@@ -627,12 +615,12 @@ private fun MemoryCardItem(
           }
         }
 
-        // Favorite Heart Button
+        // Favorite Heart Button with glassmorphism ring
         IconButton(
           onClick = onToggleFavorite,
           modifier = Modifier
             .size(32.dp)
-            .background(Color.Black.copy(alpha = 0.35f), CircleShape)
+            .background(Color.Black.copy(alpha = 0.38f), CircleShape)
         ) {
           Icon(
             imageVector = if (memory.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -648,7 +636,7 @@ private fun MemoryCardItem(
         Box(
           modifier = Modifier
             .align(Alignment.Center)
-            .size(44.dp)
+            .size(46.dp)
             .background(Color.Black.copy(alpha = 0.55f), CircleShape)
             .border(1.5.dp, Color.White, CircleShape),
           contentAlignment = Alignment.Center
@@ -657,12 +645,12 @@ private fun MemoryCardItem(
             imageVector = Icons.Default.PlayArrow,
             contentDescription = "Play Video",
             tint = Color.White,
-            modifier = Modifier.size(26.dp)
+            modifier = Modifier.size(28.dp)
           )
         }
       }
 
-      // Bottom Gradient Scrim for readable title & info
+      // Bottom Gradient Scrim for crystal clear text info
       Box(
         modifier = Modifier
           .fillMaxWidth()
@@ -671,12 +659,12 @@ private fun MemoryCardItem(
             Brush.verticalGradient(
               colors = listOf(
                 Color.Transparent,
-                Color.Black.copy(alpha = 0.6f),
-                Color.Black.copy(alpha = 0.92f)
+                Color.Black.copy(alpha = 0.65f),
+                Color.Black.copy(alpha = 0.94f)
               )
             )
           )
-          .padding(horizontal = 10.dp, vertical = 8.dp)
+          .padding(horizontal = 10.dp, vertical = 9.dp)
       ) {
         Column {
           Text(
@@ -711,17 +699,17 @@ private fun MemoryCardItem(
               )
             }
 
-            // Author Badge (Phân quyền)
+            // Author Badge (Role & Permission)
             Surface(
-              shape = RoundedCornerShape(4.dp),
-              color = if (isAuthor) Color(0xFF8E24AA).copy(alpha = 0.7f) else Color(0xFFD81B60).copy(alpha = 0.7f)
+              shape = RoundedCornerShape(5.dp),
+              color = if (isAuthor) Color(0xFF8E24AA).copy(alpha = 0.75f) else Color(0xFFD81B60).copy(alpha = 0.75f)
             ) {
               Text(
-                text = if (isAuthor) "Bạn" else memory.authorName,
-                fontSize = 9.sp,
+                text = if (isAuthor) (if (isEnglish) "You" else "Bạn") else memory.authorName.ifBlank { if (isEnglish) "Partner" else "Người ấy" },
+                fontSize = 9.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
               )
             }
           }
@@ -735,24 +723,26 @@ private fun MemoryCardItem(
 private fun EmptyMemoriesCard(
   strings: com.example.ui.util.AppStrings,
   selectedFilter: String,
-  onAddClick: () -> Unit
+  onAddClick: () -> Unit,
+  isEnglish: Boolean = false
 ) {
   Surface(
-    shape = RoundedCornerShape(24.dp),
-    color = Color.White.copy(alpha = 0.9f),
+    shape = RoundedCornerShape(26.dp),
+    color = Color.White.copy(alpha = 0.98f),
     modifier = Modifier
       .fillMaxWidth()
-      .padding(vertical = 32.dp)
-      .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(24.dp))
+      .padding(vertical = 24.dp)
+      .border(1.2.dp, Color(0xFFFFDDE6), RoundedCornerShape(26.dp)),
+    shadowElevation = 2.dp
   ) {
     Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.padding(28.dp)
+      modifier = Modifier.padding(26.dp)
     ) {
       Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-          .size(72.dp)
+          .size(76.dp)
           .background(Color(0xFFFFF0F5), CircleShape)
           .border(2.dp, Color(0xFFFFB3C6), CircleShape)
       ) {
@@ -764,7 +754,7 @@ private fun EmptyMemoriesCard(
           },
           contentDescription = null,
           tint = Color(0xFFFF2D75),
-          modifier = Modifier.size(36.dp)
+          modifier = Modifier.size(38.dp)
         )
       }
 
@@ -772,10 +762,10 @@ private fun EmptyMemoriesCard(
 
       Text(
         text = when (selectedFilter) {
-          "fav" -> "Chưa có ảnh/video yêu thích nào"
-          "video" -> "Chưa có video kỷ niệm nào trên Cloudinary"
-          "mine" -> "Bạn chưa đăng kỷ niệm nào"
-          "partner" -> "Người ấy chưa đăng kỷ niệm nào"
+          "fav" -> if (isEnglish) "No favorite memories yet" else "Chưa có ảnh/video yêu thích nào"
+          "video" -> if (isEnglish) "No memory videos yet" else "Chưa có video kỷ niệm nào"
+          "mine" -> if (isEnglish) "You haven't posted any memories yet" else "Bạn chưa đăng kỷ niệm nào"
+          "partner" -> if (isEnglish) "Partner hasn't posted any memories yet" else "Người ấy chưa đăng kỷ niệm nào"
           else -> strings.memoryEmptyTitle
         },
         style = MaterialTheme.typography.titleMedium,
@@ -787,22 +777,28 @@ private fun EmptyMemoriesCard(
       Spacer(modifier = Modifier.height(6.dp))
 
       Text(
-        text = "Lưu lại những giây phút ngọt ngào, tải lên Cloudinary an toàn và cùng nhau nhìn lại!",
+        text = if (isEnglish) "Capture your sweet moments, keep them safe and cherish them forever!"
+               else "Lưu lại những giây phút ngọt ngào, lưu trữ an toàn và cùng nhau nhìn lại!",
         style = MaterialTheme.typography.bodySmall,
         color = Color(0xFF6A1B4D).copy(alpha = 0.8f),
         textAlign = TextAlign.Center
       )
 
-      Spacer(modifier = Modifier.height(20.dp))
+      Spacer(modifier = Modifier.height(18.dp))
 
       Button(
         onClick = onAddClick,
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
       ) {
-        Icon(imageVector = Icons.Default.Add, contentDescription = null)
+        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text = strings.btnAddMemory, fontWeight = FontWeight.Bold)
+        Text(
+          text = if (isEnglish) "Add New Memory" else strings.btnAddMemory,
+          fontWeight = FontWeight.Bold,
+          fontSize = 13.5.sp
+        )
       }
     }
   }
@@ -854,51 +850,22 @@ private fun AddMemoryDialog(
   var validationResult by remember { mutableStateOf<MediaValidationResult?>(null) }
   var isUploadingToCloudinary by remember { mutableStateOf(false) }
 
-  // System Photo Picker launcher
-  val photoPickerLauncher = rememberLauncherForActivityResult(
+  // Unified System Media Picker launcher (Image and Video)
+  val filePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.PickVisualMedia()
   ) { uri: Uri? ->
     uri?.let {
-      val validation = CloudinaryStorageService.validateMedia(context, it, isVideo = false)
+      val mimeType = context.contentResolver.getType(it) ?: ""
+      val isVid = mimeType.startsWith("video/") || it.toString().lowercase().let { u ->
+        u.endsWith(".mp4") || u.endsWith(".mkv") || u.endsWith(".mov") || u.endsWith(".webm")
+      }
+      val validation = CloudinaryStorageService.validateMedia(context, it, isVideo = isVid)
       validationResult = validation
       if (validation.isValid) {
         val persistentPath = copyUriToInternalStorage(context, it)
         selectedMediaUri = persistentPath ?: it.toString()
         rawSelectedUri = it
-        mediaType = "IMAGE"
-      }
-    }
-  }
-
-  // System Video Picker launcher
-  val videoPickerLauncher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.PickVisualMedia()
-  ) { uri: Uri? ->
-    uri?.let {
-      val validation = CloudinaryStorageService.validateMedia(context, it, isVideo = true)
-      validationResult = validation
-      if (validation.isValid) {
-        selectedMediaUri = it.toString()
-        rawSelectedUri = it
-        mediaType = "VIDEO"
-      }
-    }
-  }
-
-  // Camera capture launcher (TakePicturePreview)
-  val cameraLauncher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.TakePicturePreview()
-  ) { bitmap: Bitmap? ->
-    bitmap?.let {
-      val savedPath = saveBitmapToInternalStorage(context, it)
-      if (savedPath != null) {
-        selectedMediaUri = savedPath
-        rawSelectedUri = Uri.parse(savedPath)
-        mediaType = "IMAGE"
-        validationResult = MediaValidationResult(
-          isValid = true,
-          formattedSize = "Chụp trực tiếp"
-        )
+        mediaType = if (isVid) "VIDEO" else "IMAGE"
       }
     }
   }
@@ -940,13 +907,13 @@ private fun AddMemoryDialog(
             Spacer(modifier = Modifier.width(10.dp))
             Column {
               Text(
-                text = "Tải Kỷ Niệm Lên Cloudinary",
+                text = if (currentLanguage == AppLanguage.EN) "Save Sweet Memory" else "Lưu Trữ Kỷ Niệm",
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp,
                 color = Color(0xFF880E4F)
               )
               Text(
-                text = "Lưu trữ đám mây • Giới hạn dung lượng & phân quyền",
+                text = if (currentLanguage == AppLanguage.EN) "Cherish unforgettable moments together" else "Lưu giữ an toàn từng khoảnh khắc đáng nhớ",
                 fontSize = 11.sp,
                 color = Color(0xFF6A1B4D).copy(alpha = 0.75f)
               )
@@ -960,42 +927,13 @@ private fun AddMemoryDialog(
           }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Limits Banner (User Request: "upload ảnh hoặc video giới hạn")
-        Surface(
-          shape = RoundedCornerShape(12.dp),
-          color = Color(0xFFE0F2F1),
-          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF80CBC4)),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Default.Info,
-              contentDescription = null,
-              tint = Color(0xFF00796B),
-              modifier = Modifier.size(15.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-              text = "Giới hạn: Ảnh ≤ 10MB • Video ≤ 60s / 50MB (Lưu Cloudinary)",
-              fontSize = 11.sp,
-              fontWeight = FontWeight.SemiBold,
-              color = Color(0xFF004D40)
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Selected Media Preview (Photo or Video indicator)
         Box(
           modifier = Modifier
             .fillMaxWidth()
-            .height(170.dp)
+            .height(150.dp)
             .clip(RoundedCornerShape(18.dp))
             .border(2.dp, Color(0xFFFFC0D3), RoundedCornerShape(18.dp))
             .background(Color(0xFF1E1E24))
@@ -1010,18 +948,19 @@ private fun AddMemoryDialog(
                   imageVector = Icons.Default.VideoFile,
                   contentDescription = null,
                   tint = Color(0xFF80DEEA),
-                  modifier = Modifier.size(54.dp)
+                  modifier = Modifier.size(48.dp)
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                  text = "Video đã chọn • Sẵn sàng tải lên Cloudinary",
+                  text = if (currentLanguage == AppLanguage.EN) "Selected video • Ready to store" else "Video đã chọn • Sẵn sàng lưu trữ",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color.White
                 )
                 if (validationResult != null && validationResult!!.durationSeconds > 0) {
                   Text(
-                    text = "Thời lượng: ${validationResult!!.durationSeconds} giây • Dung lượng: ${validationResult!!.formattedSize}",
+                    text = if (currentLanguage == AppLanguage.EN) "Duration: ${validationResult!!.durationSeconds}s • Size: ${validationResult!!.formattedSize}"
+                           else "Thời lượng: ${validationResult!!.durationSeconds}s • Dung lượng: ${validationResult!!.formattedSize}",
                     fontSize = 11.sp,
                     color = Color(0xFFB2EBF2)
                   )
@@ -1057,7 +996,7 @@ private fun AddMemoryDialog(
               )
               Spacer(modifier = Modifier.width(4.dp))
               Text(
-                text = if (mediaType == "VIDEO") "Video (Max 60s)" else "Ảnh HD Cloudinary",
+                text = if (mediaType == "VIDEO") "Video" else "HD Cloud",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -1068,7 +1007,7 @@ private fun AddMemoryDialog(
 
         // Validation Error / Status Feedback
         validationResult?.let { valRes ->
-          Spacer(modifier = Modifier.height(8.dp))
+          Spacer(modifier = Modifier.height(6.dp))
           if (!valRes.isValid) {
             Surface(
               shape = RoundedCornerShape(10.dp),
@@ -1078,18 +1017,18 @@ private fun AddMemoryDialog(
             ) {
               Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
               ) {
                 Icon(
                   imageVector = Icons.Default.Close,
                   contentDescription = null,
                   tint = Color(0xFFD32F2F),
-                  modifier = Modifier.size(16.dp)
+                  modifier = Modifier.size(15.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = valRes.errorMessage ?: "Tập tin không hợp lệ!",
-                  fontSize = 11.5.sp,
+                  text = valRes.errorMessage ?: (if (currentLanguage == AppLanguage.EN) "Invalid file!" else "Tập tin không hợp lệ!"),
+                  fontSize = 11.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color(0xFFC62828)
                 )
@@ -1114,8 +1053,8 @@ private fun AddMemoryDialog(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Dung lượng: ${valRes.formattedSize} • Đạt tiêu chuẩn Cloudinary ✓",
-                  fontSize = 11.5.sp,
+                  text = if (currentLanguage == AppLanguage.EN) "Size: ${valRes.formattedSize} • Ready ✓" else "Dung lượng: ${valRes.formattedSize} • Sẵn sàng ✓",
+                  fontSize = 11.sp,
                   fontWeight = FontWeight.SemiBold,
                   color = Color(0xFF1B5E20)
                 )
@@ -1124,51 +1063,35 @@ private fun AddMemoryDialog(
           }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // Buttons: Pick Photo, Capture Photo, Pick Video
-        Row(
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-          modifier = Modifier.fillMaxWidth()
+        // Single Unified File Upload Button
+        Button(
+          onClick = {
+            filePickerLauncher.launch(
+              PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+            )
+          },
+          shape = RoundedCornerShape(14.dp),
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp)
+            .testTag("btn_upload_media_file")
         ) {
-          OutlinedButton(
-            onClick = {
-              photoPickerLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-              )
-            },
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.weight(1f).testTag("btn_pick_photo")
-          ) {
-            Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(15.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Chọn ảnh", fontSize = 11.5.sp)
-          }
-
-          OutlinedButton(
-            onClick = {
-              videoPickerLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
-              )
-            },
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF00796B)),
-            modifier = Modifier.weight(1f).testTag("btn_pick_video")
-          ) {
-            Icon(Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Chọn video", fontSize = 11.5.sp)
-          }
-
-          OutlinedButton(
-            onClick = { cameraLauncher.launch(null) },
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.weight(1f).testTag("btn_camera_photo")
-          ) {
-            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(15.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Chụp ảnh", fontSize = 11.5.sp)
-          }
+          Icon(
+            imageVector = Icons.Default.CloudDone,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(18.dp)
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+            text = if (currentLanguage == AppLanguage.EN) "📁 Upload File (Photo or Video)" else "📁 Tải file lên (Ảnh hoặc Video)",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+          )
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -1176,7 +1099,7 @@ private fun AddMemoryDialog(
         // Preset Thumbnails Row (if photo and presets available)
         if (mediaType == "IMAGE" && presetPhotos.isNotEmpty()) {
           Text(
-            text = "Hoặc chọn nhanh ảnh mẫu lãng mạn:",
+            text = if (currentLanguage == AppLanguage.EN) "Or choose from romantic sample photos:" else "Hoặc chọn nhanh ảnh mẫu lãng mạn:",
             fontSize = 11.5.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF6A1B4D).copy(alpha = 0.8f)
@@ -1192,7 +1115,7 @@ private fun AddMemoryDialog(
               val isSelected = selectedMediaUri == url
               Box(
                 modifier = Modifier
-                  .size(52.dp)
+                  .size(50.dp)
                   .clip(RoundedCornerShape(12.dp))
                   .border(
                     width = if (isSelected) 2.5.dp else 1.dp,
@@ -1202,7 +1125,7 @@ private fun AddMemoryDialog(
                   .clickable {
                     selectedMediaUri = url
                     rawSelectedUri = null
-                    validationResult = MediaValidationResult(isValid = true, formattedSize = "Kho ảnh mẫu")
+                    validationResult = MediaValidationResult(isValid = true, formattedSize = if (currentLanguage == AppLanguage.EN) "Preset" else "Kho ảnh mẫu")
                   }
               ) {
                 AsyncImage(
@@ -1214,15 +1137,15 @@ private fun AddMemoryDialog(
               }
             }
           }
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(10.dp))
         }
 
         // Title Input
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Tiêu đề khoảnh khắc") },
-          placeholder = { Text("Ví dụ: Hoàng hôn bên bờ biển...") },
+          label = { Text(if (currentLanguage == AppLanguage.EN) "Moment Title" else "Tiêu đề khoảnh khắc") },
+          placeholder = { Text(if (currentLanguage == AppLanguage.EN) "e.g., Sunset by the beach..." else "Ví dụ: Hoàng hôn bên bờ biển...") },
           singleLine = true,
           shape = RoundedCornerShape(14.dp),
           modifier = Modifier.fillMaxWidth().testTag("input_memory_title"),
@@ -1234,48 +1157,30 @@ private fun AddMemoryDialog(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Date & Location in a Row
-        Row(
-          horizontalArrangement = Arrangement.spacedBy(10.dp),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          OutlinedTextField(
-            value = dateText,
-            onValueChange = { dateText = it },
-            label = { Text("Ngày kỷ niệm") },
-            singleLine = true,
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.weight(1f).testTag("input_memory_date"),
-            colors = OutlinedTextFieldDefaults.colors(
-              focusedBorderColor = Color(0xFFFF2D75),
-              unfocusedBorderColor = Color(0xFFFFDDE6)
-            )
+        // Date input (Location removed per user request)
+        OutlinedTextField(
+          value = dateText,
+          onValueChange = { dateText = it },
+          label = { Text(if (currentLanguage == AppLanguage.EN) "Date (dd/MM/yyyy)" else "Ngày kỷ niệm") },
+          singleLine = true,
+          shape = RoundedCornerShape(14.dp),
+          modifier = Modifier.fillMaxWidth().testTag("input_memory_date"),
+          colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color(0xFFFF2D75),
+            unfocusedBorderColor = Color(0xFFFFDDE6)
           )
-
-          OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Địa điểm") },
-            placeholder = { Text("Hà Nội") },
-            singleLine = true,
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.weight(1f).testTag("input_memory_location"),
-            colors = OutlinedTextFieldDefaults.colors(
-              focusedBorderColor = Color(0xFFFF2D75),
-              unfocusedBorderColor = Color(0xFFFFDDE6)
-            )
-          )
-        }
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Note Input
+        // Note Input (Supports long multiline notes)
         OutlinedTextField(
           value = note,
           onValueChange = { note = it },
-          label = { Text("Lời nhắn & cảm xúc yêu thương") },
-          placeholder = { Text("Ghi lại cảm xúc ngọt ngào khi ở bên người ấy...") },
-          maxLines = 3,
+          label = { Text(if (currentLanguage == AppLanguage.EN) "Loving Message & Thoughts" else "Lời nhắn & cảm xúc yêu thương") },
+          placeholder = { Text(if (currentLanguage == AppLanguage.EN) "Write down your sweet thoughts and unforgettable emotions..." else "Ghi lại cảm xúc ngọt ngào khi ở bên người ấy...") },
+          minLines = 3,
+          maxLines = 8,
           shape = RoundedCornerShape(14.dp),
           modifier = Modifier.fillMaxWidth().testTag("input_memory_note"),
           colors = OutlinedTextFieldDefaults.colors(
@@ -1286,9 +1191,9 @@ private fun AddMemoryDialog(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Phân Quyền (Permissions Section - User Request: "phân quyền cho tôi đầy đủ nhất có thể")
+        // Privacy Options (Only 2 modes: Couple Only & Private)
         Text(
-          text = "Phân Quyền Xem & Riêng Tư:",
+          text = if (currentLanguage == AppLanguage.EN) "Privacy & Viewing Mode:" else "Quyền Xem & Riêng Tư:",
           fontSize = 12.5.sp,
           fontWeight = FontWeight.Bold,
           color = Color(0xFF880E4F)
@@ -1296,12 +1201,12 @@ private fun AddMemoryDialog(
         Spacer(modifier = Modifier.height(6.dp))
 
         Row(
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
           modifier = Modifier.fillMaxWidth()
         ) {
           // Couple Only
           Surface(
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(14.dp),
             color = if (privacyLevel == "COUPLE_ONLY") Color(0xFFFCE4EC) else Color(0xFFFAFAFA),
             border = androidx.compose.foundation.BorderStroke(
               width = if (privacyLevel == "COUPLE_ONLY") 1.8.dp else 1.dp,
@@ -1313,27 +1218,32 @@ private fun AddMemoryDialog(
           ) {
             Column(
               horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+              modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
             ) {
               Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
                 tint = if (privacyLevel == "COUPLE_ONLY") Color(0xFFE91E63) else Color.Gray,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(20.dp)
               )
-              Spacer(modifier = Modifier.height(3.dp))
+              Spacer(modifier = Modifier.height(4.dp))
               Text(
-                text = "Chỉ 2 người",
-                fontSize = 11.sp,
+                text = if (currentLanguage == AppLanguage.EN) "Couple Only" else "Chỉ 2 người",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (privacyLevel == "COUPLE_ONLY") Color(0xFF880E4F) else Color.Gray
+              )
+              Text(
+                text = if (currentLanguage == AppLanguage.EN) "Visible to you & partner" else "Chỉ bạn và người thương thấy",
+                fontSize = 10.sp,
+                color = Color.Gray
               )
             }
           }
 
-          // Private
+          // Private / Just Me
           Surface(
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(14.dp),
             color = if (privacyLevel == "PRIVATE") Color(0xFFEDE7F6) else Color(0xFFFAFAFA),
             border = androidx.compose.foundation.BorderStroke(
               width = if (privacyLevel == "PRIVATE") 1.8.dp else 1.dp,
@@ -1345,52 +1255,25 @@ private fun AddMemoryDialog(
           ) {
             Column(
               horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+              modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
             ) {
               Icon(
                 imageVector = Icons.Default.Lock,
                 contentDescription = null,
                 tint = if (privacyLevel == "PRIVATE") Color(0xFF7E57C2) else Color.Gray,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(20.dp)
               )
-              Spacer(modifier = Modifier.height(3.dp))
+              Spacer(modifier = Modifier.height(4.dp))
               Text(
-                text = "Chỉ mình tôi",
-                fontSize = 11.sp,
+                text = if (currentLanguage == AppLanguage.EN) "Just Me" else "Chỉ mình tôi",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (privacyLevel == "PRIVATE") Color(0xFF4A148C) else Color.Gray
               )
-            }
-          }
-
-          // Public
-          Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = if (privacyLevel == "PUBLIC") Color(0xFFE0F2F1) else Color(0xFFFAFAFA),
-            border = androidx.compose.foundation.BorderStroke(
-              width = if (privacyLevel == "PUBLIC") 1.8.dp else 1.dp,
-              color = if (privacyLevel == "PUBLIC") Color(0xFF00897B) else Color(0xFFE0E0E0)
-            ),
-            modifier = Modifier
-              .weight(1f)
-              .clickable { privacyLevel = "PUBLIC" }
-          ) {
-            Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Default.Public,
-                contentDescription = null,
-                tint = if (privacyLevel == "PUBLIC") Color(0xFF00897B) else Color.Gray,
-                modifier = Modifier.size(18.dp)
-              )
-              Spacer(modifier = Modifier.height(3.dp))
               Text(
-                text = "Công khai",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (privacyLevel == "PUBLIC") Color(0xFF004D40) else Color.Gray
+                text = if (currentLanguage == AppLanguage.EN) "Keep this private" else "Riêng tư cá nhân",
+                fontSize = 10.sp,
+                color = Color.Gray
               )
             }
           }
@@ -1414,7 +1297,7 @@ private fun AddMemoryDialog(
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-              text = "Đang lưu trữ & tải lên Cloudinary... ☁️",
+              text = if (currentLanguage == AppLanguage.EN) "Saving memory safely... ✨" else "Đang lưu trữ kỷ niệm an toàn... ✨",
               fontSize = 13.sp,
               fontWeight = FontWeight.SemiBold,
               color = Color(0xFFE91E63)
@@ -1433,7 +1316,7 @@ private fun AddMemoryDialog(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.weight(1f)
           ) {
-            Text(strings.btnCancel)
+            Text(if (currentLanguage == AppLanguage.EN) "Cancel" else strings.btnCancel)
           }
 
           val canSave = !isUploadingToCloudinary && (validationResult == null || validationResult!!.isValid)
@@ -1493,9 +1376,12 @@ private fun AddMemoryDialog(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.weight(1.2f).testTag("btn_save_memory_submit")
           ) {
-            Icon(imageVector = Icons.Default.Cloud, contentDescription = null, modifier = Modifier.size(16.dp))
+            Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text = "Lưu Cloudinary", fontWeight = FontWeight.Bold)
+            Text(
+              text = if (currentLanguage == AppLanguage.EN) "Save Memory" else "Lưu Kỷ Niệm",
+              fontWeight = FontWeight.Bold
+            )
           }
         }
       }
@@ -1509,6 +1395,7 @@ private fun AddMemoryDialog(
 @Composable
 private fun EditMemoryDialog(
   memory: SharedMemoryEntity,
+  isEnglish: Boolean = false,
   onDismiss: () -> Unit,
   onSave: (SharedMemoryEntity) -> Unit
 ) {
@@ -1520,12 +1407,12 @@ private fun EditMemoryDialog(
 
   Dialog(onDismissRequest = onDismiss) {
     Surface(
-      shape = RoundedCornerShape(24.dp),
+      shape = RoundedCornerShape(26.dp),
       color = Color.White,
       shadowElevation = 10.dp,
       modifier = Modifier
         .fillMaxWidth()
-        .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(24.dp))
+        .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(26.dp))
     ) {
       Column(
         modifier = Modifier
@@ -1541,14 +1428,14 @@ private fun EditMemoryDialog(
             Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF8E24AA))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = "Chỉnh Sửa Kỷ Niệm",
+              text = if (isEnglish) "Edit Memory" else "Chỉnh Sửa Kỷ Niệm",
               fontSize = 17.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF880E4F)
             )
           }
           IconButton(onClick = onDismiss) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
+            Icon(Icons.Default.Close, contentDescription = if (isEnglish) "Close" else "Đóng")
           }
         }
 
@@ -1557,7 +1444,7 @@ private fun EditMemoryDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Tiêu đề") },
+          label = { Text(if (isEnglish) "Title" else "Tiêu đề") },
           singleLine = true,
           shape = RoundedCornerShape(14.dp),
           modifier = Modifier.fillMaxWidth()
@@ -1568,18 +1455,7 @@ private fun EditMemoryDialog(
         OutlinedTextField(
           value = dateText,
           onValueChange = { dateText = it },
-          label = { Text("Ngày kỷ niệm") },
-          singleLine = true,
-          shape = RoundedCornerShape(14.dp),
-          modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        OutlinedTextField(
-          value = location,
-          onValueChange = { location = it },
-          label = { Text("Địa điểm") },
+          label = { Text(if (isEnglish) "Anniversary Date (dd/MM/yyyy)" else "Ngày kỷ niệm") },
           singleLine = true,
           shape = RoundedCornerShape(14.dp),
           modifier = Modifier.fillMaxWidth()
@@ -1590,31 +1466,32 @@ private fun EditMemoryDialog(
         OutlinedTextField(
           value = note,
           onValueChange = { note = it },
-          label = { Text("Ghi chú") },
-          maxLines = 3,
+          label = { Text(if (isEnglish) "Loving Note & Message" else "Ghi chú & Lời nhắn yêu thương") },
+          minLines = 3,
+          maxLines = 8,
           shape = RoundedCornerShape(14.dp),
           modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Text(text = "Quyền xem & Riêng tư:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF880E4F))
+        Text(
+          text = if (isEnglish) "Privacy & Viewing Mode:" else "Quyền xem & Riêng tư:",
+          fontSize = 12.sp,
+          fontWeight = FontWeight.Bold,
+          color = Color(0xFF880E4F)
+        )
         Spacer(modifier = Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
           FilterChip(
             selected = privacyLevel == "COUPLE_ONLY",
             onClick = { privacyLevel = "COUPLE_ONLY" },
-            label = { Text("💑 Chỉ 2 người", fontSize = 11.sp) }
+            label = { Text(if (isEnglish) "💑 Couple Only" else "💑 Chỉ 2 người", fontSize = 11.5.sp) }
           )
           FilterChip(
             selected = privacyLevel == "PRIVATE",
             onClick = { privacyLevel = "PRIVATE" },
-            label = { Text("🔒 Chỉ mình tôi", fontSize = 11.sp) }
-          )
-          FilterChip(
-            selected = privacyLevel == "PUBLIC",
-            onClick = { privacyLevel = "PUBLIC" },
-            label = { Text("🌐 Công khai", fontSize = 11.sp) }
+            label = { Text(if (isEnglish) "🔒 Just Me" else "🔒 Chỉ mình tôi", fontSize = 11.5.sp) }
           )
         }
 
@@ -1625,7 +1502,7 @@ private fun EditMemoryDialog(
           modifier = Modifier.fillMaxWidth()
         ) {
           OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-            Text("Hủy")
+            Text(if (isEnglish) "Cancel" else "Hủy")
           }
           Button(
             onClick = {
@@ -1642,13 +1519,14 @@ private fun EditMemoryDialog(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA)),
             modifier = Modifier.weight(1f)
           ) {
-            Text("Lưu cập nhật")
+            Text(if (isEnglish) "Save Changes" else "Lưu cập nhật")
           }
         }
       }
     }
   }
 }
+
 
 /**
  * Memory Detail Dialog with Video Player, Cloudinary Card & Role-based Permissions
@@ -1866,14 +1744,14 @@ private fun MemoryDetailDialog(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Cloudinary Storage Information Card (User Request: "lưu trữ dữ liệu này bởi cloudinary")
+        // Cloudinary Storage Information Card
         Surface(
-          shape = RoundedCornerShape(14.dp),
+          shape = RoundedCornerShape(16.dp),
           color = Color(0xFFF1F8E9),
           border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC5E1A5)),
           modifier = Modifier.fillMaxWidth()
         ) {
-          Column(modifier = Modifier.padding(12.dp)) {
+          Column(modifier = Modifier.padding(14.dp)) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.SpaceBetween,
@@ -1884,12 +1762,12 @@ private fun MemoryDetailDialog(
                   imageVector = Icons.Default.CloudDone,
                   contentDescription = null,
                   tint = Color(0xFF33691E),
-                  modifier = Modifier.size(16.dp)
+                  modifier = Modifier.size(17.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Lưu Trữ Cloudinary An Toàn",
-                  fontSize = 12.5.sp,
+                  text = if (currentLanguage == AppLanguage.EN) "Secure Cloud Storage" else "Lưu Trữ Đám Mây An Toàn",
+                  fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color(0xFF33691E)
                 )
@@ -1906,9 +1784,9 @@ private fun MemoryDetailDialog(
                 ) {
                   Icon(
                     imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "Copy Link",
+                    contentDescription = if (currentLanguage == AppLanguage.EN) "Copy Link" else "Sao chép link",
                     tint = Color(0xFF33691E),
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(15.dp)
                   )
                 }
               }
@@ -1917,14 +1795,14 @@ private fun MemoryDetailDialog(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-              text = "Public ID: ${memory.cloudinaryPublicId ?: "inlove_asset"}",
-              fontSize = 11.sp,
+              text = "Asset ID: ${memory.cloudinaryPublicId ?: "inlove_asset"}",
+              fontSize = 11.5.sp,
               color = Color(0xFF558B2F)
             )
             if (memory.fileSizeFormatted.isNotBlank()) {
               Text(
-                text = "Dung lượng: ${memory.fileSizeFormatted}",
-                fontSize = 11.sp,
+                text = if (currentLanguage == AppLanguage.EN) "File size: ${memory.fileSizeFormatted}" else "Dung lượng: ${memory.fileSizeFormatted}",
+                fontSize = 11.5.sp,
                 color = Color(0xFF558B2F)
               )
             }
@@ -1933,9 +1811,9 @@ private fun MemoryDetailDialog(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Permissions & Role Notice (User Request: "phân quyền cho tôi đầy đủ nhất có thể")
+        // Permissions & Role Notice
         Surface(
-          shape = RoundedCornerShape(12.dp),
+          shape = RoundedCornerShape(14.dp),
           color = if (isAuthor) Color(0xFFEDE7F6) else Color(0xFFFFF3E0),
           border = androidx.compose.foundation.BorderStroke(
             1.dp,
@@ -1945,29 +1823,31 @@ private fun MemoryDetailDialog(
         ) {
           Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(12.dp)
           ) {
             Icon(
               imageVector = if (isAuthor) Icons.Default.Person else Icons.Default.Lock,
               contentDescription = null,
               tint = if (isAuthor) Color(0xFF512DA8) else Color(0xFFE65100),
-              modifier = Modifier.size(16.dp)
+              modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
               text = if (isAuthor) {
-                "Bạn là tác giả của kỷ niệm này • Có toàn quyền chỉnh sửa và xóa."
+                if (currentLanguage == AppLanguage.EN) "You are the creator of this memory • Full edit and delete permissions."
+                else "Bạn là tác giả của kỷ niệm này • Có toàn quyền chỉnh sửa và xóa."
               } else {
-                "Tác giả: ${memory.authorName} • Bạn có quyền xem và thả tim yêu thích."
+                if (currentLanguage == AppLanguage.EN) "Creator: ${memory.authorName.ifBlank { "Partner" }} • View and favorite permissions."
+                else "Tác giả: ${memory.authorName.ifBlank { "Người ấy" }} • Bạn có quyền xem và thả tim yêu thích."
               },
-              fontSize = 11.5.sp,
+              fontSize = 12.sp,
               fontWeight = FontWeight.Medium,
               color = if (isAuthor) Color(0xFF311B92) else Color(0xFFBF360C)
             )
           }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         // Actions: If Author -> Edit & Delete. If Partner -> Read Only
         if (showDeleteConfirm) {
@@ -1980,7 +1860,7 @@ private fun MemoryDetailDialog(
               shape = RoundedCornerShape(14.dp),
               modifier = Modifier.weight(1f)
             ) {
-              Text(strings.btnCancel)
+              Text(if (currentLanguage == AppLanguage.EN) "Cancel" else strings.btnCancel)
             }
 
             Button(
@@ -1992,7 +1872,7 @@ private fun MemoryDetailDialog(
               shape = RoundedCornerShape(14.dp),
               modifier = Modifier.weight(1f)
             ) {
-              Text("Xác nhận xóa")
+              Text(if (currentLanguage == AppLanguage.EN) "Confirm Delete" else "Xác nhận xóa")
             }
           }
         } else {
@@ -2010,7 +1890,7 @@ private fun MemoryDetailDialog(
                 ) {
                   Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(15.dp))
                   Spacer(modifier = Modifier.width(4.dp))
-                  Text("Xóa")
+                  Text(if (currentLanguage == AppLanguage.EN) "Delete" else "Xóa")
                 }
 
                 Button(
@@ -2020,7 +1900,7 @@ private fun MemoryDetailDialog(
                 ) {
                   Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
                   Spacer(modifier = Modifier.width(4.dp))
-                  Text("Sửa")
+                  Text(if (currentLanguage == AppLanguage.EN) "Edit" else "Sửa")
                 }
               }
             } else {
@@ -2033,7 +1913,7 @@ private fun MemoryDetailDialog(
               shape = RoundedCornerShape(14.dp),
               colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75))
             ) {
-              Text(strings.btnGotIt)
+              Text(if (currentLanguage == AppLanguage.EN) "Got It" else strings.btnGotIt)
             }
           }
         }

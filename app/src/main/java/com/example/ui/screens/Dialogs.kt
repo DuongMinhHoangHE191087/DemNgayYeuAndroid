@@ -739,6 +739,9 @@ fun EditCoupleDialog(
 
   val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
 
+  val appLanguage by viewModel.appLanguage.collectAsState()
+  val isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN
+
   // Offline editable states
   var currentBoyName by remember(boyName) { mutableStateOf(boyName.ifEmpty { "Bạn" }) }
   var currentBoyBirth by remember(boyBirthDate) { mutableStateOf(boyBirthDate.ifEmpty { "15/10/2004" }) }
@@ -881,7 +884,7 @@ fun EditCoupleDialog(
             onClick = { activeTab = 0 },
             text = {
               Text(
-                text = "Hồ Sơ Trên Máy (Offline)",
+                text = if (isEnglish) "Device Profile (Offline)" else "Hồ Sơ Trên Máy (Offline)",
                 fontWeight = if (activeTab == 0) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 13.sp
               )
@@ -892,7 +895,7 @@ fun EditCoupleDialog(
             onClick = { activeTab = 1 },
             text = {
               Text(
-                text = "Ghép Đôi 1-1 (Online)",
+                text = if (isEnglish) "Pair 1-1 (Online)" else "Ghép Đôi 1-1 (Online)",
                 fontWeight = if (activeTab == 1) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 13.sp
               )
@@ -1875,7 +1878,131 @@ fun SetAlarmReminderDialog(
 }
 
 @Composable
+fun EditLoveTitleDialog(
+  currentTitle: String,
+  isEnglish: Boolean = false,
+  onDismiss: () -> Unit,
+  onConfirm: (String) -> Unit
+) {
+  var titleInput by remember { mutableStateOf(currentTitle) }
+
+  val suggestions = if (isEnglish) {
+    listOf(
+      "Our Love Journey",
+      "Forever In Love",
+      "Together Forever",
+      "Our Story",
+      "Sweet Moments"
+    )
+  } else {
+    listOf(
+      "Hành Trình Yêu Thương",
+      "Bên Nhau Trọn Đời",
+      "Nhật Ký Tình Yêu",
+      "Khoảnh Khắc Ngọt Ngào",
+      "Mãi Mãi Bên Nhau"
+    )
+  }
+
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+          imageVector = Icons.Filled.Favorite,
+          contentDescription = null,
+          tint = Color(0xFFFF2D75),
+          modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+          text = if (isEnglish) "Customize Love Title" else "Đổi Tên Hành Trình Yêu",
+          fontWeight = FontWeight.Bold,
+          fontSize = 18.sp,
+          color = Color(0xFF26071B)
+        )
+      }
+    },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+          text = if (isEnglish) "Enter your custom title or choose a suggestion below:" else "Nhập tiêu đề bạn muốn hoặc chọn gợi ý bên dưới:",
+          fontSize = 13.sp,
+          color = OnSurfaceVariant
+        )
+
+        OutlinedTextField(
+          value = titleInput,
+          onValueChange = { titleInput = it },
+          label = { Text(if (isEnglish) "Journey Title" else "Tiêu đề hành trình") },
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+          text = if (isEnglish) "Quick suggestions:" else "Gợi ý nhanh:",
+          fontSize = 12.sp,
+          fontWeight = FontWeight.SemiBold,
+          color = Color(0xFF26071B)
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+          suggestions.forEach { suggestion ->
+            val isSelected = titleInput.trim() == suggestion
+            Surface(
+              shape = RoundedCornerShape(10.dp),
+              color = if (isSelected) Color(0xFFFFE4EC) else Color(0xFFF9F5F8),
+              border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (isSelected) Color(0xFFFF2D75) else Color(0xFFE8DEF8)
+              ),
+              modifier = Modifier
+                .fillMaxWidth()
+                .clickable { titleInput = suggestion }
+            ) {
+              Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Text(
+                  text = suggestion,
+                  fontSize = 12.sp,
+                  fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                  color = if (isSelected) Color(0xFF880E4F) else Color(0xFF424242)
+                )
+              }
+            }
+          }
+        }
+      }
+    },
+    confirmButton = {
+      Button(
+        onClick = {
+          val clean = titleInput.trim().ifEmpty { if (isEnglish) "Our Love Journey" else "Hành Trình Yêu Thương" }
+          onConfirm(clean)
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
+        shape = RoundedCornerShape(14.dp)
+      ) {
+        Text(if (isEnglish) "Save" else "Lưu Lại", fontWeight = FontWeight.Bold)
+      }
+    },
+    dismissButton = {
+      OutlinedButton(
+        onClick = onDismiss,
+        shape = RoundedCornerShape(14.dp)
+      ) {
+        Text(if (isEnglish) "Cancel" else "Hủy")
+      }
+    }
+  )
+}
+
+@Composable
 fun AddAnniversaryDateDialog(
+  isEnglish: Boolean = false,
+  initialDateText: String? = null,
   onDismiss: () -> Unit,
   onConfirm: (
     title: String,
@@ -1888,20 +2015,31 @@ fun AddAnniversaryDateDialog(
 ) {
   var title by remember { mutableStateOf("") }
   val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
-  var dateText by remember { mutableStateOf(todayFormatted) }
+  var dateText by remember(initialDateText) { mutableStateOf(initialDateText ?: todayFormatted) }
   var selectedType by remember { mutableStateOf("LOVE") }
   var description by remember { mutableStateOf("") }
   var isAnnual by remember { mutableStateOf(true) }
   var reminderDaysBefore by remember { mutableIntStateOf(3) }
 
-  val typeOptions = listOf(
-    "LOVE" to "Ngày Bắt Đầu Yêu",
-    "FIRST_DATE" to "Hẹn Hò Đầu Tiên",
-    "FIRST_KISS" to "Nụ Hôn Đầu Tiên",
-    "PROPOSAL" to "Cầu Hôn",
-    "WEDDING" to "Đám Cưới",
-    "CUSTOM" to "Kỷ Niệm Riêng"
-  )
+  val typeOptions = if (isEnglish) {
+    listOf(
+      "LOVE" to "Love Start Day",
+      "FIRST_DATE" to "First Date",
+      "FIRST_KISS" to "First Kiss",
+      "PROPOSAL" to "Proposal",
+      "WEDDING" to "Wedding Day",
+      "CUSTOM" to "Special Date"
+    )
+  } else {
+    listOf(
+      "LOVE" to "Ngày Bắt Đầu Yêu",
+      "FIRST_DATE" to "Hẹn Hò Đầu Tiên",
+      "FIRST_KISS" to "Nụ Hôn Đầu Tiên",
+      "PROPOSAL" to "Cầu Hôn",
+      "WEDDING" to "Đám Cưới",
+      "CUSTOM" to "Kỷ Niệm Riêng"
+    )
+  }
 
   AlertDialog(
     onDismissRequest = onDismiss,
@@ -1916,7 +2054,7 @@ fun AddAnniversaryDateDialog(
           tint = Primary
         )
         Text(
-          text = "Thêm Ngày Kỷ Niệm Mới",
+          text = if (isEnglish) "Add Special Anniversary" else "Thêm Ngày Kỷ Niệm Mới",
           fontWeight = FontWeight.Bold,
           fontSize = 18.sp,
           color = OnSurface
@@ -1931,8 +2069,8 @@ fun AddAnniversaryDateDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Tên ngày kỷ niệm *") },
-          placeholder = { Text("Ví dụ: Ngày chính thức yêu nhau") },
+          label = { Text(if (isEnglish) "Anniversary Title *" else "Tên ngày kỷ niệm *") },
+          placeholder = { Text(if (isEnglish) "e.g., The day we first fell in love" else "Ví dụ: Ngày chính thức yêu nhau") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_anniversary_title"),
@@ -1942,9 +2080,9 @@ fun AddAnniversaryDateDialog(
         InLoveDatePickerField(
           value = dateText,
           onValueChange = { dateText = it },
-          label = "Ngày kỷ niệm (dd/MM/yyyy) *",
+          label = if (isEnglish) "Date (dd/MM/yyyy) *" else "Ngày kỷ niệm (dd/MM/yyyy) *",
           placeholder = "dd/MM/yyyy",
-          dialogTitle = "Chọn ngày kỷ niệm",
+          dialogTitle = if (isEnglish) "Select Date" else "Chọn ngày kỷ niệm",
           quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
           helperText = DatePickerUtils.getFriendlyDateDescription(dateText),
           modifier = Modifier.fillMaxWidth(),
@@ -1952,7 +2090,7 @@ fun AddAnniversaryDateDialog(
         )
 
         Text(
-          text = "Loại kỷ niệm:",
+          text = if (isEnglish) "Anniversary Type:" else "Loại kỷ niệm:",
           fontSize = 12.sp,
           fontWeight = FontWeight.Bold,
           color = OnSurfaceVariant
@@ -2014,8 +2152,8 @@ fun AddAnniversaryDateDialog(
         OutlinedTextField(
           value = description,
           onValueChange = { description = it },
-          label = { Text("Ghi chú / Cảm xúc") },
-          placeholder = { Text("Khoảnh khắc đáng nhớ nhất...") },
+          label = { Text(if (isEnglish) "Love Notes & Emotion" else "Ghi chú / Cảm xúc") },
+          placeholder = { Text(if (isEnglish) "Unforgettable sweet moment..." else "Khoảnh khắc đáng nhớ nhất...") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_anniversary_desc"),
@@ -2028,7 +2166,7 @@ fun AddAnniversaryDateDialog(
           verticalAlignment = Alignment.CenterVertically
         ) {
           Text(
-            text = "Lặp lại hàng năm:",
+            text = if (isEnglish) "Repeat Every Year:" else "Lặp lại hàng năm:",
             fontSize = 13.sp,
             color = OnSurface
           )
@@ -2043,16 +2181,21 @@ fun AddAnniversaryDateDialog(
         }
 
         Text(
-          text = "Hẹn giờ thông báo trước:",
+          text = if (isEnglish) "Remind In Advance:" else "Hẹn giờ thông báo trước:",
           fontSize = 12.sp,
           fontWeight = FontWeight.SemiBold,
           color = OnSurface
         )
+        val reminderOptions = if (isEnglish) {
+          listOf(0 to "Same Day", 1 to "1 Day", 3 to "3 Days", 7 to "7 Days")
+        } else {
+          listOf(0 to "Đúng ngày", 1 to "1 ngày", 3 to "3 ngày", 7 to "7 ngày")
+        }
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-          listOf(0 to "Đúng ngày", 1 to "1 ngày", 3 to "3 ngày", 7 to "7 ngày").forEach { (days, label) ->
+          reminderOptions.forEach { (days, label) ->
             val isSelected = reminderDaysBefore == days
             Surface(
               shape = RoundedCornerShape(12.dp),
@@ -2083,12 +2226,15 @@ fun AddAnniversaryDateDialog(
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         modifier = Modifier.testTag("btn_save_anniversary_date")
       ) {
-        Text("Lưu Kỷ Niệm (Room)", fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "Save Anniversary" else "Lưu Kỷ Niệm", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text("Hủy", color = OnSurfaceVariant)
+      TextButton(
+        onClick = onDismiss,
+        modifier = Modifier.testTag("btn_cancel_anniversary_date")
+      ) {
+        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
       }
     },
     containerColor = Color.White,

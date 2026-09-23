@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.ui.components.InLoveDatePickerField
 import com.example.ui.components.DatePickerPresets
 import androidx.compose.material.icons.filled.Settings
@@ -122,6 +123,8 @@ fun PairingScreen(
   val incomingInvite by viewModel.incomingInvite.collectAsState()
   val outgoingInvite by viewModel.outgoingInvite.collectAsState()
   val mutualInterests by viewModel.mutualInterests.collectAsState()
+  val appLanguage by viewModel.appLanguage.collectAsState()
+  val isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN
 
   // Search & Inspection State
   val searchQuery by viewModel.searchQuery.collectAsState()
@@ -132,7 +135,7 @@ fun PairingScreen(
 
   val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
   var proposedStartDateText by remember { mutableStateOf(todayFormatted) }
-  var loveNoteInput by remember { mutableStateOf("Cùng anh/em xây dựng hạnh phúc Set Love nhé! 💕") }
+  var loveNoteInput by remember { mutableStateOf(if (isEnglish) "Let's build our sweet happiness together! 💕" else "Cùng anh/em xây dựng hạnh phúc Set Love nhé! 💕") }
 
   val calculatedDaysFromProposed by remember(proposedStartDateText) {
     derivedStateOf {
@@ -146,7 +149,7 @@ fun PairingScreen(
     val clip = ClipData.newPlainText(label, text)
     @Suppress("UsePropertyAccessSyntax")
     clipboard.setPrimaryClip(clip)
-    viewModel.showToast("Đã sao chép: $text")
+    viewModel.showToast(if (isEnglish) "Copied: $text" else "Đã sao chép: $text")
   }
 
   fun shareCoupleLink(code: String) {
@@ -155,20 +158,32 @@ fun PairingScreen(
       type = "text/plain"
       putExtra(
         Intent.EXTRA_TEXT,
-        "Cùng kết nối Set Love 1-1 với mình trên InLove nhé! Bấm vào link hoặc nhập mã:\n$shareLink\nMã ghép đôi: $code ❤️"
+        if (isEnglish) "Connect 1-1 with me on InLove! Open link or enter code:\n$shareLink\nCouple code: $code ❤️"
+        else "Cùng kết nối Set Love 1-1 với mình trên InLove nhé! Bấm vào link hoặc nhập mã:\n$shareLink\nMã ghép đôi: $code ❤️"
       )
     }
-    context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ mã/link ghép đôi qua"))
+    context.startActivity(Intent.createChooser(shareIntent, if (isEnglish) "Share couple code via" else "Chia sẻ mã/link ghép đôi qua"))
   }
 
   Scaffold(
     topBar = {
       TopAppBar(
+        navigationIcon = {
+          IconButton(
+            onClick = onNavigateBack,
+            modifier = Modifier.testTag("btn_pairing_back")
+          ) {
+            Icon(
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = if (isEnglish) "Back" else "Quay lại"
+            )
+          }
+        },
         title = {
           Text(
-            text = "Ghép Đôi 1-1 (Set Love)",
+            text = if (isEnglish) "1-1 Couple Pairing (Set Love)" else "Ghép Đôi 1-1 (Set Love)",
             fontWeight = FontWeight.Bold,
-            fontSize = 19.sp
+            fontSize = 18.sp
           )
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -181,7 +196,7 @@ fun PairingScreen(
           ) {
             Icon(
               imageVector = Icons.Default.Share,
-              contentDescription = "Chia sẻ mã ghép đôi",
+              contentDescription = if (isEnglish) "Share couple code" else "Chia sẻ mã ghép đôi",
               tint = Color(0xFFE91E63)
             )
           }
@@ -841,7 +856,7 @@ fun PairingScreen(
                           color = Color(0xFFE91E63)
                         ) {
                           Text(
-                            text = "ĐÃ TÌM THẤY ĐỐI TÁC • CHỈ ĐỌC",
+                            text = if (isEnglish) "FOUND PARTNER • READ ONLY" else "ĐÃ TÌM THẤY ĐỐI TÁC • CHỈ ĐỌC",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White,
@@ -853,7 +868,7 @@ fun PairingScreen(
                           onClick = { viewModel.clearSearch() },
                           modifier = Modifier.size(28.dp)
                         ) {
-                          Icon(imageVector = Icons.Default.Close, contentDescription = "Bỏ chọn", tint = Color.Gray)
+                          Icon(imageVector = Icons.Default.Close, contentDescription = if (isEnglish) "Deselect" else "Bỏ chọn", tint = Color.Gray)
                         }
                       }
 
@@ -878,16 +893,16 @@ fun PairingScreen(
                             color = Color(0xFF880E4F)
                           )
                           Text(
-                            text = "Mã: " + target.coupleCode,
+                            text = (if (isEnglish) "Code: " else "Mã: ") + target.coupleCode,
                             fontSize = 13.sp,
                             color = Color.Gray
                           )
                           Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (target.age > 0) {
-                              Text(text = target.age.toString() + " tuổi", fontSize = 14.sp, color = Color(0xFFC2185B), fontWeight = FontWeight.SemiBold)
+                              Text(text = if (isEnglish) "${target.age} yrs" else "${target.age} tuổi", fontSize = 14.sp, color = Color(0xFFC2185B), fontWeight = FontWeight.SemiBold)
                             }
                             if (target.zodiac.isNotBlank()) {
-                              Text(text = "• Cung " + target.zodiac, fontSize = 14.sp, color = Color(0xFF880E4F), fontWeight = FontWeight.SemiBold)
+                              Text(text = if (isEnglish) "• Zodiac " + target.zodiac else "• Cung " + target.zodiac, fontSize = 14.sp, color = Color(0xFF880E4F), fontWeight = FontWeight.SemiBold)
                             }
                           }
                         }
@@ -895,7 +910,7 @@ fun PairingScreen(
 
                       if (target.bio.isNotBlank()) {
                         Text(
-                          text = """ + target.bio + """,
+                          text = target.bio,
                           fontSize = 13.sp,
                           fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                           color = Color.DarkGray
@@ -908,7 +923,7 @@ fun PairingScreen(
                         modifier = Modifier.fillMaxWidth()
                       ) {
                         Text(
-                          text = "🔒 Hồ sơ người ấy là chỉ đọc, không thể chỉnh sửa tại đây.",
+                          text = if (isEnglish) "🔒 Partner profile is read-only here." else "🔒 Hồ sơ người ấy là chỉ đọc, không thể chỉnh sửa tại đây.",
                           fontSize = 12.sp,
                           color = Color(0xFF757575),
                           modifier = Modifier.padding(8.dp)
@@ -919,7 +934,7 @@ fun PairingScreen(
 
                       // THIẾT LẬP KỶ NIỆM YÊU (THỐNG NHẤT TỪ NGƯỜI TẠO)
                       Text(
-                        text = "Thiết Lập Ngày Bắt Đầu Yêu:",
+                        text = if (isEnglish) "Set Love Start Date:" else "Thiết Lập Ngày Bắt Đầu Yêu:",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = Color(0xFF880E4F)
@@ -929,9 +944,9 @@ fun PairingScreen(
                       InLoveDatePickerField(
                         value = proposedStartDateText,
                         onValueChange = { proposedStartDateText = it },
-                        label = "Ngày bắt đầu yêu (dd/MM/yyyy) *",
+                        label = if (isEnglish) "Love start date (dd/MM/yyyy) *" else "Ngày bắt đầu yêu (dd/MM/yyyy) *",
                         placeholder = "dd/MM/yyyy",
-                        dialogTitle = "Chọn ngày bắt đầu yêu",
+                        dialogTitle = if (isEnglish) "Select love start date" else "Chọn ngày bắt đầu yêu",
                         quickPresets = DatePickerPresets.relationshipStartDatePresets(),
                         modifier = Modifier.fillMaxWidth(),
                         testTag = "input_proposed_start_date"
@@ -955,7 +970,7 @@ fun PairingScreen(
                           )
                           Spacer(modifier = Modifier.width(8.dp))
                           Text(
-                            text = "✨ Tính đến hôm nay: $calculatedDaysFromProposed ngày yêu nhau 💕",
+                            text = if (isEnglish) "✨ Calculated until today: $calculatedDaysFromProposed days together 💕" else "✨ Tính đến hôm nay: $calculatedDaysFromProposed ngày yêu nhau 💕",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFD81B60)
@@ -967,7 +982,7 @@ fun PairingScreen(
                       OutlinedTextField(
                         value = loveNoteInput,
                         onValueChange = { loveNoteInput = it },
-                        label = { Text("Lời nhắn gửi người ấy (tùy chọn)") },
+                        label = { Text(if (isEnglish) "Message to partner (optional)" else "Lời nhắn gửi người ấy (tùy chọn)") },
                         maxLines = 2,
                         shape = RoundedCornerShape(14.dp),
                         colors = pairingTextFieldColors(),
@@ -994,7 +1009,7 @@ fun PairingScreen(
                         Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                          text = "Gửi Lời Mời Set Love Cho " + target.effectiveDisplayName + " ❤️",
+                          text = if (isEnglish) "Send Set Love Invite to ${target.effectiveDisplayName} ❤️" else "Gửi Lời Mời Set Love Cho " + target.effectiveDisplayName + " ❤️",
                           fontWeight = FontWeight.Bold,
                           fontSize = 15.sp
                         )
@@ -1090,6 +1105,7 @@ fun PairingScreen(
     EditMyProfileDialog(
       currentUser = currentUser,
       presetAvatars = dynamicPresetAvatars,
+      isEnglish = isEnglish,
       onDismiss = { viewModel.closeEditProfileDialog() },
       onSave = { name, birthDate, avatarUrl, gender, bio ->
         viewModel.updateMyProfile(name, birthDate, avatarUrl, gender, bio)

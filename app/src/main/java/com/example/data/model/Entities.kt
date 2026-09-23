@@ -208,7 +208,7 @@ data class OnlineUserEntity(
     get() = interestsCsv.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
   val effectiveDisplayName: String
-    get() = if (!isProfileSetup || displayName.isBlank()) "Vô danh" else displayName
+    get() = if (!isProfileSetup || displayName.isBlank() || displayName == "Vô danh") "" else displayName
 
   val userRole: UserRole
     get() = UserRole.fromCode(role)
