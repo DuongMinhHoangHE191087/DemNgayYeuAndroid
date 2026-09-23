@@ -3,6 +3,7 @@ package com.example
 import android.util.Log
 import com.app.plugin.MonetizationSdk
 import com.app.plugin.app.AppPluginBase
+import com.example.billing.VipProductIds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.AppCheckProviderFactory
 import com.google.firebase.appcheck.FirebaseAppCheck
@@ -24,24 +25,39 @@ class InLoveApplication : AppPluginBase() {
             return
         }
 
+        // Firebase + App Check PHẢI được cài đặt trước khi AppPluginBase.onCreate() chạy:
+        // AppPluginBase -> AppPluginManager.initPlugin() tự gọi FirebaseApp.initializeApp()
+        // rồi bắn ngay FirHelper.fetchRemoteCf{}/fetchFireStore{} — nếu App Check chưa có
+        // provider factory tại thời điểm đó, những request đầu tiên đi không kèm token App
+        // Check (mất tác dụng bảo vệ enforcement, nếu bật). Gọi FirebaseApp.initializeApp()
+        // hai lần là an toàn (idempotent, và AppPluginManager tự bọc Throwable quanh lần gọi
+        // thứ hai của nó).
+        FirebaseApp.initializeApp(this)
+        installAppCheckProviderFactory()
+
         try {
             super.onCreate()
         } catch (t: Throwable) {
             Log.e("InLoveApp", "AppPluginBase onCreate failed: ${t.message}")
         }
-        FirebaseApp.initializeApp(this)
 
+        // Nguồn sự thật duy nhất cho Product ID billing: VipProductIds (khớp BillingManager,
+        // billing client THẬT duy nhất chạy purchase flow). MonetizationSdk/IapHelper phía
+        // appplugin chỉ dùng các ID này để đồng bộ Entitlements (tắt quảng cáo cho VIP), không
+        // tự chạy một luồng mua hàng song song — xem VipProductIds.kt để biết chi tiết.
         val report = MonetizationSdk.configure(this) {
             brainEnabled = true
             brainRolloutFraction = 1.0
             childDirected = false
 
-            inappProducts = listOf("inlove_vip_lifetime")
-            subsProducts = listOf("inlove_vip_monthly", "inlove_vip_yearly")
-            removeAdsProducts = setOf("inlove_vip_monthly", "inlove_vip_yearly", "inlove_vip_lifetime")
+            inappProducts = listOf(VipProductIds.LIFETIME)
+            subsProducts = listOf(VipProductIds.MONTHLY, VipProductIds.YEARLY)
+            removeAdsProducts = setOf(VipProductIds.MONTHLY, VipProductIds.YEARLY, VipProductIds.LIFETIME)
         }
         Log.i("InLoveApp", "MonetizationSdk initialized:\n${report.describe()}")
+    }
 
+    private fun installAppCheckProviderFactory() {
         val appCheck = FirebaseAppCheck.getInstance()
         if (BuildConfig.DEBUG) {
             try {

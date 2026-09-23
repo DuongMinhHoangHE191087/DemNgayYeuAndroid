@@ -47,11 +47,12 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
     private val billingScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // ─── Product IDs ─────────────────────────────────────────────────────────
-    // Phải khớp CHÍNH XÁC với Product ID được khai báo trên Google Play Console.
+    // Nguồn thật nằm ở VipProductIds — giữ alias ở đây để không phải sửa các nơi đã tham
+    // chiếu BillingManager.PRODUCT_VIP_* (PaywallScreen, VipSubscriptionDialog, ViewModel).
     companion object {
-        const val PRODUCT_VIP_MONTHLY = "vip_monthly"
-        const val PRODUCT_VIP_YEARLY = "vip_yearly"     // Có ưu đãi 3 ngày Free Trial
-        const val PRODUCT_VIP_LIFETIME = "vip_lifetime" // In-App Purchase (mua đứt)
+        const val PRODUCT_VIP_MONTHLY = VipProductIds.MONTHLY
+        const val PRODUCT_VIP_YEARLY = VipProductIds.YEARLY     // Có ưu đãi 3 ngày Free Trial
+        const val PRODUCT_VIP_LIFETIME = VipProductIds.LIFETIME // In-App Purchase (mua đứt)
     }
 
     // ─── StateFlows (Single Source of Truth) ─────────────────────────────────
@@ -63,6 +64,15 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
     /** Product ID đang hoạt động của người dùng (null nếu không có gói VIP) */
     private val _activeProductId = MutableStateFlow<String?>(null)
     val activeProductId: StateFlow<String?> = _activeProductId.asStateFlow()
+
+    /**
+     * True sau khi [queryExistingPurchases] đã trả lời ÍT NHẤT MỘT LẦN kể từ khi app khởi
+     * động (dù kết quả là có VIP hay không). [isVipUser] khởi tạo `false` — nếu collector nào
+     * đó hạ cấp người dùng ngay khi thấy `false` mà chưa chờ cờ này, một VIP thật sẽ bị hạ
+     * xuống FREE trong vài trăm mili-giây đầu app mở, trước khi Google Play kịp trả lời.
+     */
+    private val _hasSyncedOnce = MutableStateFlow(false)
+    val hasSyncedOnce: StateFlow<Boolean> = _hasSyncedOnce.asStateFlow()
 
     /** Danh sách ProductDetails từ Google Play Store (giá, ưu đãi, offer tokens) */
     private val _productDetailsList = MutableStateFlow<List<ProductDetails>>(emptyList())
@@ -78,6 +88,7 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
         .enablePendingPurchases(
             PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
         )
+        .enableAutoServiceReconnection()
         .build()
 
     init {
@@ -108,11 +119,7 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
             }
 
             override fun onBillingServiceDisconnected() {
-                // Dịch vụ Google Play bị ngắt (hiếm gặp) — tự động thử kết nối lại
-                billingScope.launch {
-                    delay(3.seconds)
-                    startBillingConnection()
-                }
+                // Tự động thử kết nối lại được xử lý tự động bởi enableAutoServiceReconnection()
             }
         })
     }
@@ -126,31 +133,43 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
     fun queryAvailableProducts() {
         if (!billingClient.isReady) return
 
-        val productList = listOf(
-            // Gói thuê bao tháng
+        val subList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(PRODUCT_VIP_MONTHLY)
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build(),
-            // Gói thuê bao năm (có free trial 3 ngày cấu hình trong Play Console)
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(PRODUCT_VIP_YEARLY)
                 .setProductType(BillingClient.ProductType.SUBS)
-                .build(),
-            // Gói mua đứt trọn đời (In-App Purchase — không phải SUBS)
+                .build()
+        )
+
+        val inAppList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(PRODUCT_VIP_LIFETIME)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
 
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
+        val subParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(subList)
             .build()
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, detailsList ->
+        billingClient.queryProductDetailsAsync(subParams) { billingResult, subQueryResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                _productDetailsList.value = detailsList
+                val current = _productDetailsList.value.filter { it.productType != BillingClient.ProductType.SUBS }
+                _productDetailsList.value = current + subQueryResult.productDetailsList
+            }
+        }
+
+        val inAppParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(inAppList)
+            .build()
+
+        billingClient.queryProductDetailsAsync(inAppParams) { billingResult, inAppQueryResult ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                val current = _productDetailsList.value.filter { it.productType != BillingClient.ProductType.INAPP }
+                _productDetailsList.value = current + inAppQueryResult.productDetailsList
             }
         }
     }
@@ -187,8 +206,10 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
                 val purchasedSub = activeSubPurchases.first()
                 _isVipUser.value = true
                 _activeProductId.value = purchasedSub.products.firstOrNull() ?: PRODUCT_VIP_YEARLY
+                syncEntitlements(_activeProductId.value?.let { setOf(it) } ?: emptySet())
                 // Đảm bảo acknowledge các giao dịch cũ chưa được xác nhận
                 activeSubPurchases.forEach { handlePurchase(it) }
+                _hasSyncedOnce.value = true
                 onComplete?.invoke(true)
                 return@queryPurchasesAsync
             }
@@ -206,12 +227,15 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
                 if (hasLifetime) {
                     _isVipUser.value = true
                     _activeProductId.value = PRODUCT_VIP_LIFETIME
+                    syncEntitlements(setOf(PRODUCT_VIP_LIFETIME))
                     lifetimePurchases.forEach { handlePurchase(it) }
                 } else {
                     // Không có gói VIP hợp lệ nào (đã hết hạn hoặc chưa mua) -> Thu hồi VIP
                     _isVipUser.value = false
                     _activeProductId.value = null
+                    syncEntitlements(emptySet())
                 }
+                _hasSyncedOnce.value = true
                 onComplete?.invoke(hasLifetime)
             }
         }
@@ -278,10 +302,12 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
                 queryExistingPurchases()
             }
             else -> {
-                // Lỗi thanh toán — emit event để UI hiển thị thông báo
+                val errorMsg = billingResult.debugMessage.ifEmpty {
+                    "Mã lỗi ${billingResult.responseCode}"
+                }
                 billingScope.launch {
                     _purchaseEvent.emit(
-                        PurchaseEvent.Error("Thanh toán thất bại (${billingResult.responseCode}): ${billingResult.debugMessage}")
+                        PurchaseEvent.Error("Thanh toán thất bại: $errorMsg")
                     )
                 }
             }
@@ -305,9 +331,25 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
                 }
             }
             Purchase.PurchaseState.PURCHASED -> {
+                if (purchase.isSuspended) {
+                    _isVipUser.value = false
+                    purchase.products.forEach { runCatching { com.app.plugin.iap.Entitlements.revoke(it) } }
+                    billingScope.launch {
+                        _purchaseEvent.emit(
+                            PurchaseEvent.Error("Gói đăng ký của bạn đang bị tạm dừng. Vui lòng cập nhật phương thức thanh toán trên Google Play.")
+                        )
+                    }
+                    return
+                }
+
                 // Mở khóa VIP ngay lập tức để trải nghiệm không bị gián đoạn
                 _isVipUser.value = true
                 _activeProductId.value = purchase.products.firstOrNull() ?: PRODUCT_VIP_YEARLY
+
+                // Cầu nối quyền lợi sang appplugin: Entitlements.recompute() là chỗ DUY NHẤT
+                // tắt quảng cáo (AdsHelper.setRemoveAds) — không có bước này thì subscriber
+                // vẫn thấy quảng cáo dù BillingManager đã ghi nhận VIP.
+                purchase.products.forEach { runCatching { com.app.plugin.iap.Entitlements.grant(it) } }
 
                 // Emit success event cho UI
                 billingScope.launch {
@@ -323,6 +365,16 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
                 // Unspecified or unknown state
             }
         }
+    }
+
+    /**
+     * Đồng bộ tập Product ID VIP đang thực sự sở hữu (theo Google Play) sang
+     * [com.app.plugin.iap.Entitlements]. Dùng `sync()` (REPLACE, không cộng dồn) vì đây là kết
+     * quả truy vấn `queryPurchasesAsync` — sub đã huỷ đơn giản là không còn trong tập này.
+     * Bọc `runCatching` vì Entitlements có thể chưa init trong môi trường test/Robolectric.
+     */
+    private fun syncEntitlements(ownedVipProductIds: Set<String>) {
+        runCatching { com.app.plugin.iap.Entitlements.sync(ownedVipProductIds) }
     }
 
     private suspend fun acknowledgePurchaseSuspend(ackParams: AcknowledgePurchaseParams): BillingResult =

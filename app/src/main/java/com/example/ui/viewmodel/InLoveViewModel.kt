@@ -351,9 +351,14 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       }
     }
 
-    // Khi thanh toán qua Google Play thành công hoặc hết hạn, tự động đồng bộ Room DB
+    // Khi thanh toán qua Google Play thành công hoặc hết hạn, tự động đồng bộ Room DB.
+    // Chờ billingManager.hasSyncedOnce = true trước khi hạ cấp bất kỳ ai xuống FREE:
+    // isVipUser khởi tạo `false` trước khi queryExistingPurchases() kịp trả lời Google Play,
+    // nếu không chờ thì một VIP thật bị hạ xuống FREE trong vài trăm ms đầu mỗi lần mở app.
     viewModelScope.launch {
-      billingManager.isVipUser.collect { isBillingVip ->
+      combine(billingManager.hasSyncedOnce, billingManager.isVipUser) { synced, vip -> synced to vip }
+        .collect { (synced, isBillingVip) ->
+        if (!synced) return@collect
         val currentAuth = authState.value
         val uid = if (currentAuth is com.example.data.repository.AuthState.Authenticated) {
           currentAuth.account.uid
