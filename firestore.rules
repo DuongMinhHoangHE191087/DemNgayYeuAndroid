@@ -74,7 +74,12 @@ service cloud.firestore {
         request.resource.data.user1Uid == request.auth.uid ||
         request.resource.data.user2Uid == request.auth.uid
       );
+      // Khoá TẤT CẢ field xác định thành viên — thiếu partnerAId/partnerBId trước đây cho
+      // phép một partner tự thay thế người kia bằng một uid bất kỳ (chiếm quyền đọc toàn bộ
+      // memories/anniversaries đã gắn relationshipId này).
       allow update: if isRelationshipMember(resource.data) &&
+        (!('partnerAId' in resource.data) || request.resource.data.partnerAId == resource.data.partnerAId) &&
+        (!('partnerBId' in resource.data) || request.resource.data.partnerBId == resource.data.partnerBId) &&
         (!('user1' in resource.data) || request.resource.data.user1 == resource.data.user1) &&
         (!('user2' in resource.data) || request.resource.data.user2 == resource.data.user2) &&
         (!('user1Uid' in resource.data) || request.resource.data.user1Uid == resource.data.user1Uid) &&
@@ -92,11 +97,15 @@ service cloud.firestore {
         resource.data.targetUid == request.auth.uid
       );
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+      // Chỉ người ĐƯỢC MỜI (receiverUid/targetUid) mới được update — trước đây cả sender lẫn
+      // receiver đều update được, nghĩa là sender có thể tự chấp nhận lời mời của chính mình,
+      // và receiver có thể đổi targetUid/receiverUid sang uid khác. Khoá cả 2 field định danh.
       allow update: if isAuthenticated() && (
-        resource.data.senderUid == request.auth.uid ||
         resource.data.receiverUid == request.auth.uid ||
         resource.data.targetUid == request.auth.uid
-      ) && request.resource.data.senderUid == resource.data.senderUid;
+      ) && request.resource.data.senderUid == resource.data.senderUid &&
+        (!('receiverUid' in resource.data) || request.resource.data.receiverUid == resource.data.receiverUid) &&
+        (!('targetUid' in resource.data) || request.resource.data.targetUid == resource.data.targetUid);
       allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
     }
 
@@ -105,7 +114,14 @@ service cloud.firestore {
     // ===============================================================
     match /memories/{memoryId} {
       allow get, list: if isMemoryMember(resource.data);
-      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
+      // authorUid == mình là chưa đủ: nếu request gắn relationshipId thì phải thật sự là
+      // thành viên relationship đó, nếu không bất kỳ user nào cũng gắn được memory vào
+      // relationship của người khác (memory đó sẽ hiện ra trong list của cặp đôi kia).
+      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid &&
+        (!('relationshipId' in request.resource.data) ||
+         request.resource.data.relationshipId == null || request.resource.data.relationshipId == "" ||
+         (exists(/databases/$(database)/documents/relationships/$(request.resource.data.relationshipId)) &&
+          isRelationshipMember(get(/databases/$(database)/documents/relationships/$(request.resource.data.relationshipId)).data)));
       allow update: if isAuthenticated() && (
         resource.data.authorUid == request.auth.uid ||
         isMemoryMember(resource.data)
@@ -159,10 +175,9 @@ service cloud.firestore {
         resource.data.targetUid == request.auth.uid
       );
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
-      allow update: if isAuthenticated() && (
-        resource.data.senderUid == request.auth.uid ||
-        resource.data.targetUid == request.auth.uid
-      ) && request.resource.data.senderUid == resource.data.senderUid;
+      allow update: if isAuthenticated() && resource.data.targetUid == request.auth.uid &&
+        request.resource.data.senderUid == resource.data.senderUid &&
+        (!('targetUid' in resource.data) || request.resource.data.targetUid == resource.data.targetUid);
       allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
     }
 
@@ -173,7 +188,11 @@ service cloud.firestore {
          exists(/databases/$(database)/documents/relationships_3nf/$(resource.data.relationshipId)) &&
          isRelationshipMember(get(/databases/$(database)/documents/relationships_3nf/$(resource.data.relationshipId)).data))
       );
-      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid &&
+        (!('relationshipId' in request.resource.data) ||
+         request.resource.data.relationshipId == null || request.resource.data.relationshipId == "" ||
+         (exists(/databases/$(database)/documents/relationships_3nf/$(request.resource.data.relationshipId)) &&
+          isRelationshipMember(get(/databases/$(database)/documents/relationships_3nf/$(request.resource.data.relationshipId)).data)));
       allow update: if isAuthenticated() && resource.data.authorUid == request.auth.uid &&
         request.resource.data.authorUid == resource.data.authorUid &&
         (!('relationshipId' in resource.data) || request.resource.data.relationshipId == resource.data.relationshipId);
