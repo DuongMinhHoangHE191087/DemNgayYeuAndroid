@@ -24,18 +24,47 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+// Tải .env ở gốc repo nếu có (cùng file mà app/build.gradle.kts đọc CLOUDINARY_*/SMTP_*) —
+// KHÔNG bắt buộc: nếu chưa `npm install` dotenv ở scripts/, script vẫn chạy tiếp bằng
+// process.env thật (CI/CD thường set biến môi trường trực tiếp, không qua file .env).
+try {
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+} catch (_e) {
+  // dotenv chưa cài — bỏ qua, dùng process.env sẵn có.
+}
+
 // --- 1. CONFIGURATION ---
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'demngayyeuandroid';
 const API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyDlbXzWv1eZdoYpYe0QwRKL9Ou2bB56b9s';
 const SERVICE_ACCOUNT_PATH = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, 'serviceAccountKey.json');
 
+/**
+ * Bắt buộc phải có biến môi trường — dừng script ngay với thông báo rõ ràng thay vì âm thầm
+ * dùng giá trị mặc định. Trước đây mật khẩu 5 tài khoản test (gồm 1 tài khoản ADMIN) được
+ * hardcode thẳng trong file này và bị commit vào git — bất kỳ ai đọc được lịch sử repo đều có
+ * mật khẩu. Xem `.env.example` ở gốc repo để biết danh sách biến cần khai báo trong `.env`.
+ */
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    console.error(
+      `\n[FATAL] Thiếu biến môi trường bắt buộc: ${name}\n` +
+      `-> Thêm ${name}=<mật khẩu mạnh> vào file .env ở gốc repo (xem .env.example), ` +
+      `hoặc export biến môi trường trước khi chạy script.\n`
+    );
+    process.exit(1);
+  }
+  return value;
+}
+
 // --- 2. ENRICHED DATASET DEFINITIONS ---
 
-// 2.1 Test Accounts Fixtures (Dùng cho QA / Tester / Demo mà không lộ trong APK)
+// 2.1 Test Accounts Fixtures (Dùng cho QA / Tester / Demo mà không lộ trong APK).
+// Mật khẩu đọc từ biến môi trường — KHÔNG hardcode trong source đã commit git.
 const TEST_FIXTURES = {
   'tester_primary': {
     email: 'tester.primary@inlove.app',
-    password: 'Password123!',
+    password: requireEnv('SEED_TESTER_PRIMARY_PASSWORD'),
     displayName: 'Hoàng Long',
     role: 'USER_VIP',
     tier: 'VIP_YEARLY',
@@ -45,7 +74,7 @@ const TEST_FIXTURES = {
   },
   'tester_partner': {
     email: 'tester.partner@inlove.app',
-    password: 'Password123!',
+    password: requireEnv('SEED_TESTER_PARTNER_PASSWORD'),
     displayName: 'Mai Anh',
     role: 'USER_VIP',
     tier: 'VIP_YEARLY',
@@ -55,7 +84,7 @@ const TEST_FIXTURES = {
   },
   'tester_vip': {
     email: 'vip.member@inlove.app',
-    password: 'Password123!',
+    password: requireEnv('SEED_TESTER_VIP_PASSWORD'),
     displayName: 'VIP Member',
     role: 'USER_VIP',
     tier: 'LIFETIME',
@@ -65,7 +94,7 @@ const TEST_FIXTURES = {
   },
   'tester_free': {
     email: 'free.user@inlove.app',
-    password: 'Password123!',
+    password: requireEnv('SEED_TESTER_FREE_PASSWORD'),
     displayName: 'Thành Viên Free',
     role: 'USER_FREE',
     tier: 'FREE',
@@ -75,7 +104,7 @@ const TEST_FIXTURES = {
   },
   'tester_admin': {
     email: 'admin@inlove.app',
-    password: 'AdminPassword2026!',
+    password: requireEnv('SEED_ADMIN_PASSWORD'),
     displayName: 'Quản Trị Viên InLove',
     role: 'ADMIN',
     tier: 'LIFETIME',

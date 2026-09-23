@@ -124,7 +124,16 @@ secrets {
       "SMTP_PORT",
       "SMTP_SENDER_EMAIL",
       "SMTP_SENDER_PASSWORD",
-      "SMTP_SENDER_NAME"
+      "SMTP_SENDER_NAME",
+      // scripts/seed_firestore.js dùng riêng, không phải cấu hình app Android — không cần
+      // (và không nên) lộ vào BuildConfig của APK. Thiếu dòng này khiến Secrets Gradle Plugin
+      // tự sinh field BuildConfig cho các key này; giá trị rỗng trong .env.example sinh ra
+      // Java không hợp lệ (`public static final String X = ;`) và làm vỡ compileDebugJavaWithJavac.
+      "SEED_TESTER_PRIMARY_PASSWORD",
+      "SEED_TESTER_PARTNER_PASSWORD",
+      "SEED_TESTER_VIP_PASSWORD",
+      "SEED_TESTER_FREE_PASSWORD",
+      "SEED_ADMIN_PASSWORD"
     )
   )
 }
