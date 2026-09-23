@@ -52,7 +52,7 @@ class InLoveApplication : AppPluginBase() {
                 val debugFactory = getInstanceMethod.invoke(null) as AppCheckProviderFactory
                 appCheck.installAppCheckProviderFactory(debugFactory)
                 Log.d("InLoveApp", "Firebase App Check initialized with DebugAppCheckProviderFactory")
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.w("InLoveApp", "Could not initialize DebugAppCheckProviderFactory: ${e.message}")
             }
         } else {
@@ -63,7 +63,7 @@ class InLoveApplication : AppPluginBase() {
                 val integrityFactory = getInstanceMethod.invoke(null) as AppCheckProviderFactory
                 appCheck.installAppCheckProviderFactory(integrityFactory)
                 Log.i("InLoveApp", "Firebase App Check initialized with PlayIntegrityAppCheckProviderFactory")
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.w("InLoveApp", "Could not initialize PlayIntegrityAppCheckProviderFactory: ${e.message}")
             }
         }

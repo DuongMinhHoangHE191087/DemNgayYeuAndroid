@@ -173,6 +173,11 @@ class AdsManagerImpl : AdsManager,
     }
 
     override fun showInterstitial(activity: Activity, onAdDismissed: () -> Unit) {
+        if (activity.isFinishing || activity.isDestroyed) {
+            onAdDismissed()
+            return
+        }
+
         val currentTime = System.currentTimeMillis()
         val isIntervalOk = (currentTime - lastInterstitialShownTime) >= minIntervalMs
         val currentAd = interstitialAd
@@ -232,8 +237,7 @@ class AdsManagerImpl : AdsManager,
     override fun registerAppOpenAdLifecycle(application: Application) {
         // Đăng ký theo dõi vòng đời các Activity để biết Activity nào đang active
         application.registerActivityLifecycleCallbacks(this)
-        // Đăng ký theo dõi Process Lifecycle: nhận sự kiện khi app lên Foreground
-        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        // Lưu ý: ProcessLifecycleObserver không đăng ký thêm ở đây để tránh trùng lặp với AppPluginBase
     }
 
     override fun preloadAppOpenAd(context: Context, adUnitId: String) {
@@ -274,6 +278,8 @@ class AdsManagerImpl : AdsManager,
     }
 
     private fun showAppOpenAdIfAvailable(activity: Activity) {
+        if (activity.isFinishing || activity.isDestroyed) return
+
         // ─── Google Play Policy compliance checks ───────────────────────────
         // 1. VIP → không bao giờ hiện quảng cáo
         // 2. Suppressed → đang ở Paywall / Splash / Permission Dialog → không được phép hiện

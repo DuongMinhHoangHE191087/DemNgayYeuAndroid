@@ -191,11 +191,11 @@ object AlarmNotificationScheduler {
           pendingIntent
         )
         return true
-      } catch (ex: Exception) {
+      } catch (ex: Throwable) {
         Log.e(TAG, "Failed fallback alarm", ex)
         return false
       }
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
       Log.e(TAG, "Failed to schedule alarm", e)
       return false
     }

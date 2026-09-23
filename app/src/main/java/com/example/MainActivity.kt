@@ -75,7 +75,6 @@ class MainActivity : ComponentActivity() {
     // Khởi tạo AppServiceLocator & Ads / Billing Services
     com.example.di.AppServiceLocator.initialize(applicationContext)
     val adsManager = com.example.di.AppServiceLocator.adsManager
-    adsManager.registerAppOpenAdLifecycle(application)
     adsManager.requestConsentAndInitialize(this) { canRequestAds ->
       if (canRequestAds) {
         adsManager.preloadInterstitial(this, BuildConfig.ADMOB_INTERSTITIAL_ID)

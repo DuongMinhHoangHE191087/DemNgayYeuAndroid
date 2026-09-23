@@ -46,3 +46,11 @@
 # 7. Preserve Line Numbers for Play Console Crash Reporting (De-obfuscation)
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# 8. Keep Firebase App Check Reflection Factories
+-keep class com.google.firebase.appcheck.** { *; }
+-keep class com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory { *; }
+-keep class com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory { *; }
+-keepclassmembers class com.google.firebase.appcheck.** {
+    public static *** getInstance(...);
+}
