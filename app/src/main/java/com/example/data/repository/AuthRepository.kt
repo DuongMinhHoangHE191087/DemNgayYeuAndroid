@@ -628,9 +628,27 @@ class AuthRepository(
       SecurityAuditLogEntity(
         accountEmail = email,
         action = "PASSWORD_RESET",
-        detail = "Đặt lại mật khẩu thành công qua OTP"
+        detail = "Đặt lại mật khẩu cục bộ qua OTP — đã kích hoạt email xác nhận Firebase chính thức"
       )
     )
+
+    // QUAN TRỌNG: mã OTP 6 số ở đây được xác minh CỤC BỘ qua [EmailQueueService], không phải
+    // cơ chế reset chính thức của Firebase Auth. Firebase Auth Client SDK KHÔNG cho phép tự đặt
+    // mật khẩu mới cho một tài khoản đã quên mật khẩu chỉ bằng email + OTP tự chế — cần mật
+    // khẩu cũ (để reauthenticate, xem [changePassword]) hoặc oobCode từ email Firebase gửi.
+    // Trước đây hàm này chỉ đổi hash cục bộ rồi báo "thành công", trong khi mật khẩu đăng nhập
+    // Firebase thật (nguồn xác thực duy nhất trong [login]) không đổi — người dùng bị khoá tài
+    // khoản thật sự. Sửa: cập nhật hash cục bộ (vẫn cần cho PIN-fallback) NHƯNG đồng thời kích
+    // hoạt luôn email reset chính thức của Firebase, và thông báo đúng sự thật thay vì nói đã
+    // xong khi chưa xong.
+    if (!isTestMode) {
+      try {
+        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase reset email after OTP verification failed: ${e.message}")
+      }
+      return@withContext true to "Đã xác minh OTP thành công! Chúng tôi vừa gửi thêm một email chính thức từ Google để bạn hoàn tất đặt mật khẩu đăng nhập mới — vui lòng kiểm tra hộp thư và làm theo hướng dẫn trong email đó."
+    }
 
     return@withContext true to "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới."
   }
@@ -684,9 +702,21 @@ class AuthRepository(
       SecurityAuditLogEntity(
         accountEmail = email,
         action = "PASSWORD_RESET",
-        detail = "Đặt lại mật khẩu qua câu hỏi bảo mật"
+        detail = "Đặt lại mật khẩu cục bộ qua câu hỏi bảo mật — đã kích hoạt email xác nhận Firebase chính thức"
       )
     )
+
+    // Cùng lý do với resetPasswordWithOtp ở trên: xác minh câu hỏi bảo mật là cục bộ, không
+    // thể tự đặt mật khẩu Firebase thật cho tài khoản đã quên mật khẩu. Cập nhật hash cục bộ
+    // (cho PIN-fallback) và kích hoạt email reset chính thức của Firebase thay vì báo sai.
+    if (!isTestMode) {
+      try {
+        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase reset email after security-answer verification failed: ${e.message}")
+      }
+      return@withContext true to "Đã xác minh câu hỏi bảo mật thành công! Chúng tôi vừa gửi thêm một email chính thức từ Google để bạn hoàn tất đặt mật khẩu đăng nhập mới — vui lòng kiểm tra hộp thư."
+    }
 
     return@withContext true to "Đặt lại mật khẩu thành công! Hãy đăng nhập ngay."
   }
@@ -717,6 +747,26 @@ class AuthRepository(
 
     if (newPasswordInput != confirmPasswordInput) {
       return@withContext false to "Mật khẩu mới xác nhận không khớp!"
+    }
+
+    // Mật khẩu Firebase Auth THẬT phải đổi trước khi cập nhật cache cục bộ — nếu không, người
+    // dùng nghĩ đã đổi mật khẩu nhưng lần đăng nhập kế tiếp (luôn xác thực qua Firebase, xem
+    // [login]) vẫn đòi mật khẩu CŨ, trong khi PIN-fallback ([unlockWithAccountPassword]) lại
+    // chấp nhận mật khẩu MỚI — gây lệch trạng thái khó hiểu và có thể tự khoá tài khoản thật.
+    // reauthenticate() bằng mật khẩu cũ vừa xác minh đúng là mật khẩu Firebase hiện tại, vừa
+    // thoả điều kiện "recent login" mà updatePassword() bắt buộc.
+    if (!isTestMode) {
+      val fbUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        ?: return@withContext false to "Phiên đăng nhập Firebase đã hết hạn. Vui lòng đăng nhập lại rồi thử lại."
+      try {
+        val credential = com.google.firebase.auth.EmailAuthProvider
+          .getCredential(currentAccount.email, oldPasswordInput)
+        fbUser.reauthenticate(credential).await()
+        fbUser.updatePassword(newPasswordInput).await()
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "Firebase changePassword failed: ${e.message}")
+        return@withContext false to (e.localizedMessage ?: "Đổi mật khẩu trên Firebase thất bại. Vui lòng thử lại.")
+      }
     }
 
     val newSalt = AuthSecurityManager.generateSalt()
@@ -912,7 +962,23 @@ class AuthRepository(
       }
 
       if (!isTestMode) {
-        // 1. Delete Cloud Firestore documents (Fail-Closed)
+        // 1. Xoá danh tính Firebase Auth TRƯỚC TIÊN. Trước đây bước này chạy SAU CÙNG (sau khi
+        // đã xoá xong Firestore) — nếu Firebase yêu cầu đăng nhập lại gần đây (đăng nhập đã
+        // lâu) thì `delete()` ném `FirebaseAuthRecentLoginRequiredException`, toàn bộ hàm bị
+        // catch ở ngoài và dừng lại, nhưng dữ liệu Firestore/Room đã xoá mất rồi — tài khoản
+        // kẹt ở trạng thái nửa xoá (mất dữ liệu, vẫn đăng nhập được). Xoá Auth trước: nếu lỗi,
+        // KHÔNG có gì bị xoá cả, người dùng chỉ cần đăng nhập lại rồi thử xoá lần nữa.
+        val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+        val fbUser = fbAuth.currentUser
+        try {
+          fbUser?.delete()?.await()
+        } catch (e: com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+          return@withContext Result.failure(
+            IllegalStateException("Vì lý do bảo mật, vui lòng đăng xuất và đăng nhập lại gần đây trước khi xoá tài khoản vĩnh viễn.")
+          )
+        }
+
+        // 2. Xoá tài liệu Cloud Firestore (Fail-Closed) — chỉ chạy sau khi Auth đã xoá thành công
         val fs = com.google.firebase.firestore.FirebaseFirestore.getInstance()
         fs.collection("users").document(uid).delete().await()
         fs.collection("users_3nf").document(uid).delete().await()
@@ -928,10 +994,15 @@ class AuthRepository(
           doc.reference.delete().await()
         }
 
-        // 2. Delete Firebase Auth identity (Fail-Closed)
-        val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        val fbUser = fbAuth.currentUser
-        fbUser?.delete()?.await()
+        // Xoá các lời mời Set Love mà tài khoản này đã GỬI đi (field senderUid — khớp đúng
+        // OnlineCoupleRepository.sendSetLoveInvite() ghi thật lên collection "invites"; đây là
+        // collection Firestore duy nhất khác mà app hiện có ghi tới, ngoài users/memories ở
+        // trên — "relationships"/"relationships_3nf"/"invites_3nf" hiện KHÔNG được client ghi
+        // nên không cần dọn ở đây).
+        val sentInvites = fs.collection("invites").whereEqualTo("senderUid", uid).get().await()
+        sentInvites.documents.forEach { doc ->
+          doc.reference.delete().await()
+        }
       }
 
       // 3. Delete Local Room records, online cache, and memories
