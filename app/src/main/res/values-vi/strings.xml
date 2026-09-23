@@ -221,9 +221,9 @@
     <string name="paywall_sub">Tình yêu không giới hạn — Gắn kết mọi kỷ niệm trọn vẹn</string>
     <string name="paywall_benefits_header">Đặc Quyền VIP</string>
     <string name="paywall_benefit_ads">Tắt hoàn toàn 100% quảng cáo vĩnh viễn</string>
-    <string name="paywall_benefit_ai">Gợi ý quà tặng &amp; Thư tình AI không giới hạn</string>
-    <string name="paywall_benefit_cloud">Lưu trữ ảnh kỷ niệm HD lên đám mây không giới hạn</string>
-    <string name="paywall_benefit_lock">Khóa ứng dụng vân tay / FaceID tuyệt đối riêng tư</string>
+    <string name="paywall_benefit_ai">Gợi ý quà tặng &amp; thư tình theo sở thích riêng</string>
+    <string name="paywall_benefit_cloud">Sao lưu ảnh kỷ niệm HD lên đám mây</string>
+    <string name="paywall_benefit_lock">Khóa ứng dụng bằng mã PIN riêng tư</string>
     <string name="paywall_benefit_theme">Huy hiệu Premium &amp; Theme độc quyền dành cho cặp đôi</string>
     <string name="paywall_plan_yearly_title">Gói 1 Năm — Được Yêu Thích ❤️</string>
     <string name="paywall_plan_yearly_price">299.000 đ / năm</string>

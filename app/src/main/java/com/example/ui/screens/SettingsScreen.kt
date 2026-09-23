@@ -695,7 +695,13 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               )
               Spacer(modifier = Modifier.height(2.dp))
               Text(
-                text = if (isVip) (if (isEnglish) "No ads • Cloud sync • Unlimited AI" else "Không quảng cáo • Cloud lưu trữ • AI không giới hạn")
+                // Chỉ liệt kê quyền lợi ĐÃ XÁC MINH thật sự dành riêng cho VIP: tắt quảng cáo
+                // là quyền lợi duy nhất được BillingManager/AdsManagerImpl gate theo isVip.
+                // "Cloud sync" (Firebase3NFService) và "AI không giới hạn" (gợi ý quà) đã bị
+                // xoá khỏi dòng này vì cả hai đều KHÔNG được gate theo VIP trong code thực tế
+                // (sync cloud là dead code chưa từng gọi; gợi ý quà mở cho mọi người dùng miễn
+                // phí) — Google Play Policy cấm quảng cáo sai sự thật về tính năng.
+                text = if (isVip) (if (isEnglish) "Completely ad-free • Smooth, uninterrupted experience" else "Tắt quảng cáo hoàn toàn • Trải nghiệm mượt mà không gián đoạn")
                        else (if (isEnglish) "Ad-free experience • 3-day free trial on Annual plan" else "Tắt sạch quảng cáo • Thử miễn phí 3 ngày gói Năm"),
                 fontSize = 12.sp,
                 color = OnSurfaceVariant

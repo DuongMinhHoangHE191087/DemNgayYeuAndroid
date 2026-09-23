@@ -221,9 +221,9 @@
     <string name="paywall_sub">Unlimited Love — Cherish every precious moment together</string>
     <string name="paywall_benefits_header">VIP Privileges</string>
     <string name="paywall_benefit_ads">100% Ad-Free forever</string>
-    <string name="paywall_benefit_ai">Unlimited AI gift ideas &amp; love letters</string>
-    <string name="paywall_benefit_cloud">Unlimited HD cloud memory photo backup</string>
-    <string name="paywall_benefit_lock">Fingerprint / PIN private security lock</string>
+    <string name="paywall_benefit_ai">Personalized gift ideas &amp; love letter suggestions</string>
+    <string name="paywall_benefit_cloud">HD memory photo backup to the cloud</string>
+    <string name="paywall_benefit_lock">PIN-protected private app lock</string>
     <string name="paywall_benefit_theme">Exclusive couple themes &amp; Premium badges</string>
     <string name="paywall_plan_yearly_title">1-Year Plan — Most Popular ❤️</string>
     <string name="paywall_plan_yearly_price">$12.99 / year</string>
