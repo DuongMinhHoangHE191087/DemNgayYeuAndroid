@@ -320,7 +320,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
     // BillingManager is the authoritative Single Source of Truth for VIP entitlements.
     // Cached local DB flags cannot grant VIP if Google Play Billing reports inactive/expired subscription.
-    isVip = combine(currentOnlineUser, authState, billingManager.isVipUser) { _, auth, billingVip ->
+    isVip = combine(currentOnlineUser, authState, com.example.di.AppServiceLocator.entitlementRepository.isVipUser) { _, auth, billingVip ->
       val isAdmin = auth is com.example.data.repository.AuthState.Authenticated &&
           auth.account.userRole == com.example.data.model.UserRole.ADMIN
       billingVip || isAdmin

@@ -119,7 +119,7 @@ fun PaywallScreen(
     val uriHandler = LocalUriHandler.current
 
     val productDetailsList by billingManager.productDetailsList.collectAsState()
-    val isVipUser by billingManager.isVipUser.collectAsState()
+    val isVipUser by com.example.di.AppServiceLocator.entitlementRepository.isVipUser.collectAsState()
 
     var selectedPlan by remember { mutableStateOf(PaywallPlan.YEARLY) }
     var isRestoring by remember { mutableStateOf(false) }
