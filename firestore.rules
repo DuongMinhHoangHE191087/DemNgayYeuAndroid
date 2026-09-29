@@ -62,18 +62,35 @@ service cloud.firestore {
     }
 
     // ===============================================================
+    // Couple Codes (public lookup: code -> ownerUid, needed for real
+    // two-device pairing since `users` is owner-only readable)
+    // ===============================================================
+    match /coupleCodes/{code} {
+      allow get: if isAuthenticated();
+      allow list: if false; // never enumerable — only direct get by a known code
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerUid == request.auth.uid &&
+        !exists(/databases/$(database)/documents/coupleCodes/$(code));
+      allow update: if false; // codes are immutable; regenerate = delete + create new
+      allow delete: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ===============================================================
     // Relationships Collection
     // ===============================================================
     match /relationships/{relationshipId} {
       allow get, list: if isRelationshipMember(resource.data);
-      allow create: if isAuthenticated() && (
-        request.resource.data.partnerAId == request.auth.uid ||
-        request.resource.data.partnerBId == request.auth.uid ||
-        request.resource.data.user1 == request.auth.uid ||
-        request.resource.data.user2 == request.auth.uid ||
-        request.resource.data.user1Uid == request.auth.uid ||
-        request.resource.data.user2Uid == request.auth.uid
-      );
+      // Relationship id MUST equal the id of the invite it was accepted from. This is what
+      // closes pairing without a Cloud Function: creating this doc requires that invite to
+      // already be ACCEPTED and to name the same two people, and a second create attempt on
+      // the same id is routed by Firestore to the `update` rule below (which locks identity
+      // fields), making replay a safe no-op instead of a second relationship.
+      allow create: if isAuthenticated() &&
+        (request.resource.data.partnerAId == request.auth.uid || request.resource.data.partnerBId == request.auth.uid) &&
+        exists(/databases/$(database)/documents/invites/$(relationshipId)) &&
+        get(/databases/$(database)/documents/invites/$(relationshipId)).data.status == 'ACCEPTED' &&
+        get(/databases/$(database)/documents/invites/$(relationshipId)).data.senderUid == request.resource.data.partnerAId &&
+        get(/databases/$(database)/documents/invites/$(relationshipId)).data.targetUid == request.resource.data.partnerBId;
       // Khoá TẤT CẢ field xác định thành viên — thiếu partnerAId/partnerBId trước đây cho
       // phép một partner tự thay thế người kia bằng một uid bất kỳ (chiếm quyền đọc toàn bộ
       // memories/anniversaries đã gắn relationshipId này).
@@ -88,6 +105,24 @@ service cloud.firestore {
     }
 
     // ===============================================================
+    // Shared content subcollections of a relationship (Task 5's
+    // MemorySyncAdapter/AnniversarySyncAdapter write/listen here — distinct
+    // from the top-level /memories, /anniversaries collections below).
+    // Both partners get full read/write; no sender/receiver asymmetry here.
+    // ===============================================================
+    match /relationships/{relId}/memories/{memId} {
+      allow read, write: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/relationships/$(relId)) &&
+        isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data);
+    }
+
+    match /relationships/{relId}/anniversaries/{annId} {
+      allow read, write: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/relationships/$(relId)) &&
+        isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data);
+    }
+
+    // ===============================================================
     // Invites Collection (Couple Pairing: only sender and receiver)
     // ===============================================================
     match /invites/{inviteId} {
@@ -97,15 +132,17 @@ service cloud.firestore {
         resource.data.targetUid == request.auth.uid
       );
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
-      // Chỉ người ĐƯỢC MỜI (receiverUid/targetUid) mới được update — trước đây cả sender lẫn
-      // receiver đều update được, nghĩa là sender có thể tự chấp nhận lời mời của chính mình,
-      // và receiver có thể đổi targetUid/receiverUid sang uid khác. Khoá cả 2 field định danh.
-      allow update: if isAuthenticated() && (
-        resource.data.receiverUid == request.auth.uid ||
-        resource.data.targetUid == request.auth.uid
-      ) && request.resource.data.senderUid == resource.data.senderUid &&
+      // Receiver may only move PENDING -> ACCEPTED/DECLINED. Sender may only move
+      // PENDING -> CANCELLED. Identity fields stay locked as before.
+      allow update: if isAuthenticated() &&
+        request.resource.data.senderUid == resource.data.senderUid &&
         (!('receiverUid' in resource.data) || request.resource.data.receiverUid == resource.data.receiverUid) &&
-        (!('targetUid' in resource.data) || request.resource.data.targetUid == resource.data.targetUid);
+        (!('targetUid' in resource.data) || request.resource.data.targetUid == resource.data.targetUid) &&
+        resource.data.status == 'PENDING' && (
+          ((resource.data.receiverUid == request.auth.uid || resource.data.targetUid == request.auth.uid) &&
+           request.resource.data.status in ['ACCEPTED', 'DECLINED']) ||
+          (resource.data.senderUid == request.auth.uid && request.resource.data.status == 'CANCELLED')
+        );
       allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
     }
 
