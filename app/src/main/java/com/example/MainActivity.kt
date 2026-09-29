@@ -74,6 +74,11 @@ class MainActivity : ComponentActivity() {
 
     // Khởi tạo AppServiceLocator & Ads / Billing Services
     com.example.di.AppServiceLocator.initialize(applicationContext)
+    try {
+      com.app.plugin.ads.adsmob.AdsMobMy.instance.startSdkInit(applicationContext)
+    } catch (e: Exception) {
+      android.util.Log.d("MainActivity", "AdsMobMy.startSdkInit skipped: ${e.message}")
+    }
     val adsManager = com.example.di.AppServiceLocator.adsManager
     adsManager.requestConsentAndInitialize(this) { canRequestAds ->
       if (canRequestAds) {

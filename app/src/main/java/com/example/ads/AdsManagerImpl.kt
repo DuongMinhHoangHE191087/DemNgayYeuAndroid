@@ -113,11 +113,12 @@ class AdsManagerImpl : AdsManager,
     }
 
     override fun initialize(context: Context) {
-        // 1. Cấu hình Test Device IDs để tránh vi phạm Invalid Traffic Policy.
-        val requestConfig = RequestConfiguration.Builder()
-            .setTestDeviceIds(testDeviceIds)
-            .build()
-        MobileAds.setRequestConfiguration(requestConfig)
+        // 1. Cấu hình Test Device IDs — MERGE vào cấu hình hiện có, không tạo Builder() rỗng:
+        // appplugin's AdsMobMy.startNetwork() can set/replace this same global object in either
+        // order relative to this call, and its own history (AdsMobMy.kt:106-111) documents the
+        // exact failure a fresh Builder() causes: whichever call runs second silently erases the
+        // other's fields (production traffic served test ads, or a debug build served real ads).
+        applyTestDeviceIds(testDeviceIds)
 
         // 2. Khởi tạo SDK. Callback fire sau khi tất cả ad network adapters sẵn sàng.
         MobileAds.initialize(context) {
@@ -339,4 +340,13 @@ class AdsManagerImpl : AdsManager,
     // Các callback bắt buộc khai báo nhưng không cần xử lý
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+
+    companion object {
+        internal fun applyTestDeviceIds(testDeviceIds: List<String>) {
+            val merged = MobileAds.getRequestConfiguration().toBuilder()
+                .setTestDeviceIds(testDeviceIds)
+                .build()
+            MobileAds.setRequestConfiguration(merged)
+        }
+    }
 }
