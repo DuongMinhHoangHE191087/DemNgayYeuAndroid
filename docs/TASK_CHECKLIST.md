@@ -28,7 +28,7 @@
 
 ## 🟠 Chức năng lõi — làm cho đúng như quảng cáo
 
-- [ ] ❓❗ **Việc quan trọng nhất còn lại:** tính năng ghép đôi "Set Love 1-1" giữa 2 điện thoại thật KHÔNG hoạt động — đã đọc toàn bộ code và xác nhận chắc chắn. Mọi thử nghiệm trước giờ "thành công" chỉ vì 2 tài khoản demo dùng chung 1 máy. Cần viết lại để thực sự đồng bộ qua đám mây.
+- [x] ✅ Ghép đôi 2 máy thật qua Firestore — đã viết lại toàn bộ theo `docs/superpowers/plans/2026-09-29-data-sync-and-real-pairing.md` (12/13 task: outbox + WorkManager + SyncCoordinator hai tầng + `coupleCodes` lookup + relationship id = invite id, rà soát 2 vòng, đã sửa hết lỗi tìm được). **Chưa build/chạy thử trên máy thật** — sandbox này không có mạng để chạy Gradle và không có thiết bị Android để cài APK, nên chưa thể tự xác nhận Task 13 (QA 2 máy thật). Cần bạn tự chạy `./gradlew :app:testDebugUnitTest :app:assembleDebug`, cài lên 2 máy, và làm theo 6 bước trong Task 13 của plan trên để xác nhận trước khi đổi dòng này thành ✅✅.
 - [ ] ⏳ Không có tính năng nhận biết mất mạng / còn mạng — app không báo cho người dùng biết khi nào offline
 - [ ] ⏳ Wallpaper người dùng chọn không được lưu lại, mất khi mở lại app
 - [ ] ⏳ Dialog "Đặt báo thức nhắc nhở" đã viết code nhưng quên nối vào màn hình — bấm không có phản ứng gì
