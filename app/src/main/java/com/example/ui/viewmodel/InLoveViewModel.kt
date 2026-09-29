@@ -277,7 +277,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
   init {
     val database = AppDatabase.getDatabase(application)
-    repository = InLoveRepository(database.inLoveDao())
+    repository = InLoveRepository(database.inLoveDao(), application)
     onlineRepo = com.example.data.repository.OnlineCoupleRepository(database.inLoveDao(), application, viewModelScope)
     authRepo = com.example.data.repository.AuthRepository(database.inLoveDao(), onlineRepo, application, viewModelScope)
     authState = authRepo.authState

@@ -12,6 +12,10 @@ import com.example.data.model.LoveBadgeEntity
 import com.example.data.model.MilestoneEntity
 import com.example.data.model.ReminderCadenceEntity
 import com.example.data.model.SharedMemoryEntity
+import com.example.data.model.SyncOutboxEntity
+import com.example.data.sync.AnniversarySyncAdapter
+import com.example.data.sync.MemorySyncAdapter
+import com.example.data.sync.SyncWorker
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -21,8 +25,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
-class InLoveRepository(private val dao: InLoveDao) {
+class InLoveRepository(private val dao: InLoveDao, private val appContext: android.content.Context) {
 
   val milestones: Flow<List<MilestoneEntity>> = dao.getAllMilestones()
   val giftIdeas: Flow<List<GiftIdeaEntity>> = dao.getAllGiftIdeas()
@@ -338,40 +343,49 @@ class InLoveRepository(private val dao: InLoveDao) {
     durationSeconds: Int = 0,
     privacyLevel: String = "COUPLE_ONLY"
   ) {
-    dao.insertSharedMemory(
-      SharedMemoryEntity(
-        title = title,
-        dateText = dateText,
-        photoUri = photoUri,
-        note = note,
-        location = location,
-        isFavorite = false,
-        anniversaryTitle = anniversaryTitle,
-        createdAt = System.currentTimeMillis(),
-        authorId = authorId,
-        authorName = authorName,
-        mediaType = mediaType,
-        videoUri = videoUri,
-        cloudinaryPublicId = cloudinaryPublicId,
-        cloudinaryUrl = cloudinaryUrl,
-        isCloudinaryStored = isCloudinaryStored,
-        fileSizeFormatted = fileSizeFormatted,
-        durationSeconds = durationSeconds,
-        privacyLevel = privacyLevel
-      )
+    val now = System.currentTimeMillis()
+    val memory = SharedMemoryEntity(
+      title = title,
+      dateText = dateText,
+      photoUri = photoUri,
+      note = note,
+      location = location,
+      isFavorite = false,
+      anniversaryTitle = anniversaryTitle,
+      createdAt = now,
+      authorId = authorId,
+      authorName = authorName,
+      mediaType = mediaType,
+      videoUri = videoUri,
+      cloudinaryPublicId = cloudinaryPublicId,
+      cloudinaryUrl = cloudinaryUrl,
+      isCloudinaryStored = isCloudinaryStored,
+      fileSizeFormatted = fileSizeFormatted,
+      durationSeconds = durationSeconds,
+      privacyLevel = privacyLevel,
+      syncId = UUID.randomUUID().toString(),
+      updatedAt = now,
+      pendingSync = true
     )
+    dao.insertSharedMemoryWithOutbox(memory, outboxEntryFor(MemorySyncAdapter.entityType, memory.syncId, memory))
+    SyncWorker.enqueueImmediate(appContext)
   }
 
   suspend fun updateSharedMemory(memory: SharedMemoryEntity) {
-    dao.updateSharedMemory(memory)
+    val withSync = ensureSyncId(memory).copy(updatedAt = System.currentTimeMillis(), pendingSync = true)
+    dao.updateSharedMemoryWithOutbox(withSync, outboxEntryFor(MemorySyncAdapter.entityType, withSync.syncId, withSync))
+    SyncWorker.enqueueImmediate(appContext)
   }
 
   suspend fun deleteSharedMemory(id: Long) {
-    dao.deleteSharedMemoryById(id)
+    val existing = dao.getAllSharedMemories().first().firstOrNull { it.id == id } ?: return
+    val tombstone = ensureSyncId(existing).copy(deleted = true, updatedAt = System.currentTimeMillis(), pendingSync = true)
+    dao.deleteSharedMemoryWithOutbox(id, outboxEntryFor(MemorySyncAdapter.entityType, tombstone.syncId, tombstone))
+    SyncWorker.enqueueImmediate(appContext)
   }
 
   suspend fun toggleMemoryFavorite(memory: SharedMemoryEntity) {
-    dao.updateSharedMemory(memory.copy(isFavorite = !memory.isFavorite))
+    updateSharedMemory(memory.copy(isFavorite = !memory.isFavorite))
   }
 
   // Anniversary Dates CRUD
@@ -384,32 +398,70 @@ class InLoveRepository(private val dao: InLoveDao) {
     reminderDaysBefore: Int = 3,
     daysRemaining: Int = 0
   ): Long {
-    return dao.insertAnniversaryDate(
-      AnniversaryDateEntity(
-        title = title,
-        dateText = dateText,
-        type = type,
-        description = description,
-        isAnnual = isAnnual,
-        notificationEnabled = true,
-        reminderDaysBefore = reminderDaysBefore,
-        daysRemaining = daysRemaining,
-        createdAt = System.currentTimeMillis()
-      )
+    val now = System.currentTimeMillis()
+    val item = AnniversaryDateEntity(
+      title = title,
+      dateText = dateText,
+      type = type,
+      description = description,
+      isAnnual = isAnnual,
+      notificationEnabled = true,
+      reminderDaysBefore = reminderDaysBefore,
+      daysRemaining = daysRemaining,
+      createdAt = now,
+      syncId = UUID.randomUUID().toString(),
+      updatedAt = now,
+      pendingSync = true
     )
+    val newId = dao.insertAnniversaryDateWithOutbox(
+      item, outboxEntryFor(AnniversarySyncAdapter.entityType, item.syncId, item)
+    )
+    SyncWorker.enqueueImmediate(appContext)
+    return newId
   }
 
   suspend fun updateAnniversaryDate(item: AnniversaryDateEntity) {
-    dao.updateAnniversaryDate(item)
+    val withSync = ensureSyncId(item).copy(updatedAt = System.currentTimeMillis(), pendingSync = true)
+    dao.updateAnniversaryDateWithOutbox(
+      withSync, outboxEntryFor(AnniversarySyncAdapter.entityType, withSync.syncId, withSync)
+    )
+    SyncWorker.enqueueImmediate(appContext)
   }
 
   suspend fun deleteAnniversaryDate(id: Long) {
-    dao.deleteAnniversaryDateById(id)
+    val existing = dao.getAllAnniversaryDates().first().firstOrNull { it.id == id } ?: return
+    val tombstone = ensureSyncId(existing).copy(deleted = true, updatedAt = System.currentTimeMillis(), pendingSync = true)
+    dao.deleteAnniversaryDateWithOutbox(
+      id, outboxEntryFor(AnniversarySyncAdapter.entityType, tombstone.syncId, tombstone)
+    )
+    SyncWorker.enqueueImmediate(appContext)
   }
 
   suspend fun toggleAnniversaryNotification(item: AnniversaryDateEntity) {
-    dao.updateAnniversaryDate(item.copy(notificationEnabled = !item.notificationEnabled))
+    updateAnniversaryDate(item.copy(notificationEnabled = !item.notificationEnabled))
   }
+
+  private fun ensureSyncId(memory: SharedMemoryEntity): SharedMemoryEntity =
+    if (memory.syncId.isBlank()) memory.copy(syncId = UUID.randomUUID().toString()) else memory
+
+  private fun ensureSyncId(item: AnniversaryDateEntity): AnniversaryDateEntity =
+    if (item.syncId.isBlank()) item.copy(syncId = UUID.randomUUID().toString()) else item
+
+  private fun outboxEntryFor(entityType: String, syncId: String, memory: SharedMemoryEntity): SyncOutboxEntity =
+    SyncOutboxEntity(
+      entityType = entityType,
+      syncId = syncId,
+      operation = if (memory.deleted) "DELETE" else "UPSERT",
+      payloadJson = SyncWorker.moshiAdapterFor<SharedMemoryEntity>().toJson(memory)
+    )
+
+  private fun outboxEntryFor(entityType: String, syncId: String, item: AnniversaryDateEntity): SyncOutboxEntity =
+    SyncOutboxEntity(
+      entityType = entityType,
+      syncId = syncId,
+      operation = if (item.deleted) "DELETE" else "UPSERT",
+      payloadJson = SyncWorker.moshiAdapterFor<AnniversaryDateEntity>().toJson(item)
+    )
 
   // Gift Reminders CRUD
   suspend fun addGiftReminder(

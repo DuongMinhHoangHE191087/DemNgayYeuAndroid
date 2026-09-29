@@ -30,7 +30,7 @@ class CloudEnrichmentDataTest {
     db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
       .allowMainThreadQueries()
       .build()
-    repository = InLoveRepository(db.inLoveDao())
+    repository = InLoveRepository(db.inLoveDao(), context)
   }
 
   @After
