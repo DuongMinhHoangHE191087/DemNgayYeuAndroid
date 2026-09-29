@@ -6,11 +6,16 @@
   "scripts": {
     "seed": "node seed_firestore.js",
     "seed:rest": "node seed_firestore.js --mode=rest",
-    "seed:verify": "node seed_firestore.js --verify-only"
+    "seed:verify": "node seed_firestore.js --verify-only",
+    "test:rules": "firebase emulators:exec --only firestore \"mocha rules-tests/**/*.test.js --timeout 20000\""
   },
   "dependencies": {
     "dotenv": "^16.4.7",
     "firebase-admin": "^13.1.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "mocha": "^10.7.3"
   },
   "type": "commonjs"
 }
