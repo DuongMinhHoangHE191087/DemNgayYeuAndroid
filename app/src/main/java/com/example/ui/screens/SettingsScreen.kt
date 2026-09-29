@@ -649,6 +649,32 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       )
     }
 
+    // 2.1. Ad privacy options (GDPR/CCPA "manage consent" re-entry point)
+    item {
+      val context = androidx.compose.ui.platform.LocalContext.current
+      // NOT `context as? Activity` — MainActivity wraps LocalContext with
+      // createConfigurationContext() for locale support, so it is never an Activity here.
+      // LocalActivityResultRegistryOwner is provided once, directly around the real
+      // Activity, in the same MainActivity.onCreate setContent block, specifically usable
+      // for this.
+      val activity = androidx.activity.compose.LocalActivityResultRegistryOwner.current as? android.app.Activity
+      val showPrivacyRow = remember {
+        try { com.app.plugin.consent.ConsentManager.isPrivacyOptionsRequired(context) } catch (e: Exception) { false }
+      }
+      AdPrivacyOptionsRow(
+        visible = showPrivacyRow && activity != null,
+        isEnglish = isEnglish,
+        onClick = {
+          val act = activity ?: return@AdPrivacyOptionsRow
+          try {
+            com.app.plugin.consent.ConsentManager.showPrivacyOptions(act)
+          } catch (e: Exception) {
+            android.util.Log.d("SettingsScreen", "showPrivacyOptions failed: ${e.message}")
+          }
+        }
+      )
+    }
+
     // 2.5. VIP Subscription Banner & Entry Point to Paywall
     item {
       Column(modifier = Modifier.fillMaxWidth()) {
@@ -1557,6 +1583,43 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         showEditLoveTitleDialog = false
       }
     )
+  }
+}
+
+/**
+ * Pure UI: takes the already-resolved visibility decision and click handler as parameters,
+ * rather than reading LocalContext/LocalActivityResultRegistryOwner itself — this is what
+ * makes PrivacyOptionsRowTest able to verify the row's actual on-screen visibility without
+ * needing to fake an Activity or a wrapped Context.
+ */
+@Composable
+internal fun AdPrivacyOptionsRow(visible: Boolean, isEnglish: Boolean, onClick: () -> Unit) {
+  if (!visible) return
+  Card(
+    shape = RoundedCornerShape(20.dp),
+    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable(onClick = onClick)
+      .testTag("settings_privacy_options_row")
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(16.dp),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Icon(
+        imageVector = Icons.Default.Info,
+        contentDescription = null,
+        tint = Primary
+      )
+      Spacer(modifier = Modifier.width(12.dp))
+      Text(
+        if (isEnglish) "Ad Privacy Options" else "Quyền riêng tư quảng cáo",
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium
+      )
+    }
   }
 }
 

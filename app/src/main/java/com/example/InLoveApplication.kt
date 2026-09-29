@@ -67,8 +67,14 @@ class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider 
         // appplugin chỉ dùng các ID này để đồng bộ Entitlements (tắt quảng cáo cho VIP), không
         // tự chạy một luồng mua hàng song song — xem VipProductIds.kt để biết chi tiết.
         val report = MonetizationSdk.configure(this) {
-            brainEnabled = true
-            brainRolloutFraction = 1.0
+            // Off: InLove is not a game, has no backend training/BigQuery pipeline deployed
+            // for this brain (per appplugin's own docs), and AdsManagerImpl's explicit 30s
+            // interstitial interval cap is already the real, auditable gate. Re-enabling later
+            // must follow the SDK's own staged rollout (5% -> 20% -> 100%, >=2 weeks per step
+            // with a holdout comparison, appplugin/DOC/38_INTEGRATION_GUIDE.md:126-144) — the
+            // value below is left in place as a starting point for that, not a live setting.
+            brainEnabled = false
+            brainRolloutFraction = 0.05
             childDirected = false
 
             inappProducts = listOf(VipProductIds.LIFETIME)
