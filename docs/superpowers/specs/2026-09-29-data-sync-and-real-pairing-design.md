@@ -27,6 +27,17 @@ service and the `_3nf` schema are deleted as dead code, not revived.
 breakup state machine stays 100% client + Firestore-rules-only (Approach 3
 below). No Cloud Functions, no new server infrastructure.
 
+**Revision (2026-09-30):** an adversarial review of the resulting
+implementation plan against the real codebase found and fixed 6 blocking
+issues before implementation started — most importantly, a missing Firestore
+rule for the `memories`/`anniversaries` subcollections Part A's content tier
+actually uses (would have silently defeated content sync entirely), a
+listener race in the identity tier, and a gap where the original "drop
+`partnerId`" design was never wired to actually propagate a remote pairing
+change to the inviting device's UI. See "Data model changes" in Part B for
+the resulting, corrected `partnerId` design and the updated rules list at
+the end of Part B.
+
 ## Part A — Generic Offline Sync Engine
 
 ### Problem this solves
@@ -103,11 +114,17 @@ instead of writing one Worker per feature.
   since relationship membership itself is unknown until the first tier below
   runs):
   1. **Identity tier, always on while logged in:** listens to
-     `relationships` where `partnerAId == myUid OR partnerBId == myUid`, and
-     to `invites` where `targetUid == myUid`. Both are written into Room via
-     the same generic outbox/adapter mechanism as any other synced entity.
-     This is what lets the UI show incoming invites and resolve "who is my
-     partner" (Part B) without a `partnerId` field.
+     `relationships` where `user1 == myUid OR user2 == myUid` (a single
+     `Filter.or` query — two independent listeners on the two fields would
+     race each other and could tear down the content tier one of them just
+     started), and to `invites` where `targetUid == myUid`. Both are written
+     into Room via the same generic outbox/adapter mechanism as any other
+     synced entity. This tier is also what keeps `OnlineUserEntity.partnerId`
+     correct from the remote side (see "Data model changes" below) and
+     signals `OnlineCoupleRepository` to refresh its UI-facing state whenever
+     it does — this is the mechanism that makes a remote pairing/breakup
+     event reach the *other* device's UI, not just the device that performed
+     the action.
   2. **Content tier, started/stopped reactively by tier 1's result:** the
      moment Room's relationship query yields a row with `status == "ACTIVE"`,
      `SyncCoordinator` registers `addSnapshotListener` on that relationship's
@@ -163,12 +180,27 @@ place partnership is recorded, and by using Firestore's own document-id
 matching to bind an accepted invite to at most one relationship.
 
 ### Data model changes
-- **Drop** `partnerId` from `OnlineUserEntity`/`UserAccountEntity` and from
-  the `users` Firestore documents. "Who is my partner" is answered by
-  querying `relationships` where `partnerAId == me OR partnerBId == me AND
-  status == "ACTIVE"` — one indexed query (add the composite index to
-  `firestore.indexes.json`), cached into Room by `SyncCoordinator` like any
-  other synced entity.
+- **`partnerId` on `OnlineUserEntity` stays, but only as a local read-cache —
+  it is never trusted by a Firestore rule, and no rule anywhere reads it.**
+  (Revised from this spec's original "drop `partnerId` entirely": the
+  security property that mattered — no client ever writes partnership onto a
+  document it doesn't own, and no rule ever trusts a client-supplied
+  `partnerId` — is fully preserved by Part B's design below; dropping the
+  field outright would additionally require rebuilding
+  `OnlineCoupleRepository`'s reactive state around a live Room query instead
+  of its existing `refreshState()`-snapshot pattern, which is a larger,
+  separate refactor than this spec's scope justifies.) The **source of
+  truth** for "who is my partner" is still exclusively the `relationships`
+  collection (`user1`/`user2` fields, queried by the identity tier above) —
+  `partnerId` is a denormalized copy of that answer, kept correct by two
+  independent writers that never conflict because they only ever write to
+  the CURRENT device's own signed-in user's row: (a) the local pairing/
+  breakup code path (`OnlineCoupleRepository`, unchanged from today), and
+  (b) `SyncCoordinator`'s identity tier, which updates it — and only it, for
+  the uid it was started with — whenever a remote `relationships` change
+  implies a different answer, then signals `OnlineCoupleRepository` to
+  refresh. `UserAccountEntity` never had a `partnerId` field and needs no
+  change.
 - **New collection `coupleCodes/{code}`**: `{ code: String, ownerUid: String,
   createdAt: Timestamp }`. Lets a partner be found without making `users`
   world-readable. `code` is an 8-character random alphanumeric string
@@ -242,8 +274,20 @@ matching to bind an accepted invite to at most one relationship.
   `Firebase3NFModels.kt` in code, plus their reads/writes in
   `InLoveViewModel.kt`. Nothing else references them (confirmed dead in the
   data-layer audit).
-- Add the composite index for the "my active relationship" query to
-  `firestore.indexes.json`.
+- **Add `relationships/{relId}/memories/{memId}` and
+  `relationships/{relId}/anniversaries/{annId}` — subcollections, distinct
+  from the existing top-level `/memories`/`/anniversaries` collections above
+  (those are untouched). This is where Part A's content tier actually
+  reads/writes (`MemorySyncAdapter`/`AnniversarySyncAdapter.collectionPath`).
+  Without a rule here, every content push and listener falls through to the
+  file's default-deny and fails — this was missing from the first draft of
+  this spec and is the single most consequential gap an implementer must not
+  skip. Both relationship members get full read/write, gated on
+  `isRelationshipMember` of the parent `relationships/{relId}` doc.**
+- The "my active relationship" query (`user1 == uid OR user2 == uid`, via a
+  single `Filter.or`) is a disjunction of two single-field equalities, which
+  Firestore auto-indexes without a manual composite index entry — no change
+  needed to `firestore.indexes.json` for it.
 
 ## Error Handling
 - Outbox push failure (offline, permission-denied, quota): row stays
@@ -274,8 +318,11 @@ matching to bind an accepted invite to at most one relationship.
   emulator-auth'd users complete steps 1–5 and end up each seeing the other
   as partner, (2) a third user cannot create a `relationships` doc without
   a matching `ACCEPTED` invite, (3) a stale invite replay after termination
-  is rejected. This is the direct regression test for the two previously
-  shipped pairing vulnerabilities.
+  is rejected, and (4) both relationship members can read/write the
+  `memories`/`anniversaries` subcollections while a non-member cannot. This
+  is the direct regression test for the two previously shipped pairing
+  vulnerabilities, plus the subcollection-rules gap found in this spec's own
+  review.
 - Manual verification: two physical/emulator devices, two accounts, full
   pairing flow with airplane mode toggled mid-flow on one device to confirm
   outbox recovery.

@@ -86,13 +86,28 @@ class Migration12To13Test {
          1700000000000, NULL, '', 'Bạn', 1, 'IMAGE', NULL, NULL, NULL, 1, '', 0, 'COUPLE_ONLY')
       """.trimIndent()
     )
+    // Two rows, both with the pre-migration column set (no remoteId) — a preset catalog
+    // table like this realistically has many rows on any device that already has the app
+    // installed, which is exactly what a naive migration's UNIQUE INDEX on a shared blank
+    // default (see MIGRATION_12_13's backfill step) would fail on if it weren't backfilled
+    // with a distinct value per row first.
     v12.execSQL(
       """
       INSERT INTO gift_ideas
         (id, title, category, badgeText, tag, description, imageUrl, isFavorited,
          detailsSnippet, actionText, isAiGenerated, targetInterests, suggestedOccasion, priceRange)
       VALUES
-        (1, 'Nến thơm', 'Quà lãng mạn', 'Gợi ý', 'Ý nghĩa', '', '', 0, '', '', 0, '', '', '')
+        (1, 'Nến thơm', 'Quà lãng mạn', 'Gợi ý', 'Ý nghĩa', '', '', 0, '', '', 0, '', '', ''),
+        (2, 'Hoa hồng', 'Quà lãng mạn', 'Gợi ý', 'Ý nghĩa', '', '', 0, '', '', 0, '', '', '')
+      """.trimIndent()
+    )
+    v12.execSQL(
+      """
+      INSERT INTO milestones
+        (id, title, dateText, subtitle, categoryTag, secondaryTag, imageUrl, daysRemaining)
+      VALUES
+        (1, '100 ngày', '2024-04-10', '', 'Cột Mốc', '', '', 0),
+        (2, '1 năm', '2025-01-01', '', 'Cột Mốc', '', '', 0)
       """.trimIndent()
     )
     v12.close()
@@ -105,9 +120,20 @@ class Migration12To13Test {
       assert(cursor.getInt(3) == 0) { "deleted must default to false" }
       assert(cursor.getInt(4) == 0) { "pendingSync must default to false for pre-existing rows" }
     }
-    v13.query("SELECT remoteId FROM gift_ideas WHERE id = 1").use { cursor ->
+    // The migration itself succeeding (runMigrationsAndValidate did not throw) is already
+    // the main regression test for the UNIQUE INDEX crash; these two assertions additionally
+    // pin the exact backfilled values so a future edit can't silently reintroduce duplicates.
+    v13.query("SELECT id, remoteId FROM gift_ideas ORDER BY id").use { cursor ->
       assert(cursor.moveToFirst())
-      assert(cursor.getString(0) == "") { "remoteId defaults to blank until the next preset sync assigns it" }
+      assert(cursor.getString(1) == "legacy_1") { "pre-existing row 1 gets a distinct placeholder remoteId" }
+      assert(cursor.moveToNext())
+      assert(cursor.getString(1) == "legacy_2") { "pre-existing row 2 gets a DIFFERENT placeholder remoteId — this is what the unique index requires" }
+    }
+    v13.query("SELECT id, remoteId FROM milestones ORDER BY id").use { cursor ->
+      assert(cursor.moveToFirst())
+      assert(cursor.getString(1) == "legacy_1")
+      assert(cursor.moveToNext())
+      assert(cursor.getString(1) == "legacy_2")
     }
     v13.query("SELECT COUNT(*) FROM sync_outbox").use { cursor ->
       cursor.moveToFirst()
@@ -148,6 +174,8 @@ ksp {
 
 In `app/src/main/java/com/example/data/model/Entities.kt`, replace the `MilestoneEntity` declaration:
 
+Room does not infer a SQL `DEFAULT` from a Kotlin constructor default — it only records one when `@ColumnInfo(defaultValue = ...)` is present, and its schema validator compares this recorded value against the actual migrated table's column defaults. `remoteId` is added via `ALTER TABLE ... ADD COLUMN ... NOT NULL` in Step 6 below, which SQLite only accepts when a `DEFAULT` is given — so it MUST carry a matching `@ColumnInfo(defaultValue = "''")`, or Task 1's own migration test (Step 1/Step 8) fails with a schema mismatch:
+
 ```kotlin
 @Entity(tableName = "milestones", indices = [Index(value = ["remoteId"], unique = true)])
 data class MilestoneEntity(
@@ -167,11 +195,11 @@ data class MilestoneEntity(
   val alarmTimeMillis: Long? = null,
   val alarmTimeFormatted: String = "",
   val isUserCreated: Boolean = false,
-  val remoteId: String = ""
+  @ColumnInfo(defaultValue = "''") val remoteId: String = ""
 )
 ```
 
-Replace the `GiftIdeaEntity` declaration:
+Replace the `GiftIdeaEntity` declaration (same `@ColumnInfo` reasoning as `MilestoneEntity.remoteId` above):
 
 ```kotlin
 @Entity(tableName = "gift_ideas", indices = [Index(value = ["remoteId"], unique = true)])
@@ -190,14 +218,15 @@ data class GiftIdeaEntity(
   val targetInterests: String = "",
   val suggestedOccasion: String = "",
   val priceRange: String = "",
-  val remoteId: String = ""
+  @ColumnInfo(defaultValue = "''") val remoteId: String = ""
 )
 ```
 
-Replace `SharedMemoryEntity` (drops `isSynced`, adds four sync columns):
+Replace `SharedMemoryEntity` (drops `isSynced`, adds four sync columns). `syncId`/`deleted`/`pendingSync` carry `@ColumnInfo(defaultValue = ...)` because Step 6's migration rebuild deliberately leaves them OUT of the `INSERT ... SELECT` column list (existing rows have no value to copy for a column that didn't exist), so SQLite fills them from the table's `DEFAULT` on migration — that default must be declared here to match. `updatedAt` does NOT need one: Step 6's migration explicitly copies a value into it for every existing row (from the old `createdAt`), so no SQL-level default is ever exercised, and Room's schema validator only complains about a *mismatch*, not about the mere absence of a default on both sides:
 
 ```kotlin
 @Entity(tableName = "shared_memories")
+@JsonClass(generateAdapter = true)
 data class SharedMemoryEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
@@ -222,17 +251,18 @@ data class SharedMemoryEntity(
   // Phân quyền (Permissions): "COUPLE_ONLY", "PRIVATE", "PUBLIC"
   val privacyLevel: String = "COUPLE_ONLY",
   // Offline-first sync (Task 1, 2026-09-29 data-sync-and-real-pairing plan)
-  val syncId: String = "",
+  @ColumnInfo(defaultValue = "''") val syncId: String = "",
   val updatedAt: Long = 0,
-  val deleted: Boolean = false,
-  val pendingSync: Boolean = false
+  @ColumnInfo(defaultValue = "0") val deleted: Boolean = false,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 )
 ```
 
-Replace `AnniversaryDateEntity` (drops `isSynced`, adds the same four columns):
+Replace `AnniversaryDateEntity` (drops `isSynced`, adds the same four columns, same `@ColumnInfo` reasoning as `SharedMemoryEntity` above):
 
 ```kotlin
 @Entity(tableName = "anniversary_dates")
+@JsonClass(generateAdapter = true)
 data class AnniversaryDateEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
@@ -245,14 +275,14 @@ data class AnniversaryDateEntity(
   val daysRemaining: Int = 0,
   val createdAt: Long = System.currentTimeMillis(),
   val relationshipId: String? = null,
-  val syncId: String = "",
+  @ColumnInfo(defaultValue = "''") val syncId: String = "",
   val updatedAt: Long = 0,
-  val deleted: Boolean = false,
-  val pendingSync: Boolean = false
+  @ColumnInfo(defaultValue = "0") val deleted: Boolean = false,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 )
 ```
 
-Add sync columns to `OnlineRelationshipEntity` and `OnlineInviteEntity` (identity-tier entities, Task 8):
+Add sync columns to `OnlineRelationshipEntity` and `OnlineInviteEntity` (identity-tier entities, Task 8). Unlike the two entities above, these columns are added with plain `ALTER TABLE ... ADD COLUMN ... NOT NULL` in Step 6 (no table rebuild), and SQLite only accepts a `NOT NULL` column added this way when a `DEFAULT` is given — so both fields on both entities need `@ColumnInfo(defaultValue = "0")`:
 
 ```kotlin
 @Entity(tableName = "online_relationships")
@@ -267,8 +297,8 @@ data class OnlineRelationshipEntity(
   val breakupRequestedAt: Long? = null,
   val createdAt: Long = System.currentTimeMillis(),
   val terminatedAt: Long? = null,
-  val updatedAt: Long = 0,
-  val pendingSync: Boolean = false
+  @ColumnInfo(defaultValue = "0") val updatedAt: Long = 0,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 )
 ```
 
@@ -291,18 +321,19 @@ data class OnlineInviteEntity(
   val loveNote: String = "",
   val status: String = InviteStatus.PENDING,
   val createdAt: Long = System.currentTimeMillis(),
-  val updatedAt: Long = 0,
-  val pendingSync: Boolean = false
+  @ColumnInfo(defaultValue = "0") val updatedAt: Long = 0,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 ) {
   val effectiveSenderName: String
     get() = senderName.ifBlank { "Vô danh" }
 }
 ```
 
-Add the new outbox entity at the end of the file, before the final blank lines:
+Add the new outbox entity at the end of the file, before the final blank lines. It needs no `@ColumnInfo(defaultValue = ...)` anywhere: it is a brand-new table with no pre-existing rows to backfill, and every write in this plan (Task 6/7) always constructs a complete `SyncOutboxEntity` with every field resolved by Kotlin before Room ever sees it, so no SQL-level default is ever exercised:
 
 ```kotlin
 @Entity(tableName = "sync_outbox")
+@JsonClass(generateAdapter = true)
 data class SyncOutboxEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val entityType: String, // "memory" | "anniversary" | "invite" | "relationship"
@@ -315,11 +346,13 @@ data class SyncOutboxEntity(
 )
 ```
 
-Add the two new imports at the top of `Entities.kt`:
+Add the new imports at the top of `Entities.kt`:
 ```kotlin
+import androidx.room.ColumnInfo
 import androidx.room.Index
+import com.squareup.moshi.JsonClass
 ```
-(`androidx.room.Entity` and `androidx.room.PrimaryKey` are already imported.)
+(`androidx.room.Entity` and `androidx.room.PrimaryKey` are already imported.) `@JsonClass(generateAdapter = true)` on `SharedMemoryEntity`/`AnniversaryDateEntity`/`SyncOutboxEntity` makes `moshi-kotlin-codegen` (already a KSP dependency in this project, per its existing `ksp(libs.moshi.kotlin.codegen)` usage for network models) generate a real `JsonAdapter` for each at compile time. `SyncWorker.moshiAdapterFor` (Task 6) then picks that generated adapter up automatically — Moshi always prefers a generated adapter over its reflection-based `KotlinJsonAdapterFactory` fallback when both are present — which is safer than relying on reflection alone for these three classes' nullable/defaulted constructor parameters.
 
 - [ ] **Step 5: Add outbox + upsert-by-remoteId methods to `InLoveDao`**
 
@@ -438,31 +471,38 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 val MIGRATION_12_13 = object : Migration(12, 13) {
   override fun migrate(db: SupportSQLiteDatabase) {
     // --- shared_memories: rebuild to drop isSynced, add sync columns ---
+    // DEFAULT is given ONLY for columns the INSERT below does not populate (syncId,
+    // deleted, pendingSync — there is nothing to copy from the old table for them). Every
+    // other column, including updatedAt, is always given an explicit value by the INSERT,
+    // so it carries no SQL-level DEFAULT here — matching each field's Kotlin declaration in
+    // Step 4, which likewise has no @ColumnInfo(defaultValue=...) unless the field is one of
+    // these three. A DEFAULT on both sides that Room's schema validator did not expect (or a
+    // missing one it did) fails Step 8's migration test with a schema mismatch.
     db.execSQL(
       """
       CREATE TABLE shared_memories_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         title TEXT NOT NULL,
         dateText TEXT NOT NULL,
-        note TEXT NOT NULL DEFAULT '',
+        note TEXT NOT NULL,
         photoUri TEXT NOT NULL,
-        location TEXT NOT NULL DEFAULT '',
-        isFavorite INTEGER NOT NULL DEFAULT 0,
-        anniversaryTitle TEXT NOT NULL DEFAULT 'Kỷ Niệm Ngày Yêu',
+        location TEXT NOT NULL,
+        isFavorite INTEGER NOT NULL,
+        anniversaryTitle TEXT NOT NULL,
         createdAt INTEGER NOT NULL,
         relationshipId TEXT,
-        authorId TEXT NOT NULL DEFAULT '',
-        authorName TEXT NOT NULL DEFAULT 'Bạn',
-        mediaType TEXT NOT NULL DEFAULT 'IMAGE',
+        authorId TEXT NOT NULL,
+        authorName TEXT NOT NULL,
+        mediaType TEXT NOT NULL,
         videoUri TEXT,
         cloudinaryPublicId TEXT,
         cloudinaryUrl TEXT,
-        isCloudinaryStored INTEGER NOT NULL DEFAULT 1,
-        fileSizeFormatted TEXT NOT NULL DEFAULT '',
-        durationSeconds INTEGER NOT NULL DEFAULT 0,
-        privacyLevel TEXT NOT NULL DEFAULT 'COUPLE_ONLY',
+        isCloudinaryStored INTEGER NOT NULL,
+        fileSizeFormatted TEXT NOT NULL,
+        durationSeconds INTEGER NOT NULL,
+        privacyLevel TEXT NOT NULL,
         syncId TEXT NOT NULL DEFAULT '',
-        updatedAt INTEGER NOT NULL DEFAULT 0,
+        updatedAt INTEGER NOT NULL,
         deleted INTEGER NOT NULL DEFAULT 0,
         pendingSync INTEGER NOT NULL DEFAULT 0
       )
@@ -486,23 +526,23 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     db.execSQL("DROP TABLE shared_memories")
     db.execSQL("ALTER TABLE shared_memories_new RENAME TO shared_memories")
 
-    // --- anniversary_dates: same rebuild pattern ---
+    // --- anniversary_dates: same rebuild pattern, same DEFAULT-only-where-uncopied rule ---
     db.execSQL(
       """
       CREATE TABLE anniversary_dates_new (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         title TEXT NOT NULL,
         dateText TEXT NOT NULL,
-        type TEXT NOT NULL DEFAULT 'LOVE',
-        description TEXT NOT NULL DEFAULT '',
-        isAnnual INTEGER NOT NULL DEFAULT 1,
-        notificationEnabled INTEGER NOT NULL DEFAULT 1,
-        reminderDaysBefore INTEGER NOT NULL DEFAULT 3,
-        daysRemaining INTEGER NOT NULL DEFAULT 0,
+        type TEXT NOT NULL,
+        description TEXT NOT NULL,
+        isAnnual INTEGER NOT NULL,
+        notificationEnabled INTEGER NOT NULL,
+        reminderDaysBefore INTEGER NOT NULL,
+        daysRemaining INTEGER NOT NULL,
         createdAt INTEGER NOT NULL,
         relationshipId TEXT,
         syncId TEXT NOT NULL DEFAULT '',
-        updatedAt INTEGER NOT NULL DEFAULT 0,
+        updatedAt INTEGER NOT NULL,
         deleted INTEGER NOT NULL DEFAULT 0,
         pendingSync INTEGER NOT NULL DEFAULT 0
       )
@@ -522,7 +562,9 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     db.execSQL("DROP TABLE anniversary_dates")
     db.execSQL("ALTER TABLE anniversary_dates_new RENAME TO anniversary_dates")
 
-    // --- additive columns (SQLite ADD COLUMN is safe on every supported OS version) ---
+    // --- additive columns: SQLite requires a DEFAULT to ADD a NOT NULL column to a table
+    // that already has rows, so these six all carry a matching @ColumnInfo(defaultValue=...)
+    // in Step 4 (unlike the rebuilt tables above, where most columns intentionally have none) ---
     db.execSQL("ALTER TABLE gift_ideas ADD COLUMN remoteId TEXT NOT NULL DEFAULT ''")
     db.execSQL("ALTER TABLE milestones ADD COLUMN remoteId TEXT NOT NULL DEFAULT ''")
     db.execSQL("ALTER TABLE online_relationships ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
@@ -530,11 +572,26 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     db.execSQL("ALTER TABLE online_invites ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
     db.execSQL("ALTER TABLE online_invites ADD COLUMN pendingSync INTEGER NOT NULL DEFAULT 0")
 
+    // --- backfill a distinct placeholder remoteId per pre-existing row BEFORE creating the
+    // unique index below. Every row just got the SAME literal '' from the ALTER TABLE
+    // DEFAULT above — unlike NULL, SQLite's unique index treats repeated '' values as
+    // genuine duplicates, so on a real device (this table is a preset catalog, seeded with
+    // many rows — that plurality is the entire premise of Task 9's dedupe fix) the
+    // CREATE UNIQUE INDEX below would abort the migration with "UNIQUE constraint failed"
+    // the moment two or more pre-existing rows share the same remoteId, i.e. on every
+    // install that already has data. `id` is the table's own primary key, so 'legacy_' || id
+    // is guaranteed distinct per row; Task 9's next real Firestore sync then inserts fresh
+    // rows keyed by the actual remote document id (a placeholder never matches a real one,
+    // so it is left in place as a harmless pre-existing row, not merged away) ---
+    db.execSQL("UPDATE gift_ideas SET remoteId = 'legacy_' || id WHERE remoteId = ''")
+    db.execSQL("UPDATE milestones SET remoteId = 'legacy_' || id WHERE remoteId = ''")
+
     // --- unique indices backing the new remoteId upsert path ---
     db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_gift_ideas_remoteId ON gift_ideas(remoteId)")
     db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_milestones_remoteId ON milestones(remoteId)")
 
-    // --- new outbox table ---
+    // --- new outbox table: no pre-existing rows to backfill, so no column needs a DEFAULT
+    // (every insert in Task 6/7 always supplies a fully-constructed SyncOutboxEntity) ---
     db.execSQL(
       """
       CREATE TABLE IF NOT EXISTS sync_outbox (
@@ -544,7 +601,7 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         operation TEXT NOT NULL,
         payloadJson TEXT NOT NULL,
         createdAt INTEGER NOT NULL,
-        attemptCount INTEGER NOT NULL DEFAULT 0,
+        attemptCount INTEGER NOT NULL,
         lastError TEXT
       )
       """.trimIndent()
@@ -1290,6 +1347,7 @@ import androidx.work.NetworkType
 import androidx.work.BackoffPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.WorkRequest
 import com.example.data.db.AppDatabase
 import com.example.data.db.InLoveDao
 import com.example.data.model.AnniversaryDateEntity
@@ -1387,8 +1445,6 @@ class SyncWorker(
   }
 }
 ```
-
-Add the missing `WorkRequest` import: `import androidx.work.WorkRequest`.
 
 - [ ] **Step 5: Add a `WorkerFactory` for constructor injection**
 
@@ -1686,7 +1742,7 @@ git commit -m "feat(data): route memory/anniversary CRUD through the offline out
 
 **Interfaces:**
 - Consumes: `InLoveDao` (Task 1), `MemorySyncAdapter`/`AnniversarySyncAdapter` (Task 5), `NetworkMonitor` (Task 4), `SyncWorker.enqueuePeriodic`/`SyncWorkerFactory` (Task 6).
-- Produces: `class SyncCoordinator(dao: InLoveDao, firestore: FirebaseFirestore?, scope: CoroutineScope) { fun start(uid: String); fun stop() }`. `AppServiceLocator.syncCoordinator`, `AppServiceLocator.networkMonitor`. Consumed by Task 11 (pairing rewrite reads `AppServiceLocator.syncCoordinator`/is started from `AuthRepository`'s login success path).
+- Produces: `class SyncCoordinator(dao: InLoveDao, firestore: FirebaseFirestore?, scope: CoroutineScope) { fun start(uid: String, onRelationshipChanged: suspend () -> Unit = {}); fun stop() }`. `AppServiceLocator.syncCoordinator`, `AppServiceLocator.networkMonitor`. Consumed by Task 11 (pairing rewrite reads `AppServiceLocator.syncCoordinator`/is started from `AuthRepository`'s login success path, passed `onlineRepo::refreshState` as the callback so a remote pairing/breakup event reaches the inviting device's UI, not just the accepting one).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1767,8 +1823,10 @@ import com.example.data.db.InLoveDao
 import com.example.data.model.AnniversaryDateEntity
 import com.example.data.model.OnlineInviteEntity
 import com.example.data.model.OnlineRelationshipEntity
+import com.example.data.model.OnlineStatus
 import com.example.data.model.RelationshipStatus
 import com.example.data.model.SharedMemoryEntity
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
@@ -1777,10 +1835,21 @@ import kotlinx.coroutines.launch
 /**
  * Two listener tiers, both scoped to the login lifetime (started/stopped together):
  *  - identity tier: relationships + invites involving me, always on while logged in — this
- *    is how "who is my partner" is resolved without a partnerId field on the user document.
+ *    is how "who is my partner" is resolved without trusting a client-writable field on
+ *    someone else's user document.
  *  - content tier: memories + anniversaries of the active relationship, started the moment
  *    the identity tier yields a relationship with status == ACTIVE, stopped the moment it
  *    stops being ACTIVE (terminated) or on logout.
+ *
+ * `OnlineUserEntity.partnerId`/`relationshipId`/`status` remain a LOCAL read-cache (the spec's
+ * "drop partnerId" intent is honored where it actually matters — no Firestore rule anywhere
+ * trusts this field; see the design-doc amendment). This class is what keeps that cache
+ * correct from the REMOTE side: it only ever writes to the row matching the uid passed into
+ * `start()` (never another user's row — that data came from a Firestore READ of a relationship
+ * doc I am legitimately a member of, not a cross-user write), and calls `onRelationshipChanged`
+ * after doing so, so `OnlineCoupleRepository`'s existing `refreshState()`-based UI state picks
+ * it up — without this callback, only the device that itself performed a local pairing/breakup
+ * action would ever see its own UI update; the OTHER device's UI would stay stale.
  */
 class SyncCoordinator(
   private val dao: InLoveDao,
@@ -1790,28 +1859,31 @@ class SyncCoordinator(
   private var identityRegistrations: List<ListenerRegistration> = emptyList()
   private var contentRegistrations: List<ListenerRegistration> = emptyList()
   private var activeRelationshipId: String? = null
+  private var onRelationshipChanged: suspend () -> Unit = {}
 
-  fun start(uid: String) {
+  fun start(uid: String, onRelationshipChanged: suspend () -> Unit = {}) {
     stop()
+    this.onRelationshipChanged = onRelationshipChanged
     val fs = firestore ?: return
 
+    // A single Filter.or query, not two separate whereEqualTo("user1"/"user2") listeners:
+    // two independent listeners racing on different fields would each see the OTHER's rows
+    // as an empty result and could tear down the content tier the other one just started.
     val relationshipsListener = fs.collection("relationships")
-      .whereEqualTo("user1", uid)
-      .addSnapshotListener { snapshot, _ -> handleRelationshipSnapshot(snapshot) }
-    val relationshipsListener2 = fs.collection("relationships")
-      .whereEqualTo("user2", uid)
-      .addSnapshotListener { snapshot, _ -> handleRelationshipSnapshot(snapshot) }
+      .where(Filter.or(Filter.equalTo("user1", uid), Filter.equalTo("user2", uid)))
+      .addSnapshotListener { snapshot, _ -> handleRelationshipSnapshot(snapshot, uid) }
     val invitesListener = fs.collection("invites")
       .whereEqualTo("targetUid", uid)
       .addSnapshotListener { snapshot, _ -> handleInviteSnapshot(snapshot) }
 
-    identityRegistrations = listOf(relationshipsListener, relationshipsListener2, invitesListener)
+    identityRegistrations = listOf(relationshipsListener, invitesListener)
   }
 
   fun stop() {
     identityRegistrations.forEach { it.remove() }
     identityRegistrations = emptyList()
     stopContentListeners()
+    onRelationshipChanged = {}
   }
 
   private fun stopContentListeners() {
@@ -1820,8 +1892,11 @@ class SyncCoordinator(
     activeRelationshipId = null
   }
 
-  private fun handleRelationshipSnapshot(snapshot: com.google.firebase.firestore.QuerySnapshot?) {
+  private fun handleRelationshipSnapshot(snapshot: com.google.firebase.firestore.QuerySnapshot?, uid: String) {
     val fs = firestore ?: return
+    // One query now returns every relationship doc involving me, so "the" active one is
+    // simply the ACTIVE doc among these results (at most one — Task 11's accept flow always
+    // issues a fresh id per pairing and never reuses a terminated one).
     val activeDoc = snapshot?.documents?.firstOrNull { it.getString("status") == RelationshipStatus.ACTIVE }
     scope.launch {
       snapshot?.documents?.forEach { doc ->
@@ -1840,6 +1915,25 @@ class SyncCoordinator(
           pendingSync = false
         )
         dao.insertOnlineRelationship(rel)
+      }
+
+      // Keep MY OWN OnlineUserEntity row in sync with what the identity tier just learned —
+      // this is the piece that makes a remote pairing/breakup event reach the local
+      // read-cache OnlineCoupleRepository.refreshState() actually reads.
+      val me = dao.getOnlineUserByUidSync(uid)
+      if (me != null) {
+        val updatedMe = when {
+          activeDoc != null -> {
+            val partnerUid = if (activeDoc.getString("user1") == uid) activeDoc.getString("user2") else activeDoc.getString("user1")
+            me.copy(status = OnlineStatus.COUPLED, partnerId = partnerUid, relationshipId = activeDoc.id)
+          }
+          me.relationshipId != null -> me.copy(status = OnlineStatus.SINGLE, partnerId = null, relationshipId = null)
+          else -> null
+        }
+        if (updatedMe != null && updatedMe != me) {
+          dao.updateOnlineUser(updatedMe)
+          onRelationshipChanged()
+        }
       }
 
       val activeId = activeDoc?.id
@@ -1976,15 +2070,35 @@ And inside `fun initialize(context: Context)`, after the existing `_adsManager` 
 
 (This is the one process-lifetime `CoroutineScope` in this plan that is intentionally never cancelled — `SyncCoordinator` is meant to run for the whole app process, matching `AdsManagerImpl`/`BillingManager`'s existing lifetime in the same object.)
 
-- [ ] **Step 6: Start/stop `SyncCoordinator` from `AuthRepository`'s login/logout paths, and enqueue the periodic worker at app start**
+- [ ] **Step 6: Start/stop `SyncCoordinator` from every place `AuthRepository` transitions to `Authenticated`, and enqueue the periodic worker at app start**
 
-In `app/src/main/java/com/example/data/repository/AuthRepository.kt`, find the point right after `_authState.value = AuthState.Authenticated(...)` is set on successful login (in both the login and register flows) and add:
+`AuthState.Authenticated` is reached from **five** places in the real file, not just `login()`/`register()`: `restoreSession()` (`AuthRepository.kt:189`, the "remember me" auto-login path run on every app relaunch for a PIN-disabled account), `login()` (`AuthRepository.kt:327`), `register()` (around `AuthRepository.kt:528` at the time of writing), and — reached only after `restoreSession()`/`lockApp()` first sets `PinLocked` — `unlockWithPin()` (`AuthRepository.kt:861` and `:871`, a legacy-PIN-migration duplicate of the same transition) and `unlockWithAccountPassword()` (`AuthRepository.kt:890`). Starting `SyncCoordinator` only from `login()`/`register()`, as an earlier draft of this task did, means the common case — a user who is already logged in simply reopening the app, with or without a PIN — never activates sync for that session at all. Add one private helper and call it at all five sites instead of duplicating the try/catch:
+
 ```kotlin
-      com.example.di.AppServiceLocator.syncCoordinator.start(firebaseUid)
+  private fun startSyncCoordinatorSafely(uid: String) {
+    try {
+      com.example.di.AppServiceLocator.syncCoordinator.start(uid) { onlineRepo.refreshState() }
+    } catch (e: Exception) {
+      Log.d("AuthRepo", "SyncCoordinator not started (locator not initialized, e.g. under test): ${e.message}")
+    }
+  }
 ```
-(using whichever local variable in that function already holds the just-authenticated uid — `firebaseUid` in register, the equivalent in login). In `logout()` (the function that calls `FirebaseAuth.getInstance().signOut()` at line 936), add immediately after the sign-out call:
+(`AuthRepositoryTest`, Task 3 Step 6, constructs `AuthRepository`/`OnlineCoupleRepository` directly under Robolectric and never calls `AppServiceLocator.initialize()` — and `InLoveApplication.onCreate()` early-returns under Robolectric, `InLoveApplication.kt:21-26`, before reaching any `AppServiceLocator` call — so the locator is genuinely never initialized in that test file's environment, and `AppServiceLocator.syncCoordinator`'s getter throws `IllegalStateException`. The try/catch, matching the defensive style already used throughout this file for optional cloud calls, degrades that to "sync doesn't start this session" instead of breaking every login/register/restore/unlock test. `SyncCoordinator.start()` itself is a plain, non-suspend function — registering listeners is synchronous, only their callbacks run on the injected `scope` — so this helper can be called from both suspend and non-suspend call sites below without needing `scope.launch`.)
+
+Call sites (each is a one-line addition immediately after the cited `_authState.value = AuthState.Authenticated(...)`):
+- `restoreSession()`, right after `AuthRepository.kt:189`: `startSyncCoordinatorSafely(account.uid)`.
+- `login()`, right after `AuthRepository.kt:327` (the `else` branch, i.e. only when NOT `PinLocked`): `startSyncCoordinatorSafely(account.uid)`.
+- `register()`, right after its own `AuthState.Authenticated(...)` assignment: `startSyncCoordinatorSafely(firebaseUid)`.
+- `unlockWithPin()`, right after BOTH `AuthRepository.kt:861` and `:871` (the normal-hash-match return and the legacy-PIN-migration return — both reach `Authenticated`): `startSyncCoordinatorSafely(currentAccount.uid)`.
+- `unlockWithAccountPassword()`, right after `AuthRepository.kt:890`: `startSyncCoordinatorSafely(currentAccount.uid)`.
+
+In `logout()` (the function that calls `FirebaseAuth.getInstance().signOut()` at line 936), add immediately after the sign-out call:
 ```kotlin
-      com.example.di.AppServiceLocator.syncCoordinator.stop()
+      try {
+        com.example.di.AppServiceLocator.syncCoordinator.stop()
+      } catch (e: Exception) {
+        Log.d("AuthRepo", "SyncCoordinator stop skipped (locator not initialized): ${e.message}")
+      }
 ```
 
 In `app/src/main/java/com/example/InLoveApplication.kt`, inside `onCreate()` after `AppServiceLocator` would already be relied upon — since `AppServiceLocator.initialize()` is currently only called from `InLoveViewModel.init` (line 331), add a call to `AppServiceLocator.initialize(this)` near the top of `InLoveApplication.onCreate()` (right after `FirebaseApp.initializeApp(this)` and `installAppCheckProviderFactory()`, before `super.onCreate()`), so the locator — and with it `SyncCoordinator`/`NetworkMonitor` — exists before any UI is shown, not just after the first `InLoveViewModel` is constructed. Also add the periodic sync enqueue:
@@ -1992,6 +2106,7 @@ In `app/src/main/java/com/example/InLoveApplication.kt`, inside `onCreate()` aft
         com.example.di.AppServiceLocator.initialize(this)
         com.example.data.sync.SyncWorker.enqueuePeriodic(this)
 ```
+This runs only on the non-test path (after the `isRunningInTest` early return above it), so it does not change what `AuthRepositoryTest` sees — that test's `AppServiceLocator` stays uninitialized by design, which is exactly why the try/catch above exists.
 
 - [ ] **Step 7: Wire `SyncWorkerFactory` into WorkManager's real initialization (without this step, `SyncWorker` crashes at runtime — see below)**
 
@@ -2239,20 +2354,42 @@ Replace the whole `match /invites/{inviteId} { ... }` block with (adds an explic
     }
 ```
 
-- [ ] **Step 3: Add the composite index for "my active relationships"**
+- [ ] **Step 3: Add rules for the memories/anniversaries subcollections — without this, every content sync in Task 6/8 fails `PERMISSION_DENIED`**
 
-In `firestore.indexes.json`, add the two single-field-equality queries `SyncCoordinator` (Task 8) runs (`relationships` where `user1 == uid` and where `user2 == uid`) — Firestore only needs a composite index when a query combines an equality filter with something else (an order-by or a second field), and these are plain single-field equality queries, which Firestore auto-indexes without any entry needed. Leave `firestore.indexes.json` unchanged for this task; note this explicitly so a future reader doesn't wonder why no index was added.
+`MemorySyncAdapter`/`AnniversarySyncAdapter` (Task 5) place synced content at `relationships/{relationshipId}/memories/{syncId}` and `relationships/{relationshipId}/anniversaries/{syncId}` — **subcollections of `relationships/{relationshipId}`**, structurally distinct from the existing top-level `/memories/{memoryId}` and `/anniversaries/{anniversaryId}` collections above (those stay as-is; nothing in this plan touches them). Firestore's default-deny rule (`match /{document=**} { allow read, write: if false; }`, already at the top of the file) applies to any path with no matching `match` block, so without this step `SyncWorker`'s pushes and `SyncCoordinator`'s listeners (Task 6, Task 8) fail on every single call — the entire point of Part A's content sync.
 
-- [ ] **Step 4: Validate the rules file**
+Add two new `match` blocks, right after the `relationships/{relationshipId}` block:
+
+```
+    match /relationships/{relId}/memories/{memId} {
+      allow read, write: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/relationships/$(relId)) &&
+        isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data);
+    }
+
+    match /relationships/{relId}/anniversaries/{annId} {
+      allow read, write: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/relationships/$(relId)) &&
+        isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data);
+    }
+```
+
+Both partners in the relationship may read and write every document in these two subcollections — matching the shared-couple-space model the spec describes for memories/anniversaries (unlike `invites`/`relationships` themselves, there is no sender/receiver asymmetry to enforce here).
+
+- [ ] **Step 4: Add the composite index for "my active relationships" (verify none is actually needed)**
+
+Task 8's `SyncCoordinator` queries `relationships` with `Filter.or(Filter.equalTo("user1", uid), Filter.equalTo("user2", uid))` — a disjunction of two single-field equality filters. Firestore auto-indexes every single field, and an `or()` of single-field-equality branches does not require a manual composite index (unlike an `or()` combined with an `orderBy`, or an equality combined with a range on a different field). Leave `firestore.indexes.json` unchanged for this task. If a real deploy or the Task 12 emulator run ever reports a "the query requires an index" error with a console link for this specific query, add that generated index entry then — do not pre-guess one now.
+
+- [ ] **Step 5: Validate the rules file**
 
 Run: `firebase deploy --only firestore:rules --dry-run --project demngayyeuandroid` (uses the existing `.firebaserc` project; `--dry-run` only compiles/validates, does not deploy).
 Expected: "Rules file firestore.rules compiled successfully" with no errors.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add firestore.rules firestore.indexes.json
-git commit -m "feat(rules): coupleCodes lookup + relationship-id-bound-to-invite pairing, no Cloud Functions"
+git commit -m "feat(rules): coupleCodes lookup + relationship-id-bound-to-invite pairing + content subcollections, no Cloud Functions"
 ```
 
 ---
@@ -2471,17 +2608,21 @@ Replace the body of `acceptSetLoveInvite` from `// Check relationship history:` 
           "createdAt" to System.currentTimeMillis()
         )
       )?.await()
-      dao.updateOnlineRelationship(relationship.copy(pendingSync = false))
+      // insertOnlineRelationship, not updateOnlineRelationship: @Update matches by primary
+      // key and silently does nothing if the row doesn't exist yet locally — which it never
+      // does at this point, since this relationship id is brand new. insertOnlineRelationship
+      // uses OnConflictStrategy.REPLACE, so it correctly creates the row here.
+      val synced = relationship.copy(pendingSync = false)
+      dao.insertOnlineRelationship(synced)
+      _activeRelationship.value = synced
     } catch (e: Exception) {
       Log.d("OnlineCoupleRepo", "Firestore pairing sync error, will retry via outbox in a later task: ${e.message}")
       dao.insertOnlineRelationship(relationship)
+      _activeRelationship.value = relationship
     }
-
-    dao.insertOnlineRelationship(relationship)
-    _activeRelationship.value = relationship
 ```
 
-(`dao.insertOnlineRelationship` uses `OnConflictStrategy.REPLACE` already, so calling it once more after the try/catch — whether or not the catch branch already inserted it — is a safe idempotent overwrite with the same data, not a duplicate.)
+(There is deliberately no unconditional `dao.insertOnlineRelationship(relationship)` after this try/catch: an earlier draft had one, using the original `pendingSync = true` entity — it would have silently overwritten the success branch's `pendingSync = false` write on every successful accept, since both branches already persist and publish the correct entity for their own outcome.)
 
 - [ ] **Step 6: Push breakup state to Firestore — without this, a real partner device never learns about a breakup request or confirmation**
 
@@ -2700,15 +2841,45 @@ describe('pairing security rules (Task 10 design)', function () {
     await assertFails(bCtx.collection('coupleCodes').doc('AAAA-1111').set({ code: 'AAAA-1111', ownerUid: uidB }));
     await assertFails(bCtx.collection('coupleCodes').get());
   });
+
+  it('memories/anniversaries subcollections: both relationship members can read and write, a stranger cannot', async () => {
+    const uidA = 'uid_a';
+    const uidB = 'uid_b';
+    const uidC = 'uid_c'; // not a member of this relationship
+    const relId = 'rel_1';
+
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await ctx.firestore().collection('relationships').doc(relId).set({
+        partnerAId: uidA, partnerBId: uidB, user1: uidA, user2: uidB, status: 'ACTIVE',
+      });
+    });
+
+    const aCtx = testEnv.authenticatedContext(uidA).firestore();
+    const bCtx = testEnv.authenticatedContext(uidB).firestore();
+    const cCtx = testEnv.authenticatedContext(uidC).firestore();
+    const memoryDoc = { syncId: 'sync-1', title: 'First trip', updatedAt: Date.now(), deleted: false };
+
+    // Member A writes, member B (the SyncCoordinator content-tier listener on the other
+    // device) can read it straight back — this is the exact path Task 6/8 rely on, and the
+    // one the pre-fix rules file had no match block for at all (falls through to the
+    // top-level default-deny otherwise).
+    await assertSucceeds(aCtx.collection(`relationships/${relId}/memories`).doc('sync-1').set(memoryDoc));
+    await assertSucceeds(bCtx.collection(`relationships/${relId}/memories`).doc('sync-1').get());
+    await assertSucceeds(bCtx.collection(`relationships/${relId}/anniversaries`).doc('sync-2').set({ syncId: 'sync-2', title: 'Anniversary', updatedAt: Date.now(), deleted: false }));
+
+    // A non-member cannot read or write either subcollection of this relationship.
+    await assertFails(cCtx.collection(`relationships/${relId}/memories`).doc('sync-1').get());
+    await assertFails(cCtx.collection(`relationships/${relId}/memories`).doc('sync-3').set({ syncId: 'sync-3', title: 'Intrusion', updatedAt: Date.now(), deleted: false }));
+  });
 });
 ```
 
-- [ ] **Step 2 (of the TDD cycle, run after Step 3 above): Run tests to verify the suite runs and passes against Task 10's rules**
+- [ ] **Step 4: Run tests to verify the suite runs and passes against Task 10's rules**
 
 Run (from `scripts/`): `npm install && npm run test:rules`
-Expected: all 4 tests PASS. If `firebase emulators:exec` cannot start because the Java runtime required by the Firestore emulator is missing on this machine, install a JDK first (the emulator requires Java 11+); this is an environment prerequisite, not a code issue.
+Expected: all 5 tests PASS. If `firebase emulators:exec` cannot start because the Java runtime required by the Firestore emulator is missing on this machine, install a JDK first (the emulator requires Java 11+); this is an environment prerequisite, not a code issue.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add firebase.json scripts/package.json scripts/rules-tests/pairing.rules.test.js
@@ -2770,6 +2941,22 @@ git commit -m "docs: confirm real two-device pairing verified end-to-end"
 **Type consistency:** `OnlineCoupleRepository`/`AuthRepository` constructor signatures introduced in Task 3 are the ones Task 8 (Step 6, login/logout wiring) and Task 11 build on; `InLoveRepository`'s new `(dao, appContext)` constructor from Task 7 matches Task 9's continued use of `dao` alone (Task 9 only touches DAO-calling code already inside that class, no new constructor dependency). `SyncOutboxEntity`/`EntitySyncAdapter`/`SyncWorker.moshiAdapterFor` names are identical across Tasks 1, 5, 6, 7.
 
 **Review Focus:** all five items have an owning task and test, listed inline next to each item above.
+
+**Adversarial implementation review (2026-09-30):** a full task-by-task cross-check of this plan against the real source it modifies found 6 blocking issues and 2 worth fixing though non-blocking, all now fixed in place (not left as follow-ups):
+1. Task 10 had no rule for the `relationships/{id}/memories`/`.../anniversaries` subcollections Task 5's adapters actually use — every content push/listener would have failed `PERMISSION_DENIED`. Fixed: Task 10 Step 3 (new rule blocks) + Task 12 (new emulator test).
+2. Task 8's `SyncCoordinator` raced two separate `user1`/`user2` listeners against each other, able to tear down the content tier one had just started. Fixed: a single `Filter.or` query.
+3. Task 8 Step 6's `AppServiceLocator.syncCoordinator.start()`/`.stop()` calls would throw under Robolectric (the locator is never initialized in `AuthRepositoryTest`'s environment, and `InLoveApplication`'s test branch returns before it would be), breaking that whole test file. Fixed: wrapped in try/catch, matching this codebase's existing defensive style for optional cloud calls.
+4. Task 1's new/altered columns had no `@ColumnInfo(defaultValue = ...)` to match `MIGRATION_12_13`'s SQL `DEFAULT` clauses, which would fail Room's schema-validation migration test. Fixed: added the annotation exactly where SQLite requires a default (three rebuilt-table columns per entity, six `ALTER TABLE ADD COLUMN` fields) and removed the now-unnecessary `DEFAULT` from every column the migration always populates explicitly.
+5. `SyncCoordinator` wrote incoming relationship changes to Room but never told `OnlineCoupleRepository` to refresh its UI-facing state, so the inviting device's UI would never leave "pending" after the partner accepted. Fixed: `start()` takes an `onRelationshipChanged` callback (Task 8), wired to `onlineRepo::refreshState` from `AuthRepository` (Task 8 Step 6).
+6. The spec's original "drop `partnerId`" instruction was never implemented by any task, leaving a half-migrated model (item 5's root cause). Resolved by amending the spec: `partnerId` stays as a documented local read-cache, kept correct from both the local and remote paths, while the actual security boundary (Firestore rules trusting only `relationships`/`invites` docs) is unchanged and still fully honors the spec's original security intent.
+7. (non-blocking) `SyncWorker`'s Moshi setup relied on reflection (`KotlinJsonAdapterFactory`) for three data classes with nullable/defaulted fields. Fixed: added `@JsonClass(generateAdapter = true)` to generate real adapters via the project's existing `moshi-kotlin-codegen` KSP setup.
+8. (non-blocking) Task 6's `WorkRequest` import was given as prose after its code fence, not inside it. Fixed: moved into the `import` block.
+
+**Second adversarial pass, verifying the fixes above (2026-09-30):** found the rules/adapter/index/`@ColumnInfo`/`partnerId` fixes (items 1, 2, 4, 5, 6) all correct as applied, but found 2 new blocking issues introduced or exposed by the same fixes, plus 1 cosmetic issue, all now fixed:
+9. Task 8 Step 6 only started `SyncCoordinator` from `login()`/`register()` — never from `restoreSession()` (the ordinary "already logged in, reopen the app" path, run on every relaunch for a non-PIN account) or from `unlockWithPin()`/`unlockWithAccountPassword()` (the same transition for a PIN-protected account). Net effect: sync would never activate for the common case of reopening an already-logged-in app, only right after an explicit logout+login — quietly defeating the plan's central goal for most real sessions. Fixed: a `startSyncCoordinatorSafely(uid)` private helper, called from all five `AuthState.Authenticated` transition sites in the real file, not just two of them.
+10. `MIGRATION_12_13`'s `CREATE UNIQUE INDEX` on `gift_ideas(remoteId)`/`milestones(remoteId)` would abort the migration with "UNIQUE constraint failed" on any device with two or more pre-existing rows in either table — every pre-existing row got the identical `''` from the `ALTER TABLE ... DEFAULT ''`, and SQLite's unique index treats repeated `''` as real duplicates (unlike `NULL`). Since these are preset catalog tables realistically seeded with many rows, this would crash the migration on essentially every real device already running the app — a direct violation of Review Focus item 4. Task 1's own migration test didn't catch it because it originally seeded only one `gift_ideas` row and zero `milestones` rows. Fixed: a backfill `UPDATE ... SET remoteId = 'legacy_' || id WHERE remoteId = ''` for both tables, run after the `ALTER TABLE` and before the `CREATE UNIQUE INDEX`; the migration test now seeds two rows in each table and asserts they get distinct placeholder ids.
+11. Task 11 Step 5's success path called `dao.updateOnlineRelationship(...)` — a `@Update`, which silently does nothing when the row doesn't exist locally yet, which it never does at this point (this is a brand-new relationship id) — so the intended local write never actually happened on success; a since-removed unconditional `dao.insertOnlineRelationship(relationship)` after the try/catch was papering over that by always re-inserting, but with the wrong (`pendingSync = true`) entity, silently undoing the success path's sync state on every successful accept. Fixed: the success branch now calls `insertOnlineRelationship` (upsert via `OnConflictStrategy.REPLACE`) with the correct `pendingSync = false` entity, and the redundant unconditional trailing insert is removed entirely.
+12. (cosmetic) Task 12's steps were numbered 1, 2, 3, "Step 2 (of the TDD cycle...)", 4 — a leftover from an earlier edit that reworded a step without renumbering it. Fixed: 1 through 5 in order.
 
 ## Verification
 
