@@ -73,7 +73,8 @@ android {
   buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       val releaseAppId = project.findProperty("ADMOB_APP_ID_RELEASE")?.toString() ?: ""
       val releaseBannerId = project.findProperty("ADMOB_BANNER_ID_RELEASE")?.toString() ?: ""
