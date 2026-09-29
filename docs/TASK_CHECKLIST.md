@@ -21,10 +21,10 @@
 - [x] ✅ Vá 3 lỗ hổng trong luật bảo mật Firestore (một người có thể chiếm quyền relationship của người khác, tự duyệt lời mời ghép đôi của chính mình)
 - [x] ✅ Sửa lỗi xoá tài khoản: trước đây xoá dữ liệu đám mây trước rồi mới xoá tài khoản đăng nhập, nếu bước sau lỗi thì mất dữ liệu mà tài khoản vẫn còn
 - [x] ✅✅ Xoá 3 lời quảng cáo VIP không đúng sự thật ("AI không giới hạn", "Cloud lưu trữ không giới hạn", và đặc biệt "Khoá vân tay/FaceID" — hoàn toàn không có trong app, chỉ dùng mã PIN) — rủi ro Google Play từ chối/gỡ app vì quảng cáo sai sự thật
-- [ ] ⏳ Bật rút gọn mã (R8) + ký đúng cho bản phát hành (hiện chưa ký, chưa rút gọn)
-- [ ] ⏳ Room database chưa có cơ chế nâng cấp phiên bản — lần đổi cấu trúc dữ liệu tiếp theo có thể làm crash app của người dùng cũ
+- [x] ✅ Bật rút gọn mã (R8) + shrink resources cho bản release (`isMinifyEnabled = true`, `isShrinkResources = true`) — theo `docs/superpowers/plans/2026-09-30-ads-monetization-sdk-compliance.md` Task 5. **Chưa build/ký thật** (sandbox không có mạng để chạy Gradle, không có keystore thật) — cần bạn tự chạy `./gradlew :app:assembleRelease` và kiểm tra `mapping.txt` trước khi đổi thành ✅✅.
+- [x] ✅ Room database đã có `MIGRATION_12_13` (version 12→13, table-rebuild cho các cột sync mới, backfill tránh crash UNIQUE INDEX) — theo `docs/superpowers/plans/2026-09-29-data-sync-and-real-pairing.md` Task 1/6. Có `Migration12To13Test.kt` nhưng chưa chạy được (không có mạng để resolve Gradle trong sandbox này) — cần bạn tự chạy `./gradlew :app:testDebugUnitTest` để xác nhận.
 - [ ] ⏳ Sửa lỗi Cloudinary: khi tải ảnh lên thất bại, app vẫn báo "đã lưu thành công" (người dùng tưởng ảnh an toàn nhưng thực ra mất)
-- [ ] ❓ **Cần bạn xác nhận:** bộ não quyết định quảng cáo (AdsBrain) đang bật cho 100% người dùng, trong khi tài liệu của chính SDK khuyến nghị nên bắt đầu từ 5% rồi tăng dần. Có nên hạ xuống không?
+- [x] 📝 **Đã quyết định (bạn chọn "Tắt hẳn"):** `brainEnabled = false` — AdsBrain tắt hoàn toàn thay vì rollout theo giai đoạn, vì InLove không phải game và không có pipeline BigQuery cho brain này. Theo `docs/superpowers/plans/2026-09-30-ads-monetization-sdk-compliance.md` Task 4.
 
 ## 🟠 Chức năng lõi — làm cho đúng như quảng cáo
 
