@@ -201,12 +201,16 @@ dependencies {
   // Google Play Billing Client KTX v7 — Subscriptions & In-App Purchases
   implementation(libs.google.play.billing.ktx)
 
+  // WorkManager — offline sync outbox (data-sync-and-real-pairing plan, Task 6)
+  implementation(libs.androidx.work.runtime.ktx)
+
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.androidx.room.testing)
+  testImplementation(libs.androidx.work.testing)
   testImplementation(libs.robolectric)
   testImplementation(libs.roborazzi)
   testImplementation(libs.roborazzi.compose)
