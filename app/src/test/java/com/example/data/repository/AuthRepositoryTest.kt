@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.db.AppDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,8 +36,9 @@ class AuthRepositoryTest {
     db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
       .allowMainThreadQueries()
       .build()
-    onlineRepo = OnlineCoupleRepository(db.inLoveDao(), context)
-    authRepo = AuthRepository(db.inLoveDao(), onlineRepo, context, isTestMode = true)
+    val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    onlineRepo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+    authRepo = AuthRepository(db.inLoveDao(), onlineRepo, context, scope, isTestMode = true)
   }
 
   @After

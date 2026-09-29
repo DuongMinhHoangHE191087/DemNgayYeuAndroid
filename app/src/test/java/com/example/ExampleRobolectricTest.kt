@@ -12,8 +12,11 @@ import com.example.data.model.RelationshipStatus
 import com.example.data.model.RbacPolicy
 import com.example.data.model.SubscriptionTier
 import com.example.data.model.UserRole
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -137,7 +140,9 @@ class ExampleRobolectricTest {
     db.inLoveDao().insertOnlineUser(userB)
     db.inLoveDao().insertOnlineRelationship(testRel)
 
-    val onlineRepo = com.example.data.repository.OnlineCoupleRepository(db.inLoveDao(), context)
+    val onlineRepo = com.example.data.repository.OnlineCoupleRepository(
+      db.inLoveDao(), context, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    )
     onlineRepo.setCurrentUserId(userA.uid)
     onlineRepo.refreshState()
 

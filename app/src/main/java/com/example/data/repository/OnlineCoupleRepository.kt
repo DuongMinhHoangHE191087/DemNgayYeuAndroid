@@ -15,7 +15,6 @@ import com.example.ui.util.ProfileUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,9 +25,9 @@ import kotlinx.coroutines.withContext
 
 class OnlineCoupleRepository(
   private val dao: InLoveDao,
-  context: Context
+  context: Context,
+  private val scope: CoroutineScope
 ) {
-  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
   // Demo user IDs for seamless 1-1 testing on device
   companion object {

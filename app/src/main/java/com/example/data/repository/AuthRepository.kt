@@ -18,7 +18,6 @@ import com.example.ui.util.ProfileUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,9 +51,9 @@ class AuthRepository(
   private val dao: InLoveDao,
   private val onlineRepo: OnlineCoupleRepository,
   context: Context,
+  private val scope: CoroutineScope,
   private val isTestMode: Boolean = false
 ) {
-  private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   private val prefs: SharedPreferences =
     context.getSharedPreferences("inlove_auth_prefs", Context.MODE_PRIVATE)
 
