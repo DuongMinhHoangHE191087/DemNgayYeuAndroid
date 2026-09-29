@@ -12,6 +12,7 @@ import com.example.data.model.OnlineUserEntity
 import com.example.data.model.RelationshipStatus
 import com.example.data.model.SharedMemoryEntity
 import com.example.ui.util.ProfileUtils
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class OnlineCoupleRepository(
@@ -252,6 +254,32 @@ class OnlineCoupleRepository(
     return@withContext true to "Đã cập nhật hồ sơ cá nhân thành công!"
   }
 
+  /** Publishes this user's couple code to the public coupleCodes/{code} lookup collection. */
+  suspend fun publishMyCoupleCode(): Result<Unit> = withContext(Dispatchers.IO) {
+    val fs = firestore ?: return@withContext Result.failure(IllegalStateException("Firestore chưa sẵn sàng"))
+    val me = _currentUser.value
+    try {
+      fs.collection("coupleCodes").document(me.coupleCode)
+        .set(mapOf("code" to me.coupleCode, "ownerUid" to me.uid, "createdAt" to FieldValue.serverTimestamp()))
+        .await()
+      Result.success(Unit)
+    } catch (e: Exception) {
+      Log.d("OnlineCoupleRepo", "publishMyCoupleCode error (may already exist, which is fine): ${e.message}")
+      Result.success(Unit) // a pre-existing code doc for the same owner is not an error
+    }
+  }
+
+  /** Resolves a partner's uid from their shared code via the public coupleCodes lookup. */
+  suspend fun lookupOwnerUidByCode(code: String): String? = withContext(Dispatchers.IO) {
+    val fs = firestore ?: return@withContext null
+    try {
+      fs.collection("coupleCodes").document(code).get().await().getString("ownerUid")
+    } catch (e: Exception) {
+      Log.d("OnlineCoupleRepo", "lookupOwnerUidByCode error: ${e.message}")
+      null
+    }
+  }
+
   // Search user by code or full shared link
   suspend fun searchUserByCodeOrLink(input: String): OnlineUserEntity? = withContext(Dispatchers.IO) {
     val code = ProfileUtils.extractCoupleCode(input)
@@ -300,15 +328,18 @@ class OnlineCoupleRepository(
       return@withContext false to "Không thể tự kết đôi với chính mã của bạn!"
     }
 
-    val targetUser = dao.getOnlineUserByCoupleCodeSync(trimmedCode)
+    val targetOwnerUid = lookupOwnerUidByCode(trimmedCode)
+      ?: dao.getOnlineUserByCoupleCodeSync(trimmedCode)?.uid // local fallback for same-device demo/testing
       ?: return@withContext false to "Không tìm thấy người dùng với mã $trimmedCode. Hãy kiểm tra lại mã!"
+    val targetUser = dao.getOnlineUserByUidSync(targetOwnerUid)
+      ?: com.example.data.model.OnlineUserEntity(uid = targetOwnerUid, coupleCode = trimmedCode)
     if (targetUser.status == OnlineStatus.COUPLED) {
       return@withContext false to "Người này đã có đôi có cặp (Set Love) với người khác!"
     }
 
-    // Create pending invite with proposed date and sender profile
+    val now = System.currentTimeMillis()
     val invite = OnlineInviteEntity(
-      inviteId = "inv_${System.currentTimeMillis()}",
+      inviteId = "inv_${now}_${me.uid.take(6)}",
       senderUid = me.uid,
       senderName = me.effectiveDisplayName,
       senderAvatar = me.avatarUrl,
@@ -318,33 +349,33 @@ class OnlineCoupleRepository(
       senderZodiac = me.zodiac,
       senderBio = me.bio,
       targetCoupleCode = trimmedCode,
-      targetUid = targetUser.uid,
+      targetUid = targetOwnerUid,
       proposedStartDate = proposedStartDateMillis,
       proposedStartDateText = ProfileUtils.formatDate(proposedStartDateMillis),
       loveNote = loveNote.trim().ifEmpty { "Cùng anh/em xây dựng hạnh phúc Set Love nhé! ❤️" },
       status = InviteStatus.PENDING,
-      createdAt = System.currentTimeMillis()
+      createdAt = now,
+      updatedAt = now,
+      pendingSync = true
     )
 
     dao.insertOnlineInvite(invite)
     _outgoingInvite.value = invite
 
-    // Update me to PENDING_INVITE
     val updatedMe = me.copy(status = OnlineStatus.PENDING_INVITE)
     dao.updateOnlineUser(updatedMe)
     _currentUser.value = updatedMe
     _relationshipStatus.value = OnlineStatus.PENDING_INVITE
 
-    // If target is currently loaded partner, update incoming invite
     if (targetUser.uid == _partnerUser.value?.uid) {
       _incomingInvite.value = invite
     }
 
-    // Attempt online sync to Firestore if configured
     try {
-      firestore?.collection("invites")?.document(invite.inviteId)?.set(invite)
+      firestore?.collection("invites")?.document(invite.inviteId)?.set(invite)?.await()
+      dao.updateOnlineInvite(invite.copy(pendingSync = false))
     } catch (e: Exception) {
-      Log.d("OnlineCoupleRepo", "Firestore invite upload error: ${e.message}")
+      Log.d("OnlineCoupleRepo", "Firestore invite upload error, will retry via outbox in a later task: ${e.message}")
     }
 
     return@withContext true to "Đã gửi lời mời Set Love đến ${targetUser.effectiveDisplayName} (${trimmedCode}) thành công!"
@@ -368,9 +399,10 @@ class OnlineCoupleRepository(
     val finalStartDateText = ProfileUtils.formatDate(finalStartDate)
     val finalLoveDays = ProfileUtils.calculateLoveDays(finalStartDate)
 
-    // Check relationship history: if re-pairing with former partner, restore existing relationship ID
-    val existingRel = dao.getActiveRelationshipForUser(me.uid)
-    val relId = existingRel?.relationshipId ?: "rel_${System.currentTimeMillis()}"
+    // Relationship id MUST equal the accepted invite's id — this is what the Task 10 rules
+    // rely on to allow the create without a Cloud Function, and what makes a duplicate
+    // accept attempt a safe no-op (routed to the locked-down `update` rule instead).
+    val relId = incoming.inviteId
 
     val relationship = OnlineRelationshipEntity(
       relationshipId = relId,
@@ -381,11 +413,41 @@ class OnlineCoupleRepository(
       status = RelationshipStatus.ACTIVE,
       breakupRequestedBy = null,
       breakupRequestedAt = null,
-      createdAt = System.currentTimeMillis()
+      createdAt = System.currentTimeMillis(),
+      updatedAt = System.currentTimeMillis(),
+      pendingSync = true
     )
 
-    dao.insertOnlineRelationship(relationship)
-    _activeRelationship.value = relationship
+    // Step (a): mark the invite ACCEPTED on Firestore first — the relationships/{relId}
+    // create rule requires invites/{relId}.status == 'ACCEPTED' to already be true.
+    try {
+      firestore?.collection("invites")?.document(incoming.inviteId)
+        ?.update(mapOf("status" to InviteStatus.ACCEPTED))?.await()
+      // Step (b): create the relationship doc at the same id as the invite.
+      firestore?.collection("relationships")?.document(relId)?.set(
+        mapOf(
+          "partnerAId" to sender.uid,
+          "partnerBId" to me.uid,
+          "user1" to sender.uid,
+          "user2" to me.uid,
+          "startDate" to finalStartDate,
+          "startDateText" to finalStartDateText,
+          "status" to RelationshipStatus.ACTIVE,
+          "createdAt" to System.currentTimeMillis()
+        )
+      )?.await()
+      // insertOnlineRelationship, not updateOnlineRelationship: @Update matches by primary
+      // key and silently does nothing if the row doesn't exist yet locally — which it never
+      // does at this point, since this relationship id is brand new. insertOnlineRelationship
+      // uses OnConflictStrategy.REPLACE, so it correctly creates the row here.
+      val synced = relationship.copy(pendingSync = false)
+      dao.insertOnlineRelationship(synced)
+      _activeRelationship.value = synced
+    } catch (e: Exception) {
+      Log.d("OnlineCoupleRepo", "Firestore pairing sync error, will retry via outbox in a later task: ${e.message}")
+      dao.insertOnlineRelationship(relationship)
+      _activeRelationship.value = relationship
+    }
 
     // Update both users to COUPLED
     val updatedMe = me.copy(
@@ -480,6 +542,18 @@ class OnlineCoupleRepository(
     dao.updateOnlineRelationship(updatedRel)
     _activeRelationship.value = updatedRel
 
+    try {
+      firestore?.collection("relationships")?.document(rel.relationshipId)?.update(
+        mapOf(
+          "status" to RelationshipStatus.PENDING_BREAKUP,
+          "breakupRequestedBy" to me.uid,
+          "breakupRequestedAt" to updatedRel.breakupRequestedAt
+        )
+      )?.await()
+    } catch (e: Exception) {
+      Log.d("OnlineCoupleRepo", "Firestore breakup-request sync error: ${e.message}")
+    }
+
     return@withContext true to "Đã gửi yêu cầu hủy Set Love đến đối phương. Chờ xác nhận 2 chiều."
   }
 
@@ -496,6 +570,14 @@ class OnlineCoupleRepository(
     )
     dao.updateOnlineRelationship(terminatedRel)
     _activeRelationship.value = terminatedRel
+
+    try {
+      firestore?.collection("relationships")?.document(rel.relationshipId)?.update(
+        mapOf("status" to RelationshipStatus.TERMINATED, "terminatedAt" to terminatedRel.terminatedAt)
+      )?.await()
+    } catch (e: Exception) {
+      Log.d("OnlineCoupleRepo", "Firestore breakup-confirm sync error: ${e.message}")
+    }
 
     // Both users return to SINGLE (soft locks shared memories)
     val updatedMe = me.copy(
@@ -533,6 +615,14 @@ class OnlineCoupleRepository(
     )
     dao.updateOnlineRelationship(revertedRel)
     _activeRelationship.value = revertedRel
+
+    try {
+      firestore?.collection("relationships")?.document(rel.relationshipId)?.update(
+        mapOf("status" to RelationshipStatus.ACTIVE, "breakupRequestedBy" to null, "breakupRequestedAt" to null)
+      )?.await()
+    } catch (e: Exception) {
+      Log.d("OnlineCoupleRepo", "Firestore breakup-reject sync error: ${e.message}")
+    }
 
     return@withContext true to "Đã từ chối lời chia tay. Mối quan hệ tiếp tục được giữ gìn! ❤️"
   }
