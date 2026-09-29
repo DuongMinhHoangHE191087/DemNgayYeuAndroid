@@ -150,56 +150,6 @@ service cloud.firestore {
     }
 
     // ===============================================================
-    // 3NF Normalized Collections
-    // ===============================================================
-    match /users_3nf/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create, update, delete: if isOwner(userId);
-    }
-
-    match /relationships_3nf/{relId} {
-      allow get, list: if isRelationshipMember(resource.data);
-      allow create: if isAuthenticated() && (
-        request.resource.data.user1Uid == request.auth.uid ||
-        request.resource.data.user2Uid == request.auth.uid
-      );
-      allow update: if isRelationshipMember(resource.data) &&
-        request.resource.data.user1Uid == resource.data.user1Uid &&
-        request.resource.data.user2Uid == resource.data.user2Uid;
-      allow delete: if isRelationshipMember(resource.data);
-    }
-
-    match /invites_3nf/{inviteId} {
-      allow get, list: if isAuthenticated() && (
-        resource.data.senderUid == request.auth.uid ||
-        resource.data.targetUid == request.auth.uid
-      );
-      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
-      allow update: if isAuthenticated() && resource.data.targetUid == request.auth.uid &&
-        request.resource.data.senderUid == resource.data.senderUid &&
-        (!('targetUid' in resource.data) || request.resource.data.targetUid == resource.data.targetUid);
-      allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
-    }
-
-    match /memories_3nf/{memoryId} {
-      allow get, list: if isAuthenticated() && (
-        resource.data.authorUid == request.auth.uid ||
-        (resource.data.relationshipId != null && resource.data.relationshipId != "" &&
-         exists(/databases/$(database)/documents/relationships_3nf/$(resource.data.relationshipId)) &&
-         isRelationshipMember(get(/databases/$(database)/documents/relationships_3nf/$(resource.data.relationshipId)).data))
-      );
-      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid &&
-        (!('relationshipId' in request.resource.data) ||
-         request.resource.data.relationshipId == null || request.resource.data.relationshipId == "" ||
-         (exists(/databases/$(database)/documents/relationships_3nf/$(request.resource.data.relationshipId)) &&
-          isRelationshipMember(get(/databases/$(database)/documents/relationships_3nf/$(request.resource.data.relationshipId)).data)));
-      allow update: if isAuthenticated() && resource.data.authorUid == request.auth.uid &&
-        request.resource.data.authorUid == resource.data.authorUid &&
-        (!('relationshipId' in resource.data) || request.resource.data.relationshipId == resource.data.relationshipId);
-      allow delete: if isAuthenticated() && resource.data.authorUid == request.auth.uid;
-    }
-
-    // ===============================================================
     // Public / Shared Catalog Collections (Read: Public, Write: Denied)
     // ===============================================================
     match /gift_ideas/{giftId} {

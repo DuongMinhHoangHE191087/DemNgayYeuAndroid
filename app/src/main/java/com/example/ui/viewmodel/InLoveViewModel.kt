@@ -39,25 +39,12 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val onlineRepo: com.example.data.repository.OnlineCoupleRepository
   val authRepo: com.example.data.repository.AuthRepository
   val authState: StateFlow<com.example.data.repository.AuthState>
-  val firebase3NFService: com.example.data.firebase.Firebase3NFService
 
   val cloudinaryMediaService: com.example.data.cloudinary.ICloudinaryMediaService =
     com.example.data.cloudinary.CloudinaryMediaService.getInstance()
 
   private val _upcomingMilestones = MutableStateFlow<List<com.example.alarm.LoveMilestoneInfo>>(emptyList())
   val upcomingMilestones: StateFlow<List<com.example.alarm.LoveMilestoneInfo>> = _upcomingMilestones.asStateFlow()
-
-  private val _show3NFVisualizerDialog = MutableStateFlow(false)
-  val show3NFVisualizerDialog: StateFlow<Boolean> = _show3NFVisualizerDialog.asStateFlow()
-
-  fun open3NFVisualizerDialog() {
-    // Deprecated - kept safe for any legacy calls
-    _show3NFVisualizerDialog.value = false
-  }
-
-  fun close3NFVisualizerDialog() {
-    _show3NFVisualizerDialog.value = false
-  }
 
   val milestones: StateFlow<List<MilestoneEntity>>
   val giftIdeas: StateFlow<List<GiftIdeaEntity>>
@@ -294,7 +281,6 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     onlineRepo = com.example.data.repository.OnlineCoupleRepository(database.inLoveDao(), application)
     authRepo = com.example.data.repository.AuthRepository(database.inLoveDao(), onlineRepo, application)
     authState = authRepo.authState
-    firebase3NFService = com.example.data.firebase.Firebase3NFService(database.inLoveDao(), application)
 
     currentOnlineUser = onlineRepo.currentUser
     partnerOnlineUser = onlineRepo.partnerUser
