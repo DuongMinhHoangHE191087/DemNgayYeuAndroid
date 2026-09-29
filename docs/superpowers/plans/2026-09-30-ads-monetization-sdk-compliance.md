@@ -71,13 +71,35 @@ Remove these lines (all confirmed to have zero direct source references anywhere
     implementation("com.google.ads.mediation:unity:4.19.0.0")
     implementation("com.unity3d.ads:unity-ads:4.19.0")
 ```
-(the exact 9 lines at `appplugin/build.gradle.kts:118-119, 123, 126-129, 136-139` — one more than "8" in the spec's count because `com.unity3d.ads:unity-ads` and `com.google.ads.mediation:unity` are two separate lines for the same network). Keep everything else, including the `com.google.ads.mediation:facebook`/`com.facebook.android:audience-network-sdk` lines (Meta stays, per the spec) and the entire AppLovin MAX block (lines 150-160, out of scope per Global Constraints).
+(the exact 9 lines at `appplugin/build.gradle.kts:118, 123, 126, 127, 128, 129, 136, 137, 139` — one more than "8" in the spec's count because `com.unity3d.ads:unity-ads` and `com.google.ads.mediation:unity` are two separate lines for the same network; line 119 is a Bigo-explaining comment and line 138 is the already-commented-out Tapjoy line — both stay untouched, match by exact text content, not by line range, when editing). Keep everything else, including the `com.google.ads.mediation:facebook`/`com.facebook.android:audience-network-sdk` lines (Meta stays, per the spec) and the entire AppLovin MAX block (lines 150-160, out of scope per Global Constraints).
 
 Also remove the now-orphaned comment block above the trimmed lines (`appplugin/build.gradle.kts:110-117`, the "GMA 25.4.0 set" explanation) only if it no longer applies to any remaining line — re-read the file after trimming: it still applies to the kept Meta adapter (`facebook:6.21.0.4`), so **leave that comment in place**, just remove the 9 `implementation(...)` lines it was warning about keeping in lockstep.
 
 - [ ] **Step 3: Remove the now-unused Maven repositories from root `settings.gradle.kts`**
 
-`settings.gradle.kts` declares repositories for Pangle, AppLovin, Chartboost and Mintegral specifically to resolve the adapters just removed (AppLovin's repo also serves the still-present MAX SDK, so check before removing that one). Read the current `dependencyResolutionManagement { repositories { ... } }` block and remove only the `maven { url = uri("https://artifact.bytedance.com/repository/pangle") ... }` and `maven { url = uri("https://cboost.jfrog.io/artifactory/chartboost-ads/") ... }` blocks (Pangle and Chartboost have no other remaining consumer). Keep the AppLovin (`https://artifacts.applovin.com/android`) repository, since the MAX SDK itself (out of scope, still present) resolves through it. There is no Mintegral-specific repository block in the current file (Mintegral resolves through `mavenCentral()`/`google()` already), so nothing to remove for it.
+`settings.gradle.kts` declares repositories for Pangle, AppLovin, Chartboost and Mintegral specifically to resolve the adapters just removed (AppLovin's repo also serves the still-present MAX SDK, so check before removing that one). Read the current `dependencyResolutionManagement { repositories { ... } }` block and remove the three now-orphaned blocks:
+```kotlin
+    maven {
+      url = uri("https://artifact.bytedance.com/repository/pangle")
+      content { includeGroup("com.pangle.global") }
+    }
+```
+```kotlin
+    maven {
+      url = uri("https://cboost.jfrog.io/artifactory/chartboost-ads/")
+      content {
+        includeGroup("com.chartboost")
+        includeGroup("com.iab.omid.library")
+      }
+    }
+```
+```kotlin
+    maven {
+      url = uri("https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea")
+      content { includeGroup("com.mbridge.msdk.oversea") }
+    }
+```
+(`settings.gradle.kts:20-40` in the current file — exact line numbers may shift slightly; match by content, not position.) Keep the AppLovin (`https://artifacts.applovin.com/android`) repository, since the MAX SDK itself (out of scope, still present) resolves through it.
 
 - [ ] **Step 4: Verify the dependency graph resolves and the project compiles**
 
@@ -102,7 +124,7 @@ git commit -m "chore(ads): fix play-services-ads version skew, trim 9 unused AdM
 **Files:**
 - Create: `app/src/main/java/com/example/billing/EntitlementRepository.kt`
 - Modify: `app/src/main/java/com/example/di/AppServiceLocator.kt`
-- Modify: `app/src/main/java/com/example/ui/viewmodel/InLoveViewModel.kt:337,359`
+- Modify: `app/src/main/java/com/example/ui/viewmodel/InLoveViewModel.kt:337` (only — lines 358-386 intentionally stay on `billingManager` directly, see Step 6)
 - Modify: `app/src/main/java/com/example/ui/screens/PaywallScreen.kt:122`
 - Test: `app/src/test/java/com/example/billing/EntitlementRepositoryTest.kt`
 
@@ -249,7 +271,12 @@ Expected: PASS.
 
 - [ ] **Step 5: Wire it into `AppServiceLocator`, and exhaustively find every direct reader of `BillingManager.isVipUser`/`hasSyncedOnce`/`activeProductId`**
 
-Run `grep -rn "billingManager\.\(isVipUser\|hasSyncedOnce\|activeProductId\)\|\.isVipUser\b\|\.hasSyncedOnce\b" app/src/main/java` (or the Grep tool with that pattern) and confirm the result is exactly the three sites already identified — `InLoveViewModel.kt:337` and `:359`, `PaywallScreen.kt:122` — plus this task's own new file. If any other file appears, add it to the two steps below; do not leave a fourth reader on the old, non-cached flow.
+Run `grep -rn "billingManager\.\(isVipUser\|hasSyncedOnce\|activeProductId\)\|\.isVipUser\b\|\.hasSyncedOnce\b" app/src/main/java` (or the Grep tool with that pattern). Confirmed real result (5 hits, not 3 — 2 are expected false positives, not new sites to migrate):
+- `InLoveViewModel.kt:337` — the app-wide `isVip` combine → **migrates** to `EntitlementRepository` (Step 6).
+- `InLoveViewModel.kt:359` and `:373` — both inside the same write-gating block described in Step 6 below (`:373` reads `billingManager.activeProductId.value` to decide which `SubscriptionTier` to persist, using the exact same `hasSyncedOnce`-gated block as `:359`) → **stays** on `billingManager` directly, unchanged.
+- `PaywallScreen.kt:122` → **migrates** to `EntitlementRepository` (Step 6).
+- `AdsManagerImpl.kt:135` — `this.isVipUser = isVip`, a private field *assignment* on `AdsManagerImpl` itself (its `setVipStatus(isVip: Boolean)` parameter, unrelated to `BillingManager.isVipUser`) — a pattern-matching false positive, not a `BillingManager` reader at all. Confirm it's this and move on; it needs no change.
+If any OTHER file appears beyond these 5 known hits, treat it as a real fourth reader: add it to Step 6 below; do not leave it on the old, non-cached flow.
 
 In `app/src/main/java/com/example/di/AppServiceLocator.kt`, add, following the exact double-checked-locking pattern already used for `_billingManager`:
 ```kotlin
@@ -276,9 +303,9 @@ and, inside `fun initialize(context: Context)`, after the existing `_billingMana
 
 - [ ] **Step 6: Switch the two VIP-for-display readers to `EntitlementRepository`; leave the one VIP-for-persistence reader on `BillingManager`**
 
-Only 2 of the 3 sites Step 5's grep confirms are "what should the UI show as the current VIP status" readers — those two move to `EntitlementRepository`. The third (`InLoveViewModel.kt:358-372`) has a different job: it exists specifically to gate a **permanent Room DB write** (syncing `billingManager.isVipUser`'s answer into the user's saved account record, further down in that same `collect` block) on `hasSyncedOnce` being `true` — i.e. "only persist a downgrade once Play Billing has genuinely answered, never on the cache-seeded default". `EntitlementRepository` deliberately does not expose a `hasSyncedOnce` of its own (it already folds that wait into what `isVipUser` returns, for display purposes), so this write-gating site keeps reading `billingManager.hasSyncedOnce`/`billingManager.isVipUser` directly, unchanged. Migrating it too would be wrong, not just unnecessary: it would either drop the "wait for a real answer" guard entirely (persisting the cache-seeded default as if it were freshly confirmed) or require adding a `hasSyncedOnce` passthrough to `EntitlementRepository` for a single caller that doesn't need the rest of what that class provides.
+Only 2 of the 5 sites Step 5's grep confirms are "what should the UI show as the current VIP status" readers — those two move to `EntitlementRepository`. The `InLoveViewModel.kt:358-386` block (containing both the `:359` and `:373` hits) has a different job: it exists specifically to gate a **permanent Room DB write** (syncing `billingManager.isVipUser`'s answer, and `billingManager.activeProductId.value`'s tier mapping, into the user's saved account record via `authRepo.updateUserSubscription(...)`) on `hasSyncedOnce` being `true` — i.e. "only persist a downgrade once Play Billing has genuinely answered, never on the cache-seeded default". `EntitlementRepository` deliberately does not expose a `hasSyncedOnce` of its own (it already folds that wait into what `isVipUser` returns, for display purposes), so this write-gating block keeps reading `billingManager.hasSyncedOnce`/`billingManager.isVipUser`/`billingManager.activeProductId` directly, unchanged. Migrating it too would be wrong, not just unnecessary: it would either drop the "wait for a real answer" guard entirely (persisting the cache-seeded default as if it were freshly confirmed) or require adding a `hasSyncedOnce` passthrough to `EntitlementRepository` for a single caller that doesn't need the rest of what that class provides. `AdsManagerImpl.kt:135` is an unrelated false positive (see Step 5) and needs no change either.
 
-In `app/src/main/java/com/example/ui/viewmodel/InLoveViewModel.kt`, replace line 337's `billingManager.isVipUser` with `com.example.di.AppServiceLocator.entitlementRepository.isVipUser` (the `billingManager` local val at this point in `init` stays — it is still needed for `startBillingConnection()`/purchase flow elsewhere in the class, and by the line 358-372 block just described — this only changes which flow is read for the app-wide `isVip` combine at line 337). Leave lines 358-372 exactly as they are.
+In `app/src/main/java/com/example/ui/viewmodel/InLoveViewModel.kt`, replace line 337's `billingManager.isVipUser` with `com.example.di.AppServiceLocator.entitlementRepository.isVipUser` (the `billingManager` local val at this point in `init` stays — it is still needed for `startBillingConnection()`/purchase flow elsewhere in the class, and by the line 358-386 block just described — this only changes which flow is read for the app-wide `isVip` combine at line 337). Leave lines 358-386 exactly as they are.
 
 In `app/src/main/java/com/example/ui/screens/PaywallScreen.kt:122`, replace `billingManager.isVipUser.collectAsState()` with `com.example.di.AppServiceLocator.entitlementRepository.isVipUser.collectAsState()` (drop the `billingManager` parameter from this composable's signature only if nothing else in the same file still uses it — check first).
 
@@ -493,7 +520,11 @@ class PrivacyOptionsRowTest {
 Run: `./gradlew :app:testDebugUnitTest --tests "com.example.ui.PrivacyOptionsRowTest"`
 Expected: PASS already — `ConsentManager.isPrivacyOptionsRequired(context)` already has this safety net (`appplugin/src/main/java/com/app/plugin/consent/ConsentManager.kt:151-157`); this step exists to pin that guarantee with a test, not to fix a bug.
 
-- [ ] **Step 4: Add the Settings row**
+- [ ] **Step 4: Add the Settings row — do NOT derive the `Activity` from `LocalContext.current`**
+
+`MainActivity.kt` (inside `InLoveApp()`, ~lines 140-159) wraps the whole composition in a locale-adjusted context: `val context = remember(rawContext, configuration) { rawContext.createConfigurationContext(configuration) }`, then `CompositionLocalProvider(LocalContext provides context, ...)`. `Context.createConfigurationContext()` returns a plain `Context`/`ContextImpl`, never the `Activity` itself and never a `ContextWrapper` chain leading back to it — so `LocalContext.current as? Activity` is `null` for every composable under this provider, including `SettingsScreen` and `PaywallScreen` (shown via the `Dialog` at `MainActivity.kt:558-572`, which still inherits the same composition). A naive `LocalContext.current as? Activity` guard would make this whole row permanently invisible, compiling cleanly and silently never firing — exactly the kind of gap this task exists to close, so it must not reappear here.
+
+Instead, reuse `LocalActivityResultRegistryOwner` — already provided once, directly around the real `Activity` instance, specifically for this reason: `MainActivity.onCreate`'s `setContent { CompositionLocalProvider(androidx.activity.compose.LocalActivityResultRegistryOwner provides this) { ... InLoveApp() } }` passes `this` (the real `MainActivity`, a `ComponentActivity`/`Activity`) as the registry owner, and that provider wraps the same subtree `LocalContext` is separately (and unreliably, for this purpose) overridden in. `LocalActivityResultRegistryOwner.current` is therefore always the real `Activity` here, and casting it is safe:
 
 In `app/src/main/java/com/example/ui/screens/SettingsScreen.kt`, add a new `item { }` block immediately after the existing "2. Language Selection Toggle" block (`SettingsScreen.kt:643-650`), matching that block's surrounding `LazyColumn` `item { }` structure and the file's existing `Card`+`clickable` idiom (seen at the VIP banner, `SettingsScreen.kt:654-668`):
 
@@ -501,47 +532,106 @@ In `app/src/main/java/com/example/ui/screens/SettingsScreen.kt`, add a new `item
     // 2.1. Ad privacy options (GDPR/CCPA "manage consent" re-entry point)
     item {
       val context = androidx.compose.ui.platform.LocalContext.current
-      val activity = context as? android.app.Activity
+      // NOT `context as? Activity` — MainActivity wraps LocalContext with
+      // createConfigurationContext() for locale support, so it is never an Activity here.
+      // LocalActivityResultRegistryOwner is provided once, directly around the real
+      // Activity, in the same MainActivity.onCreate setContent block, specifically usable
+      // for this.
+      val activity = androidx.activity.compose.LocalActivityResultRegistryOwner.current as? android.app.Activity
       val showPrivacyRow = remember {
         try { com.app.plugin.consent.ConsentManager.isPrivacyOptionsRequired(context) } catch (e: Exception) { false }
       }
-      if (showPrivacyRow && activity != null) {
-        Card(
-          shape = RoundedCornerShape(20.dp),
-          colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
-          elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-              try {
-                com.app.plugin.consent.ConsentManager.showPrivacyOptions(activity)
-              } catch (e: Exception) {
-                android.util.Log.d("SettingsScreen", "showPrivacyOptions failed: ${e.message}")
-              }
-            }
-            .testTag("settings_privacy_options_row")
-        ) {
-          Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Default.Info,
-              contentDescription = null,
-              tint = Primary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-              if (isEnglish) "Ad Privacy Options" else "Quyền riêng tư quảng cáo",
-              fontSize = 14.sp,
-              fontWeight = FontWeight.Medium
-            )
+      AdPrivacyOptionsRow(
+        visible = showPrivacyRow && activity != null,
+        isEnglish = isEnglish,
+        onClick = {
+          val act = activity ?: return@AdPrivacyOptionsRow
+          try {
+            com.app.plugin.consent.ConsentManager.showPrivacyOptions(act)
+          } catch (e: Exception) {
+            android.util.Log.d("SettingsScreen", "showPrivacyOptions failed: ${e.message}")
           }
         }
-      }
+      )
     }
 ```
-(`isEnglish`/`Primary`/`Icons.Default.Info` — verify each is already available in this file's scope the same way the surrounding blocks use them; `Icons.Default.Info` specifically may need `import androidx.compose.material.icons.filled.Info` added if not already imported elsewhere in the file — check before assuming.)
+(`isEnglish` — verify it is already available in this file's scope the same way the surrounding blocks use it, e.g. as a parameter of the enclosing composable or read from the ViewModel.)
+
+Add the extracted, independently testable composable near the file's other small private/standalone composables (or as a top-level `internal` composable in the same file — match whatever the file's existing convention is for a small reusable row):
+
+```kotlin
+/**
+ * Pure UI: takes the already-resolved visibility decision and click handler as parameters,
+ * rather than reading LocalContext/LocalActivityResultRegistryOwner itself — this is what
+ * makes PrivacyOptionsRowTest able to verify the row's actual on-screen visibility without
+ * needing to fake an Activity or a wrapped Context.
+ */
+@Composable
+internal fun AdPrivacyOptionsRow(visible: Boolean, isEnglish: Boolean, onClick: () -> Unit) {
+  if (!visible) return
+  Card(
+    shape = RoundedCornerShape(20.dp),
+    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
+    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable(onClick = onClick)
+      .testTag("settings_privacy_options_row")
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(16.dp),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Icon(
+        imageVector = Icons.Default.Info,
+        contentDescription = null,
+        tint = Primary
+      )
+      Spacer(modifier = Modifier.width(12.dp))
+      Text(
+        if (isEnglish) "Ad Privacy Options" else "Quyền riêng tư quảng cáo",
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium
+      )
+    }
+  }
+}
+```
+`Icons.Default.Info` needs `import androidx.compose.material.icons.filled.Info` added to `SettingsScreen.kt` if not already present — check the file's existing imports before assuming.
+
+- [ ] **Step 4b: Add a real visibility test for `AdPrivacyOptionsRow`, not just `ConsentManager`'s safety net**
+
+Append to `app/src/test/java/com/example/ui/PrivacyOptionsRowTest.kt` (Step 1's file):
+```kotlin
+  @get:Rule
+  val composeRule = androidx.compose.ui.test.junit4.createComposeRule()
+
+  @Test
+  fun adPrivacyOptionsRow_rendersOnlyWhenVisibleIsTrue() {
+    composeRule.setContent {
+      com.example.ui.screens.AdPrivacyOptionsRow(visible = false, isEnglish = true, onClick = {})
+    }
+    composeRule.onNodeWithTag("settings_privacy_options_row").assertDoesNotExist()
+
+    composeRule.setContent {
+      com.example.ui.screens.AdPrivacyOptionsRow(visible = true, isEnglish = true, onClick = {})
+    }
+    composeRule.onNodeWithTag("settings_privacy_options_row").assertExists()
+  }
+
+  @Test
+  fun adPrivacyOptionsRow_clickInvokesCallback() {
+    var clicked = false
+    composeRule.setContent {
+      com.example.ui.screens.AdPrivacyOptionsRow(visible = true, isEnglish = true, onClick = { clicked = true })
+    }
+    composeRule.onNodeWithTag("settings_privacy_options_row").performClick()
+    assert(clicked) { "tapping the row must invoke onClick — this is what wires to ConsentManager.showPrivacyOptions(activity) at the real call site" }
+  }
+```
+Add the needed imports (`androidx.compose.ui.test.junit4.createComposeRule`, `androidx.compose.ui.test.onNodeWithTag`, `androidx.compose.ui.test.assertExists`, `androidx.compose.ui.test.assertDoesNotExist`, `androidx.compose.ui.test.performClick`, `org.junit.Rule`) and the `androidx.compose.ui.test.junit4:ui-test-junit4`/`debugImplementation ui-test-manifest` dependencies already present in `app/build.gradle.kts` (`libs.androidx.compose.ui.test.junit4` is already a `testImplementation` per the existing catalog — confirm before assuming a new dependency is needed).
+
+This is the test that actually exercises Review Focus item 5's sibling risk (finding #1 from this plan's own adversarial review): it proves the row appears/disappears and responds to clicks purely from its own parameters, independent of whatever `LocalContext`/`LocalActivityResultRegistryOwner` resolve to at the real call site — the real call site's correctness (using `LocalActivityResultRegistryOwner`, not `LocalContext`) is a one-line, code-reviewable fact once the hard-to-test CompositionLocal-reading part is this small.
 
 - [ ] **Step 5: Run the full test suite**
 
