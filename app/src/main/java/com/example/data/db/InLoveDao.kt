@@ -227,6 +227,12 @@ interface InLoveDao {
     insertOutboxEntry(outbox)
   }
 
+  @Query("SELECT * FROM anniversary_dates WHERE syncId = :syncId LIMIT 1")
+  suspend fun getAnniversaryDateBySyncId(syncId: String): AnniversaryDateEntity?
+
+  @Query("SELECT * FROM shared_memories WHERE syncId = :syncId LIMIT 1")
+  suspend fun getSharedMemoryBySyncId(syncId: String): SharedMemoryEntity?
+
   // Direct suspend queries for background scheduling
   @Query("SELECT * FROM milestones ORDER BY id ASC")
   suspend fun getMilestonesList(): List<MilestoneEntity>

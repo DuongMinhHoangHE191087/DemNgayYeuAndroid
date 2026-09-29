@@ -1737,7 +1737,6 @@ git commit -m "feat(data): route memory/anniversary CRUD through the offline out
 - Create: `app/src/main/java/com/example/data/sync/SyncCoordinator.kt`
 - Modify: `app/src/main/java/com/example/di/AppServiceLocator.kt`
 - Modify: `app/src/main/java/com/example/InLoveApplication.kt`
-- Modify: `app/src/main/AndroidManifest.xml`
 - Test: `app/src/test/java/com/example/data/sync/SyncCoordinatorTest.kt`
 
 **Interfaces:**
@@ -2110,22 +2109,9 @@ This runs only on the non-test path (after the `isRunningInTest` early return ab
 
 - [ ] **Step 7: Wire `SyncWorkerFactory` into WorkManager's real initialization (without this step, `SyncWorker` crashes at runtime — see below)**
 
-`SyncWorker`'s primary constructor requires `dao: InLoveDao` with no default value, so WorkManager's default reflection-based factory (used automatically by its on-demand App Startup initializer) cannot construct it. This must be fixed before `SyncWorker.enqueuePeriodic`/`enqueueImmediate` (already called from Steps 6 and Task 7) can work outside of tests, where `TestListenableWorkerBuilder.setWorkerFactory(...)` was used instead.
+`SyncWorker`'s primary constructor requires `dao: InLoveDao` with no default value, so WorkManager's default reflection-based factory cannot construct it.
 
-In `app/src/main/AndroidManifest.xml`, insert this `<provider>` block right after the existing `com.google.android.gms.ads.APPLICATION_ID` `<meta-data>` element (line 33) and before the `<activity android:name=".MainActivity">` block (line 35), still inside `<application>`:
-```xml
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup.InitializationProvider"
-                tools:node="remove" />
-        </provider>
-```
-(The manifest's root `<manifest>` tag at line 2-3 already declares `xmlns:tools="http://schemas.android.com/tools"` and already uses `tools:replace` on `<application>`, so no namespace change is needed.)
+**No `AndroidManifest.xml` change is needed for this** (an earlier draft of this task added one, removing the manifest's default `androidx.work.WorkManagerInitializer` App Startup entry — this was a real mistake, corrected during execution: WorkManager 2.6+'s own default initializer already auto-detects `Application implements Configuration.Provider` and reads `workManagerConfiguration` from it directly — that auto-detection is exactly what "on-demand initialization via App Startup" means in current WorkManager versions, and is the whole point of the interface. The manifest-provider-removal dance is a DIFFERENT, unrelated technique — full manual initialization, where the app calls `WorkManager.initialize(context, configuration)` itself at a chosen time — and doing it here WITHOUT also adding that manual call would leave WorkManager with no initializer at all, so `WorkManager.getInstance(context)` would throw at runtime. Implementing `Configuration.Provider` alone, below, is both necessary and sufficient.)
 
 In `app/src/main/java/com/example/InLoveApplication.kt`, make the class implement `androidx.work.Configuration.Provider` and supply a `Configuration` built with `SyncWorkerFactory`:
 
@@ -2148,7 +2134,7 @@ class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider 
 - [ ] **Step 8: Run test to verify it passes**
 
 Run: `./gradlew :app:testDebugUnitTest --tests "com.example.data.sync.SyncCoordinatorTest"`
-Expected: PASS. Also run `./gradlew :app:testDebugUnitTest` fully, since `AuthRepository` was touched. There is no unit test for Step 7's WorkManager wiring itself (it is Android-framework `Configuration.Provider`/manifest plumbing with no pure-Kotlin logic to assert on) — it is verified manually in Task 13.
+Expected: PASS. Also run `./gradlew :app:testDebugUnitTest` fully, since `AuthRepository` was touched. There is no unit test for Step 7's WorkManager wiring itself (it is Android-framework `Configuration.Provider` plumbing with no pure-Kotlin logic to assert on) — it is verified manually in Task 13.
 
 - [ ] **Step 9: Commit**
 
@@ -2157,7 +2143,6 @@ git add app/src/main/java/com/example/data/sync/SyncCoordinator.kt \
         app/src/main/java/com/example/data/db/InLoveDao.kt \
         app/src/main/java/com/example/di/AppServiceLocator.kt \
         app/src/main/java/com/example/InLoveApplication.kt \
-        app/src/main/AndroidManifest.xml \
         app/src/main/java/com/example/data/repository/AuthRepository.kt \
         app/src/test/java/com/example/data/sync/SyncCoordinatorTest.kt
 git commit -m "feat(sync): SyncCoordinator two-tier Firestore listeners + WorkManager factory wiring"
@@ -2957,6 +2942,8 @@ git commit -m "docs: confirm real two-device pairing verified end-to-end"
 10. `MIGRATION_12_13`'s `CREATE UNIQUE INDEX` on `gift_ideas(remoteId)`/`milestones(remoteId)` would abort the migration with "UNIQUE constraint failed" on any device with two or more pre-existing rows in either table — every pre-existing row got the identical `''` from the `ALTER TABLE ... DEFAULT ''`, and SQLite's unique index treats repeated `''` as real duplicates (unlike `NULL`). Since these are preset catalog tables realistically seeded with many rows, this would crash the migration on essentially every real device already running the app — a direct violation of Review Focus item 4. Task 1's own migration test didn't catch it because it originally seeded only one `gift_ideas` row and zero `milestones` rows. Fixed: a backfill `UPDATE ... SET remoteId = 'legacy_' || id WHERE remoteId = ''` for both tables, run after the `ALTER TABLE` and before the `CREATE UNIQUE INDEX`; the migration test now seeds two rows in each table and asserts they get distinct placeholder ids.
 11. Task 11 Step 5's success path called `dao.updateOnlineRelationship(...)` — a `@Update`, which silently does nothing when the row doesn't exist locally yet, which it never does at this point (this is a brand-new relationship id) — so the intended local write never actually happened on success; a since-removed unconditional `dao.insertOnlineRelationship(relationship)` after the try/catch was papering over that by always re-inserting, but with the wrong (`pendingSync = true`) entity, silently undoing the success path's sync state on every successful accept. Fixed: the success branch now calls `insertOnlineRelationship` (upsert via `OnConflictStrategy.REPLACE`) with the correct `pendingSync = false` entity, and the redundant unconditional trailing insert is removed entirely.
 12. (cosmetic) Task 12's steps were numbered 1, 2, 3, "Step 2 (of the TDD cycle...)", 4 — a leftover from an earlier edit that reworded a step without renumbering it. Fixed: 1 through 5 in order.
+
+**Found and fixed during execution (2026-09-30), Task 8 Step 7:** the plan's original instruction to remove `androidx.work.WorkManagerInitializer` from `AndroidManifest.xml` was wrong — WorkManager 2.6+'s own default App Startup initializer already auto-detects `Application implements Configuration.Provider` and reads `workManagerConfiguration` from it directly; that removal technique is for a different, unrelated case (full manual `WorkManager.initialize()` control) and would have left WorkManager with no initializer at all if done without also adding a manual call, which the plan never did. Fixed by dropping the manifest change entirely — `Configuration.Provider` alone is sufficient — and executed that way (`AndroidManifest.xml` was not modified for this plan).
 
 ## Verification
 

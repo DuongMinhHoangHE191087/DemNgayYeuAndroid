@@ -31,6 +31,8 @@ object AppServiceLocator {
 
     @Volatile private var _adsManager: AdsManager? = null
     @Volatile private var _billingManager: BillingManager? = null
+    @Volatile private var _syncCoordinator: com.example.data.sync.SyncCoordinator? = null
+    @Volatile private var _networkMonitor: com.example.data.sync.NetworkMonitor? = null
 
     /** Singleton instance của [AdsManager] — throw [IllegalStateException] nếu chưa initialize */
     val adsManager: AdsManager
@@ -39,6 +41,14 @@ object AppServiceLocator {
     /** Singleton instance của [BillingManager] — throw [IllegalStateException] nếu chưa initialize */
     val billingManager: BillingManager
         get() = _billingManager ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.data.sync.SyncCoordinator] — throw [IllegalStateException] nếu chưa initialize */
+    val syncCoordinator: com.example.data.sync.SyncCoordinator
+        get() = _syncCoordinator ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.data.sync.NetworkMonitor] — throw [IllegalStateException] nếu chưa initialize */
+    val networkMonitor: com.example.data.sync.NetworkMonitor
+        get() = _networkMonitor ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
 
     /**
      * Khởi tạo tất cả services. Phải gọi sớm nhất có thể — trong `Application.onCreate()`
@@ -64,6 +74,32 @@ object AppServiceLocator {
             synchronized(this) {
                 if (_adsManager == null) {
                     _adsManager = AdsManagerImpl()
+                }
+            }
+        }
+
+        if (_networkMonitor == null) {
+            synchronized(this) {
+                if (_networkMonitor == null) {
+                    _networkMonitor = com.example.data.sync.NetworkMonitor(appContext)
+                }
+            }
+        }
+
+        if (_syncCoordinator == null) {
+            synchronized(this) {
+                if (_syncCoordinator == null) {
+                    val db = com.example.data.db.AppDatabase.getDatabase(appContext)
+                    val fs = try {
+                        if (com.google.firebase.FirebaseApp.getApps(appContext).isNotEmpty()) {
+                            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        } else null
+                    } catch (e: Exception) { null }
+                    _syncCoordinator = com.example.data.sync.SyncCoordinator(
+                        db.inLoveDao(), fs, kotlinx.coroutines.CoroutineScope(
+                            kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+                        )
+                    )
                 }
             }
         }

@@ -8,7 +8,21 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.AppCheckProviderFactory
 import com.google.firebase.appcheck.FirebaseAppCheck
 
-class InLoveApplication : AppPluginBase() {
+class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider {
+
+    // SyncWorker takes InLoveDao via constructor (Task 6, data-sync-and-real-pairing plan),
+    // so WorkManager's default reflection-based factory cannot build it — this is what makes
+    // that work instead of crashing the first time SyncWorker.enqueuePeriodic/enqueueImmediate
+    // actually runs outside a test.
+    override val workManagerConfiguration: androidx.work.Configuration
+        get() = androidx.work.Configuration.Builder()
+            .setWorkerFactory(
+                com.example.data.sync.SyncWorkerFactory(
+                    com.example.data.db.AppDatabase.getDatabase(this).inLoveDao()
+                )
+            )
+            .build()
+
     private val isRunningInTest: Boolean by lazy {
         try {
             Class.forName("org.robolectric.Robolectric") != null
@@ -34,6 +48,13 @@ class InLoveApplication : AppPluginBase() {
         // thứ hai của nó).
         FirebaseApp.initializeApp(this)
         installAppCheckProviderFactory()
+
+        // AppServiceLocator (Ads/Billing/SyncCoordinator/NetworkMonitor) phải tồn tại trước khi
+        // bất kỳ UI nào hiện ra — trước đây chỉ được initialize lần đầu bên trong
+        // InLoveViewModel.init, nghĩa là SyncCoordinator không tồn tại cho tới khi màn hình đầu
+        // tiên dựng ViewModel. Enqueue công việc đồng bộ định kỳ ngay sau đó.
+        com.example.di.AppServiceLocator.initialize(this)
+        com.example.data.sync.SyncWorker.enqueuePeriodic(this)
 
         try {
             super.onCreate()

@@ -75,6 +75,22 @@ class AuthRepository(
   }
 
   /**
+   * Starts [com.example.di.AppServiceLocator.syncCoordinator] for [uid], with `onlineRepo::refreshState`
+   * as the callback so a remote pairing/breakup change (detected by SyncCoordinator, whether this
+   * device or the partner's caused it) actually refreshes this device's UI-facing online-couple
+   * state. Wrapped in try/catch: under Robolectric (AuthRepositoryTest, RepositoryScopeLifecycleTest)
+   * the locator is never initialized, so `AppServiceLocator.syncCoordinator`'s getter throws — this
+   * degrades that to "sync doesn't start this session" instead of breaking login/register/restore/unlock.
+   */
+  private fun startSyncCoordinatorSafely(uid: String) {
+    try {
+      com.example.di.AppServiceLocator.syncCoordinator.start(uid) { onlineRepo.refreshState() }
+    } catch (e: Exception) {
+      Log.d("AuthRepo", "SyncCoordinator not started (locator not initialized, e.g. under test): ${e.message}")
+    }
+  }
+
+  /**
    * Fetches test account fixtures dynamically from Firebase Firestore over the network if available.
    * Zero hardcoded credentials bundled in the APK binary.
    */
@@ -186,6 +202,7 @@ class AuthRepository(
           _authState.value = AuthState.PinLocked(account)
         } else {
           _authState.value = AuthState.Authenticated(account)
+          startSyncCoordinatorSafely(account.uid)
         }
         syncOnlineUserWithAccount(account)
         return@withContext
@@ -324,6 +341,7 @@ class AuthRepository(
       _authState.value = AuthState.PinLocked(account)
     } else {
       _authState.value = AuthState.Authenticated(account)
+      startSyncCoordinatorSafely(account.uid)
     }
 
     return@withContext true to "Đăng nhập thành công! Chào mừng ${account.displayName} 💕"
@@ -525,6 +543,7 @@ class AuthRepository(
 
     syncOnlineUserWithAccount(newAccount)
     _authState.value = AuthState.Authenticated(newAccount)
+    startSyncCoordinatorSafely(newAccount.uid)
 
     return@withContext true to "Tạo tài khoản thành công! Chào mừng $name tham gia InLove."
   }
@@ -858,6 +877,7 @@ class AuthRepository(
     val hashedInput = AuthSecurityManager.hashPin(pinInput, currentAccount.salt)
     if (hashedInput == currentAccount.appPin) {
       _authState.value = AuthState.Authenticated(currentAccount)
+      startSyncCoordinatorSafely(currentAccount.uid)
       return true
     }
 
@@ -868,6 +888,7 @@ class AuthRepository(
         dao.updateUserAccount(migrated)
       }
       _authState.value = AuthState.Authenticated(currentAccount)
+      startSyncCoordinatorSafely(currentAccount.uid)
       return true
     }
 
@@ -887,6 +908,7 @@ class AuthRepository(
     val hash = AuthSecurityManager.hashPassword(passwordInput, currentAccount.salt)
     if (hash == currentAccount.passwordHash) {
       _authState.value = AuthState.Authenticated(currentAccount)
+      startSyncCoordinatorSafely(currentAccount.uid)
       return true
     }
     return false
@@ -934,6 +956,12 @@ class AuthRepository(
     try {
       com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
     } catch (_: Exception) {}
+
+    try {
+      com.example.di.AppServiceLocator.syncCoordinator.stop()
+    } catch (e: Exception) {
+      Log.d("AuthRepo", "SyncCoordinator stop skipped (locator not initialized): ${e.message}")
+    }
 
     _authState.value = AuthState.Unauthenticated
   }
