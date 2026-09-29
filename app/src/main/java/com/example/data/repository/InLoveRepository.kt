@@ -85,8 +85,8 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
       val firestore = FirebaseFirestore.getInstance()
       val snapshot = firestore.collection("milestone_presets").get().await()
       if (!snapshot.isEmpty) {
-        val milestones = snapshot.documents.mapIndexedNotNull { index, doc ->
-          val title = doc.getString("title") ?: return@mapIndexedNotNull null
+        val milestones = snapshot.documents.mapNotNull { doc ->
+          val title = doc.getString("title") ?: return@mapNotNull null
           val subtitle = doc.getString("subtitle") ?: ""
           val categoryTag = doc.getString("categoryTag") ?: "Cột Mốc"
           val secondaryTag = doc.getString("secondaryTag") ?: ""
@@ -96,7 +96,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
           val notificationEnabled = doc.getBoolean("notificationEnabled") ?: true
           val imageUrl = doc.getString("imageUrl") ?: ""
           MilestoneEntity(
-            id = (index + 1).toLong(),
+            remoteId = doc.id,
             title = title,
             dateText = doc.getString("dateText") ?: "",
             subtitle = subtitle,
@@ -110,7 +110,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
             notificationEnabled = notificationEnabled
           )
         }
-        dao.insertMilestones(milestones)
+        milestones.forEach { dao.upsertMilestoneByRemoteId(it) }
         return@withContext Result.success(milestones)
       }
       Result.success(emptyList())
@@ -530,6 +530,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
           val occasion = doc.getString("suggestedOccasion") ?: ""
           val price = doc.getString("priceRange") ?: ""
           GiftIdeaEntity(
+            remoteId = doc.id,
             title = title,
             category = category,
             badgeText = badgeText,
@@ -545,7 +546,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
             priceRange = price
           )
         }
-        dao.insertGiftIdeas(ideas)
+        ideas.forEach { dao.upsertGiftIdeaByRemoteId(it) }
         return@withContext Result.success(ideas)
       }
       Result.success(emptyList())
