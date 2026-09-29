@@ -1,9 +1,12 @@
 package com.example.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.squareup.moshi.JsonClass
 
-@Entity(tableName = "milestones")
+@Entity(tableName = "milestones", indices = [Index(value = ["remoteId"], unique = true)])
 data class MilestoneEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
@@ -20,10 +23,11 @@ data class MilestoneEntity(
   val isSaved: Boolean = false,
   val alarmTimeMillis: Long? = null,
   val alarmTimeFormatted: String = "",
-  val isUserCreated: Boolean = false
+  val isUserCreated: Boolean = false,
+  @ColumnInfo(defaultValue = "''") val remoteId: String = ""
 )
 
-@Entity(tableName = "gift_ideas")
+@Entity(tableName = "gift_ideas", indices = [Index(value = ["remoteId"], unique = true)])
 data class GiftIdeaEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
@@ -38,7 +42,8 @@ data class GiftIdeaEntity(
   val isAiGenerated: Boolean = false,
   val targetInterests: String = "",
   val suggestedOccasion: String = "",
-  val priceRange: String = ""
+  val priceRange: String = "",
+  @ColumnInfo(defaultValue = "''") val remoteId: String = ""
 )
 
 @Entity(tableName = "checklist_items")
@@ -88,6 +93,7 @@ data class CoupleProfileEntity(
 )
 
 @Entity(tableName = "shared_memories")
+@JsonClass(generateAdapter = true)
 data class SharedMemoryEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
@@ -101,7 +107,6 @@ data class SharedMemoryEntity(
   val relationshipId: String? = null,
   val authorId: String = "",
   val authorName: String = "Bạn",
-  val isSynced: Boolean = true,
   // Cloudinary media attributes
   val mediaType: String = "IMAGE", // "IMAGE" or "VIDEO"
   val videoUri: String? = null,
@@ -111,7 +116,12 @@ data class SharedMemoryEntity(
   val fileSizeFormatted: String = "",
   val durationSeconds: Int = 0,
   // Phân quyền (Permissions): "COUPLE_ONLY", "PRIVATE", "PUBLIC"
-  val privacyLevel: String = "COUPLE_ONLY"
+  val privacyLevel: String = "COUPLE_ONLY",
+  // Offline-first sync (Task 1, 2026-09-29 data-sync-and-real-pairing plan)
+  @ColumnInfo(defaultValue = "''") val syncId: String = "",
+  val updatedAt: Long = 0,
+  @ColumnInfo(defaultValue = "0") val deleted: Boolean = false,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 )
 
 @Entity(tableName = "love_badges")
@@ -132,6 +142,7 @@ data class LoveBadgeEntity(
 )
 
 @Entity(tableName = "anniversary_dates")
+@JsonClass(generateAdapter = true)
 data class AnniversaryDateEntity(
   @PrimaryKey(autoGenerate = true) val id: Long = 0,
   val title: String,
@@ -144,7 +155,10 @@ data class AnniversaryDateEntity(
   val daysRemaining: Int = 0,
   val createdAt: Long = System.currentTimeMillis(),
   val relationshipId: String? = null,
-  val isSynced: Boolean = true
+  @ColumnInfo(defaultValue = "''") val syncId: String = "",
+  val updatedAt: Long = 0,
+  @ColumnInfo(defaultValue = "0") val deleted: Boolean = false,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 )
 
 @Entity(tableName = "gift_reminders")
@@ -231,7 +245,9 @@ data class OnlineRelationshipEntity(
   val breakupRequestedBy: String? = null,
   val breakupRequestedAt: Long? = null,
   val createdAt: Long = System.currentTimeMillis(),
-  val terminatedAt: Long? = null
+  val terminatedAt: Long? = null,
+  @ColumnInfo(defaultValue = "0") val updatedAt: Long = 0,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 )
 
 @Entity(tableName = "online_invites")
@@ -251,7 +267,9 @@ data class OnlineInviteEntity(
   val proposedStartDateText: String = "",
   val loveNote: String = "",
   val status: String = InviteStatus.PENDING,
-  val createdAt: Long = System.currentTimeMillis()
+  val createdAt: Long = System.currentTimeMillis(),
+  @ColumnInfo(defaultValue = "0") val updatedAt: Long = 0,
+  @ColumnInfo(defaultValue = "0") val pendingSync: Boolean = false
 ) {
   val effectiveSenderName: String
     get() = senderName.ifBlank { "Vô danh" }
@@ -298,4 +316,15 @@ data class SecurityAuditLogEntity(
   val detail: String = ""
 )
 
-
+@Entity(tableName = "sync_outbox")
+@JsonClass(generateAdapter = true)
+data class SyncOutboxEntity(
+  @PrimaryKey(autoGenerate = true) val id: Long = 0,
+  val entityType: String, // "memory" | "anniversary" | "invite" | "relationship"
+  val syncId: String,
+  val operation: String, // "UPSERT" | "DELETE"
+  val payloadJson: String,
+  val createdAt: Long = System.currentTimeMillis(),
+  val attemptCount: Int = 0,
+  val lastError: String? = null
+)

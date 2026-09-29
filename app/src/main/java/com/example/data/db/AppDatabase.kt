@@ -18,6 +18,7 @@ import com.example.data.model.OnlineUserEntity
 import com.example.data.model.ReminderCadenceEntity
 import com.example.data.model.SecurityAuditLogEntity
 import com.example.data.model.SharedMemoryEntity
+import com.example.data.model.SyncOutboxEntity
 import com.example.data.model.UserAccountEntity
 
 @Database(
@@ -36,10 +37,11 @@ import com.example.data.model.UserAccountEntity
     OnlineRelationshipEntity::class,
     OnlineInviteEntity::class,
     UserAccountEntity::class,
-    SecurityAuditLogEntity::class
+    SecurityAuditLogEntity::class,
+    SyncOutboxEntity::class
   ],
-  version = 12,
-  exportSchema = false
+  version = 13,
+  exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
   abstract fun inLoveDao(): InLoveDao
@@ -54,7 +56,10 @@ abstract class AppDatabase : RoomDatabase() {
           context.applicationContext,
           AppDatabase::class.java,
           "inlove_database"
-        ).fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false).build()
+        )
+          .addMigrations(MIGRATION_12_13)
+          .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
+          .build()
         INSTANCE = instance
         instance
       }

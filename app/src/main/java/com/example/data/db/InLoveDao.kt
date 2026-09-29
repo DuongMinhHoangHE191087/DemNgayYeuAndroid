@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.data.model.AnniversaryDateEntity
 import com.example.data.model.ChecklistItemEntity
@@ -16,6 +17,7 @@ import com.example.data.model.LoveBadgeEntity
 import com.example.data.model.MilestoneEntity
 import com.example.data.model.ReminderCadenceEntity
 import com.example.data.model.SharedMemoryEntity
+import com.example.data.model.SyncOutboxEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -36,6 +38,28 @@ interface InLoveDao {
   @Query("DELETE FROM milestones WHERE id = :id")
   suspend fun deleteMilestoneById(id: Long)
 
+  @Query("SELECT * FROM milestones WHERE remoteId = :remoteId LIMIT 1")
+  suspend fun getMilestoneByRemoteId(remoteId: String): MilestoneEntity?
+
+  @Transaction
+  suspend fun upsertMilestoneByRemoteId(item: MilestoneEntity) {
+    val existing = getMilestoneByRemoteId(item.remoteId)
+    if (existing != null) {
+      updateMilestone(
+        item.copy(
+          id = existing.id,
+          isSaved = existing.isSaved,
+          notificationEnabled = existing.notificationEnabled,
+          alarmTimeMillis = existing.alarmTimeMillis,
+          alarmTimeFormatted = existing.alarmTimeFormatted,
+          isUserCreated = existing.isUserCreated
+        )
+      )
+    } else {
+      insertMilestone(item)
+    }
+  }
+
   // Gift Ideas
   @Query("SELECT * FROM gift_ideas ORDER BY id ASC")
   fun getAllGiftIdeas(): Flow<List<GiftIdeaEntity>>
@@ -45,6 +69,20 @@ interface InLoveDao {
 
   @Update
   suspend fun updateGiftIdea(item: GiftIdeaEntity)
+
+  // Upsert-by-remoteId (fixes duplicate rows from repeated Firestore preset syncs)
+  @Query("SELECT * FROM gift_ideas WHERE remoteId = :remoteId LIMIT 1")
+  suspend fun getGiftIdeaByRemoteId(remoteId: String): GiftIdeaEntity?
+
+  @Transaction
+  suspend fun upsertGiftIdeaByRemoteId(item: GiftIdeaEntity) {
+    val existing = getGiftIdeaByRemoteId(item.remoteId)
+    if (existing != null) {
+      updateGiftIdea(item.copy(id = existing.id, isFavorited = existing.isFavorited))
+    } else {
+      insertGiftIdeas(listOf(item))
+    }
+  }
 
   // Checklist Items
   @Query("SELECT * FROM checklist_items ORDER BY id ASC")
@@ -108,6 +146,39 @@ interface InLoveDao {
   @Query("DELETE FROM shared_memories WHERE id = :id")
   suspend fun deleteSharedMemoryById(id: Long)
 
+  // Sync outbox
+  @Insert
+  suspend fun insertOutboxEntry(entry: SyncOutboxEntity): Long
+
+  @Query("SELECT * FROM sync_outbox ORDER BY createdAt ASC LIMIT :limit")
+  suspend fun getPendingOutboxEntries(limit: Int = 20): List<SyncOutboxEntity>
+
+  @Query("DELETE FROM sync_outbox WHERE id = :id")
+  suspend fun deleteOutboxEntry(id: Long)
+
+  @Query("UPDATE sync_outbox SET attemptCount = attemptCount + 1, lastError = :error WHERE id = :id")
+  suspend fun markOutboxAttemptFailed(id: Long, error: String)
+
+  // Memory / anniversary writes that atomically enqueue an outbox entry (Task 7)
+  @Transaction
+  suspend fun insertSharedMemoryWithOutbox(memory: SharedMemoryEntity, outbox: SyncOutboxEntity): Long {
+    val newId = insertSharedMemory(memory)
+    insertOutboxEntry(outbox)
+    return newId
+  }
+
+  @Transaction
+  suspend fun updateSharedMemoryWithOutbox(memory: SharedMemoryEntity, outbox: SyncOutboxEntity) {
+    updateSharedMemory(memory)
+    insertOutboxEntry(outbox)
+  }
+
+  @Transaction
+  suspend fun deleteSharedMemoryWithOutbox(id: Long, outbox: SyncOutboxEntity) {
+    deleteSharedMemoryById(id)
+    insertOutboxEntry(outbox)
+  }
+
   // Love Milestone Badges
   @Query("SELECT * FROM love_badges ORDER BY targetDays ASC")
   fun getAllLoveBadges(): Flow<List<LoveBadgeEntity>>
@@ -136,6 +207,25 @@ interface InLoveDao {
 
   @Query("DELETE FROM anniversary_dates WHERE id = :id")
   suspend fun deleteAnniversaryDateById(id: Long)
+
+  @Transaction
+  suspend fun insertAnniversaryDateWithOutbox(item: AnniversaryDateEntity, outbox: SyncOutboxEntity): Long {
+    val newId = insertAnniversaryDate(item)
+    insertOutboxEntry(outbox)
+    return newId
+  }
+
+  @Transaction
+  suspend fun updateAnniversaryDateWithOutbox(item: AnniversaryDateEntity, outbox: SyncOutboxEntity) {
+    updateAnniversaryDate(item)
+    insertOutboxEntry(outbox)
+  }
+
+  @Transaction
+  suspend fun deleteAnniversaryDateWithOutbox(id: Long, outbox: SyncOutboxEntity) {
+    deleteAnniversaryDateById(id)
+    insertOutboxEntry(outbox)
+  }
 
   // Direct suspend queries for background scheduling
   @Query("SELECT * FROM milestones ORDER BY id ASC")
