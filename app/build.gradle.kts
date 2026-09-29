@@ -194,8 +194,8 @@ dependencies {
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
 
-  // Google Mobile Ads SDK (AdMob) & UMP (User Messaging Platform)
-  implementation(libs.google.play.services.ads)
+  // Google Mobile Ads SDK (AdMob) — provided transitively by :appplugin (25.4.0), which is the
+  // only place this version is declared now; UMP (User Messaging Platform) stays explicit.
   implementation(libs.user.messaging.platform)
 
   // Google Play Billing Client KTX v7 — Subscriptions & In-App Purchases
