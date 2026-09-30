@@ -31,7 +31,7 @@
 ## 🟠 Chức năng lõi — làm cho đúng như quảng cáo
 
 - [x] ✅ Ghép đôi 2 máy thật qua Firestore — đã viết lại toàn bộ theo `docs/superpowers/plans/2026-09-29-data-sync-and-real-pairing.md` (12/13 task: outbox + WorkManager + SyncCoordinator hai tầng + `coupleCodes` lookup + relationship id = invite id, rà soát 2 vòng, đã sửa hết lỗi tìm được). **Chưa build/chạy thử trên máy thật** — sandbox này không có mạng để chạy Gradle và không có thiết bị Android để cài APK, nên chưa thể tự xác nhận Task 13 (QA 2 máy thật). Cần bạn tự chạy `./gradlew :app:testDebugUnitTest :app:assembleDebug`, cài lên 2 máy, và làm theo 6 bước trong Task 13 của plan trên để xác nhận trước khi đổi dòng này thành ✅✅.
-- [ ] ⏳ Không có tính năng nhận biết mất mạng / còn mạng — app không báo cho người dùng biết khi nào offline
+- [x] ✅ Nhận biết mất mạng/còn mạng: `NetworkMonitor` đã chạy sẵn từ khi mở app (đăng ký trong `AppServiceLocator`) nhưng chưa ai đọc — giờ có banner "Bạn đang mất kết nối mạng" ở trang chủ (`4866cc4`)
 - [x] ✅ Wallpaper người dùng chọn giờ được lưu lại qua `SharedPreferences` (cùng cơ chế với ngôn ngữ), không mất khi mở lại app (`8834708`)
 - [x] ✅ Dialog "Đặt báo thức nhắc nhở" đã nối vào `MainActivity` — root cause là chưa có nơi nào collect `showSetAlarmDialog`/render dialog, không phải lỗi trong chính dialog (`e9efd17`)
 - [ ] 📝 Chế độ tối (Dark Mode) hiện bị tắt cứng — **đã xác nhận đây nhiều khả năng là chủ đích thiết kế** (giữ đúng phong cách hồng lãng mạn), không tự ý bật lại, cần hỏi bạn nếu muốn thêm như một tuỳ chọn
@@ -43,7 +43,7 @@
 - [ ] ⏳ 5 file màn hình quá dài (2.000-2.400 dòng mỗi file) — cần tách nhỏ theo từng chức năng để dễ bảo trì
 - [ ] ⏳ Còn khoảng 1.500 câu tiếng Việt viết cứng trong code thay vì dùng hệ thống đa ngôn ngữ có sẵn
 - [x] ✅ Dọn 2 chỗ rò rỉ tên thư viện "(Room)" vào text hiển thị cho người dùng (`a53e889`)
-- [x] ✅ Touch target dưới 48dp: đã gom sửa toàn bộ ~38 chỗ tìm được ở GiftScreen, AppModals, MilestoneBadgeTracker, PairingScreen, ReminderScreen, MemoriesGridScreen, Dialogs, CalendarScreen, SettingsScreen (`6866afd`, `e46ec5c`). Còn đúng 2 chỗ **cố ý chưa sửa**: badge đổi ảnh đại diện 22dp trong `EditCoupleDialog` (Dialogs.kt) — nằm sát góc avatar 56dp, tăng lên 48dp sẽ gần bằng cả avatar, cần xem hình thật mới quyết được có vỡ giao diện không.
+- [x] ✅ Touch target dưới 48dp: đã sửa toàn bộ ~40 chỗ tìm được (GiftScreen, AppModals, MilestoneBadgeTracker, PairingScreen, ReminderScreen, MemoriesGridScreen, Dialogs, CalendarScreen, SettingsScreen), gồm cả 2 badge đổi ảnh đại diện trong `EditCoupleDialog` — dùng vùng chạm 48dp trong suốt bọc quanh badge nhỏ 22dp thay vì phóng to hẳn badge (`6866afd`, `e46ec5c`, `18e9593`)
 
 ## ✅ Đã sửa từ vòng review sâu (2026-09-30)
 
@@ -57,16 +57,19 @@ toàn mà không cần build thật để xác nhận (đọc lại bằng tay k
 - [x] ✅ `CaptureMemoryDialog` (AppModals.kt) đã khoá nút Lưu khi đang lưu, tránh gửi trùng khi bấm nhanh (`0bb5cf0`)
 - [x] ✅ Dialog "Quên mật khẩu" đã có kiểm tra khớp mật khẩu mới ngay trên giao diện, giống màn Đăng ký (`0bb5cf0`)
 - [x] ✅ Xoá overload chết của `EditCoupleDialog` (Dialogs.kt) — thân rỗng, không còn nơi gọi (`0bb5cf0`)
+- [x] ✅ Nút "Sổ tay sở thích" (GiftScreen.kt) đã nối thật — mở `WishlistNotebookDialog` liệt kê quà đã Yêu thích, đổi tên "Của người ấy" → "Của tôi" vì dữ liệu Yêu thích chỉ ở local Room, chưa đồng bộ Firestore nên không thể hiển thị đúng sở thích thật của đối phương (`0e9bd36`)
 
-**Còn 1 mục cần bạn quyết định (không tự sửa vì không rõ ý đồ sản phẩm):**
-- [ ] ❓ Nút "Sổ tay sở thích của người ấy" (GiftScreen.kt) chỉ hiện toast, không mở màn hình nào — chưa có màn hình "wishlist notebook" nào trong app để dẫn tới, cần bạn quyết định nên xây mới hay bỏ nút này.
+## 🆕 Tính năng mới thêm theo yêu cầu (2026-10-01)
+
+- [x] ✅ Trang chủ "Chụp ảnh kỷ niệm" giờ dùng đúng dialog upload ảnh/video thật lên Cloudinary (`AddMemoryDialog`) — trước đây chỉ nhận URL dán tay/ảnh mẫu và lưu sai vào bảng milestone thay vì bảng kỷ niệm thật (`d71af49`)
+- [x] ✅ Cẩm nang hướng dẫn sử dụng (song ngữ) bổ sung 2 tab còn thiếu: "Ghép Đôi" và "Kho Kỷ Niệm" — chuỗi dịch đã có sẵn từ trước nhưng chưa ai nối vào danh sách tab hiển thị; sửa luôn câu nhắc "bảo mật vân tay" không còn đúng (`30d6e34`)
 
 ## 🟢 Dữ liệu mẫu — đã làm xong phần lớn
 
 - [x] ✅✅ Lịch ngày lễ Việt Nam: 15 ngày dương lịch cố định + 5 ngày âm lịch (Tết, Trung Thu, Giỗ Tổ, Vu Lan, Rằm tháng Giêng) — **đã tra cứu và xác minh thật qua tìm kiếm web**, không phải đoán, cho các năm 2025-2028
 - [x] ✅✅ Lịch ngày lễ Mỹ/phương Tây: 9 ngày cố định + 4 ngày tính theo công thức đúng cho mọi năm (Ngày của Mẹ, Ngày của Cha, Lễ Tạ Ơn...)
 - [x] ✅ Mở rộng danh mục gợi ý quà từ 2 lên 18 món, đầy đủ song ngữ Việt/Anh, chia theo 4 khoảng giá và nhiều dịp
-- [ ] ⏳ Nối 3 bộ dữ liệu trên vào app thật (hiện mới tạo file dữ liệu, chưa gắn vào màn hình)
+- [x] ✅ Cả 3 bộ dữ liệu mẫu đã nối vào app thật: 18 gợi ý quà thay 2 món cũ, lịch ngày lễ VN/phương Tây tự seed vào Lịch khi cài đặt lần đầu (`a70610a`, `6d497d2`)
 
 ## 🔵 Nghiên cứu — đã hoàn thành
 
@@ -87,9 +90,11 @@ RAM trên máy dao động lên xuống nhiều lần trong lúc làm việc (c�
 
 RAM lúc bắt đầu phiên này chỉ còn ~1.1GB/13.9GB trống — thấp hơn cả lần trước, nên **không tự
 chạy Gradle build/test lần này** để tránh crash JVM (đã thấy 6 lần crash liên tiếp trong log cũ).
-Mọi sửa lỗi trong phiên này (xem `git log 49c939d..HEAD`, ~16 commit) đã được đọc lại bằng tay ít
-nhất 2 lần và có test hồi quy Robolectric đi kèm cho các lỗi phức tạp (resurrection race, invite
-decline/cancel, wallpaper persistence), nhưng **chưa chạy được** — cần bạn chạy khi máy đủ RAM:
+Mọi sửa lỗi + tính năng mới trong phiên này (xem `git log 49c939d..HEAD`, ~27 commit) đã được đọc
+lại bằng tay ít nhất 2 lần, kiểm tra cân bằng ngoặc `{}`/`()` bằng script cho mọi file sửa nhiều,
+và có test hồi quy Robolectric đi kèm cho các phần phức tạp (resurrection race, invite
+decline/cancel, wallpaper persistence, seed dữ liệu quà/ngày lễ), nhưng **chưa chạy build thật
+được** — cần bạn chạy khi máy đủ RAM:
 ```
 ./gradlew :app:compileDebugKotlin :app:testDebugUnitTest
 ```
