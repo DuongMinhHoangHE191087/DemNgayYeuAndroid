@@ -1,6 +1,7 @@
 @file:Suppress("FunctionName")
 package com.example.ui.screens
 
+import com.example.BuildConfig
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -571,62 +572,68 @@ fun AuthScreen(
               }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Fast Test Login for QA / Developers (Uses Cloud Firestore Fixtures)
-            Text(
-              text = "Tài khoản kiểm thử nhanh (Cloud Fixtures):",
-              fontSize = 11.5.sp,
-              color = Color.Gray,
-              fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              OutlinedButton(
-                onClick = {
-                  isLoggingIn = true
-                  scope.launch {
-                    val res = viewModel.authRepo.loginTestUser(isPartner = false)
-                    isLoggingIn = false
-                    viewModel.showToast(res.second)
-                    if (res.first) {
-                      viewModel.closeAuthScreen()
-                      onBackToGuest()
-                    }
-                  }
-                },
-                enabled = !isLoggingIn,
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                  .weight(1f)
-                  .testTag("btn_quick_login_tester_a")
+            // Fast Test Login for QA / Developers only — must never reach a release build.
+            // These buttons log in as fixed Firestore fixture accounts with NO credential
+            // check at all; shipping this to real users is a one-tap account takeover of the
+            // shared "Tester A/B" account and whatever private data it holds (this is the same
+            // class of issue as the hardcoded test-account passwords already removed from git
+            // history — a live backdoor instead of a leaked secret).
+            if (BuildConfig.DEBUG) {
+              Spacer(modifier = Modifier.height(16.dp))
+              Text(
+                text = "Tài khoản kiểm thử nhanh (Cloud Fixtures, chỉ debug):",
+                fontSize = 11.5.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+              )
+              Spacer(modifier = Modifier.height(8.dp))
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
               ) {
-                Text("Tester A 👨", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-              }
-
-              OutlinedButton(
-                onClick = {
-                  isLoggingIn = true
-                  scope.launch {
-                    val res = viewModel.authRepo.loginTestUser(isPartner = true)
-                    isLoggingIn = false
-                    viewModel.showToast(res.second)
-                    if (res.first) {
-                      viewModel.closeAuthScreen()
-                      onBackToGuest()
+                OutlinedButton(
+                  onClick = {
+                    isLoggingIn = true
+                    scope.launch {
+                      val res = viewModel.authRepo.loginTestUser(isPartner = false)
+                      isLoggingIn = false
+                      viewModel.showToast(res.second)
+                      if (res.first) {
+                        viewModel.closeAuthScreen()
+                        onBackToGuest()
+                      }
                     }
-                  }
-                },
-                enabled = !isLoggingIn,
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                  .weight(1f)
-                  .testTag("btn_quick_login_tester_b")
-              ) {
-                Text("Tester B 👩", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                  },
+                  enabled = !isLoggingIn,
+                  shape = RoundedCornerShape(10.dp),
+                  modifier = Modifier
+                    .weight(1f)
+                    .testTag("btn_quick_login_tester_a")
+                ) {
+                  Text("Tester A 👨", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                OutlinedButton(
+                  onClick = {
+                    isLoggingIn = true
+                    scope.launch {
+                      val res = viewModel.authRepo.loginTestUser(isPartner = true)
+                      isLoggingIn = false
+                      viewModel.showToast(res.second)
+                      if (res.first) {
+                        viewModel.closeAuthScreen()
+                        onBackToGuest()
+                      }
+                    }
+                  },
+                  enabled = !isLoggingIn,
+                  shape = RoundedCornerShape(10.dp),
+                  modifier = Modifier
+                    .weight(1f)
+                    .testTag("btn_quick_login_tester_b")
+                ) {
+                  Text("Tester B 👩", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
               }
             }
           } else {
@@ -811,7 +818,7 @@ fun AuthScreen(
 
             // Primary Register Button
             val canRegister = regName.isNotBlank() &&
-                regEmail.isNotBlank() &&
+                AuthSecurityManager.isValidEmail(regEmail) &&
                 regPassword.length >= 6 &&
                 passwordsMatch &&
                 !isRegistering
