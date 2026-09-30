@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -55,10 +56,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -816,6 +815,89 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Security Question (optional — enables the "Câu hỏi bảo mật" password-recovery
+            // method in ForgotPasswordDialog; without this, that option always fails with
+            // "Tài khoản chưa thiết lập câu hỏi bảo mật" since no account ever has one stored).
+            Text(
+              text = "Câu hỏi bảo mật (không bắt buộc, dùng để khôi phục mật khẩu):",
+              fontSize = 11.5.sp,
+              color = Color(0xFF757575)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(modifier = Modifier.fillMaxWidth()) {
+              Surface(
+                onClick = { regQuestionExpanded = true },
+                shape = RoundedCornerShape(14.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0)),
+                color = Color.White,
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .testTag("dropdown_reg_security_question")
+              ) {
+                Row(
+                  modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.QuestionAnswer,
+                    contentDescription = null,
+                    tint = Color(0xFFE91E63),
+                    modifier = Modifier.size(20.dp)
+                  )
+                  Spacer(modifier = Modifier.width(10.dp))
+                  Text(
+                    text = regSecurityQuestion,
+                    fontSize = 13.sp,
+                    color = Color(0xFF212121),
+                    modifier = Modifier.weight(1f)
+                  )
+                  Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = Color(0xFF757575)
+                  )
+                }
+              }
+              DropdownMenu(
+                expanded = regQuestionExpanded,
+                onDismissRequest = { regQuestionExpanded = false },
+                modifier = Modifier.fillMaxWidth(0.88f)
+              ) {
+                AuthSecurityManager.SECURITY_QUESTIONS.forEach { question ->
+                  DropdownMenuItem(
+                    text = { Text(question, fontSize = 13.sp) },
+                    onClick = {
+                      regSecurityQuestion = question
+                      regQuestionExpanded = false
+                    }
+                  )
+                }
+              }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+              value = regSecurityAnswer,
+              onValueChange = { regSecurityAnswer = it },
+              label = { Text("Câu trả lời bảo mật") },
+              placeholder = { Text("Để trống nếu không muốn dùng cách khôi phục này") },
+              leadingIcon = {
+                Icon(imageVector = Icons.Default.QuestionAnswer, contentDescription = null, tint = Color(0xFFE91E63))
+              },
+              singleLine = true,
+              keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+              keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+              shape = RoundedCornerShape(14.dp),
+              colors = authTextFieldColors(),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("input_reg_security_answer")
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Primary Register Button
             val canRegister = regName.isNotBlank() &&
                 AuthSecurityManager.isValidEmail(regEmail) &&
@@ -832,7 +914,9 @@ fun AuthScreen(
                     displayNameInput = regName,
                     emailInput = regEmail,
                     passwordInput = regPassword,
-                    confirmPasswordInput = regConfirmPassword
+                    confirmPasswordInput = regConfirmPassword,
+                    securityQuestionInput = regSecurityQuestion,
+                    securityAnswerInput = regSecurityAnswer
                   )
                   isRegistering = false
                   viewModel.showToast(result.second)
