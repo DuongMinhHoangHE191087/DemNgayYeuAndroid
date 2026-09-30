@@ -168,7 +168,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val showWallpaperDialog: StateFlow<Boolean> = _showWallpaperDialog.asStateFlow()
 
   private val _selectedWallpaperUrl = MutableStateFlow(
-    "https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=1080&auto=format&fit=crop"
+    com.example.ui.util.LocaleManager.getSavedWallpaperUrl(application)
+      ?: "https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=1080&auto=format&fit=crop"
   )
   val selectedWallpaperUrl: StateFlow<String> = _selectedWallpaperUrl.asStateFlow()
 
@@ -1162,7 +1163,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
   fun setWallpaper(url: String) {
     if (url.isNotBlank()) {
-      _selectedWallpaperUrl.value = url.trim()
+      val trimmed = url.trim()
+      _selectedWallpaperUrl.value = trimmed
+      com.example.ui.util.LocaleManager.saveWallpaperUrl(getApplication(), trimmed)
       triggerFloatingHearts()
       val msg = if (_appLanguage.value == AppLanguage.VI) "Đã đổi hình nền lãng mạn mới! 🌸" else "Romantic wallpaper updated! 🌸"
       showToast(msg)

@@ -13,6 +13,7 @@ object LocaleManager {
   private const val PREFS_NAME = "inlove_preferences"
   private const val KEY_APP_LANGUAGE = "key_app_language"
   private const val KEY_FIRST_LAUNCH = "key_first_launch"
+  private const val KEY_WALLPAPER_URL = "key_wallpaper_url"
 
   fun getInitialLanguage(context: Context): AppLanguage {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -43,6 +44,17 @@ object LocaleManager {
   fun setFirstLaunchCompleted(context: Context) {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
+  }
+
+  /** Null means "no wallpaper saved yet" — caller keeps its own hardcoded default in that case. */
+  fun getSavedWallpaperUrl(context: Context): String? {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getString(KEY_WALLPAPER_URL, null)
+  }
+
+  fun saveWallpaperUrl(context: Context, url: String) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putString(KEY_WALLPAPER_URL, url).apply()
   }
 }
 
