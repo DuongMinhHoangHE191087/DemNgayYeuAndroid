@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
@@ -562,6 +563,9 @@ private fun MemoryCardItem(
       ) {
         // Left badges: Storage & Video
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+          // Must reflect memory.isCloudinaryStored, not always claim "Cloud": this badge used
+          // to say "Cloud" even for a memory that fell back to on-device-only storage after a
+          // failed upload — same honesty bug the save toast was fixed for (see fec27b8).
           Surface(
             shape = RoundedCornerShape(8.dp),
             color = Color.Black.copy(alpha = 0.55f)
@@ -571,14 +575,14 @@ private fun MemoryCardItem(
               modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
               Icon(
-                imageVector = Icons.Default.Cloud,
+                imageVector = if (memory.isCloudinaryStored) Icons.Default.Cloud else Icons.Default.PhoneAndroid,
                 contentDescription = null,
-                tint = Color(0xFF80DEEA),
+                tint = if (memory.isCloudinaryStored) Color(0xFF80DEEA) else Color(0xFFFFB74D),
                 modifier = Modifier.size(11.dp)
               )
               Spacer(modifier = Modifier.width(3.dp))
               Text(
-                text = "Cloud",
+                text = if (memory.isCloudinaryStored) "Cloud" else "On device",
                 fontSize = 9.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -1698,25 +1702,35 @@ private fun MemoryDetailDialog(
 
           Surface(
             shape = RoundedCornerShape(10.dp),
-            color = Color(0xFFE0F2F1),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF80CBC4))
+            color = if (memory.isCloudinaryStored) Color(0xFFE0F2F1) else Color(0xFFFFF3E0),
+            border = androidx.compose.foundation.BorderStroke(
+              1.dp, if (memory.isCloudinaryStored) Color(0xFF80CBC4) else Color(0xFFFFB74D)
+            )
           ) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
               modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
               Icon(
-                imageVector = if (isVideo) Icons.Default.Movie else Icons.Default.Cloud,
+                imageVector = when {
+                  isVideo -> Icons.Default.Movie
+                  memory.isCloudinaryStored -> Icons.Default.Cloud
+                  else -> Icons.Default.PhoneAndroid
+                },
                 contentDescription = null,
-                tint = Color(0xFF00796B),
+                tint = if (memory.isCloudinaryStored) Color(0xFF00796B) else Color(0xFFE65100),
                 modifier = Modifier.size(13.dp)
               )
               Spacer(modifier = Modifier.width(4.dp))
               Text(
-                text = if (isVideo) "Video ${memory.durationSeconds}s" else "Ảnh Cloudinary",
+                text = when {
+                  isVideo -> "Video ${memory.durationSeconds}s"
+                  memory.isCloudinaryStored -> "Ảnh Cloudinary"
+                  else -> "Lưu trên máy"
+                },
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF004D40)
+                color = if (memory.isCloudinaryStored) Color(0xFF004D40) else Color(0xFFE65100)
               )
             }
           }
@@ -1744,11 +1758,15 @@ private fun MemoryDetailDialog(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Cloudinary Storage Information Card
+        // Storage Information Card — color/copy must reflect memory.isCloudinaryStored, same
+        // honesty fix as the grid/header badges above and the save toast (fec27b8): a memory
+        // that fell back to on-device-only storage must not be shown as safely cloud-backed.
         Surface(
           shape = RoundedCornerShape(16.dp),
-          color = Color(0xFFF1F8E9),
-          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC5E1A5)),
+          color = if (memory.isCloudinaryStored) Color(0xFFF1F8E9) else Color(0xFFFFF3E0),
+          border = androidx.compose.foundation.BorderStroke(
+            1.dp, if (memory.isCloudinaryStored) Color(0xFFC5E1A5) else Color(0xFFFFB74D)
+          ),
           modifier = Modifier.fillMaxWidth()
         ) {
           Column(modifier = Modifier.padding(14.dp)) {
@@ -1759,28 +1777,32 @@ private fun MemoryDetailDialog(
             ) {
               Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                  imageVector = Icons.Default.CloudDone,
+                  imageVector = if (memory.isCloudinaryStored) Icons.Default.CloudDone else Icons.Default.PhoneAndroid,
                   contentDescription = null,
-                  tint = Color(0xFF33691E),
+                  tint = if (memory.isCloudinaryStored) Color(0xFF33691E) else Color(0xFFE65100),
                   modifier = Modifier.size(17.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = if (currentLanguage == AppLanguage.EN) "Secure Cloud Storage" else "Lưu Trữ Đám Mây An Toàn",
+                  text = if (memory.isCloudinaryStored) {
+                    if (currentLanguage == AppLanguage.EN) "Secure Cloud Storage" else "Lưu Trữ Đám Mây An Toàn"
+                  } else {
+                    if (currentLanguage == AppLanguage.EN) "On-device only — upload failed" else "Chỉ lưu trên máy — tải lên thất bại"
+                  },
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
-                  color = Color(0xFF33691E)
+                  color = if (memory.isCloudinaryStored) Color(0xFF33691E) else Color(0xFFE65100)
                 )
               }
 
-              if (!memory.cloudinaryUrl.isNullOrBlank()) {
+              if (memory.isCloudinaryStored && !memory.cloudinaryUrl.isNullOrBlank()) {
                 IconButton(
                   onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     @Suppress("UsePropertyAccessSyntax")
                     clipboard.setPrimaryClip(ClipData.newPlainText("Cloudinary URL", memory.cloudinaryUrl))
                   },
-                  modifier = Modifier.size(24.dp)
+                  modifier = Modifier.size(48.dp)
                 ) {
                   Icon(
                     imageVector = Icons.Default.ContentCopy,

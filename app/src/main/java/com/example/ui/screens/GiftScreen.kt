@@ -158,7 +158,7 @@ fun GiftScreen(
 
   val completedCount = checklistItems.count { it.isCompleted }
   val totalCount = checklistItems.size
-  val progressPercent = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) * 100f else 75f
+  val progressPercent = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) * 100f else 0f
 
   val filteredIdeas = remember(giftIdeas, selectedCategory) {
     when (selectedCategory) {
