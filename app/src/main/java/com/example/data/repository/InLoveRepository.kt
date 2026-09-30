@@ -49,7 +49,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
   private val _presetWallpapers = MutableStateFlow<List<String>>(emptyList())
   val presetWallpapers: StateFlow<List<String>> = _presetWallpapers.asStateFlow()
 
-  suspend fun initializeDefaultDataIfEmpty() {
+  suspend fun initializeDefaultDataIfEmpty(language: com.example.ui.util.AppLanguage = com.example.ui.util.AppLanguage.VI) {
     // 1. Neutral system reminder cadence preferences
     val currentCadences = dao.getAllReminderCadences().first()
     if (currentCadences.isEmpty()) {
@@ -71,7 +71,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     if (!hasMilestones || !hasGifts || !hasBadges) {
       syncAllCloudPresets()
       // If offline on cold start, populate safe seed data so the app is immediately usable
-      seedOfflineDataIfStillEmpty()
+      seedOfflineDataIfStillEmpty(language)
     } else {
       fetchPresetAssetsFromFirestore()
     }
@@ -650,7 +650,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     }
   }
 
-  suspend fun seedOfflineDataIfStillEmpty() {
+  suspend fun seedOfflineDataIfStillEmpty(language: com.example.ui.util.AppLanguage = com.example.ui.util.AppLanguage.VI) {
     if (dao.getAllMilestones().first().isEmpty()) {
       dao.insertMilestones(
         listOf(
@@ -698,31 +698,10 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     }
 
     if (dao.getAllGiftIdeas().first().isEmpty()) {
+      // GiftIdeasSeed: 18 bilingual ideas replacing this previous 2-item placeholder list
+      // (the data file already existed, fully written, but nothing ever called it).
       dao.insertGiftIdeas(
-        listOf(
-          GiftIdeaEntity(
-            title = "Bó Hoa Hồng Sáp Kèm Thiệp Thư Tay",
-            category = "Lãng Mạn",
-            badgeText = "Được yêu thích nhất 💖",
-            tag = "Kỷ niệm",
-            description = "Món quà tinh tế, vĩnh cửu cùng lời nhắn gửi chân thành từ tận đáy lòng.",
-            imageUrl = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop",
-            detailsSnippet = "Hương hoa hồng dịu nhẹ, lưu giữ trọn vẹn theo thời gian",
-            actionText = "Xem gợi ý chi tiết",
-            isAiGenerated = false
-          ),
-          GiftIdeaEntity(
-            title = "Bữa Tối Nến Lãng Mạn Tự Nấu",
-            category = "Trải Nghiệm",
-            badgeText = "Ấm áp & Riêng tư ✨",
-            tag = "Hẹn hò",
-            description = "Chuẩn bị món ăn người ấy yêu thích với ánh nến lung linh và giai điệu acoustic.",
-            imageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=800&auto=format&fit=crop",
-            detailsSnippet = "Không gian chỉ có hai bạn, lắng đọng từng cảm xúc",
-            actionText = "Lên thực đơn yêu thương",
-            isAiGenerated = false
-          )
-        )
+        com.example.data.seed.GiftIdeasSeed.all.map { it.toEntity(language) }
       )
     }
 

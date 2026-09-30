@@ -478,7 +478,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     viewModelScope.launch {
-      repository.initializeDefaultDataIfEmpty()
+      repository.initializeDefaultDataIfEmpty(_appLanguage.value)
       // Automatically schedule all stored anniversaries & milestones in Room DB
       com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(application)
     }

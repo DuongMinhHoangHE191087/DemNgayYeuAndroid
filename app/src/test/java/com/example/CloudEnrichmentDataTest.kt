@@ -69,4 +69,20 @@ class CloudEnrichmentDataTest {
     assertEquals(0, repository.presetPhotos.value.size)
     assertEquals(0, repository.presetAvatars.value.size)
   }
+
+  @Test
+  fun `initializeDefaultDataIfEmpty seeds the full GiftIdeasSeed catalog, not the old 2-item placeholder`() = runBlocking {
+    repository.initializeDefaultDataIfEmpty(com.example.ui.util.AppLanguage.EN)
+    val giftIdeas = db.inLoveDao().getAllGiftIdeas().first()
+
+    assertEquals(
+      "must seed every GiftIdeasSeed entry",
+      com.example.data.seed.GiftIdeasSeed.all.size,
+      giftIdeas.size
+    )
+    assertTrue(
+      "seeding with AppLanguage.EN must produce English titles, not Vietnamese",
+      giftIdeas.any { it.title == "Everlasting Rose Bouquet with Handwritten Card" }
+    )
+  }
 }
