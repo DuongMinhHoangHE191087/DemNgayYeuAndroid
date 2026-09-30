@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,7 +26,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -46,7 +44,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -973,234 +970,6 @@ private fun WallpaperCardItem(
           contentAlignment = Alignment.Center
         ) {
           Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-        }
-      }
-    }
-  }
-}
-
-// ==========================================
-// 4. CAPTURE & SAVE MEMORY PHOTO DIALOG
-// ==========================================
-@Composable
-fun CaptureMemoryDialog(
-  language: AppLanguage,
-  presetPhotos: List<String> = emptyList(),
-  onSaveMemory: (note: String, photoUrl: String) -> Unit,
-  onDismiss: () -> Unit
-) {
-  val strings = LocalizedStrings.get(language)
-  var noteText by remember { mutableStateOf("") }
-  var photoUrlText by remember(presetPhotos) {
-    mutableStateOf(presetPhotos.firstOrNull() ?: "")
-  }
-  var isSaving by remember { mutableStateOf(false) }
-
-  Dialog(onDismissRequest = onDismiss) {
-    Surface(
-      shape = RoundedCornerShape(28.dp),
-      color = Color.White.copy(alpha = 0.98f),
-      shadowElevation = 16.dp,
-      modifier = Modifier
-        .fillMaxWidth()
-        .border(
-          width = 1.5.dp,
-          brush = Brush.horizontalGradient(
-            listOf(Color(0xFFFF4081), Color(0xFFFF80AB))
-          ),
-          shape = RoundedCornerShape(28.dp)
-        )
-    ) {
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(20.dp)
-      ) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-              modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(
-                  Brush.linearGradient(listOf(RoseGradientStart, RoseGradientMid))
-                ),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                imageVector = Icons.Filled.CameraAlt,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-              )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
-              Text(
-                text = strings.memoryTitle,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF26071B)
-              )
-              Text(
-                text = strings.memorySubtitle,
-                fontSize = 11.sp,
-                color = Color(0xFF6B2B50)
-              )
-            }
-          }
-
-          IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
-            Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color(0xFF6B2B50))
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Image Preview Thumbnail
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .height(130.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .border(1.5.dp, Color(0xFFFFCDD2), RoundedCornerShape(18.dp))
-        ) {
-          AsyncImage(
-            model = photoUrlText,
-            contentDescription = "Memory Preview",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-          )
-          Surface(
-            shape = RoundedCornerShape(50.dp),
-            color = Color.Black.copy(alpha = 0.5f),
-            modifier = Modifier
-              .align(Alignment.BottomEnd)
-              .padding(8.dp)
-          ) {
-            Text(
-              text = if (language == AppLanguage.VI) "Xem trước ảnh 📸" else "Photo Preview 📸",
-              color = Color.White,
-              fontSize = 10.sp,
-              modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Image URL Input
-        Text(
-          text = if (language == AppLanguage.VI) "Liên kết ảnh kỷ niệm:" else "Photo URL:",
-          fontSize = 12.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = Color(0xFF26071B)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        OutlinedTextField(
-          value = photoUrlText,
-          onValueChange = { photoUrlText = it },
-          placeholder = { Text(strings.memoryUrlPlaceholder, fontSize = 12.sp) },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth(),
-          shape = RoundedCornerShape(14.dp),
-          colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Primary,
-            unfocusedBorderColor = Color(0xFFFFCDD2)
-          )
-        )
-
-        if (presetPhotos.isNotEmpty()) {
-          Spacer(modifier = Modifier.height(8.dp))
-          Text(
-            text = if (language == AppLanguage.VI) "Hoặc chọn từ bộ sưu tập mẫu:" else "Or pick from curated presets:",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Primary
-          )
-          Spacer(modifier = Modifier.height(4.dp))
-          LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            items(presetPhotos) { url ->
-              Box(
-                modifier = Modifier
-                  .size(44.dp)
-                  .clip(RoundedCornerShape(8.dp))
-                  .border(
-                    width = if (photoUrlText == url) 2.dp else 1.dp,
-                    color = if (photoUrlText == url) Primary else Color(0xFFFFCDD2),
-                    shape = RoundedCornerShape(8.dp)
-                  )
-                  .clickable { photoUrlText = url }
-              ) {
-                AsyncImage(
-                  model = url,
-                  contentDescription = null,
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier.fillMaxSize()
-                )
-              }
-            }
-          }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Note Input
-        Text(
-          text = if (language == AppLanguage.VI) "Lời nhắn gửi / Cảm xúc:" else "Sweet note / Feeling:",
-          fontSize = 12.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = Color(0xFF26071B)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        OutlinedTextField(
-          value = noteText,
-          onValueChange = { noteText = it },
-          placeholder = { Text(strings.memoryNotePlaceholder, fontSize = 12.sp) },
-          maxLines = 3,
-          modifier = Modifier.fillMaxWidth(),
-          shape = RoundedCornerShape(14.dp),
-          colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Primary,
-            unfocusedBorderColor = Color(0xFFFFCDD2)
-          )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Save Button — isSaving guards against a rapid double-tap firing onSaveMemory twice
-        // before the dialog closes (it closes itself asynchronously, from the ViewModel side).
-        Button(
-          onClick = {
-            isSaving = true
-            onSaveMemory(noteText, photoUrlText)
-          },
-          enabled = !isSaving,
-          shape = RoundedCornerShape(16.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
-          modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .testTag("btn_confirm_save_memory")
-        ) {
-          if (isSaving) {
-            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-          } else {
-            Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-          }
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = strings.btnSaveMemory,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-          )
         }
       }
     }

@@ -38,12 +38,12 @@ import com.example.ui.components.MilestoneBadgeShowcaseDialog
 import com.example.ui.screens.AddAnniversaryDateDialog
 import com.example.ui.screens.AddChecklistDialog
 import com.example.ui.screens.AddGiftReminderDialog
+import com.example.ui.screens.AddMemoryDialog
 import com.example.ui.screens.AddMilestoneDialog
 import com.example.ui.screens.AddReminderDialog
 import com.example.ui.screens.AppPinLockScreen
 import com.example.ui.screens.AuthScreen
 import com.example.ui.screens.CalendarScreen
-import com.example.ui.screens.CaptureMemoryDialog
 import com.example.ui.screens.EditCoupleDialog
 import com.example.ui.screens.EditMyProfileDialog
 import com.example.ui.screens.GiftDetailDialog
@@ -500,14 +500,34 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       )
     }
 
+    // Home's quick "Capture Memory" action now opens the same real device-photo/video +
+    // Cloudinary upload dialog the Memories tab's own FAB uses (AddMemoryDialog), instead of
+    // the old CaptureMemoryDialog which only accepted a pasted URL or a preset, and saved into
+    // a MilestoneEntity rather than the actual shared_memories table the Memories gallery reads.
     if (showMemoryDialog) {
-      CaptureMemoryDialog(
-        language = appLanguage,
+      AddMemoryDialog(
+        strings = strings,
+        currentLanguage = appLanguage,
         presetPhotos = presetPhotos,
-        onSaveMemory = { note, photoUrl ->
-          viewModel.saveMemory(note, photoUrl)
-        },
-        onDismiss = { viewModel.closeMemoryDialog() }
+        onDismiss = { viewModel.closeMemoryDialog() },
+        onSaveMemory = { title, dateText, photoUri, note, location, mediaType, videoUri, cloudinaryPublicId, cloudinaryUrl, isCloudinaryStored, fileSizeFormatted, durationSeconds, privacyLevel ->
+          viewModel.addSharedMemory(
+            title = title,
+            dateText = dateText,
+            photoUri = photoUri,
+            note = note,
+            location = location,
+            mediaType = mediaType,
+            videoUri = videoUri,
+            cloudinaryPublicId = cloudinaryPublicId,
+            cloudinaryUrl = cloudinaryUrl,
+            isCloudinaryStored = isCloudinaryStored,
+            fileSizeFormatted = fileSizeFormatted,
+            durationSeconds = durationSeconds,
+            privacyLevel = privacyLevel
+          )
+          viewModel.closeMemoryDialog()
+        }
       )
     }
 

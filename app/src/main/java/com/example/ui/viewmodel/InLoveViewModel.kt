@@ -1200,31 +1200,6 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _showMemoryDialog.value = false
   }
 
-  fun saveMemory(note: String, photoUrl: String) {
-    viewModelScope.launch {
-      val cleanNote = note.trim().ifEmpty { "Kỷ niệm ngày yêu ngọt ngào cùng nhau" }
-      val defaultFallback = presetPhotos.value.firstOrNull() ?: ""
-      val cleanUrl = photoUrl.trim().ifEmpty { defaultFallback }
-      repository.addMilestone(
-        MilestoneEntity(
-          title = "Khoảnh Khắc: ${cleanNote.take(24)}",
-          dateText = "Hôm nay",
-          subtitle = cleanNote,
-          categoryTag = "Kỷ Niệm",
-          secondaryTag = "Ảnh Đôi",
-          imageUrl = cleanUrl,
-          daysRemaining = 0,
-          isPast = true,
-          isImportant = true
-        )
-      )
-      _showMemoryDialog.value = false
-      triggerFloatingHearts()
-      val msg = if (_appLanguage.value == AppLanguage.VI) "Đã lưu lại bức ảnh kỷ niệm vào dòng thời gian! 📸❤️" else "Memory photo saved to timeline! 📸❤️"
-      showToast(msg)
-    }
-  }
-
   fun addSharedMemory(
     title: String,
     dateText: String,

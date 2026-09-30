@@ -812,7 +812,7 @@ private fun EmptyMemoriesCard(
  * Add Memory Dialog with Photo & Video upload, Cloudinary storage and permissions
  */
 @Composable
-private fun AddMemoryDialog(
+fun AddMemoryDialog(
   strings: com.example.ui.util.AppStrings,
   currentLanguage: AppLanguage,
   presetPhotos: List<String> = emptyList(),
