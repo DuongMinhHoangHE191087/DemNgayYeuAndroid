@@ -79,9 +79,14 @@ class SyncWorker(
   }
 
   companion object {
-    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    // internal, not private: an inline function's body is copied into every call site, so a
+    // public/internal inline fun cannot reference a private member — this is what the compiler
+    // flagged ("Public-API inline function cannot access non-public-API property") once this
+    // file actually got compiled. moshiAdapterFor is called from InLoveRepository and tests in
+    // this same module, so internal (not a full public leak of the Moshi instance) is correct.
+    internal val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
-    inline fun <reified T> moshiAdapterFor(): JsonAdapter<T> = moshi.adapter(T::class.java)
+    internal inline fun <reified T> moshiAdapterFor(): JsonAdapter<T> = moshi.adapter(T::class.java)
 
     private const val UNIQUE_PERIODIC_NAME = "sync_outbox_periodic"
     private const val UNIQUE_IMMEDIATE_NAME = "sync_outbox_immediate"

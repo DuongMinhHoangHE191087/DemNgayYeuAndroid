@@ -195,8 +195,15 @@ dependencies {
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
 
-  // Google Mobile Ads SDK (AdMob) — provided transitively by :appplugin (25.4.0), which is the
-  // only place this version is declared now; UMP (User Messaging Platform) stays explicit.
+  // Google Mobile Ads SDK (AdMob) & UMP (User Messaging Platform).
+  // :appplugin declares play-services-ads as `implementation`, not `api`, so it is NOT exposed
+  // transitively to :app despite `implementation(project(":appplugin"))` below — confirmed by an
+  // actual build: every file here importing com.google.android.gms.ads.* failed to resolve when
+  // this line was removed on the (wrong) assumption that the module dependency alone was enough.
+  // :app still needs its own direct dependency; what actually fixes the version skew is pinning
+  // it to the exact same version appplugin declares (playServicesAds = "25.4.0" in the catalog),
+  // not removing it.
+  implementation(libs.google.play.services.ads)
   implementation(libs.user.messaging.platform)
 
   // Google Play Billing Client KTX v7 — Subscriptions & In-App Purchases
