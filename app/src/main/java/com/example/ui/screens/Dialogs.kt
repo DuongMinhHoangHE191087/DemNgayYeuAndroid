@@ -971,12 +971,22 @@ fun EditCoupleDialog(
                       .clip(CircleShape)
                       .border(2.dp, Color(0xFF00897B), CircleShape)
                   )
-                  Surface(
-                    shape = CircleShape,
-                    color = Color(0xFF00897B),
-                    modifier = Modifier.size(22.dp).clickable { boyLauncher.launch("image/*") }
+                  // 48dp invisible tap zone (AGENTS.md minimum) wrapping the small 22dp visual
+                  // badge, instead of just growing the badge itself to 48dp — which would have
+                  // made it nearly as big as the 56dp avatar it sits on.
+                  Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                      .size(48.dp)
+                      .clickable { boyLauncher.launch("image/*") }
                   ) {
-                    Icon(Icons.Default.CameraAlt, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.padding(3.5.dp))
+                    Surface(
+                      shape = CircleShape,
+                      color = Color(0xFF00897B),
+                      modifier = Modifier.size(22.dp)
+                    ) {
+                      Icon(Icons.Default.CameraAlt, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.padding(3.5.dp))
+                    }
                   }
                 }
 
@@ -1037,12 +1047,22 @@ fun EditCoupleDialog(
                       .clip(CircleShape)
                       .border(2.dp, Color(0xFFE91E63), CircleShape)
                   )
-                  Surface(
-                    shape = CircleShape,
-                    color = Color(0xFFE91E63),
-                    modifier = Modifier.size(22.dp).clickable { girlLauncher.launch("image/*") }
+                  // 48dp invisible tap zone (AGENTS.md minimum) wrapping the small 22dp visual
+                  // badge, instead of just growing the badge itself to 48dp — which would have
+                  // made it nearly as big as the 56dp avatar it sits on.
+                  Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                      .size(48.dp)
+                      .clickable { girlLauncher.launch("image/*") }
                   ) {
-                    Icon(Icons.Default.CameraAlt, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.padding(3.5.dp))
+                    Surface(
+                      shape = CircleShape,
+                      color = Color(0xFFE91E63),
+                      modifier = Modifier.size(22.dp)
+                    ) {
+                      Icon(Icons.Default.CameraAlt, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.padding(3.5.dp))
+                    }
                   }
                 }
 
