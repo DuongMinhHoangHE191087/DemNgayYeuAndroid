@@ -1246,12 +1246,25 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         privacyLevel = privacyLevel
       )
       triggerFloatingHearts()
-      val msg = if (_appLanguage.value == AppLanguage.VI) {
-        if (mediaType == "VIDEO") "Đã lưu video kỷ niệm lên Cloudinary & Album! 🎬☁️"
-        else "Đã lưu kỷ niệm \"$validTitle\" lên Cloudinary & Album! 📸💕"
+      // isCloudinaryStored = false means CloudinaryStorageService's upload attempt failed and
+      // fell back to on-device-only storage (no automatic retry exists for this path, unlike
+      // the Firestore sync outbox) — the toast must say so, not claim a Cloudinary save that
+      // didn't happen. Silently claiming success here is what let a lost upload look "saved"
+      // to the user.
+      val msg = if (isCloudinaryStored) {
+        if (_appLanguage.value == AppLanguage.VI) {
+          if (mediaType == "VIDEO") "Đã lưu video kỷ niệm lên Cloudinary & Album! 🎬☁️"
+          else "Đã lưu kỷ niệm \"$validTitle\" lên Cloudinary & Album! 📸💕"
+        } else {
+          if (mediaType == "VIDEO") "Saved memory video to Cloudinary! 🎬☁️"
+          else "Saved memory \"$validTitle\" to Cloudinary & Album! 📸💕"
+        }
       } else {
-        if (mediaType == "VIDEO") "Saved memory video to Cloudinary! 🎬☁️"
-        else "Saved memory \"$validTitle\" to Cloudinary & Album! 📸💕"
+        if (_appLanguage.value == AppLanguage.VI) {
+          "Đã lưu \"$validTitle\" trên máy — tải lên Cloudinary thất bại, hãy kiểm tra kết nối mạng và thử lại sau! ⚠️📱"
+        } else {
+          "Saved \"$validTitle\" on this device only — Cloudinary upload failed, check your connection and try again later! ⚠️📱"
+        }
       }
       showToast(msg)
     }
