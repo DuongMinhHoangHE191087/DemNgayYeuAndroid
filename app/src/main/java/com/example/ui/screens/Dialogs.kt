@@ -2368,7 +2368,7 @@ fun AddGiftReminderDialog(
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         modifier = Modifier.testTag("btn_save_gift_reminder")
       ) {
-        Text("Lưu Nhắc Nhở (Room)", fontWeight = FontWeight.Bold)
+        Text("Lưu Nhắc Nhở", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {

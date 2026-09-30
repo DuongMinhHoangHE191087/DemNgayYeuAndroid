@@ -1449,7 +1449,7 @@ fun MilestoneCard(
               color = PrimaryFixed.copy(alpha = 0.9f)
             ) {
               Text(
-                text = if (isEnglish) "Custom" else "Tự tạo (Room)",
+                text = if (isEnglish) "Custom" else "Tự tạo",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
