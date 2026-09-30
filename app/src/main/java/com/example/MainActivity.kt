@@ -426,6 +426,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     if (showAddMilestoneDialog) {
       AddMilestoneDialog(
+        presetPhotos = presetPhotos,
         onDismiss = { viewModel.closeAddMilestoneDialog() },
         onConfirm = { title, dateText, subtitle, catTag, secTag, img, days, important ->
           viewModel.addMilestone(title, dateText, subtitle, catTag, secTag, img, days, important)

@@ -90,6 +90,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.model.AnniversaryDateEntity
 import com.example.data.model.MilestoneEntity
+import com.example.ui.components.DatePickerUtils
 import com.example.ui.components.MilestoneBadgeDashboardCard
 import com.example.ui.components.MilestoneTimelineCard
 import com.example.ui.theme.OnPrimaryFixed
@@ -1459,12 +1460,25 @@ fun MilestoneCard(
           }
 
           if (milestone.isPast) {
+            // Computed from the real date, not a hardcoded "268 days ago" that used to show
+            // for every past milestone regardless of when it actually happened.
+            val daysAgo = remember(milestone.dateText) {
+              DatePickerUtils.parseDateToUtcMillis(milestone.dateText)?.let { millis ->
+                java.util.concurrent.TimeUnit.MILLISECONDS
+                  .toDays(System.currentTimeMillis() - millis)
+                  .coerceAtLeast(0)
+              }
+            }
             Surface(
               shape = RoundedCornerShape(20.dp),
               color = TertiaryFixed.copy(alpha = 0.8f)
             ) {
               Text(
-                text = if (isEnglish) "268 days ago" else "Đã qua 268 ngày",
+                text = if (daysAgo != null) {
+                  if (isEnglish) "$daysAgo days ago" else "Đã qua $daysAgo ngày"
+                } else {
+                  if (isEnglish) "In the past" else "Đã qua"
+                },
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Tertiary,
@@ -1694,9 +1708,13 @@ fun MilestoneCard(
 
       Spacer(modifier = Modifier.height(12.dp))
 
-      // Action Buttons inside Card
+      // Action Buttons inside Card. Branches on categoryTag, not milestone.id: id is a raw
+      // Room autoincrement primary key, so branching on `id == 1L/2L` only "worked" for the 2
+      // seed rows and would silently break once those are deleted or a real milestone gets a
+      // new id. categoryTag is the actual semantic field (also user-editable in
+      // AddMilestoneDialog) and matches the seed data's own "Cột Mốc"/"Kỷ Niệm" tags exactly.
       when {
-        milestone.id == 1L -> {
+        milestone.categoryTag == "Cột Mốc" -> {
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1756,7 +1774,7 @@ fun MilestoneCard(
             }
           }
         }
-        milestone.id == 2L -> {
+        milestone.categoryTag == "Kỷ Niệm" -> {
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)

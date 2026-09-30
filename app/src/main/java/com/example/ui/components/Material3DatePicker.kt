@@ -88,6 +88,21 @@ object DatePickerUtils {
     return null
   }
 
+  /** Vietnamese day-of-week name for a "dd/MM/yyyy"-ish date string, or null if unparseable. */
+  fun getVietnameseDayOfWeek(dateStr: String): String? {
+    val millis = parseDateToUtcMillis(dateStr) ?: return null
+    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
+    return when (cal.get(Calendar.DAY_OF_WEEK)) {
+      Calendar.MONDAY -> "Thứ Hai"
+      Calendar.TUESDAY -> "Thứ Ba"
+      Calendar.WEDNESDAY -> "Thứ Tư"
+      Calendar.THURSDAY -> "Thứ Năm"
+      Calendar.FRIDAY -> "Thứ Sáu"
+      Calendar.SATURDAY -> "Thứ Bảy"
+      else -> "Chủ Nhật"
+    }
+  }
+
   /**
    * Generates a friendly relative time description (e.g. "Thứ Ba, 14/02/2023 • Cách đây 1000 ngày")
    */

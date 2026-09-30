@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -220,8 +222,12 @@ fun AddReminderDialog(
   )
 }
 
+private const val DEFAULT_MILESTONE_IMAGE_URL =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuANA2ChG6LS0d4msPLYL4g-4W2BU_q52b1udp8NDaY4NJSzyw4NZnx6e2qKT1oMKzYrc76_1-nMndDIrMSO7k1QXvz66V8WEt7D3GuZmigotLqTpeJbbAdYrKyOPyUV1W-RxHRZbCo09c24vQC-5ZIS2iG1PM6s7V5_nejLv9V0-tTQujYKsbrgGRbfxlS_JvPgXqa_zXWfABTSL3rCM-VVaw2iIyPJ43vA8jK5bjWCrVYznx4hzUS6_w"
+
 @Composable
 fun AddMilestoneDialog(
+  presetPhotos: List<String> = emptyList(),
   onDismiss: () -> Unit,
   onConfirm: (
     title: String,
@@ -236,10 +242,12 @@ fun AddMilestoneDialog(
 ) {
   var title by remember { mutableStateOf("") }
   var dateText by remember { mutableStateOf("15 Tháng 11, 2026") }
-  var subtitle by remember { mutableStateOf("Chủ Nhật") }
   var categoryTag by remember { mutableStateOf("Hẹn Hò") }
   var daysRemainingStr by remember { mutableStateOf("67") }
   var isImportant by remember { mutableStateOf(false) }
+  var imageUrl by remember(presetPhotos) {
+    mutableStateOf(presetPhotos.firstOrNull() ?: DEFAULT_MILESTONE_IMAGE_URL)
+  }
 
   AlertDialog(
     onDismissRequest = onDismiss,
@@ -312,6 +320,39 @@ fun AddMilestoneDialog(
           singleLine = true
         )
 
+        if (presetPhotos.isNotEmpty()) {
+          Text(
+            text = "Ảnh minh hoạ cho kỷ niệm:",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+          )
+          LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            items(presetPhotos) { url ->
+              Box(
+                modifier = Modifier
+                  .size(44.dp)
+                  .clip(RoundedCornerShape(8.dp))
+                  .border(
+                    width = if (imageUrl == url) 2.dp else 1.dp,
+                    color = if (imageUrl == url) Primary else Color(0xFFFFCDD2),
+                    shape = RoundedCornerShape(8.dp)
+                  )
+                  .clickable { imageUrl = url }
+              ) {
+                AsyncImage(
+                  model = url,
+                  contentDescription = null,
+                  contentScale = ContentScale.Crop,
+                  modifier = Modifier.fillMaxSize()
+                )
+              }
+            }
+          }
+        }
+
         Row(
           modifier = Modifier.fillMaxWidth(),
           verticalAlignment = Alignment.CenterVertically,
@@ -330,13 +371,16 @@ fun AddMilestoneDialog(
       Button(
         onClick = {
           val days = daysRemainingStr.toIntOrNull() ?: 30
+          // Derived from the actual picked date, not a hardcoded "Chủ Nhật" that used to be
+          // wrong for every date except an actual Sunday.
+          val subtitle = DatePickerUtils.getVietnameseDayOfWeek(dateText) ?: "Kỷ Niệm"
           onConfirm(
             title,
             dateText,
             subtitle,
             categoryTag,
             "Cột mốc mới",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuANA2ChG6LS0d4msPLYL4g-4W2BU_q52b1udp8NDaY4NJSzyw4NZnx6e2qKT1oMKzYrc76_1-nMndDIrMSO7k1QXvz66V8WEt7D3GuZmigotLqTpeJbbAdYrKyOPyUV1W-RxHRZbCo09c24vQC-5ZIS2iG1PM6s7V5_nejLv9V0-tTQujYKsbrgGRbfxlS_JvPgXqa_zXWfABTSL3rCM-VVaw2iIyPJ43vA8jK5bjWCrVYznx4hzUS6_w",
+            imageUrl,
             days,
             isImportant
           )
