@@ -761,5 +761,66 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
         )
       )
     }
+
+    // Vietnamese/Western holiday calendars: same "data file existed, nothing ever called it"
+    // gap as GiftIdeasSeed above. Only seeded once (guarded like every other block here) so a
+    // user who deletes a seeded holiday doesn't get it silently re-added on the next cold start.
+    if (dao.getAllAnniversaryDates().first().isEmpty()) {
+      dao.insertAnniversaryDates(buildHolidayAnniversaries(language))
+    }
+  }
+
+  /**
+   * Resolves each holiday (Vietnamese for VI, Western for EN — matching GiftIdeasSeed's
+   * per-language rather than additive approach) to its next upcoming occurrence. Fixed-date
+   * holidays are computed for every year via java.time; lunar/rule-based ones fall back to
+   * whatever years VietnameseHolidays/WesternHolidays' own verified-year tables cover, and are
+   * skipped entirely once past without a next-year entry — never a guessed date.
+   */
+  private fun buildHolidayAnniversaries(language: com.example.ui.util.AppLanguage): List<AnniversaryDateEntity> {
+    val today = java.time.LocalDate.now()
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val now = System.currentTimeMillis()
+
+    fun toEntity(title: String, date: java.time.LocalDate): AnniversaryDateEntity {
+      val daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, date).toInt()
+      return AnniversaryDateEntity(
+        title = title,
+        dateText = date.format(formatter),
+        type = "CUSTOM",
+        isAnnual = true,
+        daysRemaining = daysRemaining,
+        updatedAt = now
+      )
+    }
+
+    fun nextFixedOccurrence(month: Int, day: Int): java.time.LocalDate {
+      var date = java.time.LocalDate.of(today.year, month, day)
+      if (date.isBefore(today)) date = date.plusYears(1)
+      return date
+    }
+
+    return if (language == com.example.ui.util.AppLanguage.VI) {
+      val fixed = com.example.data.seed.VietnameseHolidays.fixedHolidays.map { h ->
+        toEntity("${h.emoji} ${h.titleVi}", nextFixedOccurrence(h.month, h.day))
+      }
+      val lunar = com.example.data.seed.VietnameseHolidays.lunarHolidays.mapNotNull { h ->
+        val date = com.example.data.seed.VietnameseHolidays.resolvedDate(h, today.year)
+          ?.takeIf { !it.isBefore(today) }
+          ?: com.example.data.seed.VietnameseHolidays.resolvedDate(h, today.year + 1)
+        date?.let { toEntity("${h.emoji} ${h.titleVi}", it) }
+      }
+      fixed + lunar
+    } else {
+      val fixed = com.example.data.seed.WesternHolidays.fixedHolidays.map { h ->
+        toEntity("${h.emoji} ${h.titleEn}", nextFixedOccurrence(h.month, h.day))
+      }
+      val ruleBased = com.example.data.seed.WesternHolidays.ruleBasedHolidays.map { h ->
+        var date = h.resolve(today.year)
+        if (date.isBefore(today)) date = h.resolve(today.year + 1)
+        toEntity("${h.emoji} ${h.titleEn}", date)
+      }
+      fixed + ruleBased
+    }
   }
 }

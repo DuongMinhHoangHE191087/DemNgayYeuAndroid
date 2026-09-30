@@ -85,4 +85,25 @@ class CloudEnrichmentDataTest {
       giftIdeas.any { it.title == "Everlasting Rose Bouquet with Handwritten Card" }
     )
   }
+
+  @Test
+  fun `initializeDefaultDataIfEmpty seeds holiday anniversaries from VietnameseHolidays and WesternHolidays`() = runBlocking {
+    repository.initializeDefaultDataIfEmpty(com.example.ui.util.AppLanguage.VI)
+    val viHolidays = db.inLoveDao().getAllAnniversaryDates().first()
+
+    // 15 fixed + up to 5 lunar (some lunar entries may fall outside the verified-year table
+    // around the seam of a calendar year and get skipped rather than guessed)
+    assertTrue(
+      "expected at least the 15 fixed Vietnamese holidays, got ${viHolidays.size}",
+      viHolidays.size >= com.example.data.seed.VietnameseHolidays.fixedHolidays.size
+    )
+    assertTrue(
+      "every seeded holiday dateText must be parseable dd/MM/yyyy",
+      viHolidays.all { com.example.ui.components.DatePickerUtils.parseDateToUtcMillis(it.dateText) != null }
+    )
+    assertTrue(
+      "Tết Dương Lịch should be present",
+      viHolidays.any { it.title.contains("Tết Dương Lịch") }
+    )
+  }
 }
