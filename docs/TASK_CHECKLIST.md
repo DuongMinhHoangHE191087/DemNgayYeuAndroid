@@ -43,23 +43,23 @@
 - [ ] ⏳ 5 file màn hình quá dài (2.000-2.400 dòng mỗi file) — cần tách nhỏ theo từng chức năng để dễ bảo trì
 - [ ] ⏳ Còn khoảng 1.500 câu tiếng Việt viết cứng trong code thay vì dùng hệ thống đa ngôn ngữ có sẵn
 - [x] ✅ Dọn 2 chỗ rò rỉ tên thư viện "(Room)" vào text hiển thị cho người dùng (`a53e889`)
-- [x] ✅ Touch target dưới 48dp ở badge "Copy link Cloudinary" (24dp → 48dp) khi sửa cùng chỗ (`6866afd`) — **còn khoảng 15+ chỗ khác dưới 48dp chưa sửa, xem mục ❓ bên dưới**
+- [x] ✅ Touch target dưới 48dp: đã gom sửa toàn bộ ~38 chỗ tìm được ở GiftScreen, AppModals, MilestoneBadgeTracker, PairingScreen, ReminderScreen, MemoriesGridScreen, Dialogs, CalendarScreen, SettingsScreen (`6866afd`, `e46ec5c`). Còn đúng 2 chỗ **cố ý chưa sửa**: badge đổi ảnh đại diện 22dp trong `EditCoupleDialog` (Dialogs.kt) — nằm sát góc avatar 56dp, tăng lên 48dp sẽ gần bằng cả avatar, cần xem hình thật mới quyết được có vỡ giao diện không.
 
-## ❓ Phát hiện khi code review sâu (2026-09-30) — cần bạn quyết định trước khi sửa tiếp
+## ✅ Đã sửa từ vòng review sâu (2026-09-30)
 
-Rà soát toàn bộ UI Compose (Dialogs, Calendar, Settings, Memories, Home, Reminder, Pairing, Gift,
-Auth, Modals, Milestone — ~28.000 dòng) để tìm thêm bug và cải tiến. Các mục dưới đây cần quyết
-định về sản phẩm/thiết kế nên chưa tự sửa; đều có file:line cụ thể nếu bạn muốn triển khai tiếp:
+Rà soát toàn bộ UI Compose (~28.000 dòng) tìm thêm bug/cải tiến, rồi sửa hết các mục có thể sửa an
+toàn mà không cần build thật để xác nhận (đọc lại bằng tay kỹ, không đổi hành vi ngoài ý muốn):
 
-- [ ] ❓ **`AddMilestoneDialog` (Dialogs.kt) có cụm lỗi liên quan nhau:** trường `subtitle` không có ô nhập nào cả — luôn lưu cứng "Chủ Nhật" bất kể ngày thật chọn là thứ mấy; mọi milestone mới đều nhận chung 1 ảnh stock cố định (không có bộ chọn ảnh); nhãn "268 ngày trước" ở milestone đã qua cũng là chuỗi cứng, không tính từ ngày thật. Cần quyết định: tự tính subtitle/ngày từ `dateText`, thêm bộ chọn ảnh, hay bỏ các trường này?
-- [ ] ❓ **`CalendarScreen.kt:1699,1759` rẽ nhánh giao diện theo `milestone.id == 1L/2L`** (id thật trong DB) thay vì một cờ ngữ nghĩa — chỉ "đúng" với 2 dòng seed ban đầu, vỡ khi người dùng tự tạo milestone (id mới) hoặc xoá 2 dòng seed đó.
-- [ ] ❓ **`SettingsScreen.kt` có 3 công tắc "giả":** `notificationEnabled`/`soundEnabled`/`biometricEnabled` chỉ là state cục bộ, không nối vào hệ thống thông báo hay `BiometricPrompt` thật, mất khi rời màn hình. Nghiêm trọng hơn: `biometricEnabled` trực tiếp cộng điểm vào "Security Health Score" hiển thị cho người dùng — bật công tắc không làm gì cả nhưng điểm bảo mật vẫn tăng, gây hiểu lầm.
-- [ ] ❓ **Luồng khôi phục mật khẩu bằng "Câu hỏi bảo mật" chết hoàn toàn:** `ForgotPasswordDialog` mời chọn phương án này, gọi `resetPasswordWithSecurityAnswer`, nhưng màn Đăng ký không có ô nhập câu hỏi/câu trả lời nào — không ai từng lưu được đáp án, nên ai dùng cách này chắc chắn thất bại. Cần bỏ hẳn lựa chọn này khỏi dialog, hoặc làm nốt UI còn thiếu.
-- [ ] ❓ Nút "Sổ tay sở thích của người ấy" (GiftScreen.kt) chỉ hiện toast, không mở màn hình nào — chưa rõ nên dẫn tới đâu, cần quyết định sản phẩm.
-- [ ] ❓ Còn khoảng 15+ chỗ `IconButton`/nút bấm dưới 48dp rải rác ở GiftScreen, AppModals, MilestoneBadgeTracker, PairingScreen, ReminderScreen, Dialogs, CalendarScreen, SettingsScreen — liệt kê chi tiết có trong lịch sử trao đổi phiên làm việc này, chưa gom sửa vì số lượng lớn và rải rác nhiều file.
-- [ ] ⏳ `CaptureMemoryDialog` (AppModals.kt) không khoá nút Lưu khi đang lưu — bấm nhanh nhiều lần có thể gửi trùng yêu cầu lưu/tải ảnh.
-- [ ] ⏳ Dialog "Quên mật khẩu" không kiểm tra mật khẩu mới khớp xác nhận ngay trên giao diện (màn Đăng ký đã có, dialog này thì chưa) — người dùng chỉ biết sai sau khi gửi lên server.
-- [ ] ⏳ `EditCoupleDialog` (Dialogs.kt) có 1 overload cũ thân rỗng ("// Empty fallback") — mã chết, nên xoá nếu chắc chắn không còn nơi gọi.
+- [x] ✅ `AddMilestoneDialog` (Dialogs.kt): `subtitle` giờ tự tính từ ngày thật chọn (Thứ mấy) thay vì luôn "Chủ Nhật"; đã thêm bộ chọn ảnh từ `presetPhotos` thay vì luôn 1 ảnh stock cố định; nhãn "N ngày trước" ở milestone đã qua (CalendarScreen) giờ tính từ `dateText` thật thay vì luôn "268 ngày" (`28f89ea`)
+- [x] ✅ `CalendarScreen.kt` rẽ nhánh giao diện milestone: đổi từ `milestone.id == 1L/2L` (PK thật, chỉ đúng với 2 dòng seed) sang `milestone.categoryTag` (trường ngữ nghĩa, người dùng tự đặt được qua `AddMilestoneDialog`) (`28f89ea`)
+- [x] ✅ `SettingsScreen.kt`: xoá hẳn công tắc "Xác thực sinh trắc học" giả (app không có tính năng vân tay/FaceID thật — cùng loại quảng cáo sai sự thật đã xoá ở mục VIP), tính lại "Security Health Score" chỉ dựa trên 2 yếu tố thật (tài khoản + PIN); `notificationEnabled`/`soundEnabled` giờ lưu qua `SharedPreferences` (cùng cơ chế ngôn ngữ/wallpaper) thay vì mất khi rời màn hình — **lưu ý: 2 công tắc này vẫn chưa thật sự tắt/bật thông báo, chỉ hết bị reset trạng thái** (`045155a`)
+- [x] ✅ Hoàn thiện luồng "Câu hỏi bảo mật" còn dang dở: backend (`AuthRepository`) đã hỗ trợ sẵn từ trước, chỉ thiếu UI ở màn Đăng ký. Đã thêm ô chọn câu hỏi + câu trả lời (không bắt buộc), nối vào `register()` (`7cb121d`)
+- [x] ✅ `CaptureMemoryDialog` (AppModals.kt) đã khoá nút Lưu khi đang lưu, tránh gửi trùng khi bấm nhanh (`0bb5cf0`)
+- [x] ✅ Dialog "Quên mật khẩu" đã có kiểm tra khớp mật khẩu mới ngay trên giao diện, giống màn Đăng ký (`0bb5cf0`)
+- [x] ✅ Xoá overload chết của `EditCoupleDialog` (Dialogs.kt) — thân rỗng, không còn nơi gọi (`0bb5cf0`)
+
+**Còn 1 mục cần bạn quyết định (không tự sửa vì không rõ ý đồ sản phẩm):**
+- [ ] ❓ Nút "Sổ tay sở thích của người ấy" (GiftScreen.kt) chỉ hiện toast, không mở màn hình nào — chưa có màn hình "wishlist notebook" nào trong app để dẫn tới, cần bạn quyết định nên xây mới hay bỏ nút này.
 
 ## 🟢 Dữ liệu mẫu — đã làm xong phần lớn
 
@@ -87,9 +87,9 @@ RAM trên máy dao động lên xuống nhiều lần trong lúc làm việc (c�
 
 RAM lúc bắt đầu phiên này chỉ còn ~1.1GB/13.9GB trống — thấp hơn cả lần trước, nên **không tự
 chạy Gradle build/test lần này** để tránh crash JVM (đã thấy 6 lần crash liên tiếp trong log cũ).
-Mọi sửa lỗi trong phiên này (9 commit, xem `git log`) đã được đọc lại bằng tay ít nhất 2 lần và có
-test hồi quy Robolectric đi kèm cho các lỗi phức tạp (resurrection race, invite decline/cancel,
-wallpaper persistence), nhưng **chưa chạy được** — cần bạn chạy khi máy đủ RAM:
+Mọi sửa lỗi trong phiên này (xem `git log 49c939d..HEAD`, ~16 commit) đã được đọc lại bằng tay ít
+nhất 2 lần và có test hồi quy Robolectric đi kèm cho các lỗi phức tạp (resurrection race, invite
+decline/cancel, wallpaper persistence), nhưng **chưa chạy được** — cần bạn chạy khi máy đủ RAM:
 ```
 ./gradlew :app:compileDebugKotlin :app:testDebugUnitTest
 ```
