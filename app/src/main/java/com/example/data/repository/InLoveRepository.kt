@@ -380,7 +380,9 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
   suspend fun deleteSharedMemory(id: Long) {
     val existing = dao.getAllSharedMemories().first().firstOrNull { it.id == id } ?: return
     val tombstone = ensureSyncId(existing).copy(deleted = true, updatedAt = System.currentTimeMillis(), pendingSync = true)
-    dao.deleteSharedMemoryWithOutbox(id, outboxEntryFor(MemorySyncAdapter.entityType, tombstone.syncId, tombstone))
+    dao.deleteSharedMemoryWithOutbox(
+      id, tombstone.updatedAt, outboxEntryFor(MemorySyncAdapter.entityType, tombstone.syncId, tombstone)
+    )
     SyncWorker.enqueueImmediate(appContext)
   }
 
@@ -432,7 +434,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     val existing = dao.getAllAnniversaryDates().first().firstOrNull { it.id == id } ?: return
     val tombstone = ensureSyncId(existing).copy(deleted = true, updatedAt = System.currentTimeMillis(), pendingSync = true)
     dao.deleteAnniversaryDateWithOutbox(
-      id, outboxEntryFor(AnniversarySyncAdapter.entityType, tombstone.syncId, tombstone)
+      id, tombstone.updatedAt, outboxEntryFor(AnniversarySyncAdapter.entityType, tombstone.syncId, tombstone)
     )
     SyncWorker.enqueueImmediate(appContext)
   }

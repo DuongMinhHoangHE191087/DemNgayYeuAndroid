@@ -184,7 +184,10 @@ class SyncCoordinator(
     }
     if (local != null) {
       dao.updateSharedMemory(remote.copy(id = local.id, pendingSync = false))
-    } else {
+    } else if (!remote.deleted) {
+      // A tombstone this device never had a local row for (e.g. deleted on the other device
+      // before this one ever synced it down) needs no local row: inserting one would just be
+      // dead weight, since getAllSharedMemories already filters deleted = 0.
       dao.insertSharedMemory(remote.copy(pendingSync = false))
     }
   }
@@ -198,7 +201,7 @@ class SyncCoordinator(
     }
     if (local != null) {
       dao.updateAnniversaryDate(remote.copy(id = local.id, pendingSync = false))
-    } else {
+    } else if (!remote.deleted) {
       dao.insertAnniversaryDate(remote.copy(pendingSync = false))
     }
   }

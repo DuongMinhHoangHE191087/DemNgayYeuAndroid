@@ -131,7 +131,7 @@ interface InLoveDao {
   suspend fun insertCoupleProfile(profile: CoupleProfileEntity)
 
   // Shared Memories
-  @Query("SELECT * FROM shared_memories ORDER BY id DESC")
+  @Query("SELECT * FROM shared_memories WHERE deleted = 0 ORDER BY id DESC")
   fun getAllSharedMemories(): Flow<List<SharedMemoryEntity>>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -143,8 +143,11 @@ interface InLoveDao {
   @Update
   suspend fun updateSharedMemory(memory: SharedMemoryEntity)
 
-  @Query("DELETE FROM shared_memories WHERE id = :id")
-  suspend fun deleteSharedMemoryById(id: Long)
+  // Soft delete, not DELETE FROM: the row must survive locally so a later echo of this same
+  // tombstone from the remote listener (applyRemoteMemory) finds it via syncId and no-ops
+  // instead of re-inserting it as a live row. getAllSharedMemories filters deleted = 0.
+  @Query("UPDATE shared_memories SET deleted = 1, updatedAt = :deletedAt WHERE id = :id")
+  suspend fun softDeleteSharedMemoryById(id: Long, deletedAt: Long)
 
   // Sync outbox
   @Insert
@@ -174,8 +177,8 @@ interface InLoveDao {
   }
 
   @Transaction
-  suspend fun deleteSharedMemoryWithOutbox(id: Long, outbox: SyncOutboxEntity) {
-    deleteSharedMemoryById(id)
+  suspend fun deleteSharedMemoryWithOutbox(id: Long, deletedAt: Long, outbox: SyncOutboxEntity) {
+    softDeleteSharedMemoryById(id, deletedAt)
     insertOutboxEntry(outbox)
   }
 
@@ -190,10 +193,10 @@ interface InLoveDao {
   suspend fun updateLoveBadge(item: LoveBadgeEntity)
 
   // Anniversary Dates Persistence
-  @Query("SELECT * FROM anniversary_dates ORDER BY id ASC")
+  @Query("SELECT * FROM anniversary_dates WHERE deleted = 0 ORDER BY id ASC")
   fun getAllAnniversaryDates(): Flow<List<AnniversaryDateEntity>>
 
-  @Query("SELECT * FROM anniversary_dates ORDER BY id ASC")
+  @Query("SELECT * FROM anniversary_dates WHERE deleted = 0 ORDER BY id ASC")
   suspend fun getAnniversaryDatesList(): List<AnniversaryDateEntity>
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -205,8 +208,9 @@ interface InLoveDao {
   @Update
   suspend fun updateAnniversaryDate(item: AnniversaryDateEntity)
 
-  @Query("DELETE FROM anniversary_dates WHERE id = :id")
-  suspend fun deleteAnniversaryDateById(id: Long)
+  // Soft delete, not DELETE FROM: see softDeleteSharedMemoryById for why.
+  @Query("UPDATE anniversary_dates SET deleted = 1, updatedAt = :deletedAt WHERE id = :id")
+  suspend fun softDeleteAnniversaryDateById(id: Long, deletedAt: Long)
 
   @Transaction
   suspend fun insertAnniversaryDateWithOutbox(item: AnniversaryDateEntity, outbox: SyncOutboxEntity): Long {
@@ -222,8 +226,8 @@ interface InLoveDao {
   }
 
   @Transaction
-  suspend fun deleteAnniversaryDateWithOutbox(id: Long, outbox: SyncOutboxEntity) {
-    deleteAnniversaryDateById(id)
+  suspend fun deleteAnniversaryDateWithOutbox(id: Long, deletedAt: Long, outbox: SyncOutboxEntity) {
+    softDeleteAnniversaryDateById(id, deletedAt)
     insertOutboxEntry(outbox)
   }
 
