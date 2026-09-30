@@ -43,7 +43,6 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -110,9 +109,8 @@ import androidx.compose.ui.text.AnnotatedString
 
 @Composable
 fun SettingsScreen(viewModel: InLoveViewModel) {
-  var notificationEnabled by remember { mutableStateOf(true) }
-  var soundEnabled by remember { mutableStateOf(true) }
-  var biometricEnabled by remember { mutableStateOf(false) }
+  val notificationEnabled by viewModel.notificationsEnabled.collectAsState()
+  val soundEnabled by viewModel.soundEnabled.collectAsState()
 
   val boyName by viewModel.boyName.collectAsState()
   val girlName by viewModel.girlName.collectAsState()
@@ -871,7 +869,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             subtitle = stringResource(R.string.settings_notif_anniversary_sub),
             checked = notificationEnabled,
             onCheckedChange = {
-              notificationEnabled = it
+              viewModel.setNotificationsEnabled(it)
               viewModel.showToast(if (it) notifEnabledToast else notifDisabledToast)
             }
           )
@@ -881,7 +879,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             title = stringResource(R.string.settings_notif_sound_title),
             subtitle = stringResource(R.string.settings_notif_sound_sub),
             checked = soundEnabled,
-            onCheckedChange = { soundEnabled = it }
+            onCheckedChange = { viewModel.setSoundEnabled(it) }
           )
         }
       }
@@ -900,12 +898,14 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       val currentAccount = (authState as? com.example.data.repository.AuthState.Authenticated)?.account
       val isPinActive = currentAccount?.isPinEnabled == true
 
-      // Dynamic Security Health Score Calculation (0 - 100)
-      val securityScore = remember(currentAccount, isPinActive, biometricEnabled) {
+      // Dynamic Security Health Score Calculation (0 - 100). No biometric term: this app has no
+      // biometric auth integration at all (Fingerprint/Face) — the toggle that used to add 15
+      // fake points here did nothing real, same false-claim class already removed from the VIP
+      // paywall copy elsewhere. Rebalanced so the 2 remaining real factors still reach 100.
+      val securityScore = remember(currentAccount, isPinActive) {
         var score = 40 // Base encryption score
-        if (currentAccount != null) score += 25
-        if (isPinActive) score += 20
-        if (biometricEnabled) score += 15
+        if (currentAccount != null) score += 30
+        if (isPinActive) score += 30
         score
       }
 
@@ -1117,25 +1117,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             onClick = { showSetPinDialog = true }
           )
 
-          // 3. Biometric Authentication Toggle (Fingerprint / Face Unlock)
-          SettingSwitchRow(
-            icon = Icons.Filled.Fingerprint,
-            title = if (isEnglish) "Biometric Authentication" else "Xác thực sinh trắc học",
-            subtitle = if (isEnglish) "Fingerprint & Face Unlock for quick access" else "Mở khóa bằng vân tay hoặc nhận diện khuôn mặt",
-            checked = biometricEnabled,
-            onCheckedChange = { enabled ->
-              biometricEnabled = enabled
-              viewModel.showToast(
-                if (enabled) {
-                  if (isEnglish) "Biometric authentication enabled" else "Đã kích hoạt xác thực sinh trắc học"
-                } else {
-                  if (isEnglish) "Biometric authentication disabled" else "Đã tắt xác thực sinh trắc học"
-                }
-              )
-            }
-          )
+          // Biometric Authentication toggle removed: this app has no biometric (fingerprint/
+          // face) integration anywhere — it only ever simulated turning one on, same false
+          // claim already stripped from the VIP paywall copy elsewhere in this app. Re-add a
+          // real toggle here only alongside an actual BiometricPrompt integration.
 
-          // 4. Privacy Vault Information
+          // 3. Privacy Vault Information
           SettingClickableRow(
             icon = Icons.Filled.VisibilityOff,
             title = if (isEnglish) "Privacy Vault & App Concealment" else "Két an toàn & Chế độ riêng tư",

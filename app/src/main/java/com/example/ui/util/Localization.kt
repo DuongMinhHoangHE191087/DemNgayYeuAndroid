@@ -14,6 +14,8 @@ object LocaleManager {
   private const val KEY_APP_LANGUAGE = "key_app_language"
   private const val KEY_FIRST_LAUNCH = "key_first_launch"
   private const val KEY_WALLPAPER_URL = "key_wallpaper_url"
+  private const val KEY_NOTIFICATIONS_ENABLED = "key_notifications_enabled"
+  private const val KEY_SOUND_ENABLED = "key_sound_enabled"
 
   fun getInitialLanguage(context: Context): AppLanguage {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -55,6 +57,26 @@ object LocaleManager {
   fun saveWallpaperUrl(context: Context, url: String) {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     prefs.edit().putString(KEY_WALLPAPER_URL, url).apply()
+  }
+
+  fun isNotificationsEnabled(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
+  }
+
+  fun saveNotificationsEnabled(context: Context, enabled: Boolean) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled).apply()
+  }
+
+  fun isSoundEnabled(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getBoolean(KEY_SOUND_ENABLED, true)
+  }
+
+  fun saveSoundEnabled(context: Context, enabled: Boolean) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putBoolean(KEY_SOUND_ENABLED, enabled).apply()
   }
 }
 

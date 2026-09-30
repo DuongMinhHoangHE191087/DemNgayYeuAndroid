@@ -155,6 +155,26 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     com.example.ui.util.LocaleManager.setFirstLaunchCompleted(getApplication())
   }
 
+  // Notification/sound settings toggles — previously plain UI-local `remember` state in
+  // SettingsScreen that reset every time the user left the screen. Persisted the same way as
+  // appLanguage/wallpaper; still doesn't gate actual notification delivery (a bigger feature
+  // than "make this toggle stop resetting"), so the subtitle copy in Settings must not claim it does.
+  private val _notificationsEnabled = MutableStateFlow(com.example.ui.util.LocaleManager.isNotificationsEnabled(application))
+  val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
+
+  private val _soundEnabled = MutableStateFlow(com.example.ui.util.LocaleManager.isSoundEnabled(application))
+  val soundEnabled: StateFlow<Boolean> = _soundEnabled.asStateFlow()
+
+  fun setNotificationsEnabled(enabled: Boolean) {
+    _notificationsEnabled.value = enabled
+    com.example.ui.util.LocaleManager.saveNotificationsEnabled(getApplication(), enabled)
+  }
+
+  fun setSoundEnabled(enabled: Boolean) {
+    _soundEnabled.value = enabled
+    com.example.ui.util.LocaleManager.saveSoundEnabled(getApplication(), enabled)
+  }
+
   // Language Dialog State (Shown on entry or when tapped)
   private val _showLanguageDialog = MutableStateFlow(false)
   val showLanguageDialog: StateFlow<Boolean> = _showLanguageDialog.asStateFlow()
