@@ -504,8 +504,17 @@ class OnlineCoupleRepository(
 
   // Reject incoming invite
   suspend fun rejectSetLoveInvite(inviteId: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val incoming = _incomingInvite.value
+    val incoming = _incomingInvite.value ?: dao.getInviteByIdSync(inviteId)
     if (incoming != null) {
+      // Must reach Firestore, not just delete the local row: otherwise the identity-tier
+      // invites listener (SyncCoordinator, queried with no status filter) still sees this
+      // invite as PENDING remotely and silently re-inserts it into Room on the next snapshot.
+      try {
+        firestore?.collection("invites")?.document(incoming.inviteId)
+          ?.update(mapOf("status" to InviteStatus.DECLINED))?.await()
+      } catch (e: Exception) {
+        Log.d("OnlineCoupleRepo", "Firestore invite-decline sync error, will retry via outbox in a later task: ${e.message}")
+      }
       dao.deleteOnlineInvite(incoming.inviteId)
       val sender = dao.getOnlineUserByUidSync(incoming.senderUid)
       if (sender != null && sender.status == OnlineStatus.PENDING_INVITE) {
@@ -519,6 +528,20 @@ class OnlineCoupleRepository(
   // Cancel outgoing invite
   suspend fun cancelSentInvite(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     val me = _currentUser.value
+    val outgoing = _outgoingInvite.value ?: dao.getActiveOutgoingInviteSync(me.uid)
+
+    if (outgoing != null) {
+      // Same reasoning as rejectSetLoveInvite: without this, the receiver's invites listener
+      // still sees PENDING remotely and can still Accept an invite the sender already cancelled.
+      try {
+        firestore?.collection("invites")?.document(outgoing.inviteId)
+          ?.update(mapOf("status" to InviteStatus.CANCELLED))?.await()
+      } catch (e: Exception) {
+        Log.d("OnlineCoupleRepo", "Firestore invite-cancel sync error, will retry via outbox in a later task: ${e.message}")
+      }
+      dao.deleteOnlineInvite(outgoing.inviteId)
+    }
+
     val updatedMe = me.copy(status = OnlineStatus.SINGLE)
     dao.updateOnlineUser(updatedMe)
     _currentUser.value = updatedMe

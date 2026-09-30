@@ -60,6 +60,70 @@ class OnlineCoupleRepositoryPairingTest {
   }
 
   @Test
+  fun cancelSentInvite_deletesTheLocalInviteRow_notJustResetsState() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+
+    db.inLoveDao().insertOnlineUser(
+      com.example.data.model.OnlineUserEntity(uid = "uid_a", coupleCode = "AAAA-1111", isCurrentUser = true, status = OnlineStatus.PENDING_INVITE)
+    )
+    repo.setCurrentUserId("uid_a")
+
+    val outgoingId = "inv_out_1"
+    db.inLoveDao().insertOnlineInvite(
+      com.example.data.model.OnlineInviteEntity(
+        inviteId = outgoingId, senderUid = "uid_a", senderCoupleCode = "AAAA-1111",
+        targetCoupleCode = "BBBB-2222", targetUid = "uid_b", status = "PENDING"
+      )
+    )
+    repo.setCurrentUserId("uid_a") // refreshes _outgoingInvite from the row just inserted
+
+    repo.cancelSentInvite()
+
+    assert(db.inLoveDao().getInviteByIdSync(outgoingId) == null) {
+      "cancelling an outgoing invite must delete its local row — leaving it PENDING locally " +
+        "let the receiver still Accept an invite the sender believed was cancelled"
+    }
+    db.close()
+  }
+
+  @Test
+  fun rejectSetLoveInvite_deletesTheLocalInviteRow() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+
+    db.inLoveDao().insertOnlineUser(
+      com.example.data.model.OnlineUserEntity(uid = "uid_a", coupleCode = "AAAA-1111", isCurrentUser = false, status = OnlineStatus.PENDING_INVITE)
+    )
+    db.inLoveDao().insertOnlineUser(
+      com.example.data.model.OnlineUserEntity(uid = "uid_b", coupleCode = "BBBB-2222", isCurrentUser = true)
+    )
+    repo.setCurrentUserId("uid_b")
+
+    val incomingId = "inv_in_1"
+    db.inLoveDao().insertOnlineInvite(
+      com.example.data.model.OnlineInviteEntity(
+        inviteId = incomingId, senderUid = "uid_a", senderCoupleCode = "AAAA-1111",
+        targetCoupleCode = "BBBB-2222", targetUid = "uid_b", status = "PENDING"
+      )
+    )
+    repo.setCurrentUserId("uid_b") // refreshes _incomingInvite from the row just inserted
+
+    repo.rejectSetLoveInvite(incomingId)
+
+    assert(db.inLoveDao().getInviteByIdSync(incomingId) == null)
+    val sender = db.inLoveDao().getOnlineUserByUidSync("uid_a")
+    assert(sender?.status == OnlineStatus.SINGLE) { "the sender's PENDING_INVITE lock must be released on decline" }
+    db.close()
+  }
+
+  @Test
   fun confirmBreakup_withNoFirestoreConfigured_stillTerminatesLocally() = runBlocking {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()

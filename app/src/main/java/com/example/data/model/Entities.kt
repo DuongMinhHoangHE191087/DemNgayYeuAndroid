@@ -192,7 +192,10 @@ object RelationshipStatus {
 object InviteStatus {
   const val PENDING = "PENDING"
   const val ACCEPTED = "ACCEPTED"
-  const val REJECTED = "REJECTED"
+  // Must be "DECLINED", not "REJECTED": firestore.rules' invites/{inviteId} update rule only
+  // allows the receiver to move PENDING -> 'ACCEPTED'/'DECLINED' — any other string is a
+  // client-side no-op that silently fails the security rule check.
+  const val DECLINED = "DECLINED"
   const val CANCELLED = "CANCELLED"
 }
 
