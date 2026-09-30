@@ -255,7 +255,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
 
             IconButton(
               onClick = { viewModel.openEditProfileDialog() },
-              modifier = Modifier.size(36.dp)
+              modifier = Modifier.size(48.dp)
             ) {
               Icon(
                 imageVector = Icons.Filled.Edit,

@@ -203,7 +203,7 @@ fun ReminderScreen(
           IconButton(
             onClick = { viewModel.showToast(if (isEnglish) "Notification settings ready" else "Cài đặt thông báo sâu đang sẵn sàng") },
             modifier = Modifier
-              .size(36.dp)
+              .size(48.dp)
               .clip(CircleShape)
               .background(PrimaryFixed.copy(alpha = 0.6f))
               .testTag("btn_notification_config")
@@ -1157,7 +1157,7 @@ fun CustomReminderCard(
         IconButton(
           onClick = onSetAlarm,
           modifier = Modifier
-            .size(28.dp)
+            .size(48.dp)
             .testTag("btn_alarm_reminder_${reminder.id}")
         ) {
           Icon(
@@ -1171,7 +1171,7 @@ fun CustomReminderCard(
         IconButton(
           onClick = onDelete,
           modifier = Modifier
-            .size(28.dp)
+            .size(48.dp)
             .testTag("btn_delete_reminder_${reminder.id}")
         ) {
           Icon(

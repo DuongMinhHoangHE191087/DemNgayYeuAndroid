@@ -380,7 +380,7 @@ fun UserGuideDialog(
 
           IconButton(
             onClick = onDismiss,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(48.dp)
           ) {
             Icon(
               imageVector = Icons.Filled.Close,
@@ -782,7 +782,7 @@ fun WallpaperPickerDialog(
             }
           }
 
-          IconButton(onClick = onDismiss, modifier = Modifier.size(30.dp)) {
+          IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color(0xFF6B2B50))
           }
         }
@@ -1054,7 +1054,7 @@ fun CaptureMemoryDialog(
             }
           }
 
-          IconButton(onClick = onDismiss, modifier = Modifier.size(30.dp)) {
+          IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color(0xFF6B2B50))
           }
         }

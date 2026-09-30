@@ -482,8 +482,8 @@ fun GiftDetailDialog(
             onClick = onDismiss,
             modifier = Modifier
               .align(Alignment.TopEnd)
-              .padding(8.dp)
-              .size(34.dp)
+              .padding(4.dp)
+              .size(48.dp)
               .clip(CircleShape)
               .background(Color.Black.copy(alpha = 0.5f))
           ) {
@@ -652,7 +652,7 @@ fun VipProposalDialog(
           IconButton(
             onClick = onDismiss,
             modifier = Modifier
-              .size(32.dp)
+              .size(48.dp)
               .clip(CircleShape)
               .background(SurfaceContainerHigh)
           ) {
@@ -897,7 +897,7 @@ fun EditCoupleDialog(
 
           IconButton(
             onClick = onDismiss,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(48.dp)
           ) {
             Icon(
               imageVector = Icons.Default.Close,
@@ -1763,7 +1763,7 @@ fun SetAlarmReminderDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   IconButton(
                     onClick = { customHour = (customHour - 1 + 24) % 24 },
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(48.dp)
                   ) {
                     Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
@@ -1776,7 +1776,7 @@ fun SetAlarmReminderDialog(
                   )
                   IconButton(
                     onClick = { customHour = (customHour + 1) % 24 },
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(48.dp)
                   ) {
                     Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
@@ -1791,7 +1791,7 @@ fun SetAlarmReminderDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   IconButton(
                     onClick = { customMinute = (customMinute - 5 + 60) % 60 },
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(48.dp)
                   ) {
                     Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
@@ -1804,7 +1804,7 @@ fun SetAlarmReminderDialog(
                   )
                   IconButton(
                     onClick = { customMinute = (customMinute + 5) % 60 },
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(48.dp)
                   ) {
                     Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }

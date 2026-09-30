@@ -798,7 +798,7 @@ fun MilestoneBadgeShowcaseDialog(
             IconButton(
               onClick = onDismiss,
               modifier = Modifier
-                .size(40.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(Color.White)
             ) {
@@ -835,7 +835,7 @@ fun MilestoneBadgeShowcaseDialog(
             IconButton(
               onClick = { viewMode = "TIMELINE" },
               modifier = Modifier
-                .size(32.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(if (viewMode == "TIMELINE") Primary else Color.Transparent)
             ) {
@@ -849,7 +849,7 @@ fun MilestoneBadgeShowcaseDialog(
             IconButton(
               onClick = { viewMode = "GRID" },
               modifier = Modifier
-                .size(32.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(if (viewMode == "GRID") Primary else Color.Transparent)
             ) {
@@ -1253,7 +1253,7 @@ fun DigitalTrophyRewardDialog(
           IconButton(
             onClick = onDismiss,
             modifier = Modifier
-              .size(36.dp)
+              .size(48.dp)
               .clip(CircleShape)
               .background(Color(0xFFF5F5F5))
           ) {
@@ -1411,7 +1411,7 @@ fun DigitalTrophyRewardDialog(
               )
               IconButton(
                 onClick = { isEditingNote = !isEditingNote },
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(48.dp)
               ) {
                 Icon(
                   imageVector = Icons.Filled.Edit,

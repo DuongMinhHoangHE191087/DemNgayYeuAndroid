@@ -623,7 +623,7 @@ private fun MemoryCardItem(
         IconButton(
           onClick = onToggleFavorite,
           modifier = Modifier
-            .size(32.dp)
+            .size(48.dp)
             .background(Color.Black.copy(alpha = 0.38f), CircleShape)
         ) {
           Icon(
@@ -1608,7 +1608,7 @@ private fun MemoryDetailDialog(
             IconButton(
               onClick = onDismiss,
               modifier = Modifier
-                .size(36.dp)
+                .size(48.dp)
                 .background(Color.Black.copy(alpha = 0.45f), CircleShape)
             ) {
               Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.White)
@@ -1617,7 +1617,7 @@ private fun MemoryDetailDialog(
             IconButton(
               onClick = onToggleFavorite,
               modifier = Modifier
-                .size(36.dp)
+                .size(48.dp)
                 .background(Color.Black.copy(alpha = 0.45f), CircleShape)
             ) {
               Icon(

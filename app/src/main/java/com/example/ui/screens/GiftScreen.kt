@@ -1067,13 +1067,13 @@ fun GiftIdeaCard(
           }
         }
 
-        // Heart Button Top Right
+        // Heart Button Top Right — 48dp touch target (AGENTS.md minimum), not the old 36dp.
         IconButton(
           onClick = onFavoriteToggle,
           modifier = Modifier
-            .padding(10.dp)
+            .padding(2.dp)
             .align(Alignment.TopEnd)
-            .size(36.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .background(Color.White.copy(alpha = 0.85f))
         ) {
@@ -1396,7 +1396,7 @@ fun ChecklistRow(
         IconButton(
           onClick = onDelete,
           modifier = Modifier
-            .size(28.dp)
+            .size(48.dp)
             .testTag("btn_delete_checklist_${item.id}")
         ) {
           Icon(
@@ -1440,7 +1440,7 @@ fun GiftReminderRow(
         IconButton(
           onClick = onToggle,
           modifier = Modifier
-            .size(28.dp)
+            .size(48.dp)
             .testTag("btn_toggle_gift_reminder_${item.id}")
         ) {
           Icon(
@@ -1499,7 +1499,7 @@ fun GiftReminderRow(
 
       IconButton(
         onClick = onDelete,
-        modifier = Modifier.size(32.dp)
+        modifier = Modifier.size(48.dp)
       ) {
         Icon(
           imageVector = Icons.Filled.Close,

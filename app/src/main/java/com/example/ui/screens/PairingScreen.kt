@@ -433,7 +433,7 @@ fun PairingScreen(
               Row {
                 IconButton(
                   onClick = { copyToClipboard(currentUser.coupleCode, "Couple Code") },
-                  modifier = Modifier.size(36.dp).testTag("copy_couple_code_button")
+                  modifier = Modifier.size(48.dp).testTag("copy_couple_code_button")
                 ) {
                   Icon(
                     imageVector = Icons.Default.ContentCopy,
@@ -448,7 +448,7 @@ fun PairingScreen(
                     val link = ProfileUtils.createShareLink(currentUser.coupleCode)
                     copyToClipboard(link, "Couple Link")
                   },
-                  modifier = Modifier.size(36.dp).testTag("copy_couple_link_button")
+                  modifier = Modifier.size(48.dp).testTag("copy_couple_link_button")
                 ) {
                   Icon(
                     imageVector = Icons.Default.Link,
@@ -460,7 +460,7 @@ fun PairingScreen(
 
                 IconButton(
                   onClick = { shareCoupleLink(currentUser.coupleCode) },
-                  modifier = Modifier.size(36.dp).testTag("share_couple_code_button")
+                  modifier = Modifier.size(48.dp).testTag("share_couple_code_button")
                 ) {
                   Icon(
                     imageVector = Icons.Default.Share,
@@ -866,7 +866,7 @@ fun PairingScreen(
 
                         IconButton(
                           onClick = { viewModel.clearSearch() },
-                          modifier = Modifier.size(28.dp)
+                          modifier = Modifier.size(48.dp)
                         ) {
                           Icon(imageVector = Icons.Default.Close, contentDescription = if (isEnglish) "Deselect" else "Bỏ chọn", tint = Color.Gray)
                         }

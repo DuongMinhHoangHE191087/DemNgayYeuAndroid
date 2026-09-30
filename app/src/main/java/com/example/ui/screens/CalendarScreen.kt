@@ -380,7 +380,7 @@ fun CalendarScreen(
                   }
                   calendarNavTick++
                 },
-                modifier = Modifier.size(32.dp).testTag("btn_calendar_prev")
+                modifier = Modifier.size(48.dp).testTag("btn_calendar_prev")
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronLeft,
@@ -407,7 +407,7 @@ fun CalendarScreen(
                   }
                   calendarNavTick++
                 },
-                modifier = Modifier.size(32.dp).testTag("btn_calendar_next")
+                modifier = Modifier.size(48.dp).testTag("btn_calendar_next")
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronRight,
@@ -1340,7 +1340,7 @@ fun AnniversaryDateRow(
       ) {
         IconButton(
           onClick = onToggleNotification,
-          modifier = Modifier.size(32.dp)
+          modifier = Modifier.size(48.dp)
         ) {
           Icon(
             imageVector = if (item.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
@@ -1352,7 +1352,7 @@ fun AnniversaryDateRow(
 
         IconButton(
           onClick = onDelete,
-          modifier = Modifier.size(32.dp)
+          modifier = Modifier.size(48.dp)
         ) {
           Icon(
             imageVector = Icons.Filled.Delete,
@@ -1497,7 +1497,7 @@ fun MilestoneCard(
           IconButton(
             onClick = onSetAlarm,
             modifier = Modifier
-              .size(32.dp)
+              .size(48.dp)
               .clip(CircleShape)
               .background(SurfaceContainer)
               .testTag("btn_alarm_milestone_${milestone.id}")
@@ -1515,7 +1515,7 @@ fun MilestoneCard(
             IconButton(
               onClick = onNotificationToggle,
               modifier = Modifier
-                .size(32.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(SurfaceContainer)
                 .testTag("btn_notif_milestone_${milestone.id}")
@@ -1533,7 +1533,7 @@ fun MilestoneCard(
           IconButton(
             onClick = onDelete,
             modifier = Modifier
-              .size(32.dp)
+              .size(48.dp)
               .clip(CircleShape)
               .background(SurfaceContainer)
               .testTag("btn_delete_milestone_${milestone.id}")
