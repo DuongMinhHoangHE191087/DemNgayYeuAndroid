@@ -46,6 +46,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -993,6 +994,7 @@ fun CaptureMemoryDialog(
   var photoUrlText by remember(presetPhotos) {
     mutableStateOf(presetPhotos.firstOrNull() ?: "")
   }
+  var isSaving by remember { mutableStateOf(false) }
 
   Dialog(onDismissRequest = onDismiss) {
     Surface(
@@ -1173,11 +1175,14 @@ fun CaptureMemoryDialog(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Save Button
+        // Save Button — isSaving guards against a rapid double-tap firing onSaveMemory twice
+        // before the dialog closes (it closes itself asynchronously, from the ViewModel side).
         Button(
           onClick = {
+            isSaving = true
             onSaveMemory(noteText, photoUrlText)
           },
+          enabled = !isSaving,
           shape = RoundedCornerShape(16.dp),
           colors = ButtonDefaults.buttonColors(containerColor = Primary),
           modifier = Modifier
@@ -1185,7 +1190,11 @@ fun CaptureMemoryDialog(
             .height(44.dp)
             .testTag("btn_confirm_save_memory")
         ) {
-          Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+          if (isSaving) {
+            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+          } else {
+            Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+          }
           Spacer(modifier = Modifier.width(6.dp))
           Text(
             text = strings.btnSaveMemory,

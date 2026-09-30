@@ -1051,6 +1051,12 @@ fun ForgotPasswordDialog(
   var newPasswordVisible by remember { mutableStateOf(false) }
   var isSubmitting by remember { mutableStateOf(false) }
 
+  // Same live match check the Register tab already has — without it, a mismatch here was only
+  // ever caught after the round-trip to AuthRepository, via a generic toast.
+  val newPasswordsMatch = remember(newPasswordInput, confirmNewPasswordInput) {
+    newPasswordInput.isNotEmpty() && newPasswordInput == confirmNewPasswordInput
+  }
+
   // OTP Countdown
   LaunchedEffect(otpTimerSeconds) {
     if (otpTimerSeconds > 0) {
@@ -1263,6 +1269,29 @@ fun ForgotPasswordDialog(
           modifier = Modifier.fillMaxWidth()
         )
 
+        if (confirmNewPasswordInput.isNotEmpty()) {
+          Spacer(modifier = Modifier.height(4.dp))
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(start = 4.dp)
+          ) {
+            Icon(
+              imageVector = if (newPasswordsMatch) Icons.Default.CheckCircle else Icons.Default.Close,
+              contentDescription = null,
+              tint = if (newPasswordsMatch) Color(0xFF43A047) else Color(0xFFE53935),
+              modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+              text = if (newPasswordsMatch) "Mật khẩu xác nhận hoàn toàn khớp!" else "Mật khẩu xác nhận chưa khớp!",
+              fontSize = 11.sp,
+              color = if (newPasswordsMatch) Color(0xFF43A047) else Color(0xFFE53935)
+            )
+          }
+        }
+
         Spacer(modifier = Modifier.height(18.dp))
 
         // Buttons
@@ -1304,7 +1333,7 @@ fun ForgotPasswordDialog(
                 }
               }
             },
-            enabled = !isSubmitting && emailInput.isNotBlank() && newPasswordInput.length >= 8,
+            enabled = !isSubmitting && emailInput.isNotBlank() && newPasswordInput.length >= 8 && newPasswordsMatch,
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
             modifier = Modifier.weight(1.5f)

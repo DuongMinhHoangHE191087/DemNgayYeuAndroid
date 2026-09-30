@@ -1482,43 +1482,6 @@ fun EditCoupleDialog(
   }
 }
 
-// Backward-compatibility overload for EditCoupleDialog
-@Composable
-fun EditCoupleDialog(
-  currentBoyName: String = "",
-  currentBoyBirth: String = "",
-  currentBoyAvatar: String = "",
-  currentBoyAge: Int = 0,
-  currentBoyZodiac: String = "",
-  currentGirlName: String = "",
-  currentGirlBirth: String = "",
-  currentGirlAvatar: String = "",
-  currentGirlAge: Int = 0,
-  currentGirlZodiac: String = "",
-  currentTitle: String = "",
-  currentDays: Int = 0,
-  currentAnniversary: String = "",
-  onSearchPartner: (suspend (String) -> OnlineUserEntity?)? = null,
-  onDismiss: () -> Unit,
-  onSave: (
-    boy: String,
-    boyBirth: String,
-    boyAvatar: String,
-    boyAge: Int,
-    boyZodiac: String,
-    girl: String,
-    girlBirth: String,
-    girlAvatar: String,
-    girlAge: Int,
-    girlZodiac: String,
-    title: String,
-    days: Int,
-    anniversary: String
-  ) -> Unit
-) {
-  // Empty fallback - Main entry calls the ViewModel version
-}
-
 @Composable
 fun DeleteConfirmationDialog(
   title: String,
