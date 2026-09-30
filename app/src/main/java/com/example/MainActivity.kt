@@ -54,6 +54,7 @@ import com.example.ui.screens.MemoriesGridScreen
 import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.PairingScreen
 import com.example.ui.screens.ReminderScreen
+import com.example.ui.screens.SetAlarmReminderDialog
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.UserGuideDialog
 import com.example.ui.screens.VipProposalDialog
@@ -121,6 +122,10 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val showLanguageDialog by viewModel.showLanguageDialog.collectAsState()
   val showWallpaperDialog by viewModel.showWallpaperDialog.collectAsState()
   val showMemoryDialog by viewModel.showMemoryDialog.collectAsState()
+  val showSetAlarmDialog by viewModel.showSetAlarmDialog.collectAsState()
+  val alarmDialogPresetTitle by viewModel.alarmDialogPresetTitle.collectAsState()
+  val alarmDialogPresetMessage by viewModel.alarmDialogPresetMessage.collectAsState()
+  val alarmDialogReminderId by viewModel.alarmDialogReminderId.collectAsState()
   val showGuideDialog by viewModel.showGuideDialog.collectAsState()
   val showBadgeShowcaseDialog by viewModel.showBadgeShowcaseDialog.collectAsState()
   val selectedBadge by viewModel.selectedBadge.collectAsState()
@@ -502,6 +507,25 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
           viewModel.saveMemory(note, photoUrl)
         },
         onDismiss = { viewModel.closeMemoryDialog() }
+      )
+    }
+
+    // viewModel.openSetAlarmDialog() is called from ReminderScreen/CalendarScreen/GiftScreen,
+    // but until this block was added nothing ever collected showSetAlarmDialog or rendered the
+    // dialog — tapping the alarm icon flipped the StateFlow with no visible effect at all.
+    if (showSetAlarmDialog) {
+      SetAlarmReminderDialog(
+        initialTitle = alarmDialogPresetTitle,
+        initialMessage = alarmDialogPresetMessage,
+        reminderId = alarmDialogReminderId,
+        onDismiss = { viewModel.closeSetAlarmDialog() },
+        onSchedule = { title, message, triggerMillis, reminderId ->
+          viewModel.scheduleReminderAlarm(title, message, triggerMillis, reminderId)
+          viewModel.closeSetAlarmDialog()
+        },
+        onTestNow = { title, message ->
+          viewModel.scheduleReminderAlarm(title, message, System.currentTimeMillis() + 1000L)
+        }
       )
     }
 
