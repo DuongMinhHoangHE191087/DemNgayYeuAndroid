@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.Wallpaper
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.Favorite
@@ -153,6 +154,7 @@ fun LoveHomeScreen(
   val incomingInvite by viewModel.incomingInvite.collectAsState()
 
   val selectedWallpaperUrl by viewModel.selectedWallpaperUrl.collectAsState()
+  val isOnline by viewModel.isOnline.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
   val strings = LocalizedStrings.get(appLanguage)
   val isEnglish = appLanguage == AppLanguage.EN
@@ -396,6 +398,50 @@ fun LoveHomeScreen(
       }
 
 
+
+      // Offline Banner — backed by AppServiceLocator's NetworkMonitor, which was already
+      // running process-wide but had no UI reading it anywhere (the checklist's "no offline/
+      // online awareness" gap). Informational only, not clickable: nothing to tap into.
+      if (!isOnline) {
+        Surface(
+          shape = RoundedCornerShape(16.dp),
+          color = Color(0xFFECEFF1),
+          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB0BEC5)),
+          shadowElevation = 2.dp,
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+            .testTag("home_offline_banner")
+        ) {
+          Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Icon(
+              imageVector = Icons.Default.WifiOff,
+              contentDescription = null,
+              tint = Color(0xFF455A64),
+              modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+              Text(
+                text = if (isEnglish) "You're offline" else "Bạn đang mất kết nối mạng",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = Color(0xFF263238)
+              )
+              Text(
+                text = if (isEnglish) "New memories and pairing changes will sync once you're back online."
+                       else "Kỷ niệm mới và thay đổi ghép đôi sẽ tự đồng bộ khi có mạng trở lại.",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF455A64)
+              )
+            }
+          }
+        }
+      }
 
       // Dynamic Banner 1: Profile Setup Warning (Anonymous State)
       val hasLocalOrOnlineName = currentOnlineUser.isProfileSetup || boyName.isNotBlank()

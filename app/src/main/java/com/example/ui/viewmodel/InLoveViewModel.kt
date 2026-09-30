@@ -74,6 +74,10 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val subscriptionTier: StateFlow<com.example.data.model.SubscriptionTier>
   val isVip: StateFlow<Boolean>
 
+  // Live connectivity — backed by AppServiceLocator's single process-wide NetworkMonitor
+  // (was already registered and running, just never read by any UI before now).
+  val isOnline: StateFlow<Boolean>
+
   private val _showVipDialog = MutableStateFlow(false)
   val showVipDialog: StateFlow<Boolean> = _showVipDialog.asStateFlow()
 
@@ -338,6 +342,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     com.example.di.AppServiceLocator.initialize(application)
     val billingManager = com.example.di.AppServiceLocator.billingManager
     val adsManager = com.example.di.AppServiceLocator.adsManager
+    isOnline = com.example.di.AppServiceLocator.networkMonitor.isOnline
 
     // BillingManager is the authoritative Single Source of Truth for VIP entitlements.
     // Cached local DB flags cannot grant VIP if Google Play Billing reports inactive/expired subscription.
