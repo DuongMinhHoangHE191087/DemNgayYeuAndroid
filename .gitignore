@@ -23,3 +23,7 @@ scripts/serviceAccountKey.json
 .agents/
 .agent/
 
+# JVM crash dumps (low-RAM Gradle daemon crashes)
+hs_err_pid*.log
+replay_pid*.log
+
