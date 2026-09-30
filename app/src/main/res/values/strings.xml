@@ -90,6 +90,7 @@
     <string name="guide_title">InLove User Guide</string>
     <string name="guide_subtitle">Explore features crafted to cherish every moment of your love</string>
     <string name="guide_tab_counter">Love Counter</string>
+    <string name="guide_tab_pairing">Pairing</string>
     <string name="guide_tab_memories">Memories Album</string>
     <string name="guide_tab_calendar">Calendar</string>
     <string name="guide_tab_gifts">Gift Ideas</string>

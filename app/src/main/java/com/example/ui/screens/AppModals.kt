@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhotoAlbum
@@ -310,6 +311,8 @@ fun UserGuideDialog(
 
   val tabs = listOf(
     Pair(strings.guideTabCounter, Icons.Filled.Favorite),
+    Pair(strings.guideTabPairing, Icons.Filled.Link),
+    Pair(strings.guideTabMemories, Icons.Filled.PhotoAlbum),
     Pair(strings.guideTabCalendar, Icons.Filled.CalendarMonth),
     Pair(strings.guideTabGifts, Icons.Filled.CardGiftcard),
     Pair(strings.guideTabReminders, Icons.Filled.Notifications),
@@ -455,7 +458,43 @@ fun UserGuideDialog(
               )
             )
             1 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "2. Lịch Kỷ Niệm & Cột Mốc" else "2. Anniversary Calendar & Milestones",
+              title = if (language == AppLanguage.VI) "2. Ghép Đôi Với Người Ấy" else "2. Pairing With Your Partner",
+              desc = if (language == AppLanguage.VI)
+                "Kết nối 2 máy thật qua Firestore để cùng nhau dùng chung 1 tài khoản tình yêu:"
+              else
+                "Link two real devices via Firestore so you both share one love account:",
+              points = if (language == AppLanguage.VI) listOf(
+                "Mỗi người có 1 mã ghép đôi riêng — chia sẻ mã hoặc link cho người ấy để họ gửi lời mời.",
+                "Xác nhận ngày bắt đầu yêu khi chấp nhận lời mời; có thể từ chối hoặc hủy lời mời đã gửi bất kỳ lúc nào.",
+                "Sau khi ghép đôi, kỷ niệm/ngày kỷ niệm/hồ sơ được đồng bộ hai chiều theo thời gian thực giữa 2 máy.",
+                "Muốn dừng lại: yêu cầu hủy Set Love cần cả 2 người xác nhận (không thể tự ý hủy một phía)."
+              ) else listOf(
+                "Each account gets its own pairing code — share the code or link so your partner can send an invite.",
+                "Confirm your relationship start date when accepting an invite; a pending invite can be declined or cancelled anytime.",
+                "Once paired, memories/anniversaries/profile sync both ways in real time between the two devices.",
+                "Ending it requires mutual confirmation from both partners — neither side can unpair alone."
+              )
+            )
+            2 -> GuideContentSection(
+              title = if (language == AppLanguage.VI) "3. Kho Kỷ Niệm" else "3. Memories Album",
+              desc = if (language == AppLanguage.VI)
+                "Lưu giữ những khoảnh khắc đáng nhớ với ảnh và video thật:"
+              else
+                "Save your real, cherished moments with actual photos and videos:",
+              points = if (language == AppLanguage.VI) listOf(
+                "Chụp ảnh mới hoặc chọn ảnh/video có sẵn trên máy — có ở cả trang chủ và tab Kỷ Niệm.",
+                "Ảnh/video tự động tải lên Cloudinary; nếu mạng yếu, app lưu tạm trên máy và báo rõ, không giả vờ đã lên cloud.",
+                "Đặt quyền riêng tư cho từng kỷ niệm: Cặp đôi, Riêng tư chỉ mình bạn, hoặc Công khai.",
+                "Nhấn vào ảnh để xem chi tiết, đánh dấu Yêu thích, hoặc xóa khi không cần nữa."
+              ) else listOf(
+                "Capture a new photo or pick an existing photo/video from your device — available on both Home and the Memories tab.",
+                "Media uploads to Cloudinary automatically; on a weak connection it's kept on-device instead and clearly marked as such, never claimed as backed up when it isn't.",
+                "Set a privacy level per memory: Couple-only, Private to just you, or Public.",
+                "Tap any memory to view details, mark it a favorite, or delete it."
+              )
+            )
+            3 -> GuideContentSection(
+              title = if (language == AppLanguage.VI) "4. Lịch Kỷ Niệm & Cột Mốc" else "4. Anniversary Calendar & Milestones",
               desc = if (language == AppLanguage.VI)
                 "Ghi nhớ các dịp đặc biệt để luôn chuẩn bị trước chu đáo:"
               else
@@ -472,8 +511,8 @@ fun UserGuideDialog(
                 "Toggle notifications to receive alerts 7 days, 3 days, and 1 day in advance."
               )
             )
-            2 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "3. Gợi Ý Quà Tặng & Checklist Hẹn Hò" else "3. Gift Suggestions & Date Checklist",
+            4 -> GuideContentSection(
+              title = if (language == AppLanguage.VI) "5. Gợi Ý Quà Tặng & Checklist Hẹn Hò" else "5. Gift Suggestions & Date Checklist",
               desc = if (language == AppLanguage.VI)
                 "Gợi ý những món quà tinh tế và danh sách cần chuẩn bị:"
               else
@@ -490,8 +529,8 @@ fun UserGuideDialog(
                 "Interactive Checklist: Check off prepared items and add custom date to-dos."
               )
             )
-            3 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "4. Trung Tâm Nhắc Hẹn Thông Minh" else "4. Smart Date Reminders",
+            5 -> GuideContentSection(
+              title = if (language == AppLanguage.VI) "6. Trung Tâm Nhắc Hẹn Thông Minh" else "6. Smart Date Reminders",
               desc = if (language == AppLanguage.VI)
                 "Đảm bảo bạn luôn nhớ những ngày hẹn hò ngọt ngào:"
               else
@@ -508,22 +547,22 @@ fun UserGuideDialog(
                 "Seamlessly synchronizes with Android device notification system."
               )
             )
-            4 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "5. Cài Đặt, Đổi Nền & Bảo Mật" else "5. Settings, Wallpapers & Privacy",
+            6 -> GuideContentSection(
+              title = if (language == AppLanguage.VI) "7. Cài Đặt, Đổi Nền & Bảo Mật" else "7. Settings, Wallpapers & Privacy",
               desc = if (language == AppLanguage.VI)
                 "Cá nhân hóa trải nghiệm và bảo vệ những khoảnh khắc riêng tư:"
               else
                 "Personalize your experience and safeguard couple memories:",
               points = if (language == AppLanguage.VI) listOf(
-                "Đổi hình nền mộng mơ: Hoa anh đào, Hoàng hôn lãng mạn, Đêm sao hoặc dán URL ảnh đôi.",
-                "Chụp ảnh / Lưu giữ kỷ niệm với ghi chú cảm xúc vào dòng thời gian.",
+                "Đổi hình nền mộng mơ: Hoa anh đào, Hoàng hôn lãng mạn, Đêm sao hoặc dán URL ảnh đôi — được lưu lại cho lần mở app sau.",
+                "Chụp ảnh / Lưu giữ kỷ niệm với ghi chú cảm xúc vào Kho Kỷ Niệm.",
                 "Chuyển đổi ngôn ngữ Tiếng Việt 🇻🇳 và English 🇬🇧 bất kỳ lúc nào.",
-                "Quản lý hồ sơ Room Database và bảo mật vân tay cho ứng dụng."
+                "Khóa ứng dụng bằng mã PIN 4 số riêng tư (app hiện chưa hỗ trợ vân tay/FaceID)."
               ) else listOf(
-                "Change dreamy wallpapers: Cherry Blossom, Sunset, Starry Night, or custom photo URL.",
-                "Capture and record romantic photo memories with captions onto the timeline.",
+                "Change dreamy wallpapers: Cherry Blossom, Sunset, Starry Night, or a custom photo URL — remembered across app restarts.",
+                "Capture and record romantic photo memories with captions into the Memories Album.",
                 "Switch languages between Tiếng Việt 🇻🇳 and English 🇬🇧 at any time.",
-                "Manage local Room SQLite database and privacy app lock."
+                "Lock the app with a private 4-digit PIN (fingerprint/Face unlock isn't supported yet)."
               )
             )
           }
