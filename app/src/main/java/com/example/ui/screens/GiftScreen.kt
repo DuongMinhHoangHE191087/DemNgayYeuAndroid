@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -80,10 +81,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.data.model.ChecklistItemEntity
 import com.example.data.model.GiftIdeaEntity
@@ -125,6 +128,7 @@ fun GiftScreen(
 
   var giftItemToDelete by remember { mutableStateOf<ChecklistItemEntity?>(null) }
   var reminderToDelete by remember { mutableStateOf<GiftReminderEntity?>(null) }
+  var showWishlistDialog by remember { mutableStateOf(false) }
 
   reminderToDelete?.let { reminder ->
     DeleteConfirmationDialog(
@@ -917,16 +921,14 @@ fun GiftScreen(
           }
         }
 
-        // Secondary glass note button
+        // Secondary glass note button — opens the real favorited-ideas list (WishlistNotebookDialog)
         Surface(
           shape = RoundedCornerShape(50.dp),
           color = Color.White.copy(alpha = 0.9f),
           shadowElevation = 2.dp,
           modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-              viewModel.showToast(if (isEnglish) "Opening partner's wishlist notebook..." else "Mở sổ tay sở thích của người ấy...")
-            }
+            .clickable { showWishlistDialog = true }
             .testTag("btn_preferences_notebook")
         ) {
           Row(
@@ -942,11 +944,122 @@ fun GiftScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = if (isEnglish) "Partner's Wishlist Notebook" else "Lưu ý sổ tay sở thích của người ấy",
+              text = if (isEnglish) "My Wishlist Notebook" else "Sổ Tay Yêu Thích Của Tôi",
               fontSize = 13.sp,
               fontWeight = FontWeight.SemiBold,
               color = OnSurface
             )
+          }
+        }
+      }
+    }
+  }
+
+  if (showWishlistDialog) {
+    WishlistNotebookDialog(
+      giftIdeas = giftIdeas,
+      isEnglish = isEnglish,
+      onFavoriteToggle = { viewModel.toggleGiftFavorite(it) },
+      onItemClick = { viewModel.openGiftDetail(it) },
+      onDismiss = { showWishlistDialog = false }
+    )
+  }
+}
+
+// Shows the items *I've* favorited — gift ideas/favorites are plain local Room state, never
+// synced to Firestore (unlike memories/anniversaries/pairing), so this cannot actually reflect
+// what a partner favorited on their own device. Framed honestly as "my wishlist", not "partner's".
+@Composable
+fun WishlistNotebookDialog(
+  giftIdeas: List<GiftIdeaEntity>,
+  isEnglish: Boolean,
+  onFavoriteToggle: (GiftIdeaEntity) -> Unit,
+  onItemClick: (GiftIdeaEntity) -> Unit,
+  onDismiss: () -> Unit
+) {
+  val favorites = remember(giftIdeas) { giftIdeas.filter { it.isFavorited } }
+
+  Dialog(onDismissRequest = onDismiss) {
+    Surface(
+      shape = RoundedCornerShape(28.dp),
+      color = Color.White,
+      shadowElevation = 16.dp,
+      modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight(0.85f)
+    ) {
+      Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+              imageVector = Icons.Filled.BookmarkBorder,
+              contentDescription = null,
+              tint = Secondary,
+              modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+              Text(
+                text = if (isEnglish) "My Wishlist Notebook" else "Sổ Tay Yêu Thích Của Tôi",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = OnSurface
+              )
+              Text(
+                text = if (isEnglish) "${favorites.size} saved ideas" else "${favorites.size} ý tưởng đã lưu",
+                fontSize = 11.sp,
+                color = OnSurfaceVariant
+              )
+            }
+          }
+          IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
+            Icon(imageVector = Icons.Filled.Close, contentDescription = if (isEnglish) "Close" else "Đóng")
+          }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (favorites.isEmpty()) {
+          Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+          ) {
+            Icon(
+              imageVector = Icons.Filled.BookmarkBorder,
+              contentDescription = null,
+              tint = OnSurfaceVariant.copy(alpha = 0.4f),
+              modifier = Modifier.size(56.dp)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+              text = if (isEnglish) "No favorites yet" else "Chưa có ý tưởng yêu thích nào",
+              fontWeight = FontWeight.SemiBold,
+              color = OnSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = if (isEnglish) "Tap the heart on any gift idea to save it here." else "Nhấn vào biểu tượng trái tim trên món quà để lưu vào đây.",
+              fontSize = 12.sp,
+              color = OnSurfaceVariant,
+              textAlign = TextAlign.Center,
+              modifier = Modifier.padding(horizontal = 24.dp)
+            )
+          }
+        } else {
+          LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(favorites, key = { it.id }) { idea ->
+              GiftIdeaCard(
+                idea = idea,
+                isEnglish = isEnglish,
+                onFavoriteToggle = { onFavoriteToggle(idea) },
+                onActionClick = { onItemClick(idea) }
+              )
+            }
           }
         }
       }
