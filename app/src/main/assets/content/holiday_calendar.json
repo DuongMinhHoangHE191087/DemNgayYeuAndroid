@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "vi": {
+    "fixed": [
+      {
+        "titleVi": "Tết Dương Lịch",
+        "titleEn": "New Year's Day",
+        "month": 1,
+        "day": 1,
+        "emoji": "🎉",
+        "suggestedGiftCategory": "Trải Nghiệm",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Lễ Tình Nhân Valentine",
+        "titleEn": "Valentine's Day",
+        "month": 2,
+        "day": 14,
+        "emoji": "💝",
+        "suggestedGiftCategory": "Lãng Mạn",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Quốc Tế Phụ Nữ",
+        "titleEn": "International Women's Day",
+        "month": 3,
+        "day": 8,
+        "emoji": "🌷",
+        "suggestedGiftCategory": "Lãng Mạn",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Ngày Quốc Tế Hạnh Phúc",
+        "titleEn": "International Day of Happiness",
+        "month": 3,
+        "day": 20,
+        "emoji": "😊",
+        "suggestedGiftCategory": "Trải Nghiệm",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Ngày Sách Việt Nam",
+        "titleEn": "Vietnam Book Day",
+        "month": 4,
+        "day": 21,
+        "emoji": "📚",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Giải Phóng Miền Nam",
+        "titleEn": "Reunification Day",
+        "month": 4,
+        "day": 30,
+        "emoji": "🇻🇳",
+        "suggestedGiftCategory": "Trải Nghiệm",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Quốc Tế Lao Động",
+        "titleEn": "International Workers' Day",
+        "month": 5,
+        "day": 1,
+        "emoji": "🎈",
+        "suggestedGiftCategory": "Trải Nghiệm",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Ngày Quốc Tế Gia Đình",
+        "titleEn": "International Day of Families",
+        "month": 5,
+        "day": 15,
+        "emoji": "👨‍👩‍👧",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Quốc Tế Thiếu Nhi",
+        "titleEn": "International Children's Day",
+        "month": 6,
+        "day": 1,
+        "emoji": "🧸",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Ngày Gia Đình Việt Nam",
+        "titleEn": "Vietnamese Family Day",
+        "month": 6,
+        "day": 28,
+        "emoji": "🏡",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Ngày Thương Binh Liệt Sĩ",
+        "titleEn": "War Invalids and Martyrs Day",
+        "month": 7,
+        "day": 27,
+        "emoji": "🕯️",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Quốc Khánh",
+        "titleEn": "National Day",
+        "month": 9,
+        "day": 2,
+        "emoji": "🇻🇳",
+        "suggestedGiftCategory": "Trải Nghiệm",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Ngày Phụ Nữ Việt Nam",
+        "titleEn": "Vietnamese Women's Day",
+        "month": 10,
+        "day": 20,
+        "emoji": "🌹",
+        "suggestedGiftCategory": "Lãng Mạn",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Ngày Nhà Giáo Việt Nam",
+        "titleEn": "Vietnamese Teachers' Day",
+        "month": 11,
+        "day": 20,
+        "emoji": "🍎",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Ngày Thành Lập QĐND Việt Nam",
+        "titleEn": "Vietnam People's Army Day",
+        "month": 12,
+        "day": 22,
+        "emoji": "🎖️",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false
+      }
+    ],
+    "lunar": [
+      {
+        "titleVi": "Tết Nguyên Đán",
+        "titleEn": "Lunar New Year (Tết)",
+        "emoji": "🧧",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": true,
+        "datesByYear": {
+          "2025": "2025-01-29",
+          "2026": "2026-02-17",
+          "2027": "2027-02-06",
+          "2028": "2028-01-26"
+        }
+      },
+      {
+        "titleVi": "Rằm Tháng Giêng",
+        "titleEn": "First Full Moon Festival",
+        "emoji": "🌕",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false,
+        "datesByYear": {
+          "2026": "2026-03-03",
+          "2027": "2027-02-19"
+        }
+      },
+      {
+        "titleVi": "Giỗ Tổ Hùng Vương",
+        "titleEn": "Hùng Kings' Commemoration Day",
+        "emoji": "🏯",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false,
+        "datesByYear": {
+          "2025": "2025-04-07",
+          "2026": "2026-04-26",
+          "2027": "2027-04-16",
+          "2028": "2028-04-04"
+        }
+      },
+      {
+        "titleVi": "Lễ Vu Lan",
+        "titleEn": "Vu Lan (Ancestors' Day)",
+        "emoji": "🪷",
+        "suggestedGiftCategory": "Ý Nghĩa",
+        "isCoupleRelevant": false,
+        "datesByYear": {
+          "2025": "2025-09-06",
+          "2026": "2026-08-27"
+        }
+      },
+      {
+        "titleVi": "Tết Trung Thu",
+        "titleEn": "Mid-Autumn Festival",
+        "emoji": "🥮",
+        "suggestedGiftCategory": "Trải Nghiệm",
+        "isCoupleRelevant": true,
+        "datesByYear": {
+          "2025": "2025-10-06",
+          "2026": "2026-09-25",
+          "2027": "2027-09-15"
+        }
+      }
+    ]
+  },
+  "en": {
+    "fixed": [
+      {
+        "titleVi": "Tết Dương Lịch",
+        "titleEn": "New Year's Day",
+        "month": 1,
+        "day": 1,
+        "emoji": "🎉",
+        "suggestedGiftCategory": "Experience",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Lễ Tình Nhân",
+        "titleEn": "Valentine's Day",
+        "month": 2,
+        "day": 14,
+        "emoji": "💝",
+        "suggestedGiftCategory": "Romantic",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Ngày Thánh Patrick",
+        "titleEn": "St. Patrick's Day",
+        "month": 3,
+        "day": 17,
+        "emoji": "🍀",
+        "suggestedGiftCategory": "Experience",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Ngày Bạn Trai Quốc Gia",
+        "titleEn": "National Boyfriend Day",
+        "month": 10,
+        "day": 3,
+        "emoji": "💙",
+        "suggestedGiftCategory": "Romantic",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Ngày Quốc Khánh Mỹ",
+        "titleEn": "Independence Day",
+        "month": 7,
+        "day": 4,
+        "emoji": "🎆",
+        "suggestedGiftCategory": "Experience",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Lễ Hội Ma Halloween",
+        "titleEn": "Halloween",
+        "month": 10,
+        "day": 31,
+        "emoji": "🎃",
+        "suggestedGiftCategory": "Experience",
+        "isCoupleRelevant": false
+      },
+      {
+        "titleVi": "Đêm Giáng Sinh",
+        "titleEn": "Christmas Eve",
+        "month": 12,
+        "day": 24,
+        "emoji": "🌟",
+        "suggestedGiftCategory": "Romantic",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Giáng Sinh",
+        "titleEn": "Christmas Day",
+        "month": 12,
+        "day": 25,
+        "emoji": "🎄",
+        "suggestedGiftCategory": "Meaningful",
+        "isCoupleRelevant": true
+      },
+      {
+        "titleVi": "Giao Thừa Dương Lịch",
+        "titleEn": "New Year's Eve",
+        "month": 12,
+        "day": 31,
+        "emoji": "🥂",
+        "suggestedGiftCategory": "Romantic",
+        "isCoupleRelevant": true
+      }
+    ],
+    "ruleBased": [
+      {
+        "titleVi": "Ngày Của Mẹ",
+        "titleEn": "Mother's Day",
+        "emoji": "💐",
+        "suggestedGiftCategory": "Meaningful",
+        "isCoupleRelevant": false,
+        "ruleMonth": 5,
+        "ruleDayOfWeek": "SUNDAY",
+        "ruleOccurrence": 2
+      },
+      {
+        "titleVi": "Ngày Của Cha",
+        "titleEn": "Father's Day",
+        "emoji": "👔",
+        "suggestedGiftCategory": "Meaningful",
+        "isCoupleRelevant": false,
+        "ruleMonth": 6,
+        "ruleDayOfWeek": "SUNDAY",
+        "ruleOccurrence": 3
+      },
+      {
+        "titleVi": "Lễ Tạ Ơn",
+        "titleEn": "Thanksgiving",
+        "emoji": "🦃",
+        "suggestedGiftCategory": "Experience",
+        "isCoupleRelevant": false,
+        "ruleMonth": 11,
+        "ruleDayOfWeek": "THURSDAY",
+        "ruleOccurrence": 4
+      },
+      {
+        "titleVi": "Ngày Ngọt Ngào (Sweetest Day)",
+        "titleEn": "Sweetest Day",
+        "emoji": "🍬",
+        "suggestedGiftCategory": "Romantic",
+        "isCoupleRelevant": true,
+        "ruleMonth": 10,
+        "ruleDayOfWeek": "SATURDAY",
+        "ruleOccurrence": 3
+      }
+    ]
+  }
+}

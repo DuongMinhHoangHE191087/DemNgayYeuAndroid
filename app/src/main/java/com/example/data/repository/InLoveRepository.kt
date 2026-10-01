@@ -341,7 +341,8 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     isCloudinaryStored: Boolean = true,
     fileSizeFormatted: String = "",
     durationSeconds: Int = 0,
-    privacyLevel: String = "COUPLE_ONLY"
+    privacyLevel: String = "COUPLE_ONLY",
+    relationshipId: String? = null
   ) {
     val now = System.currentTimeMillis()
     val memory = SharedMemoryEntity(
@@ -353,6 +354,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
       isFavorite = false,
       anniversaryTitle = anniversaryTitle,
       createdAt = now,
+      relationshipId = relationshipId,
       authorId = authorId,
       authorName = authorName,
       mediaType = mediaType,
@@ -398,7 +400,8 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     description: String = "",
     isAnnual: Boolean = true,
     reminderDaysBefore: Int = 3,
-    daysRemaining: Int = 0
+    daysRemaining: Int = 0,
+    relationshipId: String? = null
   ): Long {
     val now = System.currentTimeMillis()
     val item = AnniversaryDateEntity(
@@ -411,6 +414,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
       reminderDaysBefore = reminderDaysBefore,
       daysRemaining = daysRemaining,
       createdAt = now,
+      relationshipId = relationshipId,
       syncId = UUID.randomUUID().toString(),
       updatedAt = now,
       pendingSync = true

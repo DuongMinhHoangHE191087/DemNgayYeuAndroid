@@ -303,9 +303,21 @@ class AuthRepository(
       dao.insertUserAccount(newAccount)
       account = newAccount
     } else {
-      // Migrate legacy UID if different from Firebase Auth UID
+      // Migrate legacy UID if different from Firebase Auth UID. Also refresh the local
+      // passwordHash (with the account's EXISTING salt — never a new one, see the
+      // no-salt-rotation notes in changePassword/resetPasswordWithOtp/
+      // resetPasswordWithSecurityAnswer: appPin/securityAnswerHash share this salt and
+      // would break if it changed) using the password just verified as correct by
+      // Firebase above. Without this, a password changed via Firebase on ANOTHER device
+      // (or via the official Firebase reset email) never reaches this device's local
+      // cache, so unlockWithAccountPassword (the PIN-fallback screen) keeps rejecting the
+      // user's real, current password here until they log out/in enough times to notice —
+      // this device's local hash is only ever set once, at this device's own registration
+      // or first login.
+      val refreshedHash = AuthSecurityManager.hashPassword(passwordInput, account.salt)
       val updated = account.copy(
         uid = firebaseUid,
+        passwordHash = refreshedHash,
         failedAttempts = 0,
         lockoutUntil = 0L,
         lastLoginAt = System.currentTimeMillis(),
@@ -631,12 +643,17 @@ class AuthRepository(
       return@withContext false to "Mật khẩu mới xác nhận không khớp!"
     }
 
-    val newSalt = AuthSecurityManager.generateSalt()
-    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, newSalt)
+    // KHÔNG đổi `salt` — như [changePassword], appPin và securityAnswerHash đều băm
+    // bằng cùng salt cấp tài khoản (AuthSecurityManager.hashPin/hashSecurityAnswer).
+    // Sinh salt mới ở đây trước làm hỏng khoá PIN vĩnh viễn (unlockWithPin dùng
+    // account.salt MỚI trong khi appPin đã lưu được băm bằng salt CŨ) và làm hỏng luôn
+    // câu hỏi bảo mật (resetPasswordWithSecurityAnswer so sánh bằng account.salt mới
+    // trong khi securityAnswerHash được băm bằng salt cũ) — cả hai không hề được cập
+    // nhật lại theo salt mới ở hàm này.
+    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, account.salt)
 
     val updated = account.copy(
       passwordHash = newHash,
-      salt = newSalt,
       failedAttempts = 0,
       lockoutUntil = 0L
     )
@@ -703,14 +720,14 @@ class AuthRepository(
       return@withContext false to "Mật khẩu xác nhận không khớp!"
     }
 
-    val newSalt = AuthSecurityManager.generateSalt()
-    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, newSalt)
-    val newAnswerHash = AuthSecurityManager.hashSecurityAnswer(securityAnswerInput, newSalt)
+    // KHÔNG đổi `salt` (xem giải thích trong changePassword/resetPasswordWithOtp):
+    // appPin dùng chung salt cấp tài khoản này, nên đổi sang salt mới ở đây sẽ làm
+    // hỏng khoá PIN vĩnh viễn dù không đụng gì tới appPin. securityAnswerHash vẫn
+    // giữ nguyên (đã đúng với salt hiện tại, không cần băm lại).
+    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, account.salt)
 
     val updated = account.copy(
       passwordHash = newHash,
-      salt = newSalt,
-      securityAnswerHash = newAnswerHash,
       failedAttempts = 0,
       lockoutUntil = 0L
     )
@@ -787,9 +804,15 @@ class AuthRepository(
       }
     }
 
-    val newSalt = AuthSecurityManager.generateSalt()
-    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, newSalt)
-    val updated = currentAccount.copy(passwordHash = newHash, salt = newSalt)
+    // KHÔNG đổi `salt`: PIN (setAppPin/unlockWithPin) và câu hỏi bảo mật
+    // (securityAnswerHash) đều được băm bằng CÙNG salt cấp tài khoản này (xem
+    // AuthSecurityManager.hashPin/hashSecurityAnswer). Nếu đổi sang salt mới ở đây,
+    // appPin đã lưu (băm bằng salt cũ) sẽ không bao giờ khớp lại với
+    // hashPin(pin, salt_mới) trong unlockWithPin() nữa — khoá PIN vĩnh viễn hỏng dù
+    // người dùng nhập đúng mã cho tới khi họ tự đặt lại PIN. Giữ nguyên salt hiện tại
+    // và chỉ đổi passwordHash vẫn an toàn (salt vẫn ngẫu nhiên 16 byte/tài khoản).
+    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, currentAccount.salt)
+    val updated = currentAccount.copy(passwordHash = newHash)
     dao.updateUserAccount(updated)
 
     dao.insertSecurityLog(

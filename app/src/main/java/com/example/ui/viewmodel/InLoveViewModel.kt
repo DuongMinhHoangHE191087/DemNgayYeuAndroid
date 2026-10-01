@@ -1246,7 +1246,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         isCloudinaryStored = isCloudinaryStored,
         fileSizeFormatted = fileSizeFormatted,
         durationSeconds = durationSeconds,
-        privacyLevel = privacyLevel
+        privacyLevel = privacyLevel,
+        relationshipId = currentOnlineUser.value.relationshipId
       )
       triggerFloatingHearts()
       // isCloudinaryStored = false means CloudinaryStorageService's upload attempt failed and
@@ -1374,7 +1375,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         type = type,
         description = description.trim(),
         isAnnual = isAnnual,
-        reminderDaysBefore = reminderDaysBefore
+        reminderDaysBefore = reminderDaysBefore,
+        relationshipId = currentOnlineUser.value.relationshipId
       )
       val context = getApplication<Application>()
       val ann = AnniversaryDateEntity(
