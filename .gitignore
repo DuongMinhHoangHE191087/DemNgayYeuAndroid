@@ -14,13 +14,13 @@
 .externalNativeBuild
 .cxx
 local.properties
-.env
+
 debug.keystore
 *.jks
 *.keystore
 my-upload-key.jks
 license.properties
-.env.*
+
 !.env.example
 node_modules/
 scripts/serviceAccountKey.json
