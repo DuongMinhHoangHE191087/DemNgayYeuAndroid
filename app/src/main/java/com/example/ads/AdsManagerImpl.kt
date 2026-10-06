@@ -8,7 +8,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.app.plugin.ads.AdsHelper
-import com.app.plugin.brain.AdsBrain
 import com.app.plugin.consent.ConsentManager
 import com.example.BuildConfig
 import com.google.android.gms.ads.AdError
@@ -183,12 +182,6 @@ class AdsManagerImpl : AdsManager,
         val isIntervalOk = (currentTime - lastInterstitialShownTime) >= minIntervalMs
         val currentAd = interstitialAd
 
-        // Monetization Brain: nếu brain đang hoạt động và đánh giá không nên hiển thị, bỏ qua ngay
-        if (AdsBrain.enabled && !AdsBrain.shouldShowInterstitial()) {
-            onAdDismissed()
-            return
-        }
-
         // Guard: bỏ qua nếu VIP, chưa đủ interval 30s, hoặc ad chưa load xong
         if (isVipUser || currentAd == null || !isIntervalOk) {
             // Callback ngay để người dùng tiếp tục thao tác — không bao giờ block UI
@@ -205,9 +198,6 @@ class AdsManagerImpl : AdsManager,
 
         currentAd.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
-                // Ghi nhận tín hiệu hiển thị cho Monetization Brain
-                AdsBrain.onInterstitialShown()
-
                 // Người dùng đóng ad — tiếp tục luồng
                 interstitialAd = null
                 lastInterstitialShownTime = System.currentTimeMillis()

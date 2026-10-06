@@ -46,5 +46,9 @@ dependencyResolutionManagement {
 rootProject.name = "InLove"
 
 include(":app")
-include(":appplugin")
+includeBuild("appplugin") {
+  dependencySubstitution {
+    substitute(module("com.app.plugin:appplugin")).using(project(":"))
+  }
+}
 

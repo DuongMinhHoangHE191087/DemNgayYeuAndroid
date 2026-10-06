@@ -31,7 +31,7 @@ android {
 
   defaultConfig {
     applicationId = "com.aistudio.inlove.kmrv"
-    minSdk = 26
+    minSdk = 24
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
@@ -127,6 +127,7 @@ secrets {
       "CLOUDINARY_CLOUD_NAME",
       "CLOUDINARY_UPLOAD_PRESET",
       "CLOUDINARY_FOLDER",
+      // SMTP_* may still exist in a developer .env; never expose them in BuildConfig (empty values break javac).
       "SMTP_HOST",
       "SMTP_PORT",
       "SMTP_SENDER_EMAIL",
@@ -150,7 +151,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
-  implementation(project(":appplugin"))
+  implementation(libs.appplugin)
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
@@ -197,7 +198,7 @@ dependencies {
 
   // Google Mobile Ads SDK (AdMob) & UMP (User Messaging Platform).
   // :appplugin declares play-services-ads as `implementation`, not `api`, so it is NOT exposed
-  // transitively to :app despite `implementation(project(":appplugin"))` below — confirmed by an
+  // transitively to :app despite `implementation(libs.appplugin)` below — confirmed by an
   // actual build: every file here importing com.google.android.gms.ads.* failed to resolve when
   // this line was removed on the (wrong) assumption that the module dependency alone was enough.
   // :app still needs its own direct dependency; what actually fixes the version skew is pinning

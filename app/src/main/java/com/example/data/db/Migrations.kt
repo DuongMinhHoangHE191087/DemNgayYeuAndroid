@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  *
  * shared_memories/anniversary_dates are rebuilt (not ALTERed) because they also drop the
  * unused `isSynced` column, and SQLite's DROP COLUMN support (3.35+) is not guaranteed on
- * every OS version this app's minSdk (26) has to run on.
+ * every OS version this app's minSdk (24) has to run on.
  */
 val MIGRATION_12_13 = object : Migration(12, 13) {
   override fun migrate(db: SupportSQLiteDatabase) {

@@ -56,9 +56,26 @@ service cloud.firestore {
     // ===============================================================
     // Users Collection (Strict privacy: owner-only access)
     // ===============================================================
+    // Entitlement/role fields (isVip, subscriptionTier, role, ...) are server-owned: they
+    // are in NO allowlist below, so a client can never create, modify or delete them
+    // (writes only via Admin SDK / trusted backend, which bypasses rules).
+    // The app does not currently write users/{uid} from the client; this allowlist mirrors
+    // the profile fields of OnlineUserEntity minus entitlement fields.
+    function userProfileFields() {
+      return ['uid', 'displayName', 'email', 'coupleCode', 'partnerId', 'relationshipId',
+              'status', 'interests', 'interestsCsv', 'avatarUrl', 'gender', 'birthDate',
+              'age', 'zodiac', 'bio', 'isProfileSetup', 'createdAt', 'updatedAt'];
+    }
+
     match /users/{userId} {
       allow get, list: if isOwner(userId);
-      allow create, update, delete: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+        request.resource.data.keys().hasOnly(userProfileFields()) &&
+        (!('uid' in request.resource.data) || request.resource.data.uid == userId);
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(userProfileFields()) &&
+        (!('uid' in request.resource.data) || request.resource.data.uid == userId);
+      allow delete: if isOwner(userId);
     }
 
     // ===============================================================

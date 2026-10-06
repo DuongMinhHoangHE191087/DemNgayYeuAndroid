@@ -92,10 +92,8 @@ class EmailQueueService private constructor(private val context: Context? = null
   private val _otpEvents = MutableSharedFlow<OtpEvent>(replay = 1)
   val otpEvents: SharedFlow<OtpEvent> = _otpEvents.asSharedFlow()
 
-  val realSmtpSender = RealSmtpEmailSender()
-
   init {
-    Log.i("EmailQueueService", "Khởi tạo EmailQueueService. ${realSmtpSender.getConfigSummary()}")
+    Log.i("EmailQueueService", "Khởi tạo EmailQueueService (không gửi SMTP từ client).")
     startQueueWorker()
   }
 
@@ -111,39 +109,15 @@ class EmailQueueService private constructor(private val context: Context? = null
   }
 
   /**
-   * Dispatches the email task.
-   * If SMTP is configured in .env, sends REAL email directly to recipient inbox.
-   * Also broadcasts to UI event stream and displays local toast for QA visibility.
+   * Handles the queued task. No email is sent from the client: SMTP credentials must never ship in
+   * the APK, and account verification/reset mail is delivered by Firebase Auth. This only
+   * broadcasts a UI event (and a toast for QA visibility) without exposing the OTP.
    */
   private suspend fun processEmailTask(task: EmailTask) = withContext(Dispatchers.IO) {
-    Log.d("EmailQueueService", "Processing queued verification request for ${task.email}")
+    Log.d("EmailQueueService", "Processing queued verification request")
+    delay(400.milliseconds)
 
-    var realEmailSent = false
-    var realEmailError: String? = null
-
-    if (realSmtpSender.isReady()) {
-      val sendResult = realSmtpSender.sendOtpEmail(
-        recipientEmail = task.email,
-        otpCode = task.otpCode,
-        purpose = task.purpose
-      )
-      sendResult.onSuccess {
-        realEmailSent = true
-      }.onFailure { error ->
-        realEmailError = error.message
-        Log.e("EmailQueueService", "Gửi email xác thực thất bại: ${error.message}", error)
-      }
-    } else {
-      delay(400.milliseconds)
-    }
-
-    val message = if (realEmailSent) {
-      "Đã gửi mã xác thực thành công đến hòm thư [${task.email}]! Vui lòng kiểm tra hộp thư (inbox/spam)."
-    } else if (realEmailError != null) {
-      "Lỗi kết nối gửi email xác thực. Vui lòng thử lại sau!"
-    } else {
-      "Mã xác thực ${task.purpose.titleVi} đã được gửi đến [${task.email}] (Hiệu lực 5 phút)."
-    }
+    val message = "Mã xác thực ${task.purpose.titleVi} đã được gửi đến [${task.email}] (Hiệu lực 5 phút)."
 
     // Notify listeners via SharedFlow
     _otpEvents.emit(
