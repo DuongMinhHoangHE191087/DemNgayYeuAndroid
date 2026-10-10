@@ -1,10 +1,6 @@
 @file:Suppress("FunctionName")
 package com.example.ui.screens
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.MediaController
 import android.widget.VideoView
@@ -49,7 +45,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -85,6 +80,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -105,16 +101,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
-import com.example.data.cloudinary.CloudinaryStorageService
-import com.example.data.cloudinary.MediaValidationResult
+import com.example.data.media.LocalMediaStore
 import com.example.data.model.OnlineStatus
+import com.example.data.model.PRIVACY_PRIVATE
 import com.example.data.model.SharedMemoryEntity
+import com.example.domain.media.MediaKind
+import com.example.domain.media.MemoryMediaFile
+import com.example.domain.media.formatMediaSize
+import com.example.ui.components.rememberMemoryUri
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
 import com.example.ui.viewmodel.InLoveViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -193,7 +193,8 @@ fun MemoriesGridScreen(
             isAuthor = viewModel.isCurrentUserAuthor(memory),
             isEnglish = isEnglish,
             onClick = { viewModel.openMemoryDetail(memory) },
-            onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) }
+            onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) },
+            resolveMedia = { viewModel.resolveMemoryMediaUrl(memory) }
           )
         }
       }
@@ -226,7 +227,7 @@ fun MemoriesGridScreen(
     )
   }
 
-  // Add Memory Dialog with Cloudinary & Video support & Permissions
+  // Add Memory Dialog: photo or video, uploaded and confirmed by the server before it is saved
   val dynamicPresetPhotos by viewModel.presetPhotos.collectAsState()
   if (showAddDialog) {
     AddMemoryDialog(
@@ -234,31 +235,16 @@ fun MemoriesGridScreen(
       currentLanguage = currentLanguage,
       presetPhotos = dynamicPresetPhotos,
       onDismiss = { showAddDialog = false },
-      onSaveMemory = { title, dateText, photoUri, note, location, mediaType, videoUri, cloudinaryPublicId, cloudinaryUrl, isCloudinaryStored, fileSizeFormatted, durationSeconds, privacyLevel ->
-        viewModel.addSharedMemory(
-          title = title,
-          dateText = dateText,
-          photoUri = photoUri,
-          note = note,
-          location = location,
-          mediaType = mediaType,
-          videoUri = videoUri,
-          cloudinaryPublicId = cloudinaryPublicId,
-          cloudinaryUrl = cloudinaryUrl,
-          isCloudinaryStored = isCloudinaryStored,
-          fileSizeFormatted = fileSizeFormatted,
-          durationSeconds = durationSeconds,
-          privacyLevel = privacyLevel
-        )
-        showAddDialog = false
+      onSaveMemory = { title, dateText, photoUri, note, location, media, coverUri, privacyLevel ->
+        viewModel.saveSharedMemory(title, dateText, photoUri, note, location, media, coverUri, privacyLevel)
       }
     )
   }
 
   // Edit Memory Dialog (Author only)
-  if (memoryToEdit != null) {
+  memoryToEdit?.let { editing ->
     EditMemoryDialog(
-      memory = memoryToEdit!!,
+      memory = editing,
       isEnglish = isEnglish,
       onDismiss = { memoryToEdit = null },
       onSave = { updated ->
@@ -268,7 +254,7 @@ fun MemoriesGridScreen(
     )
   }
 
-  // Detail Dialog with full video playback, Cloudinary info & Permissions
+  // Detail Dialog with full video playback, storage status & permissions
   selectedDetail?.let { memory ->
     val isAuthor = viewModel.isCurrentUserAuthor(memory)
     MemoryDetailDialog(
@@ -284,7 +270,8 @@ fun MemoriesGridScreen(
       },
       onDelete = {
         viewModel.deleteSharedMemory(memory.id)
-      }
+      },
+      resolveMedia = { viewModel.resolveMemoryMediaUrl(memory) }
     )
   }
 }
@@ -514,9 +501,18 @@ private fun MemoryCardItem(
   isAuthor: Boolean,
   isEnglish: Boolean = false,
   onClick: () -> Unit,
-  onToggleFavorite: () -> Unit
+  onToggleFavorite: () -> Unit,
+  resolveMedia: suspend () -> String?
 ) {
   val isVideo = memory.mediaType == "VIDEO"
+  val hasCloud = !memory.cloudinaryPublicId.isNullOrBlank()
+  // Local copy first; a partner's device has only the publicId, so it resolves a short-lived URL.
+  val photoModel = rememberMemoryUri(
+    memoryId = memory.syncId,
+    localUri = memory.photoUri,
+    cloudPublicId = memory.cloudinaryPublicId.takeIf { !isVideo },
+    resolve = resolveMedia
+  )
 
   Card(
     shape = RoundedCornerShape(20.dp),
@@ -533,7 +529,7 @@ private fun MemoryCardItem(
     Box(modifier = Modifier.fillMaxSize()) {
       // Photo / Video Thumbnail
       AsyncImage(
-        model = memory.photoUri,
+        model = photoModel,
         contentDescription = memory.title,
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize()
@@ -563,9 +559,7 @@ private fun MemoryCardItem(
       ) {
         // Left badges: Storage & Video
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-          // Must reflect memory.isCloudinaryStored, not always claim "Cloud": this badge used
-          // to say "Cloud" even for a memory that fell back to on-device-only storage after a
-          // failed upload — same honesty bug the save toast was fixed for (see fec27b8).
+          // "Cloud" only once the server confirmed the upload (publicId set); a local-only memory never claims it.
           Surface(
             shape = RoundedCornerShape(8.dp),
             color = Color.Black.copy(alpha = 0.55f)
@@ -575,14 +569,17 @@ private fun MemoryCardItem(
               modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
               Icon(
-                imageVector = if (memory.isCloudinaryStored) Icons.Default.Cloud else Icons.Default.PhoneAndroid,
+                imageVector = if (hasCloud) Icons.Default.Cloud else Icons.Default.PhoneAndroid,
                 contentDescription = null,
-                tint = if (memory.isCloudinaryStored) Color(0xFF80DEEA) else Color(0xFFFFB74D),
+                tint = if (hasCloud) Color(0xFF80DEEA) else Color(0xFFFFB74D),
                 modifier = Modifier.size(11.dp)
               )
               Spacer(modifier = Modifier.width(3.dp))
               Text(
-                text = if (memory.isCloudinaryStored) "Cloud" else "On device",
+                text = when {
+                  hasCloud -> if (isEnglish) "Cloud" else "Đám mây"
+                  else -> if (isEnglish) "On device" else "Trên máy"
+                },
                 fontSize = 9.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -809,7 +806,8 @@ private fun EmptyMemoriesCard(
 }
 
 /**
- * Add Memory Dialog with Photo & Video upload, Cloudinary storage and permissions
+ * Add Memory Dialog: pick a photo or video, then save. [onSaveMemory] returns true only once the upload
+ * is confirmed and the memory is stored; the dialog closes itself on true and stays open on false.
  */
 @Composable
 fun AddMemoryDialog(
@@ -817,21 +815,16 @@ fun AddMemoryDialog(
   currentLanguage: AppLanguage,
   presetPhotos: List<String> = emptyList(),
   onDismiss: () -> Unit,
-  onSaveMemory: (
+  onSaveMemory: suspend (
     title: String,
     dateText: String,
     photoUri: String,
     note: String,
     location: String,
-    mediaType: String,
-    videoUri: String?,
-    cloudinaryPublicId: String?,
-    cloudinaryUrl: String?,
-    isCloudinaryStored: Boolean,
-    fileSizeFormatted: String,
-    durationSeconds: Int,
+    media: MemoryMediaFile?,
+    coverUri: String?,
     privacyLevel: String
-  ) -> Unit
+  ) -> Boolean
 ) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
@@ -840,41 +833,38 @@ fun AddMemoryDialog(
     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
   }
 
-  var mediaType by remember { mutableStateOf("IMAGE") } // "IMAGE" or "VIDEO"
   var title by remember { mutableStateOf("") }
   var dateText by remember { mutableStateOf(todayFormatted) }
   var location by remember { mutableStateOf("") }
   var note by remember { mutableStateOf("") }
-  var privacyLevel by remember { mutableStateOf("COUPLE_ONLY") } // "COUPLE_ONLY", "PRIVATE", "PUBLIC"
+  var privacyLevel by remember { mutableStateOf("COUPLE_ONLY") } // "COUPLE_ONLY" or "PRIVATE"
 
   var selectedMediaUri by remember(presetPhotos) {
     mutableStateOf(presetPhotos.firstOrNull() ?: "")
   }
-  var rawSelectedUri by remember { mutableStateOf<Uri?>(null) }
-  var validationResult by remember { mutableStateOf<MediaValidationResult?>(null) }
-  var isUploadingToCloudinary by remember { mutableStateOf(false) }
+  // The picked file is the single source of truth for the media type; presets leave it null.
+  var pickedMedia by remember { mutableStateOf<MemoryMediaFile?>(null) }
+  var validationError by remember { mutableStateOf<String?>(null) }
+  var isSaving by remember { mutableStateOf(false) }
+  val isVideo = pickedMedia?.kind == MediaKind.VIDEO
 
-  // Unified System Media Picker launcher (Image and Video)
+  // System photo/video picker: copy and validate off the main thread, then show the result
   val filePickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.PickVisualMedia()
   ) { uri: Uri? ->
-    uri?.let {
-      val mimeType = context.contentResolver.getType(it) ?: ""
-      val isVid = mimeType.startsWith("video/") || it.toString().lowercase().let { u ->
-        u.endsWith(".mp4") || u.endsWith(".mkv") || u.endsWith(".mov") || u.endsWith(".webm")
-      }
-      val validation = CloudinaryStorageService.validateMedia(context, it, isVideo = isVid)
-      validationResult = validation
-      if (validation.isValid) {
-        val persistentPath = copyUriToInternalStorage(context, it)
-        selectedMediaUri = persistentPath ?: it.toString()
-        rawSelectedUri = it
-        mediaType = if (isVid) "VIDEO" else "IMAGE"
+    uri?.let { picked ->
+      coroutineScope.launch {
+        val pick = withContext(Dispatchers.IO) { LocalMediaStore.prepare(context, picked) }
+        validationError = pick.error
+        if (pick.media != null) {
+          pickedMedia = pick.media
+          selectedMediaUri = pick.coverUri.orEmpty()
+        }
       }
     }
   }
 
-  Dialog(onDismissRequest = { if (!isUploadingToCloudinary) onDismiss() }) {
+  Dialog(onDismissRequest = { if (!isSaving) onDismiss() }) {
     Surface(
       shape = RoundedCornerShape(26.dp),
       color = Color.White,
@@ -902,7 +892,7 @@ fun AddMemoryDialog(
               contentAlignment = Alignment.Center
             ) {
               Icon(
-                imageVector = if (mediaType == "VIDEO") Icons.Default.Movie else Icons.Default.AddAPhoto,
+                imageVector = if (isVideo) Icons.Default.Movie else Icons.Default.AddAPhoto,
                 contentDescription = null,
                 tint = Color(0xFFFF2D75),
                 modifier = Modifier.size(20.dp)
@@ -924,7 +914,7 @@ fun AddMemoryDialog(
             }
           }
 
-          if (!isUploadingToCloudinary) {
+          if (!isSaving) {
             IconButton(onClick = onDismiss) {
               Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
             }
@@ -942,7 +932,7 @@ fun AddMemoryDialog(
             .border(2.dp, Color(0xFFFFC0D3), RoundedCornerShape(18.dp))
             .background(Color(0xFF1E1E24))
         ) {
-          if (mediaType == "VIDEO") {
+          if (isVideo) {
             Box(
               modifier = Modifier.fillMaxSize(),
               contentAlignment = Alignment.Center
@@ -961,10 +951,10 @@ fun AddMemoryDialog(
                   fontWeight = FontWeight.Bold,
                   color = Color.White
                 )
-                if (validationResult != null && validationResult!!.durationSeconds > 0) {
+                pickedMedia?.let { media ->
                   Text(
-                    text = if (currentLanguage == AppLanguage.EN) "Duration: ${validationResult!!.durationSeconds}s • Size: ${validationResult!!.formattedSize}"
-                           else "Thời lượng: ${validationResult!!.durationSeconds}s • Dung lượng: ${validationResult!!.formattedSize}",
+                    text = if (currentLanguage == AppLanguage.EN) "Duration: ${media.durationSeconds}s • Size: ${formatMediaSize(media.sizeBytes)}"
+                           else "Thời lượng: ${media.durationSeconds}s • Dung lượng: ${formatMediaSize(media.sizeBytes)}",
                     fontSize = 11.sp,
                     color = Color(0xFFB2EBF2)
                   )
@@ -993,14 +983,14 @@ fun AddMemoryDialog(
               modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
               Icon(
-                imageVector = if (mediaType == "VIDEO") Icons.Default.Movie else Icons.Default.Cloud,
+                imageVector = if (isVideo) Icons.Default.Movie else Icons.Default.AddAPhoto,
                 contentDescription = null,
                 tint = Color(0xFF80DEEA),
                 modifier = Modifier.size(12.dp)
               )
               Spacer(modifier = Modifier.width(4.dp))
               Text(
-                text = if (mediaType == "VIDEO") "Video" else "HD Cloud",
+                text = if (isVideo) "Video" else if (currentLanguage == AppLanguage.EN) "Photo" else "Ảnh",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -1010,59 +1000,59 @@ fun AddMemoryDialog(
         }
 
         // Validation Error / Status Feedback
-        validationResult?.let { valRes ->
+        validationError?.let { message ->
           Spacer(modifier = Modifier.height(6.dp))
-          if (!valRes.isValid) {
-            Surface(
-              shape = RoundedCornerShape(10.dp),
-              color = Color(0xFFFFEBEE),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF9A9A)),
-              modifier = Modifier.fillMaxWidth()
+          Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFFFEBEE),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF9A9A)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
             ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Close,
-                  contentDescription = null,
-                  tint = Color(0xFFD32F2F),
-                  modifier = Modifier.size(15.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                  text = valRes.errorMessage ?: (if (currentLanguage == AppLanguage.EN) "Invalid file!" else "Tập tin không hợp lệ!"),
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color(0xFFC62828)
-                )
-              }
+              Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                tint = Color(0xFFD32F2F),
+                modifier = Modifier.size(15.dp)
+              )
+              Spacer(modifier = Modifier.width(6.dp))
+              Text(
+                text = message,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFC62828)
+              )
             }
-          } else if (valRes.formattedSize.isNotBlank()) {
-            Surface(
-              shape = RoundedCornerShape(10.dp),
-              color = Color(0xFFE8F5E9),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA5D6A7)),
-              modifier = Modifier.fillMaxWidth()
+          }
+        }
+        pickedMedia?.takeIf { validationError == null }?.let { media ->
+          Spacer(modifier = Modifier.height(6.dp))
+          Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFE8F5E9),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA5D6A7)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
             ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Check,
-                  contentDescription = null,
-                  tint = Color(0xFF2E7D32),
-                  modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                  text = if (currentLanguage == AppLanguage.EN) "Size: ${valRes.formattedSize} • Ready ✓" else "Dung lượng: ${valRes.formattedSize} • Sẵn sàng ✓",
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.SemiBold,
-                  color = Color(0xFF1B5E20)
-                )
-              }
+              Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = Color(0xFF2E7D32),
+                modifier = Modifier.size(14.dp)
+              )
+              Spacer(modifier = Modifier.width(6.dp))
+              Text(
+                text = if (currentLanguage == AppLanguage.EN) "Size: ${formatMediaSize(media.sizeBytes)} • Ready ✓" else "Dung lượng: ${formatMediaSize(media.sizeBytes)} • Sẵn sàng ✓",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1B5E20)
+              )
             }
           }
         }
@@ -1076,6 +1066,7 @@ fun AddMemoryDialog(
               PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
             )
           },
+          enabled = !isSaving,
           shape = RoundedCornerShape(14.dp),
           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
           modifier = Modifier
@@ -1101,7 +1092,7 @@ fun AddMemoryDialog(
         Spacer(modifier = Modifier.height(10.dp))
 
         // Preset Thumbnails Row (if photo and presets available)
-        if (mediaType == "IMAGE" && presetPhotos.isNotEmpty()) {
+        if (!isVideo && presetPhotos.isNotEmpty()) {
           Text(
             text = if (currentLanguage == AppLanguage.EN) "Or choose from romantic sample photos:" else "Hoặc chọn nhanh ảnh mẫu lãng mạn:",
             fontSize = 11.5.sp,
@@ -1128,8 +1119,8 @@ fun AddMemoryDialog(
                   )
                   .clickable {
                     selectedMediaUri = url
-                    rawSelectedUri = null
-                    validationResult = MediaValidationResult(isValid = true, formattedSize = if (currentLanguage == AppLanguage.EN) "Preset" else "Kho ảnh mẫu")
+                    pickedMedia = null
+                    validationError = null
                   }
               ) {
                 AsyncImage(
@@ -1286,7 +1277,7 @@ fun AddMemoryDialog(
         Spacer(modifier = Modifier.height(18.dp))
 
         // Upload Status Spinner
-        if (isUploadingToCloudinary) {
+        if (isSaving) {
           Row(
             modifier = Modifier
               .fillMaxWidth()
@@ -1316,63 +1307,38 @@ fun AddMemoryDialog(
         ) {
           OutlinedButton(
             onClick = onDismiss,
-            enabled = !isUploadingToCloudinary,
+            enabled = !isSaving,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.weight(1f)
           ) {
             Text(if (currentLanguage == AppLanguage.EN) "Cancel" else strings.btnCancel)
           }
 
-          val canSave = !isUploadingToCloudinary && (validationResult == null || validationResult!!.isValid)
+          val canSave = !isSaving && validationError == null
 
           Button(
             onClick = {
-              isUploadingToCloudinary = true
+              isSaving = true
               coroutineScope.launch {
                 val finalTitle = title.ifBlank {
                   if (currentLanguage == AppLanguage.VI) "Khoảnh Khắc Kỷ Niệm" else "Special Moment"
                 }
-
-                if (rawSelectedUri != null) {
-                  val result = CloudinaryStorageService.uploadToCloudinary(
-                    context = context,
-                    mediaUri = rawSelectedUri!!,
-                    mediaType = mediaType
-                  )
-
-                  onSaveMemory(
-                    finalTitle,
-                    dateText,
-                    result.thumbnailUri,
-                    note,
-                    location,
-                    mediaType,
-                    if (mediaType == "VIDEO") result.secureUrl else null,
-                    result.publicId,
-                    result.secureUrl,
-                    result.isRealCloudinaryUpload,
-                    result.sizeFormatted,
-                    result.durationSeconds,
-                    privacyLevel
-                  )
-                } else {
-                  // Using selected preset photo
+                // A preset has no picked file; a picked file uses its cover frame as the local photo.
+                val saved = try {
                   onSaveMemory(
                     finalTitle,
                     dateText,
                     selectedMediaUri,
                     note,
                     location,
-                    "IMAGE",
-                    null,
-                    "preset_${System.currentTimeMillis()}",
-                    selectedMediaUri,
-                    true,
-                    "2.1 MB",
-                    0,
+                    pickedMedia,
+                    if (pickedMedia != null) selectedMediaUri else null,
                     privacyLevel
                   )
+                } finally {
+                  isSaving = false
                 }
+                if (saved) onDismiss()
               }
             },
             enabled = canSave,
@@ -1490,6 +1456,8 @@ private fun EditMemoryDialog(
           FilterChip(
             selected = privacyLevel == "COUPLE_ONLY",
             onClick = { privacyLevel = "COUPLE_ONLY" },
+            // Đã riêng tư thì không chuyển lại chia sẻ: ảnh có thể đã từng nằm trên đám mây.
+            enabled = memory.privacyLevel != PRIVACY_PRIVATE,
             label = { Text(if (isEnglish) "💑 Couple Only" else "💑 Chỉ 2 người", fontSize = 11.5.sp) }
           )
           FilterChip(
@@ -1533,7 +1501,7 @@ private fun EditMemoryDialog(
 
 
 /**
- * Memory Detail Dialog with Video Player, Cloudinary Card & Role-based Permissions
+ * Memory Detail Dialog with Video Player, Storage Card & Role-based Permissions
  */
 @Composable
 private fun MemoryDetailDialog(
@@ -1544,10 +1512,18 @@ private fun MemoryDetailDialog(
   onDismiss: () -> Unit,
   onToggleFavorite: () -> Unit,
   onEdit: () -> Unit,
-  onDelete: () -> Unit
+  onDelete: () -> Unit,
+  resolveMedia: suspend () -> String?
 ) {
-  val context = LocalContext.current
   val isVideo = memory.mediaType == "VIDEO"
+  val hasCloud = !memory.cloudinaryPublicId.isNullOrBlank()
+  // The local copy plays on the author's device; a partner's device resolves a short-lived URL.
+  val mediaUri = rememberMemoryUri(
+    memoryId = memory.syncId,
+    localUri = if (isVideo) memory.videoUri else memory.photoUri,
+    cloudPublicId = memory.cloudinaryPublicId,
+    resolve = resolveMedia
+  )
   var showDeleteConfirm by remember { mutableStateOf(false) }
 
   Dialog(onDismissRequest = onDismiss) {
@@ -1573,25 +1549,30 @@ private fun MemoryDetailDialog(
             .border(1.dp, Color(0xFFFFE0E9), RoundedCornerShape(20.dp))
             .background(Color.Black)
         ) {
-          if (isVideo && !memory.videoUri.isNullOrBlank()) {
-            AndroidView(
-              factory = { ctx ->
-                VideoView(ctx).apply {
-                  setVideoURI(Uri.parse(memory.videoUri))
-                  val mediaController = MediaController(ctx)
-                  mediaController.setAnchorView(this)
-                  setMediaController(mediaController)
-                  setOnPreparedListener { mp ->
-                    mp.isLooping = true
-                    start()
-                  }
-                }
-              },
-              modifier = Modifier.fillMaxSize()
-            )
+          if (isVideo) {
+            // key() rebuilds the player when the resolved URL changes, so it never plays a stale source.
+            mediaUri?.let { uri ->
+              key(uri) {
+                AndroidView(
+                  factory = { ctx ->
+                    VideoView(ctx).apply {
+                      setVideoURI(Uri.parse(uri))
+                      val mediaController = MediaController(ctx)
+                      mediaController.setAnchorView(this)
+                      setMediaController(mediaController)
+                      setOnPreparedListener { mp ->
+                        mp.isLooping = true
+                        start()
+                      }
+                    }
+                  },
+                  modifier = Modifier.fillMaxSize()
+                )
+              }
+            }
           } else {
             AsyncImage(
-              model = memory.photoUri,
+              model = mediaUri,
               contentDescription = memory.title,
               contentScale = ContentScale.Crop,
               modifier = Modifier.fillMaxSize()
@@ -1702,9 +1683,9 @@ private fun MemoryDetailDialog(
 
           Surface(
             shape = RoundedCornerShape(10.dp),
-            color = if (memory.isCloudinaryStored) Color(0xFFE0F2F1) else Color(0xFFFFF3E0),
+            color = if (hasCloud) Color(0xFFE0F2F1) else Color(0xFFFFF3E0),
             border = androidx.compose.foundation.BorderStroke(
-              1.dp, if (memory.isCloudinaryStored) Color(0xFF80CBC4) else Color(0xFFFFB74D)
+              1.dp, if (hasCloud) Color(0xFF80CBC4) else Color(0xFFFFB74D)
             )
           ) {
             Row(
@@ -1714,23 +1695,23 @@ private fun MemoryDetailDialog(
               Icon(
                 imageVector = when {
                   isVideo -> Icons.Default.Movie
-                  memory.isCloudinaryStored -> Icons.Default.Cloud
+                  hasCloud -> Icons.Default.Cloud
                   else -> Icons.Default.PhoneAndroid
                 },
                 contentDescription = null,
-                tint = if (memory.isCloudinaryStored) Color(0xFF00796B) else Color(0xFFE65100),
+                tint = if (hasCloud) Color(0xFF00796B) else Color(0xFFE65100),
                 modifier = Modifier.size(13.dp)
               )
               Spacer(modifier = Modifier.width(4.dp))
               Text(
                 text = when {
                   isVideo -> "Video ${memory.durationSeconds}s"
-                  memory.isCloudinaryStored -> "Ảnh Cloudinary"
-                  else -> "Lưu trên máy"
+                  hasCloud -> if (currentLanguage == AppLanguage.EN) "Cloud photo" else "Ảnh đám mây"
+                  else -> if (currentLanguage == AppLanguage.EN) "On device" else "Lưu trên máy"
                 },
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (memory.isCloudinaryStored) Color(0xFF004D40) else Color(0xFFE65100)
+                color = if (hasCloud) Color(0xFF004D40) else Color(0xFFE65100)
               )
             }
           }
@@ -1758,14 +1739,12 @@ private fun MemoryDetailDialog(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Storage Information Card — color/copy must reflect memory.isCloudinaryStored, same
-        // honesty fix as the grid/header badges above and the save toast (fec27b8): a memory
-        // that fell back to on-device-only storage must not be shown as safely cloud-backed.
+        // Storage card: a memory with no publicId was never uploaded, so it reads as on-device only.
         Surface(
           shape = RoundedCornerShape(16.dp),
-          color = if (memory.isCloudinaryStored) Color(0xFFF1F8E9) else Color(0xFFFFF3E0),
+          color = if (hasCloud) Color(0xFFF1F8E9) else Color(0xFFFFF3E0),
           border = androidx.compose.foundation.BorderStroke(
-            1.dp, if (memory.isCloudinaryStored) Color(0xFFC5E1A5) else Color(0xFFFFB74D)
+            1.dp, if (hasCloud) Color(0xFFC5E1A5) else Color(0xFFFFB74D)
           ),
           modifier = Modifier.fillMaxWidth()
         ) {
@@ -1777,51 +1756,27 @@ private fun MemoryDetailDialog(
             ) {
               Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                  imageVector = if (memory.isCloudinaryStored) Icons.Default.CloudDone else Icons.Default.PhoneAndroid,
+                  imageVector = if (hasCloud) Icons.Default.CloudDone else Icons.Default.PhoneAndroid,
                   contentDescription = null,
-                  tint = if (memory.isCloudinaryStored) Color(0xFF33691E) else Color(0xFFE65100),
+                  tint = if (hasCloud) Color(0xFF33691E) else Color(0xFFE65100),
                   modifier = Modifier.size(17.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = if (memory.isCloudinaryStored) {
+                  text = if (hasCloud) {
                     if (currentLanguage == AppLanguage.EN) "Secure Cloud Storage" else "Lưu Trữ Đám Mây An Toàn"
                   } else {
-                    if (currentLanguage == AppLanguage.EN) "On-device only — upload failed" else "Chỉ lưu trên máy — tải lên thất bại"
+                    if (currentLanguage == AppLanguage.EN) "On-device only" else "Chỉ lưu trên máy"
                   },
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
-                  color = if (memory.isCloudinaryStored) Color(0xFF33691E) else Color(0xFFE65100)
+                  color = if (hasCloud) Color(0xFF33691E) else Color(0xFFE65100)
                 )
-              }
-
-              if (memory.isCloudinaryStored && !memory.cloudinaryUrl.isNullOrBlank()) {
-                IconButton(
-                  onClick = {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    @Suppress("UsePropertyAccessSyntax")
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Cloudinary URL", memory.cloudinaryUrl))
-                  },
-                  modifier = Modifier.size(48.dp)
-                ) {
-                  Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = if (currentLanguage == AppLanguage.EN) "Copy Link" else "Sao chép link",
-                    tint = Color(0xFF33691E),
-                    modifier = Modifier.size(15.dp)
-                  )
-                }
               }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-              text = "Asset ID: ${memory.cloudinaryPublicId ?: "inlove_asset"}",
-              fontSize = 11.5.sp,
-              color = Color(0xFF558B2F)
-            )
             if (memory.fileSizeFormatted.isNotBlank()) {
+              Spacer(modifier = Modifier.height(4.dp))
               Text(
                 text = if (currentLanguage == AppLanguage.EN) "File size: ${memory.fileSizeFormatted}" else "Dung lượng: ${memory.fileSizeFormatted}",
                 fontSize = 11.5.sp,
@@ -1941,34 +1896,5 @@ private fun MemoryDetailDialog(
         }
       }
     }
-  }
-}
-
-// Helpers for persisting media safely
-fun saveBitmapToInternalStorage(context: Context, bitmap: Bitmap): String? {
-  return try {
-    val filename = "shared_mem_${System.currentTimeMillis()}.jpg"
-    val file = File(context.filesDir, filename)
-    FileOutputStream(file).use { out ->
-      bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
-    }
-    Uri.fromFile(file).toString()
-  } catch (e: Exception) {
-    null
-  }
-}
-
-fun copyUriToInternalStorage(context: Context, uri: Uri): String? {
-  return try {
-    val filename = "picked_mem_${System.currentTimeMillis()}.jpg"
-    val destFile = File(context.filesDir, filename)
-    context.contentResolver.openInputStream(uri)?.use { input ->
-      FileOutputStream(destFile).use { output ->
-        input.copyTo(output)
-      }
-    }
-    Uri.fromFile(destFile).toString()
-  } catch (e: Exception) {
-    null
   }
 }

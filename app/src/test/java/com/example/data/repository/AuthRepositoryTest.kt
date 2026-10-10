@@ -6,7 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.data.db.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
@@ -29,6 +31,7 @@ class AuthRepositoryTest {
   private lateinit var db: AppDatabase
   private lateinit var onlineRepo: OnlineCoupleRepository
   private lateinit var authRepo: AuthRepository
+  private lateinit var scope: CoroutineScope
 
   @Before
   fun setUp() {
@@ -36,13 +39,14 @@ class AuthRepositoryTest {
     db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
       .allowMainThreadQueries()
       .build()
-    val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
-    onlineRepo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+    scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    onlineRepo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
     authRepo = AuthRepository(db.inLoveDao(), onlineRepo, context, scope, isTestMode = true)
   }
 
   @After
   fun tearDown() {
+    runBlocking { scope.coroutineContext.job.cancelAndJoin() }
     db.close()
   }
 
@@ -139,62 +143,11 @@ class AuthRepositoryTest {
   }
 
   @Test
-  fun testPasswordReset_withOtp() = runBlocking {
-    val email = "reset_test@inlove.app"
-    val oldPassword = "OldPassword@123"
-    val newPassword = "NewStrongPassword@2026"
-    authRepo.register("Tester", email, oldPassword, oldPassword)
-
-    // Request reset OTP
-    val (reqSuccess, reqMsg) = authRepo.requestPasswordResetOtp(email)
-    assertTrue("Yêu cầu gửi OTP phải thành công: $reqMsg", reqSuccess)
-
-    // Retrieve active OTP securely via test helper
-    val otp = authRepo.emailQueueService.getActiveOtpForTesting(email)
-    assertNotNull("OTP phải được tạo trong queue bảo mật", otp)
-    assertEquals("OTP phải có độ dài 6 ký tự số", 6, otp!!.length)
-
-    // Reset password with OTP (no expectedOtp argument allowed from client)
-    val (resetSuccess, resetMsg) = authRepo.resetPasswordWithOtp(
-      emailInput = email,
-      enteredOtp = otp,
-      newPasswordInput = newPassword,
-      confirmPasswordInput = newPassword
-    )
-    assertTrue("Reset mật khẩu thành công: $resetMsg", resetSuccess)
-
-    // Verify login with new password works
-    val (newLoginSuccess, _) = authRepo.login(email, newPassword, rememberMe = false)
-    assertTrue("Phải đăng nhập được với mật khẩu mới", newLoginSuccess)
-
-    // Verify old password no longer works
-    authRepo.logout()
-    val (oldLoginSuccess, _) = authRepo.login(email, oldPassword, rememberMe = false)
-    assertFalse("Mật khẩu cũ không thể đăng nhập", oldLoginSuccess)
-  }
-
-  @Test
-  fun testPasswordReset_withSecurityAnswer_unconfiguredAccount_fails() = runBlocking {
-    val email = "no_sec_answer@inlove.app"
-    val password = "SecurePassword@123"
-    authRepo.register(
-      displayNameInput = "No Sec Tester",
-      emailInput = email,
-      passwordInput = password,
-      confirmPasswordInput = password,
-      securityQuestionInput = "",
-      securityAnswerInput = ""
-    )
-
-    // Attempt password reset with security answer on unconfigured account
-    val (success, msg) = authRepo.resetPasswordWithSecurityAnswer(
-      emailInput = email,
-      securityAnswerInput = "anything",
-      newPasswordInput = "NewPassword@2026",
-      confirmPasswordInput = "NewPassword@2026"
-    )
-    assertFalse("Không được phép bypass đặt lại mật khẩu khi chưa thiết lập câu hỏi bảo mật", success)
-    assertTrue(msg.contains("chưa thiết lập câu hỏi") || msg.contains("bảo mật"))
+  fun testPasswordRecovery_hasOnlyTheFirebaseEmailRoute() {
+    // Local OTP / security-answer resets changed only the local hash, so the real Firebase password stayed old. Keep both gone.
+    val obsolete = setOf("resetPasswordWithOtp", "resetPasswordWithSecurityAnswer")
+    val leftover = AuthRepository::class.java.declaredMethods.map { it.name }.filter { it in obsolete }
+    assertTrue("Đường khôi phục cũ vẫn còn trong AuthRepository: $leftover", leftover.isEmpty())
   }
 
   @Test
@@ -236,12 +189,12 @@ class AuthRepositoryTest {
 
     // Unlock with wrong PIN
     val wrongPinResult = authRepo.unlockWithPin("1234")
-    assertFalse("Mở khóa bằng mã PIN sai phải thất bại", wrongPinResult)
+    assertTrue("Mở khóa bằng mã PIN sai phải thất bại", wrongPinResult is UnlockResult.Wrong)
     assertTrue("Vẫn ở trạng thái PinLocked", authRepo.authState.value is AuthState.PinLocked)
 
     // Unlock with correct PIN
     val correctPinResult = authRepo.unlockWithPin("8888")
-    assertTrue("Mở khóa bằng mã PIN đúng phải thành công", correctPinResult)
+    assertTrue("Mở khóa bằng mã PIN đúng phải thành công", correctPinResult is UnlockResult.Success)
     assertTrue("Trạng thái phải trở lại Authenticated", authRepo.authState.value is AuthState.Authenticated)
   }
 }

@@ -33,9 +33,8 @@
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.firebase.**
 
-# 5. Keep Cloudinary & InLove data models
+# 5. Keep InLove data models
 -keep class com.example.data.model.** { *; }
--keep class com.example.data.cloudinary.** { *; }
 -keep class com.example.data.firebase.** { *; }
 
 # 6. Keep Google Play Billing Client and Google Mobile Ads

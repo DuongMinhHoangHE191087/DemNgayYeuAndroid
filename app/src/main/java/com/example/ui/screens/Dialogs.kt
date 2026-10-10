@@ -34,7 +34,6 @@ import androidx.compose.material.icons.filled.DinnerDining
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.HistoryEdu
-import androidx.compose.material.icons.filled.LocalFlorist
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PhotoAlbum
@@ -107,6 +106,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.data.model.GiftIdeaEntity
+import com.example.domain.content.GiftCatalog
 import com.example.ui.theme.OnPrimaryFixed
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
@@ -448,8 +448,10 @@ fun AddChecklistDialog(
 fun GiftDetailDialog(
   gift: GiftIdeaEntity,
   onDismiss: () -> Unit,
-  onToggleFavorite: () -> Unit
+  onToggleFavorite: () -> Unit,
+  isEnglish: Boolean = false
 ) {
+  val localized = GiftCatalog.localized(gift, isEnglish)
   Dialog(onDismissRequest = onDismiss) {
     Card(
       shape = RoundedCornerShape(24.dp),
@@ -473,10 +475,19 @@ fun GiftDetailDialog(
         ) {
           AsyncImage(
             model = gift.imageUrl,
-            contentDescription = gift.title,
+            contentDescription = localized.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
           )
+
+          if (localized.isSeed) {
+            IllustrationCaption(
+              isEnglish = isEnglish,
+              modifier = Modifier
+                .padding(10.dp)
+                .align(Alignment.BottomStart)
+            )
+          }
 
           IconButton(
             onClick = onDismiss,
@@ -503,7 +514,7 @@ fun GiftDetailDialog(
           color = PrimaryFixed.copy(alpha = 0.7f)
         ) {
           Text(
-            text = gift.category,
+            text = GiftCatalog.categoryLabel(localized.categoryKey, isEnglish),
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             color = Primary,
@@ -514,7 +525,7 @@ fun GiftDetailDialog(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-          text = gift.title,
+          text = localized.title,
           fontSize = 18.sp,
           fontWeight = FontWeight.Bold,
           color = OnSurface
@@ -523,11 +534,21 @@ fun GiftDetailDialog(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-          text = gift.description,
+          text = localized.description,
           fontSize = 13.sp,
           color = OnSurfaceVariant,
           lineHeight = 18.sp
         )
+
+        GiftCatalog.priceLabel(gift.priceRange, isEnglish)?.let { price ->
+          Spacer(modifier = Modifier.height(6.dp))
+          Text(
+            text = price,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Primary
+          )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -538,7 +559,7 @@ fun GiftDetailDialog(
         ) {
           Column(modifier = Modifier.padding(12.dp)) {
             Text(
-              text = "CHI TIẾT THỰC HIỆN",
+              text = if (isEnglish) "DETAILS" else "CHI TIẾT THỰC HIỆN",
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
               color = Primary,
@@ -546,7 +567,9 @@ fun GiftDetailDialog(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-              text = gift.detailsSnippet.ifBlank { "Món quà tuyệt vời lưu lại khoảnh khắc gắn kết của hai bạn." },
+              text = localized.detailsSnippet.ifBlank {
+                if (isEnglish) "A thoughtful gift that marks the moments you share together." else "Món quà tuyệt vời lưu lại khoảnh khắc gắn kết của hai bạn."
+              },
               fontSize = 12.sp,
               color = OnSurface
             )
@@ -579,7 +602,12 @@ fun GiftDetailDialog(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (gift.isFavorited) "Đã lưu" else "Yêu thích",
+                text = when {
+                  gift.isFavorited && isEnglish -> "Saved"
+                  gift.isFavorited -> "Đã lưu"
+                  isEnglish -> "Favorite"
+                  else -> "Yêu thích"
+                },
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 color = Primary
@@ -593,7 +621,7 @@ fun GiftDetailDialog(
             colors = ButtonDefaults.buttonColors(containerColor = Primary),
             modifier = Modifier.weight(1f)
           ) {
-            Text("Đã rõ", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(if (isEnglish) "Got it" else "Đã rõ", fontWeight = FontWeight.Bold, fontSize = 13.sp)
           }
         }
       }
@@ -603,7 +631,8 @@ fun GiftDetailDialog(
 
 @Composable
 fun VipProposalDialog(
-  onDismiss: () -> Unit
+  onDismiss: () -> Unit,
+  isEnglish: Boolean = false
 ) {
   Dialog(onDismissRequest = onDismiss) {
     Card(
@@ -641,7 +670,7 @@ fun VipProposalDialog(
                 modifier = Modifier.size(14.dp)
               )
               Text(
-                text = "GÓI ĐỀ XUẤT VIP",
+                text = if (isEnglish) "PROPOSAL IDEAS" else "GỢI Ý ĐỀ XUẤT",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
@@ -668,7 +697,7 @@ fun VipProposalDialog(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-          text = "Gói Kỷ Niệm 1.000 Ngày Hoàn Hảo",
+          text = if (isEnglish) "1,000-Day Celebration Ideas" else "Ý Tưởng Kỷ Niệm 1.000 Ngày",
           fontSize = 19.sp,
           fontWeight = FontWeight.Bold,
           color = OnSurface
@@ -677,7 +706,7 @@ fun VipProposalDialog(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-          text = "Lịch trình trọn gói được thiết kế riêng giúp bạn tạo nên một đêm kỷ niệm lãng mạn không thể nào quên.",
+          text = if (isEnglish) "A few itinerary ideas for an anniversary evening. Pick what suits you both." else "Vài gợi ý lịch trình cho một buổi tối kỷ niệm. Chọn những gì hợp với hai bạn.",
           fontSize = 13.sp,
           color = OnSurfaceVariant,
           lineHeight = 18.sp
@@ -686,11 +715,16 @@ fun VipProposalDialog(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Itinerary Timeline Steps
-        val steps = listOf(
-          Triple("18:30", "Đón Nàng & Bó Hoa Vĩnh Cửu", "Bất ngờ tặng bó hoa hồng đỏ vĩnh cửu lồng kính pha lê kèm thiệp viết tay chân thành."),
-          Triple("19:00", "Bữa Tối Rooftop Lung Linh", "Bàn ăn riêng tư tại tầng 35 ngắm trọn vẹn ánh đèn thành phố lung linh."),
-          Triple("20:30", "Khoảnh Khắc Bánh Kem & Thổi Nến", "Bật bài hát kỷ niệm của hai bạn, cùng nhau nhìn lại album 1.000 ngày."),
-          Triple("21:30", "Dạo Phố & Hộp Quà Dây Chuyền Bạc", "Trao món quà nhỏ xinh khắc ngày đầu tiên gặp gỡ.")
+        val steps = if (isEnglish) listOf(
+          Triple("18:30", "Meet up & a bouquet", "You could bring flowers with a handwritten note."),
+          Triple("19:00", "A romantic dinner", "Pick a quiet place with a nice view to talk."),
+          Triple("20:30", "Cake & candles", "Play your song and look back at your photos together."),
+          Triple("21:30", "A walk & a small gift", "Give a small gift tied to the day you met.")
+        ) else listOf(
+          Triple("18:30", "Gặp nhau & một bó hoa", "Bạn có thể mang theo hoa kèm một lời nhắn tự viết tay."),
+          Triple("19:00", "Bữa tối lãng mạn", "Chọn một quán yên tĩnh, có view đẹp để trò chuyện."),
+          Triple("20:30", "Bánh kem & thổi nến", "Bật lại bài hát của hai bạn và cùng xem lại ảnh kỷ niệm."),
+          Triple("21:30", "Dạo phố & một món quà nhỏ", "Tặng một món quà nhỏ gắn với ngày đầu hai bạn gặp nhau.")
         )
 
         steps.forEachIndexed { index, (time, title, desc) ->
@@ -749,7 +783,7 @@ fun VipProposalDialog(
           colors = ButtonDefaults.buttonColors(containerColor = Primary),
           modifier = Modifier.fillMaxWidth()
         ) {
-          Text("Lưu Kế Hoạch Này", fontWeight = FontWeight.Bold)
+          Text(if (isEnglish) "Got it" else "Đã rõ", fontWeight = FontWeight.Bold)
         }
       }
     }
@@ -1191,8 +1225,7 @@ fun EditCoupleDialog(
           // --- TAB 1: GHÉP ĐÔI 1-1 (ONLINE) ---
 
           // 1. INCOMING INVITE (NẾU CÓ)
-          if (incomingInvite != null) {
-            val invite = incomingInvite!!
+          incomingInvite?.let { invite ->
             Card(
               shape = RoundedCornerShape(20.dp),
               colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
@@ -1265,8 +1298,7 @@ fun EditCoupleDialog(
           }
 
           // 2. OUTGOING INVITE (NẾU CÓ)
-          if (outgoingInvite != null && relationshipStatus != OnlineStatus.COUPLED) {
-            val out = outgoingInvite!!
+          outgoingInvite?.takeIf { relationshipStatus != OnlineStatus.COUPLED }?.let { out ->
             Card(
               shape = RoundedCornerShape(20.dp),
               colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
@@ -1418,11 +1450,10 @@ fun EditCoupleDialog(
                 }
 
                 if (searchError != null) {
-                  Text(text = searchError!!, color = Color(0xFFD32F2F), fontSize = 12.sp)
+                  Text(text = searchError.orEmpty(), color = Color(0xFFD32F2F), fontSize = 12.sp)
                 }
 
-                if (selectedPartner != null) {
-                  val partner = selectedPartner!!
+                selectedPartner?.let { partner ->
                   Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5)),
@@ -1616,7 +1647,7 @@ fun SetAlarmReminderDialog(
   initialMessage: String = "",
   reminderId: Long? = null,
   onDismiss: () -> Unit,
-  onSchedule: (title: String, message: String, triggerMillis: Long, reminderId: Long) -> Unit,
+  onSchedule: (title: String, message: String, triggerMillis: Long, reminderId: Long?) -> Unit,
   onTestNow: (title: String, message: String) -> Unit
 ) {
   var title by remember {
@@ -1869,8 +1900,7 @@ fun SetAlarmReminderDialog(
       Button(
         onClick = {
           val trigger = calculateTriggerMillis(selectedPreset, customHour, customMinute)
-          val id = reminderId ?: System.currentTimeMillis()
-          onSchedule(title, message, trigger, id)
+          onSchedule(title, message, trigger, reminderId)
         },
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         shape = RoundedCornerShape(12.dp),

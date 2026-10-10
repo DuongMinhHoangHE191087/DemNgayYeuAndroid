@@ -513,8 +513,8 @@ fun LoveHomeScreen(
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
               Text(
-                text = if (isEnglish) "💌 Pairing invite from ${incomingInvite!!.effectiveSenderName.ifBlank { "Partner" }}"
-                       else "💌 Lời mời kết đôi từ ${incomingInvite!!.effectiveSenderName.ifBlank { "Người ấy" }}",
+                text = if (isEnglish) "💌 Pairing invite from ${incomingInvite?.effectiveSenderName.orEmpty().ifBlank { "Partner" }}"
+                       else "💌 Lời mời kết đôi từ ${incomingInvite?.effectiveSenderName.orEmpty().ifBlank { "Người ấy" }}",
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 color = Color(0xFF880E4F)
@@ -955,8 +955,8 @@ fun LoveHomeScreen(
                     .shadow(3.dp, CircleShape)
                 ) {
                   AsyncImage(
-                    model = partnerUser!!.avatarUrl.ifEmpty { girlAvatarUrl },
-                    contentDescription = partnerUser!!.displayName,
+                    model = partnerUser?.avatarUrl.orEmpty().ifEmpty { girlAvatarUrl },
+                    contentDescription = partnerUser?.displayName.orEmpty(),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                   )
@@ -983,7 +983,7 @@ fun LoveHomeScreen(
               Spacer(modifier = Modifier.height(4.dp))
 
               Text(
-                text = partnerUser!!.displayName,
+                text = partnerUser?.displayName.orEmpty(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDarkPlum
@@ -1001,7 +1001,7 @@ fun LoveHomeScreen(
                   color = Color(0xFFFCE4EC)
                 ) {
                   Text(
-                    text = if (partnerUser!!.age > 0) "${partnerUser!!.age}t" else "$girlAge t",
+                    text = if ((partnerUser?.age ?: 0) > 0) "${partnerUser?.age ?: 0}t" else "$girlAge t",
                     color = Color(0xFFC2185B),
                     fontSize = 10.5.sp,
                     fontWeight = FontWeight.Bold,
@@ -1014,7 +1014,7 @@ fun LoveHomeScreen(
                   color = Color(0xFFFFF0F5)
                 ) {
                   Text(
-                    text = partnerUser!!.zodiac.ifEmpty { girlZodiac },
+                    text = partnerUser?.zodiac.orEmpty().ifEmpty { girlZodiac },
                     color = Color(0xFFAD1457),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -1026,7 +1026,7 @@ fun LoveHomeScreen(
               Spacer(modifier = Modifier.height(2.dp))
 
               Text(
-                text = partnerUser!!.birthDate.ifEmpty { girlBirthDate },
+                text = partnerUser?.birthDate.orEmpty().ifEmpty { girlBirthDate },
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextSubtlePlum

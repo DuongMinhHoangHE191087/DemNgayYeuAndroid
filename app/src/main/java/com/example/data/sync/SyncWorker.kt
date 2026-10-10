@@ -21,6 +21,8 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -40,41 +42,55 @@ class SyncWorker(
   }
 ) : CoroutineWorker(context, params) {
 
-  override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-    val pending = dao.getPendingOutboxEntries(limit = 20)
+  override suspend fun doWork(): Result = drainLock.withLock { drain() }
+
+  private suspend fun drain(): Result = withContext(Dispatchers.IO) {
+    // Session fence: outbox rows belong to whichever account scope is live. If the scope switches
+    // while this batch is in flight, stop without acknowledging anything by numeric id.
+    val epoch = com.example.data.db.AccountDataVault.epoch.get()
+    // Whole queue in one run, healthy rows first (attemptCount ASC). A failed row keeps its count and sinks behind them.
+    // ponytail: the queue snapshot is held in memory for one run; a very large outbox needs keyset paging by id.
+    val pending = dao.getPendingOutboxEntries(limit = Int.MAX_VALUE)
     if (pending.isEmpty()) return@withContext Result.success()
 
     var anyFailure = false
     for (entry in pending) {
+      if (epoch != com.example.data.db.AccountDataVault.epoch.get()) return@withContext Result.retry()
       try {
         pushOne(entry)
+        if (epoch != com.example.data.db.AccountDataVault.epoch.get()) return@withContext Result.retry()
         dao.deleteOutboxEntry(entry.id)
       } catch (e: Exception) {
         anyFailure = true
-        dao.markOutboxAttemptFailed(entry.id, e.localizedMessage ?: e.toString())
+        if (epoch == com.example.data.db.AccountDataVault.epoch.get()) {
+          dao.markOutboxAttemptFailed(entry.id, e.localizedMessage ?: e.toString())
+        }
       }
     }
     if (anyFailure) Result.retry() else Result.success()
   }
 
+  // ponytail: dòng không đẩy được (payload rỗng, thiếu relationshipId, loại lạ) bị ném lỗi và giữ lại trong outbox.
+  // attemptCount tăng nên nó xếp sau dòng mới; không tự xoá để khỏi mất dữ liệu. Ngưỡng: outbox phình to thì thêm dọn theo số lần thử.
   private suspend fun pushOne(entry: SyncOutboxEntity) {
     when (entry.entityType) {
       MemorySyncAdapter.entityType -> {
-        val entity = moshiAdapterFor<SharedMemoryEntity>().fromJson(entry.payloadJson) ?: return
-        val relationshipId = entity.relationshipId ?: return
+        val entity = moshiAdapterFor<SharedMemoryEntity>().fromJson(entry.payloadJson)
+          ?: error("outbox ${entry.id}: memory payload is null")
+        val relationshipId = entity.relationshipId
+          ?: error("outbox ${entry.id}: memory has no relationshipId")
         val path = "${MemorySyncAdapter.collectionPath(relationshipId)}/${entity.syncId}"
         push(path, MemorySyncAdapter.toFirestoreMap(entity))
       }
       AnniversarySyncAdapter.entityType -> {
-        val entity = moshiAdapterFor<AnniversaryDateEntity>().fromJson(entry.payloadJson) ?: return
-        val relationshipId = entity.relationshipId ?: return
+        val entity = moshiAdapterFor<AnniversaryDateEntity>().fromJson(entry.payloadJson)
+          ?: error("outbox ${entry.id}: anniversary payload is null")
+        val relationshipId = entity.relationshipId
+          ?: error("outbox ${entry.id}: anniversary has no relationshipId")
         val path = "${AnniversarySyncAdapter.collectionPath(relationshipId)}/${entity.syncId}"
         push(path, AnniversarySyncAdapter.toFirestoreMap(entity))
       }
-      else -> {
-        // Unknown entity type (should not happen — every producer uses a known adapter's
-        // entityType). Drop it rather than retry forever.
-      }
+      else -> error("outbox ${entry.id}: unknown entityType '${entry.entityType}'")
     }
   }
 
@@ -87,6 +103,9 @@ class SyncWorker(
     internal val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 
     internal inline fun <reified T> moshiAdapterFor(): JsonAdapter<T> = moshi.adapter(T::class.java)
+
+    // ponytail: một lock cho cả tiến trình. Hai lần chạy cùng đọc một outbox có thể đẩy bản UPSERT cũ sau tombstone; nhiều tiến trình thì cần đánh dấu dòng đang xử lý trong DB.
+    private val drainLock = Mutex()
 
     private const val UNIQUE_PERIODIC_NAME = "sync_outbox_periodic"
     private const val UNIQUE_IMMEDIATE_NAME = "sync_outbox_immediate"

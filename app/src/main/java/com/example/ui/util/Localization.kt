@@ -14,7 +14,6 @@ object LocaleManager {
   private const val KEY_APP_LANGUAGE = "key_app_language"
   private const val KEY_FIRST_LAUNCH = "key_first_launch"
   private const val KEY_WALLPAPER_URL = "key_wallpaper_url"
-  private const val KEY_NOTIFICATIONS_ENABLED = "key_notifications_enabled"
   private const val KEY_SOUND_ENABLED = "key_sound_enabled"
 
   fun getInitialLanguage(context: Context): AppLanguage {
@@ -57,16 +56,6 @@ object LocaleManager {
   fun saveWallpaperUrl(context: Context, url: String) {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     prefs.edit().putString(KEY_WALLPAPER_URL, url).apply()
-  }
-
-  fun isNotificationsEnabled(context: Context): Boolean {
-    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    return prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
-  }
-
-  fun saveNotificationsEnabled(context: Context, enabled: Boolean) {
-    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled).apply()
   }
 
   fun isSoundEnabled(context: Context): Boolean {
@@ -231,7 +220,6 @@ data class AppStrings(
   // Gift Strings
   val giftScreenTitle: String,
   val giftCatAll: String,
-  val giftCatAi: String,
   val giftCatJewelry: String,
   val giftCatTech: String,
   val giftCatFlowers: String,
@@ -266,19 +254,11 @@ data class AppStrings(
   val paywallSub: String,
   val paywallBenefitsHeader: String,
   val paywallBenefitAds: String,
-  val paywallBenefitAi: String,
-  val paywallBenefitCloud: String,
-  val paywallBenefitLock: String,
-  val paywallBenefitTheme: String,
   val paywallPlanYearlyTitle: String,
-  val paywallPlanYearlyPrice: String,
   val paywallPlanYearlySub: String,
-  val paywallPlanYearlyBadge: String,
   val paywallPlanMonthlyTitle: String,
-  val paywallPlanMonthlyPrice: String,
   val paywallPlanMonthlySub: String,
   val paywallPlanLifetimeTitle: String,
-  val paywallPlanLifetimePrice: String,
   val paywallPlanLifetimeSub: String,
   val paywallPlanLifetimeBadge: String,
   val paywallBtnTrial: String,
@@ -457,7 +437,6 @@ object LocalizedStrings {
       // Gifts
       giftScreenTitle = res.getString(R.string.gift_screen_title),
       giftCatAll = res.getString(R.string.gift_cat_all),
-      giftCatAi = res.getString(R.string.gift_cat_ai),
       giftCatJewelry = res.getString(R.string.gift_cat_jewelry),
       giftCatTech = res.getString(R.string.gift_cat_tech),
       giftCatFlowers = res.getString(R.string.gift_cat_flowers),
@@ -492,19 +471,11 @@ object LocalizedStrings {
       paywallSub = res.getString(R.string.paywall_sub),
       paywallBenefitsHeader = res.getString(R.string.paywall_benefits_header),
       paywallBenefitAds = res.getString(R.string.paywall_benefit_ads),
-      paywallBenefitAi = res.getString(R.string.paywall_benefit_ai),
-      paywallBenefitCloud = res.getString(R.string.paywall_benefit_cloud),
-      paywallBenefitLock = res.getString(R.string.paywall_benefit_lock),
-      paywallBenefitTheme = res.getString(R.string.paywall_benefit_theme),
       paywallPlanYearlyTitle = res.getString(R.string.paywall_plan_yearly_title),
-      paywallPlanYearlyPrice = res.getString(R.string.paywall_plan_yearly_price),
       paywallPlanYearlySub = res.getString(R.string.paywall_plan_yearly_sub),
-      paywallPlanYearlyBadge = res.getString(R.string.paywall_plan_yearly_badge),
       paywallPlanMonthlyTitle = res.getString(R.string.paywall_plan_monthly_title),
-      paywallPlanMonthlyPrice = res.getString(R.string.paywall_plan_monthly_price),
       paywallPlanMonthlySub = res.getString(R.string.paywall_plan_monthly_sub),
       paywallPlanLifetimeTitle = res.getString(R.string.paywall_plan_lifetime_title),
-      paywallPlanLifetimePrice = res.getString(R.string.paywall_plan_lifetime_price),
       paywallPlanLifetimeSub = res.getString(R.string.paywall_plan_lifetime_sub),
       paywallPlanLifetimeBadge = res.getString(R.string.paywall_plan_lifetime_badge),
       paywallBtnTrial = res.getString(R.string.paywall_btn_trial),
@@ -680,7 +651,6 @@ object LocalizedStrings {
     // Gifts
     giftScreenTitle = "Gợi Ý Quà Tặng",
     giftCatAll = "Tất cả",
-    giftCatAi = "AI Đề Xuất ✨",
     giftCatJewelry = "Trang Sức",
     giftCatTech = "Công Nghệ",
     giftCatFlowers = "Hoa & Thiệp",
@@ -713,23 +683,15 @@ object LocalizedStrings {
     // Paywall
     paywallTitle = "INLOVE PREMIUM",
     paywallSub = "Tình yêu không giới hạn — Gắn kết mọi kỷ niệm trọn vẹn",
-    paywallBenefitsHeader = "Đặc Quyền VIP",
-    paywallBenefitAds = "Tắt hoàn toàn 100% quảng cáo vĩnh viễn",
-    paywallBenefitAi = "Gợi ý quà tặng & thư tình theo sở thích riêng",
-    paywallBenefitCloud = "Sao lưu ảnh kỷ niệm HD lên đám mây",
-    paywallBenefitLock = "Khóa ứng dụng bằng mã PIN riêng tư",
-    paywallBenefitTheme = "Huy hiệu Premium & Theme độc quyền dành cho cặp đôi",
-    paywallPlanYearlyTitle = "Gói 1 Năm — Được Yêu Thích ❤️",
-    paywallPlanYearlyPrice = "299.000 đ / năm",
-    paywallPlanYearlySub = "3 ngày dùng thử miễn phí, sau đó ~24.900 đ/tháng",
-    paywallPlanYearlyBadge = "TIẾT KIỆM 50%",
+    paywallBenefitsHeader = "Quyền lợi",
+    paywallBenefitAds = "Không quảng cáo khi gói còn hiệu lực (Trọn đời: vĩnh viễn)",
+    paywallPlanYearlyTitle = "Gói 1 Năm ❤️",
+    paywallPlanYearlySub = "Thanh toán theo năm, hủy bất kỳ lúc nào",
     paywallPlanMonthlyTitle = "Gói 1 Tháng",
-    paywallPlanMonthlyPrice = "49.000 đ / tháng",
     paywallPlanMonthlySub = "Thanh toán linh hoạt, hủy bất kỳ lúc nào",
-    paywallPlanLifetimeTitle = "Gói Trọn Đời Vĩnh Cửu 💫",
-    paywallPlanLifetimePrice = "699.000 đ một lần",
-    paywallPlanLifetimeSub = "Thanh toán duy nhất 1 lần — Sử dụng mãi mãi",
-    paywallPlanLifetimeBadge = "MÃI MÃI",
+    paywallPlanLifetimeTitle = "Gói Trọn Đời 💫",
+    paywallPlanLifetimeSub = "Thanh toán một lần — không quảng cáo khi ứng dụng còn được hỗ trợ",
+    paywallPlanLifetimeBadge = "TRỌN ĐỜI",
     paywallBtnTrial = "🎁 BẮT ĐẦU DÙNG THỬ 3 NGÀY MIỄN PHÍ",
     paywallBtnMonthly = "💳 ĐĂNG KÝ THÁNG NGAY",
     paywallBtnLifetime = "👑 NÂNG CẤP TRỌN ĐỜI NGAY",
@@ -894,7 +856,6 @@ object LocalizedStrings {
     // Gifts
     giftScreenTitle = "Gift Suggestions",
     giftCatAll = "All",
-    giftCatAi = "AI Suggestions ✨",
     giftCatJewelry = "Jewelry",
     giftCatTech = "Tech Gadgets",
     giftCatFlowers = "Flowers & Cards",
@@ -927,22 +888,14 @@ object LocalizedStrings {
     // Paywall
     paywallTitle = "INLOVE PREMIUM",
     paywallSub = "Unlimited Love — Cherish every precious moment together",
-    paywallBenefitsHeader = "VIP Privileges",
-    paywallBenefitAds = "100% Ad-Free forever",
-    paywallBenefitAi = "Personalized gift ideas & love letter suggestions",
-    paywallBenefitCloud = "HD memory photo backup to the cloud",
-    paywallBenefitLock = "PIN-protected private app lock",
-    paywallBenefitTheme = "Exclusive couple themes & Premium badges",
-    paywallPlanYearlyTitle = "1-Year Plan — Most Popular ❤️",
-    paywallPlanYearlyPrice = "$12.99 / year",
-    paywallPlanYearlySub = "3 days free trial, then ~$1.08/month",
-    paywallPlanYearlyBadge = "SAVE 50%",
+    paywallBenefitsHeader = "Benefits",
+    paywallBenefitAds = "No ads while your plan is active (Lifetime: forever)",
+    paywallPlanYearlyTitle = "1-Year Plan ❤️",
+    paywallPlanYearlySub = "Billed yearly, cancel anytime",
     paywallPlanMonthlyTitle = "1-Month Plan",
-    paywallPlanMonthlyPrice = "$1.99 / month",
     paywallPlanMonthlySub = "Flexible billing, cancel anytime",
-    paywallPlanLifetimeTitle = "Lifetime Eternal Access 💫",
-    paywallPlanLifetimePrice = "$29.99 one-time",
-    paywallPlanLifetimeSub = "Pay once — Cherish love forever",
+    paywallPlanLifetimeTitle = "Lifetime Plan 💫",
+    paywallPlanLifetimeSub = "Pay once — ad-free for as long as the app is supported",
     paywallPlanLifetimeBadge = "LIFETIME",
     paywallBtnTrial = "🎁 START 3-DAY FREE TRIAL",
     paywallBtnMonthly = "💳 SUBSCRIBE MONTHLY NOW",

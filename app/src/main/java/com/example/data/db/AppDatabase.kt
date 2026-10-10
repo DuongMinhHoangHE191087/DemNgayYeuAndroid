@@ -40,7 +40,7 @@ import com.example.data.model.UserAccountEntity
     SecurityAuditLogEntity::class,
     SyncOutboxEntity::class
   ],
-  version = 13,
+  version = 14,
   exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -57,7 +57,7 @@ abstract class AppDatabase : RoomDatabase() {
           AppDatabase::class.java,
           "inlove_database"
         )
-          .addMigrations(MIGRATION_12_13)
+          .addMigrations(MIGRATION_12_13, MIGRATION_13_14)
           .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
           .build()
         INSTANCE = instance

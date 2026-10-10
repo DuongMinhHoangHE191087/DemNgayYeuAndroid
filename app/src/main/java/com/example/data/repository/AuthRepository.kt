@@ -18,6 +18,7 @@ import com.example.ui.util.ProfileUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 import com.example.data.email.EmailQueueService
 import com.example.data.email.OtpPurpose
@@ -33,6 +35,15 @@ sealed class AuthState {
   data object Unauthenticated : AuthState()
   data class Authenticated(val account: UserAccountEntity) : AuthState()
   data class PinLocked(val account: UserAccountEntity) : AuthState()
+}
+
+/** Outcome of an app-lock unlock attempt; the UI localises it (no raw SDK/domain strings). */
+sealed interface UnlockResult {
+  data object Success : UnlockResult
+  data class Wrong(val attemptsBeforeLock: Int) : UnlockResult
+  data class Locked(val untilMillis: Long) : UnlockResult
+  data object NoSession : UnlockResult
+  data class Error(val reason: com.example.data.auth.SocialAuthException.Reason) : UnlockResult
 }
 
 /**
@@ -52,10 +63,17 @@ class AuthRepository(
   private val onlineRepo: OnlineCoupleRepository,
   context: Context,
   private val scope: CoroutineScope,
-  private val isTestMode: Boolean = false
+  private val isTestMode: Boolean = false,
+  private val vault: com.example.data.db.AccountDataVault? = null,
+  private val facebook: com.example.data.auth.FacebookAuthGateway = com.example.data.auth.FirebaseFacebookGateway(),
+  // Test mode không đụng Firebase; test truyền bản giả để kiểm thứ tự xoá (AccountDeletionOrderTest).
+  private val remoteCleanup: RemoteAccountCleanup = if (isTestMode) NoopRemoteAccountCleanup else FirebaseRemoteAccountCleanup()
 ) {
   private val prefs: SharedPreferences =
     context.getSharedPreferences("inlove_auth_prefs", Context.MODE_PRIVATE)
+  private val attempts = com.example.data.auth.UnlockAttemptStore(
+    context.getSharedPreferences("inlove_unlock_attempts", Context.MODE_PRIVATE)
+  )
 
   private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
   val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -66,6 +84,21 @@ class AuthRepository(
     private const val KEY_SESSION_TOKEN = "key_session_token"
     private const val KEY_REMEMBER_ME = "key_remember_me"
     private const val KEY_SAVED_EMAIL = "key_saved_email"
+    /** passwordHash marker for accounts created through a sign-in provider (no local password). */
+    const val PROVIDER_HASH_PREFIX = "oauth:"
+    /** Quá thời gian này khi xoá dữ liệu đám mây thì dừng và báo thử lại; Auth chưa bị xoá nên không mất gì. */
+    private const val CLOUD_CLEANUP_TIMEOUT_MS = 20_000L
+  }
+
+  /** Swaps the personal-data scope BEFORE the auth state flips, so sync never writes into the wrong account. */
+  private suspend fun enterScope(email: String?) {
+    vault?.switchTo(com.example.data.db.AccountDataVault.scopeOf(email))
+    if (email == null) onlineRepo.setCurrentUserId("") // drop the previous account's online identity/relationship
+  }
+
+  /** Đang ở chế độ khách và có dữ liệu tự tạo: đăng ký phải hỏi người dùng giữ hay bỏ. */
+  suspend fun guestHasData(): Boolean = withContext(Dispatchers.IO) {
+    vault != null && vault.currentScope == com.example.data.db.AccountDataVault.GUEST && vault.hasPersonalData()
   }
 
   init {
@@ -83,6 +116,12 @@ class AuthRepository(
    * degrades that to "sync doesn't start this session" instead of breaking login/register/restore/unlock.
    */
   private fun startSyncCoordinatorSafely(uid: String) {
+    // Cloud actions need a live Firebase session for this very uid; a cached local account alone
+    // (expired/revoked session, or offline restore) stays fully usable but local-only.
+    if (!isTestMode && com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid != uid) {
+      Log.d("AuthRepo", "No matching Firebase session; cloud sync stays off")
+      return
+    }
     try {
       com.example.di.AppServiceLocator.syncCoordinator.start(uid) { onlineRepo.refreshState() }
     } catch (e: Exception) {
@@ -188,6 +227,28 @@ class AuthRepository(
   }
 
   /**
+   * Checks the cached account against Firebase Auth in the background. A deleted/disabled user or a
+   * revoked token signs the cached session out; any network problem keeps offline local access.
+   */
+  private fun reconcileFirebaseSession(account: UserAccountEntity) {
+    if (isTestMode) return
+    scope.launch(Dispatchers.IO) {
+      val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser ?: return@launch
+      if (user.uid != account.uid) return@launch
+      try {
+        user.reload().await()
+      } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+        Log.w("AuthRepo", "Firebase user no longer valid (${e.errorCode}); signing out cached session")
+        logout()
+      } catch (e: com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
+        logout()
+      } catch (e: Exception) {
+        Log.d("AuthRepo", "Firebase reconcile skipped (offline?): ${e.message}")
+      }
+    }
+  }
+
+  /**
    * Attempts restoring persistent session if "Remember me" is enabled.
    */
   private suspend fun restoreSession() = withContext(Dispatchers.IO) {
@@ -197,6 +258,7 @@ class AuthRepository(
     if (rememberMe && !savedToken.isNullOrEmpty()) {
       val account = dao.getUserAccountBySessionToken(savedToken)
       if (account != null) {
+        enterScope(account.email)
         // If PIN is enabled, lock upon relaunch for security
         if (account.isPinEnabled && account.appPin.isNotEmpty()) {
           _authState.value = AuthState.PinLocked(account)
@@ -205,9 +267,11 @@ class AuthRepository(
           startSyncCoordinatorSafely(account.uid)
         }
         syncOnlineUserWithAccount(account)
+        reconcileFirebaseSession(account)
         return@withContext
       }
     }
+    enterScope(null)
     _authState.value = AuthState.Unauthenticated
   }
 
@@ -305,8 +369,7 @@ class AuthRepository(
     } else {
       // Migrate legacy UID if different from Firebase Auth UID. Also refresh the local
       // passwordHash (with the account's EXISTING salt — never a new one, see the
-      // no-salt-rotation notes in changePassword/resetPasswordWithOtp/
-      // resetPasswordWithSecurityAnswer: appPin/securityAnswerHash share this salt and
+      // no-salt-rotation notes in changePassword: appPin/securityAnswerHash share this salt and
       // would break if it changed) using the password just verified as correct by
       // Firebase above. Without this, a password changed via Firebase on ANOTHER device
       // (or via the official Firebase reset email) never reaches this device's local
@@ -347,6 +410,7 @@ class AuthRepository(
       )
     )
 
+    enterScope(account.email)
     syncOnlineUserWithAccount(account)
 
     if (account.isPinEnabled && account.appPin.isNotEmpty()) {
@@ -429,7 +493,8 @@ class AuthRepository(
     confirmPasswordInput: String,
     securityQuestionInput: String = "",
     securityAnswerInput: String = "",
-    otpCodeInput: String = ""
+    otpCodeInput: String = "",
+    keepGuestData: Boolean = true
   ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
     val name = displayNameInput.trim()
     val email = emailInput.trim().lowercase()
@@ -553,6 +618,13 @@ class AuthRepository(
       .putString(KEY_SAVED_EMAIL, email)
       .apply()
 
+    // Đăng ký từ chế độ khách: người dùng chọn giữ dữ liệu khách cho tài khoản mới (mặc định) hoặc bắt đầu mới.
+    // Bắt đầu mới: enterScope cất dữ liệu khách vào ngăn của khách, tài khoản mới trống, không gán ngầm.
+    if (keepGuestData && vault != null && vault.currentScope == com.example.data.db.AccountDataVault.GUEST) {
+      vault.adoptCurrentInto(com.example.data.db.AccountDataVault.scopeOf(email))
+    } else {
+      enterScope(email)
+    }
     syncOnlineUserWithAccount(newAccount)
     _authState.value = AuthState.Authenticated(newAccount)
     startSyncCoordinatorSafely(newAccount.uid)
@@ -610,151 +682,16 @@ class AuthRepository(
           )
         )
         true to "Liên kết đặt lại mật khẩu đã được gửi đến email $email. Vui lòng kiểm tra hộp thư!"
+      } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+        // Do not reveal whether the address has an account.
+        true to "Nếu email này có tài khoản, liên kết đặt lại mật khẩu đã được gửi."
+      } catch (e: com.google.firebase.FirebaseNetworkException) {
+        false to "Không có kết nối mạng. Vui lòng thử lại."
       } catch (e: Exception) {
         Log.w("AuthRepo", "Firebase password reset error: ${e.message}")
-        false to (e.localizedMessage ?: "Gửi email đặt lại mật khẩu thất bại. Vui lòng thử lại sau!")
+        false to "Gửi email đặt lại mật khẩu thất bại. Vui lòng thử lại sau!"
       }
     }
-
-  /**
-   * Resets password using OTP code verified securely on repository/queue level.
-   * Single-use OTP prevents replay attacks.
-   */
-  suspend fun resetPasswordWithOtp(
-    emailInput: String,
-    enteredOtp: String,
-    newPasswordInput: String,
-    confirmPasswordInput: String
-  ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val email = emailInput.trim().lowercase()
-    val account = dao.getUserAccountByEmail(email) ?: return@withContext false to "Tài khoản không tồn tại!"
-
-    val (otpValid, otpMessage) = emailQueueService.verifyOtp(email, enteredOtp)
-    if (!otpValid) {
-      return@withContext false to otpMessage
-    }
-
-    val strength = AuthSecurityManager.evaluatePasswordStrength(newPasswordInput)
-    if (strength.level == PasswordStrengthLevel.VERY_WEAK || strength.level == PasswordStrengthLevel.WEAK) {
-      return@withContext false to "Mật khẩu mới chưa đủ mạnh. ${strength.missingRequirements.joinToString(", ")}"
-    }
-
-    if (newPasswordInput != confirmPasswordInput) {
-      return@withContext false to "Mật khẩu mới xác nhận không khớp!"
-    }
-
-    // KHÔNG đổi `salt` — như [changePassword], appPin và securityAnswerHash đều băm
-    // bằng cùng salt cấp tài khoản (AuthSecurityManager.hashPin/hashSecurityAnswer).
-    // Sinh salt mới ở đây trước làm hỏng khoá PIN vĩnh viễn (unlockWithPin dùng
-    // account.salt MỚI trong khi appPin đã lưu được băm bằng salt CŨ) và làm hỏng luôn
-    // câu hỏi bảo mật (resetPasswordWithSecurityAnswer so sánh bằng account.salt mới
-    // trong khi securityAnswerHash được băm bằng salt cũ) — cả hai không hề được cập
-    // nhật lại theo salt mới ở hàm này.
-    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, account.salt)
-
-    val updated = account.copy(
-      passwordHash = newHash,
-      failedAttempts = 0,
-      lockoutUntil = 0L
-    )
-    dao.updateUserAccount(updated)
-
-    dao.insertSecurityLog(
-      SecurityAuditLogEntity(
-        accountEmail = email,
-        action = "PASSWORD_RESET",
-        detail = "Đặt lại mật khẩu cục bộ qua OTP — đã kích hoạt email xác nhận Firebase chính thức"
-      )
-    )
-
-    // QUAN TRỌNG: mã OTP 6 số ở đây được xác minh CỤC BỘ qua [EmailQueueService], không phải
-    // cơ chế reset chính thức của Firebase Auth. Firebase Auth Client SDK KHÔNG cho phép tự đặt
-    // mật khẩu mới cho một tài khoản đã quên mật khẩu chỉ bằng email + OTP tự chế — cần mật
-    // khẩu cũ (để reauthenticate, xem [changePassword]) hoặc oobCode từ email Firebase gửi.
-    // Trước đây hàm này chỉ đổi hash cục bộ rồi báo "thành công", trong khi mật khẩu đăng nhập
-    // Firebase thật (nguồn xác thực duy nhất trong [login]) không đổi — người dùng bị khoá tài
-    // khoản thật sự. Sửa: cập nhật hash cục bộ (vẫn cần cho PIN-fallback) NHƯNG đồng thời kích
-    // hoạt luôn email reset chính thức của Firebase, và thông báo đúng sự thật thay vì nói đã
-    // xong khi chưa xong.
-    if (!isTestMode) {
-      try {
-        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
-      } catch (e: Exception) {
-        Log.w("AuthRepo", "Firebase reset email after OTP verification failed: ${e.message}")
-      }
-      return@withContext true to "Đã xác minh OTP thành công! Chúng tôi vừa gửi thêm một email chính thức từ Google để bạn hoàn tất đặt mật khẩu đăng nhập mới — vui lòng kiểm tra hộp thư và làm theo hướng dẫn trong email đó."
-    }
-
-    return@withContext true to "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới."
-  }
-
-  /**
-   * Resets password using Security Question Answer.
-   * Strictly verifies that account has configured security questions.
-   */
-  suspend fun resetPasswordWithSecurityAnswer(
-    emailInput: String,
-    securityAnswerInput: String,
-    newPasswordInput: String,
-    confirmPasswordInput: String
-  ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val email = emailInput.trim().lowercase()
-    val account = dao.getUserAccountByEmail(email) ?: return@withContext false to "Tài khoản không tồn tại!"
-
-    val expectedAnswerHash = account.securityAnswerHash
-    if (expectedAnswerHash.isBlank()) {
-      return@withContext false to "Tài khoản chưa thiết lập câu hỏi bảo mật! Vui lòng sử dụng phương thức đặt lại qua mã OTP email."
-    }
-
-    val providedHash = AuthSecurityManager.hashSecurityAnswer(securityAnswerInput, account.salt)
-    if (expectedAnswerHash != providedHash) {
-      return@withContext false to "Câu trả lời bảo mật không chính xác!"
-    }
-
-    val strength = AuthSecurityManager.evaluatePasswordStrength(newPasswordInput)
-    if (strength.level == PasswordStrengthLevel.VERY_WEAK || strength.level == PasswordStrengthLevel.WEAK) {
-      return@withContext false to "Mật khẩu mới chưa đủ an toàn! ${strength.missingRequirements.joinToString(", ")}"
-    }
-
-    if (newPasswordInput != confirmPasswordInput) {
-      return@withContext false to "Mật khẩu xác nhận không khớp!"
-    }
-
-    // KHÔNG đổi `salt` (xem giải thích trong changePassword/resetPasswordWithOtp):
-    // appPin dùng chung salt cấp tài khoản này, nên đổi sang salt mới ở đây sẽ làm
-    // hỏng khoá PIN vĩnh viễn dù không đụng gì tới appPin. securityAnswerHash vẫn
-    // giữ nguyên (đã đúng với salt hiện tại, không cần băm lại).
-    val newHash = AuthSecurityManager.hashPassword(newPasswordInput, account.salt)
-
-    val updated = account.copy(
-      passwordHash = newHash,
-      failedAttempts = 0,
-      lockoutUntil = 0L
-    )
-    dao.updateUserAccount(updated)
-
-    dao.insertSecurityLog(
-      SecurityAuditLogEntity(
-        accountEmail = email,
-        action = "PASSWORD_RESET",
-        detail = "Đặt lại mật khẩu cục bộ qua câu hỏi bảo mật — đã kích hoạt email xác nhận Firebase chính thức"
-      )
-    )
-
-    // Cùng lý do với resetPasswordWithOtp ở trên: xác minh câu hỏi bảo mật là cục bộ, không
-    // thể tự đặt mật khẩu Firebase thật cho tài khoản đã quên mật khẩu. Cập nhật hash cục bộ
-    // (cho PIN-fallback) và kích hoạt email reset chính thức của Firebase thay vì báo sai.
-    if (!isTestMode) {
-      try {
-        com.google.firebase.auth.FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
-      } catch (e: Exception) {
-        Log.w("AuthRepo", "Firebase reset email after security-answer verification failed: ${e.message}")
-      }
-      return@withContext true to "Đã xác minh câu hỏi bảo mật thành công! Chúng tôi vừa gửi thêm một email chính thức từ Google để bạn hoàn tất đặt mật khẩu đăng nhập mới — vui lòng kiểm tra hộp thư."
-    }
-
-    return@withContext true to "Đặt lại mật khẩu thành công! Hãy đăng nhập ngay."
-  }
 
   /**
    * Change password from Settings (requires old password).
@@ -841,9 +778,10 @@ class AuthRepository(
       else -> return@withContext false to "Bạn chưa đăng nhập!"
     }
 
-    val hashedPin = AuthSecurityManager.hashPin(pin, currentAccount.salt)
+    val hashedPin = AuthSecurityManager.hashPinV2(pin, currentAccount.salt)
     val updated = currentAccount.copy(appPin = hashedPin, isPinEnabled = true)
     dao.updateUserAccount(updated)
+    attempts.reset(currentAccount.uid)
 
     dao.insertSecurityLog(
       SecurityAuditLogEntity(
@@ -886,55 +824,149 @@ class AuthRepository(
     return@withContext true to if (enabled) "Đã bật bảo vệ ứng dụng bằng mã PIN!" else "Đã tắt bảo vệ bằng mã PIN."
   }
 
-  /**
-   * Unlocks app using hashed PIN comparison.
-   * Automatically migrates legacy plaintext 4-digit PINs upon first successful unlock.
-   */
-  fun unlockWithPin(pinInput: String): Boolean {
-    val currentAccount = when (val currentAuth = _authState.value) {
-      is AuthState.PinLocked -> currentAuth.account
-      is AuthState.Authenticated -> currentAuth.account
-      else -> return false
-    }
+  private fun lockedAccount(): UserAccountEntity? = when (val s = _authState.value) {
+    is AuthState.PinLocked -> s.account
+    is AuthState.Authenticated -> s.account
+    else -> null
+  }
 
-    val hashedInput = AuthSecurityManager.hashPin(pinInput, currentAccount.salt)
-    if (hashedInput == currentAccount.appPin) {
-      _authState.value = AuthState.Authenticated(currentAccount)
-      startSyncCoordinatorSafely(currentAccount.uid)
-      return true
-    }
+  private fun unlockSucceeded(account: UserAccountEntity) {
+    attempts.reset(account.uid)
+    _authState.value = AuthState.Authenticated(account)
+    startSyncCoordinatorSafely(account.uid)
+  }
 
-    // Migration fallback: if account previously stored legacy unhashed 4-digit PIN
-    if (pinInput == currentAccount.appPin && currentAccount.appPin.length == 4) {
-      scope.launch {
-        val migrated = currentAccount.copy(appPin = hashedInput)
-        dao.updateUserAccount(migrated)
-      }
-      _authState.value = AuthState.Authenticated(currentAccount)
-      startSyncCoordinatorSafely(currentAccount.uid)
-      return true
+  /** Shared gate + counter for every guessable secret (PIN, account password). */
+  private suspend fun guessUnlock(account: UserAccountEntity, verify: suspend (UserAccountEntity) -> UserAccountEntity?): UnlockResult {
+    (attempts.gate(account.uid) as? com.example.data.auth.UnlockAttemptStore.Gate.Locked)?.let {
+      return UnlockResult.Locked(it.untilMillis)
     }
-
-    return false
+    val verified = verify(account)
+    if (verified != null) {
+      unlockSucceeded(verified)
+      return UnlockResult.Success
+    }
+    dao.insertSecurityLog(
+      SecurityAuditLogEntity(accountEmail = account.email, action = "UNLOCK_FAILED", detail = "Sai mã mở khóa lần ${attempts.failures(account.uid) + 1}")
+    )
+    return when (val gate = attempts.recordFailure(account.uid)) {
+      is com.example.data.auth.UnlockAttemptStore.Gate.Locked -> UnlockResult.Locked(gate.untilMillis)
+      else -> UnlockResult.Wrong(attempts.remainingBeforeLock(account.uid))
+    }
   }
 
   /**
-   * Fallback unlock using account password.
+   * Unlocks the app with the PIN. Rate-limited (persisted, escalating lock-out); old PIN formats
+   * (plaintext, salted SHA-256) are upgraded to the slow v2 hash on the first successful unlock.
    */
-  fun unlockWithAccountPassword(passwordInput: String): Boolean {
-    val currentAccount = when (val currentAuth = _authState.value) {
-      is AuthState.PinLocked -> currentAuth.account
-      is AuthState.Authenticated -> currentAuth.account
-      else -> return false
+  suspend fun unlockWithPin(pinInput: String): UnlockResult = withContext(Dispatchers.Default) {
+    val account = lockedAccount() ?: return@withContext UnlockResult.NoSession
+    guessUnlock(account) { acc ->
+      if (pinInput.length != 4 || !pinInput.all { it.isDigit() } ||
+        !AuthSecurityManager.verifyPin(pinInput, acc.salt, acc.appPin)
+      ) return@guessUnlock null
+      if (AuthSecurityManager.isPinV2(acc.appPin)) acc
+      else acc.copy(appPin = AuthSecurityManager.hashPinV2(pinInput, acc.salt)).also { dao.updateUserAccount(it) }
     }
+  }
 
-    val hash = AuthSecurityManager.hashPassword(passwordInput, currentAccount.salt)
-    if (hash == currentAccount.passwordHash) {
-      _authState.value = AuthState.Authenticated(currentAccount)
-      startSyncCoordinatorSafely(currentAccount.uid)
-      return true
+  /** Fallback unlock with the account password (never matches provider-only accounts). Shares the PIN lock-out. */
+  suspend fun unlockWithAccountPassword(passwordInput: String): UnlockResult = withContext(Dispatchers.Default) {
+    val account = lockedAccount() ?: return@withContext UnlockResult.NoSession
+    guessUnlock(account) { acc ->
+      if (isProviderOnly(acc)) return@guessUnlock null
+      val hash = AuthSecurityManager.hashPassword(passwordInput, acc.salt)
+      if (AuthSecurityManager.secureEquals(hash, acc.passwordHash)) acc else null
     }
-    return false
+  }
+
+  /**
+   * Unlock by re-authenticating with Facebook. Not rate-limited (the secret is not guessable
+   * here) and it clears the PIN lock-out, so it is also the "forgot PIN" recovery path.
+   */
+  suspend fun unlockWithFacebook(activity: android.app.Activity): UnlockResult {
+    val account = lockedAccount() ?: return UnlockResult.NoSession
+    return try {
+      facebook.reauthenticate(activity, account.uid)
+      dao.insertSecurityLog(SecurityAuditLogEntity(accountEmail = account.email, action = "UNLOCK_FACEBOOK", detail = "Mở khóa bằng Facebook"))
+      unlockSucceeded(account)
+      UnlockResult.Success
+    } catch (e: com.example.data.auth.SocialAuthException) {
+      UnlockResult.Error(e.reason)
+    }
+  }
+
+  val isFacebookLinked: Boolean get() = !isTestMode && facebook.isLinked()
+
+  /** Accounts created through Facebook have no password the user knows. */
+  fun isProviderOnly(account: UserAccountEntity) = account.passwordHash.startsWith(PROVIDER_HASH_PREFIX)
+
+  /** Links Facebook to the signed-in account so it can be used to sign in / unlock / recover the PIN. */
+  suspend fun linkFacebook(activity: android.app.Activity): Pair<Boolean, String> {
+    val account = lockedAccount() ?: return false to "Bạn chưa đăng nhập!"
+    return try {
+      facebook.link(activity)
+      dao.insertSecurityLog(SecurityAuditLogEntity(accountEmail = account.email, action = "FACEBOOK_LINKED", detail = "Liên kết Facebook"))
+      true to "Đã liên kết Facebook với tài khoản!"
+    } catch (e: com.example.data.auth.SocialAuthException) {
+      false to socialErrorMessage(e.reason)
+    }
+  }
+
+  /** Signs in (or creates the local cache account) through Facebook, honouring the PIN lock afterwards. */
+  suspend fun loginWithFacebook(activity: android.app.Activity, rememberMe: Boolean): Pair<Boolean, String> {
+    val profile = try {
+      facebook.signIn(activity)
+    } catch (e: com.example.data.auth.SocialAuthException) {
+      return false to socialErrorMessage(e.reason)
+    }
+    return withContext(Dispatchers.IO) {
+      val email = (profile.email ?: "fb_${profile.uid}@facebook.inlove.local").trim().lowercase()
+      val token = AuthSecurityManager.generateSessionToken()
+      val existing = dao.getUserAccountByUid(profile.uid) ?: dao.getUserAccountByEmail(email)
+      val account = if (existing == null) {
+        UserAccountEntity(
+          uid = profile.uid,
+          email = email,
+          passwordHash = PROVIDER_HASH_PREFIX + "facebook",
+          salt = AuthSecurityManager.generateSalt(),
+          displayName = profile.displayName ?: email.substringBefore('@'),
+          coupleCode = ProfileUtils.generateRandomCoupleCode(),
+          avatarUrl = profile.photoUrl.orEmpty(),
+          securityQuestion = AuthSecurityManager.SECURITY_QUESTIONS[0],
+          lastLoginAt = System.currentTimeMillis(),
+          sessionToken = token
+        ).also { dao.insertUserAccount(it) }
+      } else {
+        existing.copy(uid = profile.uid, lastLoginAt = System.currentTimeMillis(), sessionToken = token).also {
+          if (existing.uid != profile.uid) { dao.deleteUserAccount(existing); dao.insertUserAccount(it) } else dao.updateUserAccount(it)
+        }
+      }
+      prefs.edit()
+        .putBoolean(KEY_REMEMBER_ME, rememberMe)
+        .putString(KEY_SESSION_TOKEN, if (rememberMe) token else null)
+        .putString(KEY_SAVED_EMAIL, account.email)
+        .apply()
+      dao.insertSecurityLog(SecurityAuditLogEntity(accountEmail = account.email, action = "LOGIN_SUCCESS", detail = "Đăng nhập Facebook, UID: ${account.uid}"))
+      enterScope(account.email)
+      syncOnlineUserWithAccount(account)
+      if (account.isPinEnabled && account.appPin.isNotEmpty()) {
+        _authState.value = AuthState.PinLocked(account)
+      } else {
+        _authState.value = AuthState.Authenticated(account)
+        startSyncCoordinatorSafely(account.uid)
+      }
+      true to "Đăng nhập thành công! Chào mừng ${account.displayName} 💕"
+    }
+  }
+
+  fun socialErrorMessage(reason: com.example.data.auth.SocialAuthException.Reason): String =
+    com.example.ui.util.socialErrorText(reason, english = false)
+
+  /** Epoch millis until which unlock attempts are refused for the current account (0 = not locked). */
+  fun lockedUntilMillis(): Long {
+    val account = lockedAccount() ?: return 0L
+    return (attempts.gate(account.uid) as? com.example.data.auth.UnlockAttemptStore.Gate.Locked)?.untilMillis ?: 0L
   }
 
   /**
@@ -986,13 +1018,15 @@ class AuthRepository(
       Log.d("AuthRepo", "SyncCoordinator stop skipped (locator not initialized): ${e.message}")
     }
 
+    enterScope(null)
     _authState.value = AuthState.Unauthenticated
   }
 
   /**
-   * Google Play Policy compliant Account Deletion:
-   * Permanently deletes user account, cloud documents, Firebase Auth user,
-   * audit logs, local memories/profiles, and resets session.
+   * Xoá tài khoản vĩnh viễn: gửi yêu cầu cho máy chủ (callable `requestAccountDeletion`) → đăng xuất → xoá dữ liệu local.
+   * Máy chủ xoá dữ liệu đám mây, tệp và danh tính Auth, tự thử lại nếu lỗi giữa chừng (xem accountDeletion.js).
+   * Nếu máy chủ chưa nhận (mất mạng, cần đăng nhập lại) thì dữ liệu local còn nguyên để thử lại; gọi lại là an toàn.
+   * Đăng nhập lại mà máy chủ vẫn xoá dở thì tài khoản có thể biến mất; người dùng chỉ cần đợi.
    */
   suspend fun deleteCurrentAccount(): Result<Unit> = withContext(Dispatchers.IO) {
     try {
@@ -1011,51 +1045,28 @@ class AuthRepository(
         return@withContext Result.failure(IllegalStateException("Không tìm thấy tài khoản đang đăng nhập."))
       }
 
-      if (!isTestMode) {
-        // 1. Xoá danh tính Firebase Auth TRƯỚC TIÊN. Trước đây bước này chạy SAU CÙNG (sau khi
-        // đã xoá xong Firestore) — nếu Firebase yêu cầu đăng nhập lại gần đây (đăng nhập đã
-        // lâu) thì `delete()` ném `FirebaseAuthRecentLoginRequiredException`, toàn bộ hàm bị
-        // catch ở ngoài và dừng lại, nhưng dữ liệu Firestore/Room đã xoá mất rồi — tài khoản
-        // kẹt ở trạng thái nửa xoá (mất dữ liệu, vẫn đăng nhập được). Xoá Auth trước: nếu lỗi,
-        // KHÔNG có gì bị xoá cả, người dùng chỉ cần đăng nhập lại rồi thử xoá lần nữa.
-        val fbAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
-        val fbUser = fbAuth.currentUser
-        try {
-          fbUser?.delete()?.await()
-        } catch (e: com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
-          return@withContext Result.failure(
-            IllegalStateException("Vì lý do bảo mật, vui lòng đăng xuất và đăng nhập lại gần đây trước khi xoá tài khoản vĩnh viễn.")
-          )
-        }
-
-        // 2. Xoá tài liệu Cloud Firestore (Fail-Closed) — chỉ chạy sau khi Auth đã xoá thành công
-        val fs = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-        fs.collection("users").document(uid).delete().await()
-        fs.collection("users_3nf").document(uid).delete().await()
-
-        // Clean up user's memories in Firestore
-        val userMemories = fs.collection("memories").whereEqualTo("authorUid", uid).get().await()
-        userMemories.documents.forEach { doc ->
-          doc.reference.delete().await()
-        }
-
-        val userMemories3nf = fs.collection("memories_3nf").whereEqualTo("authorUid", uid).get().await()
-        userMemories3nf.documents.forEach { doc ->
-          doc.reference.delete().await()
-        }
-
-        // Xoá các lời mời Set Love mà tài khoản này đã GỬI đi (field senderUid — khớp đúng
-        // OnlineCoupleRepository.sendSetLoveInvite() ghi thật lên collection "invites"; đây là
-        // collection Firestore duy nhất khác mà app hiện có ghi tới, ngoài users/memories ở
-        // trên — "relationships"/"relationships_3nf"/"invites_3nf" hiện KHÔNG được client ghi
-        // nên không cần dọn ở đây).
-        val sentInvites = fs.collection("invites").whereEqualTo("senderUid", uid).get().await()
-        sentInvites.documents.forEach { doc ->
-          doc.reference.delete().await()
-        }
+      // 1. Dữ liệu đám mây, khi còn đăng nhập. Có timeout để mạng chậm không treo màn hình xoá.
+      val coupleCode = dao.getOnlineUserByUidSync(uid)?.coupleCode.orEmpty()
+      // Máy chủ chỉ nhận yêu cầu khi đăng nhập gần đây; nếu không thì dừng ở đây, local còn nguyên.
+      try {
+        withTimeout(CLOUD_CLEANUP_TIMEOUT_MS) { remoteCleanup.deleteCloudData(uid, coupleCode) }
+      } catch (_: TimeoutCancellationException) {
+        return@withContext Result.failure(
+          IllegalStateException("Mạng đang chậm, chưa gửi được yêu cầu xoá lên máy chủ. Tài khoản vẫn còn nguyên, vui lòng thử lại.")
+        )
+      } catch (_: RecentLoginRequiredException) {
+        return@withContext Result.failure(
+          IllegalStateException("Vì lý do bảo mật, vui lòng đăng xuất và đăng nhập lại gần đây trước khi xoá tài khoản vĩnh viễn.")
+        )
       }
 
-      // 3. Delete Local Room records, online cache, and memories
+      // 2. Máy chủ đã nhận việc (tự thử lại tới khi xong); client chỉ kết thúc phiên Auth.
+      remoteCleanup.deleteAuthIdentity()
+
+      // 3. Dừng đồng bộ trước khi xoá local, để listener không ghi lại dữ liệu vừa xoá.
+      try { com.example.di.AppServiceLocator.syncCoordinator.stop() } catch (_: Exception) {}
+
+      // 4. Delete Local Room records, online cache, and memories
       if (email.isNotEmpty()) {
         val account = dao.getUserAccountByEmail(email)
         if (account != null) {
@@ -1069,8 +1080,10 @@ class AuthRepository(
       dao.clearAllSharedMemories()
       dao.clearCoupleProfile()
 
-      // 4. Clear all preferences and reset session
+      // 5. Clear all preferences and reset session
       prefs.edit().clear().apply()
+      vault?.switchTo(com.example.data.db.AccountDataVault.GUEST, discardCurrent = true)
+      onlineRepo.setCurrentUserId("")
       _authState.value = AuthState.Unauthenticated
       Result.success(Unit)
     } catch (e: Exception) {
@@ -1131,5 +1144,24 @@ class AuthRepository(
       )
     }
     onlineRepo.setCurrentUserId(account.uid)
+    publishCoupleCodeInBackground(account.uid)
+  }
+
+  /**
+   * Đăng ký mã ghép đôi lên Firestore để người khác tìm được bằng mã (lời mời theo mã cần bản ghi này).
+   * Chạy nền, không chặn đăng nhập; lỗi chỉ ghi log.
+   */
+  private fun publishCoupleCodeInBackground(uid: String) {
+    if (isTestMode) return
+    scope.launch {
+      try {
+        // ponytail: một lần get mỗi lần đăng nhập; mã đã có thì không ghi lại. Chưa retry khi offline.
+        if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid != uid) return@launch
+        val code = dao.getOnlineUserByUidSync(uid)?.coupleCode?.takeIf { it.isNotBlank() } ?: return@launch
+        onlineRepo.publishCoupleCode(uid, code).onFailure { Log.w("AuthRepo", "publish couple code failed: ${it.message}") }
+      } catch (e: Exception) {
+        Log.w("AuthRepo", "publish couple code skipped: ${e.message}")
+      }
+    }
   }
 }

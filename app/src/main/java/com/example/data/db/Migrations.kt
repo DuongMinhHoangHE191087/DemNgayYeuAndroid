@@ -154,3 +154,18 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     )
   }
 }
+
+/**
+ * v13 -> v14: partner preferences (likes / gift budget / occasion region) on the single
+ * couple_profile row. These were first added to the v13 schema in place, which crashes any
+ * install already on v13 with Room's "schema changed but version not updated" integrity check.
+ * DEFAULTs are required so ALTER TABLE ADD COLUMN works on the existing row, and match the
+ * @ColumnInfo(defaultValue=...) in Entities.kt.
+ */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+  override fun migrate(db: SupportSQLiteDatabase) {
+    db.execSQL("ALTER TABLE couple_profile ADD COLUMN likesCsv TEXT NOT NULL DEFAULT ''")
+    db.execSQL("ALTER TABLE couple_profile ADD COLUMN budgetMaxVnd INTEGER NOT NULL DEFAULT 0")
+    db.execSQL("ALTER TABLE couple_profile ADD COLUMN occasionRegion TEXT NOT NULL DEFAULT ''")
+  }
+}

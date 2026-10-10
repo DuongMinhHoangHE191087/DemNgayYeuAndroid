@@ -5,6 +5,10 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.squareup.moshi.JsonClass
+import java.util.UUID
+
+/** remoteId có unique index: mỗi bản ghi tạo cục bộ cần id riêng, nếu không REPLACE sẽ gộp chúng thành một dòng. */
+fun newLocalRemoteId(): String = "local_${UUID.randomUUID()}"
 
 @Entity(tableName = "milestones", indices = [Index(value = ["remoteId"], unique = true)])
 data class MilestoneEntity(
@@ -24,7 +28,7 @@ data class MilestoneEntity(
   val alarmTimeMillis: Long? = null,
   val alarmTimeFormatted: String = "",
   val isUserCreated: Boolean = false,
-  @ColumnInfo(defaultValue = "''") val remoteId: String = ""
+  @ColumnInfo(defaultValue = "''") val remoteId: String = newLocalRemoteId()
 )
 
 @Entity(tableName = "gift_ideas", indices = [Index(value = ["remoteId"], unique = true)])
@@ -43,7 +47,7 @@ data class GiftIdeaEntity(
   val targetInterests: String = "",
   val suggestedOccasion: String = "",
   val priceRange: String = "",
-  @ColumnInfo(defaultValue = "''") val remoteId: String = ""
+  @ColumnInfo(defaultValue = "''") val remoteId: String = newLocalRemoteId()
 )
 
 @Entity(tableName = "checklist_items")
@@ -89,8 +93,17 @@ data class CoupleProfileEntity(
   val loveTitle: String = "InLove",
   val loveDays: Int = 0,
   val anniversaryDate: String = "",
-  val updatedAt: Long = System.currentTimeMillis()
+  val updatedAt: Long = System.currentTimeMillis(),
+  /** Sở thích của người ấy, phân tách bằng dấu phẩy; rỗng = chưa nhập (không tự gieo sẵn). */
+  @ColumnInfo(defaultValue = "''") val likesCsv: String = "",
+  /** Ngân sách quà tối đa (VND); 0 = không giới hạn. */
+  @ColumnInfo(defaultValue = "0") val budgetMaxVnd: Long = 0,
+  /** Vùng dịp lễ (VN/INTL), độc lập với ngôn ngữ giao diện; rỗng = chưa chọn. */
+  @ColumnInfo(defaultValue = "''") val occasionRegion: String = ""
 )
+
+/** Quyền "PRIVATE": kỷ niệm chỉ lưu trên máy này, không bao giờ đưa lên Firestore hay Cloudinary. */
+const val PRIVACY_PRIVATE = "PRIVATE"
 
 @Entity(tableName = "shared_memories")
 @JsonClass(generateAdapter = true)

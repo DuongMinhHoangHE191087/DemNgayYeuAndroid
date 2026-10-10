@@ -1,9 +1,8 @@
 @file:Suppress("FunctionName")
 package com.example.ui.screens
 
+import android.content.Intent
 import com.example.ui.util.AppLanguage
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmOn
@@ -43,28 +44,28 @@ import androidx.compose.material.icons.filled.DinnerDining
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.LocalFlorist
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.NaturePeople
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Redeem
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TableRestaurant
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -74,13 +75,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -91,6 +93,8 @@ import coil.compose.AsyncImage
 import com.example.data.model.ChecklistItemEntity
 import com.example.data.model.GiftIdeaEntity
 import com.example.data.model.GiftReminderEntity
+import com.example.domain.content.GiftCatalog
+import com.example.domain.usecase.GetPersonalizedGiftSuggestionsUseCase
 import com.example.ui.theme.OnPrimaryFixed
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
@@ -98,11 +102,9 @@ import com.example.ui.theme.OutlineVariant
 import com.example.ui.theme.Primary
 import com.example.ui.theme.PrimaryContainer
 import com.example.ui.theme.PrimaryFixed
-import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
 import com.example.ui.theme.Secondary
-import com.example.ui.theme.SecondaryContainer
 import com.example.ui.theme.SecondaryFixed
 import com.example.ui.theme.SurfaceContainer
 import com.example.ui.theme.SurfaceContainerHigh
@@ -117,6 +119,7 @@ fun GiftScreen(
   viewModel: InLoveViewModel
 ) {
   val giftIdeas by viewModel.giftIdeas.collectAsState()
+  val personalizedGifts by viewModel.personalizedGifts.collectAsState()
   val checklistItems by viewModel.checklistItems.collectAsState()
   val giftReminders by viewModel.giftReminders.collectAsState()
   val selectedCategory by viewModel.giftCategory.collectAsState()
@@ -125,10 +128,42 @@ fun GiftScreen(
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
   val isEnglish = appLanguage == AppLanguage.EN
+  val coupleProfile by viewModel.coupleProfile.collectAsState()
+  val context = LocalContext.current
 
   var giftItemToDelete by remember { mutableStateOf<ChecklistItemEntity?>(null) }
   var reminderToDelete by remember { mutableStateOf<GiftReminderEntity?>(null) }
   var showWishlistDialog by remember { mutableStateOf(false) }
+  var sharePreview by remember { mutableStateOf<String?>(null) }
+
+  // Xem trước rồi mới gửi: nội dung chỉ gồm tên quà và giá tham khảo, không kèm thông tin hồ sơ nào.
+  // ponytail: chỉ Sharesheet của Android; bản ghi gợi ý riêng cho thành viên trong cặp (Firestore) làm sau khi có thời gian.
+  sharePreview?.let { text ->
+    AlertDialog(
+      onDismissRequest = { sharePreview = null },
+      title = { Text(if (isEnglish) "Share this suggestion?" else "Chia sẻ gợi ý này?", fontWeight = FontWeight.Bold) },
+      text = { Text(text = text, fontSize = 14.sp) },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+              type = "text/plain"
+              putExtra(Intent.EXTRA_TEXT, text)
+            }
+            context.startActivity(Intent.createChooser(shareIntent, if (isEnglish) "Share suggestion via" else "Chia sẻ gợi ý qua"))
+            sharePreview = null
+          },
+          modifier = Modifier.heightIn(min = 48.dp).testTag("btn_confirm_share_gift")
+        ) { Text(if (isEnglish) "Share" else "Chia sẻ") }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = { sharePreview = null },
+          modifier = Modifier.heightIn(min = 48.dp)
+        ) { Text(if (isEnglish) "Cancel" else "Hủy") }
+      }
+    )
+  }
 
   reminderToDelete?.let { reminder ->
     DeleteConfirmationDialog(
@@ -165,11 +200,7 @@ fun GiftScreen(
   val progressPercent = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) * 100f else 0f
 
   val filteredIdeas = remember(giftIdeas, selectedCategory) {
-    when (selectedCategory) {
-      "Tất cả", "All" -> giftIdeas
-      "AI Đề Xuất ✨", "AI Suggestions ✨" -> giftIdeas.filter { it.isAiGenerated }
-      else -> giftIdeas.filter { it.category.contains(selectedCategory, ignoreCase = true) }
-    }
+    GiftCatalog.filterByChip(giftIdeas, selectedCategory)
   }
 
   LazyColumn(
@@ -292,7 +323,7 @@ fun GiftScreen(
       }
     }
 
-    // Mutual Interests Recommendation (interests_A ∩ interests_B)
+    // Personalized suggestions (shared interests + partner preferences + budget + upcoming occasion) with the preferences editor
     item {
       Card(
         shape = RoundedCornerShape(22.dp),
@@ -315,23 +346,10 @@ fun GiftScreen(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (isEnglish) "Suggestions by Mutual Interests" else "Gợi Ý Theo Sở Thích Chung",
+                text = if (isEnglish) "Personalized suggestions" else "Gợi ý cá nhân hóa",
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 color = Color(0xFF880E4F)
-              )
-            }
-
-            Surface(
-              shape = RoundedCornerShape(8.dp),
-              color = Color(0xFFFFEBEE)
-            ) {
-              Text(
-                text = "interests_A ∩ B",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFC2185B),
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
               )
             }
           }
@@ -346,55 +364,24 @@ fun GiftScreen(
               color = Color(0xFF4A148C)
             )
             Spacer(modifier = Modifier.height(8.dp))
+          }
 
-            // Suggestions based on enriched gift ideas from Cloud Firestore
-            val suggestions = remember(giftIdeas, isEnglish) {
-              if (giftIdeas.isNotEmpty()) {
-                giftIdeas.take(3).map { it.title to it.category }
-              } else {
-                if (isEnglish) {
-                  listOf(
-                    "Romantic Candlelight Dinner" to "Date Spot",
-                    "Customized Love Keepsake" to "Memory",
-                    "Surprise Rose Bouquet" to "Gifts"
-                  )
-                } else {
-                  listOf(
-                    "Ý tưởng hẹn hò lãng mạn" to "Địa điểm",
-                    "Món quà kỷ vật tình yêu" to "Kỷ niệm",
-                    "Bó hoa hồng bất ngờ" to "Quà tặng"
-                  )
-                }
-              }
-            }
-
+          if (personalizedGifts.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-              suggestions.forEach { (title, tag) ->
-                Row(
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(10.dp))
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                  Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                      imageVector = Icons.Default.Favorite,
-                      contentDescription = null,
-                      tint = Color(0xFFFF4081),
-                      modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = title, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                  }
-                  Text(text = tag, fontSize = 10.sp, color = Color.Gray)
-                }
+              personalizedGifts.forEach { s ->
+                PersonalizedGiftCard(
+                  title = s.gift.title,
+                  reason = s.reason,
+                  preparation = s.preparation,
+                  priceLabel = s.priceLabel,
+                  onShare = { sharePreview = listOfNotNull(s.gift.title, s.priceLabel).joinToString("\n") },
+                  shareLabel = if (isEnglish) "Share this suggestion" else "Chia sẻ gợi ý này"
+                )
               }
             }
           } else {
             Text(
-              text = if (isEnglish) "Choose interests on the Pairing screen for automatic gift & date suggestions for both of you!" else "Hãy cùng chọn sở thích ở trang Ghép Đôi để hệ thống tự động gợi ý quà và lịch hẹn lý tưởng cho cả hai!",
+              text = if (isEnglish) "Choose interests on the Pairing screen, note what your partner likes below, or add your anniversary and birthdays, to see suggestions made for both of you. You can still browse the full catalog below." else "Hãy chọn sở thích ở trang Ghép Đôi, ghi lại điều đối tác thích ở bên dưới, hoặc nhập ngày yêu và ngày sinh, để xem gợi ý dành riêng cho hai bạn. Bạn vẫn có thể xem toàn bộ danh mục bên dưới.",
               fontSize = 12.sp,
               color = Color.Gray
             )
@@ -414,45 +401,33 @@ fun GiftScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
               Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
               Spacer(modifier = Modifier.width(8.dp))
-              Text(if (isEnglish) "🤖 AI Assistant: Gift Suggestions" else "🤖 Trợ Lý AI Gợi Ý Quà Cho Đôi Ta", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+              Text(if (isEnglish) "✨ Add suggestions by your interests" else "✨ Gợi ý thêm theo sở thích", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
           }
+
+          Spacer(modifier = Modifier.height(4.dp))
+          PartnerPreferencesEditor(
+            profileExists = coupleProfile != null,
+            savedLikes = coupleProfile?.likesCsv.orEmpty(),
+            savedBudgetVnd = coupleProfile?.budgetMaxVnd ?: 0L,
+            savedRegion = coupleProfile?.occasionRegion.orEmpty(),
+            isEnglish = isEnglish,
+            onSave = viewModel::savePartnerPreferences
+          )
         }
       }
     }
 
     // 2. Category Filter Tabs (Horizontal Scroll)
     item {
-      val categories = if (isEnglish) {
-        listOf(
-          "All",
-          "AI Suggestions ✨",
-          "Romantic Gifts",
-          "Jewelry & Perfume",
-          "Handmade Keepsakes",
-          "Date Locations",
-          "Secret Surprises"
-        )
-      } else {
-        listOf(
-          "Tất cả",
-          "AI Đề Xuất ✨",
-          "Quà lãng mạn",
-          "Trang sức & Nước hoa",
-          "Kỷ vật Handmade",
-          "Địa điểm hẹn hò",
-          "Bất ngờ bí mật"
-        )
-      }
-
       Row(
         modifier = Modifier
           .fillMaxWidth()
           .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        categories.forEach { cat ->
-          val isSelected = selectedCategory == cat
+        GiftCatalog.chips(isEnglish).forEach { chip ->
+          val isSelected = selectedCategory == chip.key
           Surface(
             shape = RoundedCornerShape(24.dp),
             color = if (isSelected) Color.Transparent else Color.White.copy(alpha = 0.85f),
@@ -468,11 +443,11 @@ fun GiftScreen(
                   )
                 } else Modifier
               )
-              .clickable { viewModel.setGiftCategory(cat) }
-              .testTag("gift_tab_$cat")
+              .clickable { viewModel.setGiftCategory(chip.key) }
+              .testTag("gift_tab_${chip.key}")
           ) {
             Text(
-              text = cat,
+              text = chip.label,
               fontSize = 12.sp,
               fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
               color = if (isSelected) Color.White else OnSurfaceVariant,
@@ -522,7 +497,7 @@ fun GiftScreen(
                   modifier = Modifier.size(13.dp)
                 )
                 Text(
-                  text = if (isEnglish) "VIP PROPOSAL BUNDLE" else "GÓI ĐỀ XUẤT VIP",
+                  text = if (isEnglish) "CELEBRATION IDEAS" else "GỢI Ý KỶ NIỆM",
                   fontSize = 10.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color.White,
@@ -530,25 +505,12 @@ fun GiftScreen(
                 )
               }
             }
-
-            Surface(
-              shape = RoundedCornerShape(20.dp),
-              color = Color.Black.copy(alpha = 0.25f)
-            ) {
-              Text(
-                text = if (isEnglish) "Most Popular" else "Được chọn nhiều nhất",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.9f),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-              )
-            }
           }
 
           Spacer(modifier = Modifier.height(10.dp))
 
           Text(
-            text = if (isEnglish) "1,000 Days Perfect Celebration Bundle" else "Gói Kỷ Niệm 1.000 Ngày Hoàn Hảo",
+            text = if (isEnglish) "1,000-Day Celebration Ideas" else "Ý Tưởng Kỷ Niệm 1.000 Ngày",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -557,7 +519,7 @@ fun GiftScreen(
           Spacer(modifier = Modifier.height(4.dp))
 
           Text(
-            text = if (isEnglish) "Preserved rose in crystal glass combined with candlelight rooftop dinner overlooking the whole city with handwritten love letter." else "Hoa hồng vĩnh cửu lồng kính pha lê kết hợp bữa tối Rooftop lung linh ánh nến ngắm toàn cảnh thành phố cùng thiệp thư tình viết tay.",
+            text = if (isEnglish) "A few ideas for marking 1,000 days together: flowers, a shared dinner, and a note written by hand." else "Vài gợi ý để kỷ niệm 1.000 ngày bên nhau: hoa, bữa tối và một lời nhắn tự tay viết.",
             fontSize = 12.sp,
             color = Color.White.copy(alpha = 0.9f),
             lineHeight = 17.sp
@@ -571,13 +533,13 @@ fun GiftScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
             val highlights = if (isEnglish) listOf(
-              Pair("Eternal Rose", Icons.Filled.LocalFlorist),
-              Pair("Rooftop Table", Icons.Filled.DinnerDining),
-              Pair("Handwritten Card", Icons.Filled.Mail)
+              Pair("Roses", Icons.Filled.LocalFlorist),
+              Pair("Dinner", Icons.Filled.DinnerDining),
+              Pair("A Note", Icons.Filled.Mail)
             ) else listOf(
-              Pair("Hoa Vĩnh Cửu", Icons.Filled.LocalFlorist),
-              Pair("Bàn Rooftop", Icons.Filled.DinnerDining),
-              Pair("Thiệp Viết Tay", Icons.Filled.Mail)
+              Pair("Hoa Hồng", Icons.Filled.LocalFlorist),
+              Pair("Bữa Tối", Icons.Filled.DinnerDining),
+              Pair("Lời Nhắn", Icons.Filled.Mail)
             )
 
             highlights.forEach { (name, icon) ->
@@ -625,7 +587,7 @@ fun GiftScreen(
               horizontalArrangement = Arrangement.Center
             ) {
               Text(
-                text = if (isEnglish) "View perfect itinerary details" else "Xem chi tiết lịch trình hoàn hảo",
+                text = if (isEnglish) "View itinerary ideas" else "Xem gợi ý lịch trình",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
@@ -1074,54 +1036,8 @@ fun GiftIdeaCard(
   onFavoriteToggle: () -> Unit,
   onActionClick: () -> Unit
 ) {
-  val displayBadgeText = if (isEnglish) {
-    when (idea.id) {
-      1L -> "MOST POPULAR"
-      2L -> "PERSONALIZED"
-      3L -> "ROMANTIC VIBE"
-      else -> "OUTDOORS"
-    }
-  } else idea.badgeText
-
-  val displayTitle = if (isEnglish) {
-    when (idea.id) {
-      1L -> "Couple Love Memory Scrapbook"
-      2L -> "Custom Engraved Love Silver Rings"
-      3L -> "Sunset Rooftop Candlelight Dinner"
-      4L -> "Weekend Camping & Stargazing Date"
-      else -> idea.title
-    }
-  } else idea.title
-
-  val displayTag = if (isEnglish) {
-    when (idea.id) {
-      1L -> "Handmade"
-      2L -> "Jewelry"
-      3L -> "Dinner Date"
-      4L -> "Outdoor Experience"
-      else -> idea.tag
-    }
-  } else idea.tag
-
-  val displayDescription = if (isEnglish) {
-    when (idea.id) {
-      1L -> "Print 20 of your favorite love photos and write sweet wishes together to create a lasting keepsake."
-      2L -> "Fine 925 sterling silver couple rings engraved with your initials and the start date of your love story."
-      3L -> "A romantic candlelight table with city sunset views, gentle music, and a warm private atmosphere."
-      4L -> "Pack warm cocoa and a picnic blanket for a cozy camping trip and stargazing in the cool pine breeze."
-      else -> idea.description
-    }
-  } else idea.description
-
-  val displayActionText = if (isEnglish) {
-    when (idea.id) {
-      1L -> "Prepare Photo Scrapbook"
-      2L -> "Preview Engraving Details"
-      3L -> "Reserve Table & Menu"
-      4L -> "View Camping Itinerary"
-      else -> idea.actionText
-    }
-  } else idea.actionText
+  val gift = GiftCatalog.localized(idea, isEnglish)
+  val accent = if (idea.isAiGenerated) Tertiary else Secondary
 
   Card(
     shape = RoundedCornerShape(24.dp),
@@ -1132,7 +1048,7 @@ fun GiftIdeaCard(
       .testTag("gift_idea_${idea.id}")
   ) {
     Column(modifier = Modifier.padding(14.dp)) {
-      // Photo with Badge & Heart button
+      // Photo with Badge, Illustration Caption & Heart button
       Box(
         modifier = Modifier
           .fillMaxWidth()
@@ -1141,7 +1057,7 @@ fun GiftIdeaCard(
       ) {
         AsyncImage(
           model = idea.imageUrl,
-          contentDescription = idea.title,
+          contentDescription = gift.title,
           contentScale = ContentScale.Crop,
           modifier = Modifier.fillMaxSize()
         )
@@ -1159,25 +1075,29 @@ fun GiftIdeaCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
           ) {
-            val badgeIcon = when (idea.id) {
-              1L -> Icons.Filled.Favorite
-              2L -> Icons.Filled.AutoAwesome
-              3L -> Icons.Filled.Restaurant
-              else -> Icons.Filled.NaturePeople
-            }
             Icon(
-              imageVector = badgeIcon,
+              imageVector = giftCategoryIcon(gift.categoryKey),
               contentDescription = null,
-              tint = if (idea.id == 2L) Tertiary else Secondary,
+              tint = accent,
               modifier = Modifier.size(14.dp)
             )
             Text(
-              text = displayBadgeText,
+              text = gift.badge,
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
-              color = if (idea.id == 2L) Tertiary else Secondary
+              color = accent
             )
           }
+        }
+
+        // Seed photos are stock illustrations, not the gift itself
+        if (gift.isSeed) {
+          IllustrationCaption(
+            isEnglish = isEnglish,
+            modifier = Modifier
+              .padding(10.dp)
+              .align(Alignment.BottomStart)
+          )
         }
 
         // Heart Button Top Right — 48dp touch target (AGENTS.md minimum), not the old 36dp.
@@ -1208,7 +1128,7 @@ fun GiftIdeaCard(
         verticalAlignment = Alignment.Top
       ) {
         Text(
-          text = displayTitle,
+          text = gift.title,
           fontSize = 15.sp,
           fontWeight = FontWeight.Bold,
           color = OnSurface,
@@ -1217,13 +1137,13 @@ fun GiftIdeaCard(
         Spacer(modifier = Modifier.width(8.dp))
         Surface(
           shape = RoundedCornerShape(12.dp),
-          color = if (idea.id == 2L) SecondaryFixed.copy(alpha = 0.7f) else PrimaryFixed.copy(alpha = 0.6f)
+          color = if (idea.isAiGenerated) SecondaryFixed.copy(alpha = 0.7f) else PrimaryFixed.copy(alpha = 0.6f)
         ) {
           Text(
-            text = displayTag,
+            text = gift.tag,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = if (idea.id == 2L) Secondary else Primary,
+            color = if (idea.isAiGenerated) Secondary else Primary,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
           )
         }
@@ -1232,167 +1152,36 @@ fun GiftIdeaCard(
       Spacer(modifier = Modifier.height(4.dp))
 
       Text(
-        text = displayDescription,
+        text = gift.description,
         fontSize = 12.sp,
         color = OnSurfaceVariant,
         lineHeight = 17.sp
       )
 
-      Spacer(modifier = Modifier.height(10.dp))
+      GiftCatalog.priceLabel(idea.priceRange, isEnglish)?.let { price ->
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+          text = price,
+          fontSize = 11.sp,
+          fontWeight = FontWeight.Bold,
+          color = Primary
+        )
+      }
 
-      // Card Details Snippet Area
-      when (idea.id) {
-        1L -> {
-          Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = SurfaceContainerLow,
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Column(modifier = Modifier.padding(10.dp)) {
-              Text(
-                text = if (isEnglish) "PREPARATION CHECKLIST:" else "CHECKLIST CHUẨN BỊ:",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Primary,
-                letterSpacing = 0.5.sp
-              )
-              Spacer(modifier = Modifier.height(4.dp))
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.CheckCircle,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(14.dp)
-                )
-                Text(
-                  text = if (isEnglish) "Print 20 best couple photos" else "In 20 tấm ảnh đôi đẹp nhất của 2 đứa",
-                  fontSize = 11.sp,
-                  color = OnSurfaceVariant
-                )
-              }
-              Spacer(modifier = Modifier.height(2.dp))
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.CheckCircle,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(14.dp)
-                )
-                Text(
-                  text = if (isEnglish) "Write wishes & memorable notes below each photo" else "Viết lời chúc & kỷ niệm đáng nhớ dưới mỗi ảnh",
-                  fontSize = 11.sp,
-                  color = OnSurfaceVariant
-                )
-              }
-            }
-          }
-        }
-        2L -> {
-          Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = SurfaceContainerLow,
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Row(
-              modifier = Modifier.padding(10.dp),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.Schedule,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(18.dp)
-                )
-                Column {
-                  Text(
-                    text = if (isEnglish) "Engraving & delivery time:" else "Thời gian khắc & giao:",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurface
-                  )
-                  Text(
-                    text = if (isEnglish) "Around 1 - 2 days (Order soon)" else "Khoảng 1 - 2 ngày (Nên đặt ngay)",
-                    fontSize = 11.sp,
-                    color = OnSurfaceVariant
-                  )
-                }
-              }
-              Icon(
-                imageVector = Icons.Filled.Verified,
-                contentDescription = null,
-                tint = Primary,
-                modifier = Modifier.size(18.dp)
-              )
-            }
-          }
-        }
-        3L -> {
-          Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = SurfaceContainerLow,
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Column(modifier = Modifier.padding(10.dp)) {
-              Text(
-                text = if (isEnglish) "SUGGESTED MENU:" else "THỰC ĐƠN GỢI Ý:",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Primary,
-                letterSpacing = 0.5.sp
-              )
-              Spacer(modifier = Modifier.height(4.dp))
-              Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState())
-              ) {
-                val menuItems = if (isEnglish) listOf("🥩 Tenderloin Steak", "🍷 Rosé Wine", "🎂 Heart Cake") else listOf("🥩 Bò Steak Thăn Nội", "🍷 Rượu Vang Hồng", "🎂 Bánh Kem Trái Tim")
-                menuItems.forEach { item ->
-                  Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.White,
-                    shadowElevation = 1.dp
-                  ) {
-                    Text(
-                      text = item,
-                      fontSize = 11.sp,
-                      color = OnSurface,
-                      modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                  }
-                }
-              }
-            }
-          }
-        }
-        4L -> {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(vertical = 2.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Filled.LocationOn,
-              contentDescription = null,
-              tint = Secondary,
-              modifier = Modifier.size(16.dp)
-            )
-            Text(
-              text = if (isEnglish) "Suburban Pine Hill (45 mins drive from city center)" else "Đồi thông ngoại ô (cách trung tâm 45 phút lái xe)",
-              fontSize = 11.sp,
-              color = OnSurfaceVariant
-            )
-          }
+      if (gift.detailsSnippet.isNotBlank()) {
+        Spacer(modifier = Modifier.height(10.dp))
+        Surface(
+          shape = RoundedCornerShape(14.dp),
+          color = SurfaceContainerLow,
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Text(
+            text = gift.detailsSnippet,
+            fontSize = 11.sp,
+            color = OnSurfaceVariant,
+            lineHeight = 16.sp,
+            modifier = Modifier.padding(10.dp)
+          )
         }
       }
 
@@ -1411,21 +1200,15 @@ fun GiftIdeaCard(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.Center
         ) {
-          val actionIcon = when (idea.id) {
-            1L -> Icons.Filled.PhotoLibrary
-            2L -> Icons.Filled.Brush
-            3L -> Icons.AutoMirrored.Filled.ReceiptLong
-            else -> Icons.Filled.Map
-          }
           Icon(
-            imageVector = actionIcon,
+            imageVector = giftCategoryIcon(gift.categoryKey),
             contentDescription = null,
             tint = Primary,
             modifier = Modifier.size(16.dp)
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = displayActionText,
+            text = gift.actionText,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Primary
@@ -1433,6 +1216,216 @@ fun GiftIdeaCard(
         }
       }
     }
+  }
+}
+
+/** Icon for a gift's category; the Room id is not a content key. */
+private fun giftCategoryIcon(categoryKey: String) = when (categoryKey) {
+  GiftCatalog.ROMANTIC -> Icons.Filled.Favorite
+  GiftCatalog.JEWELRY -> Icons.Filled.AutoAwesome
+  GiftCatalog.HANDMADE -> Icons.Filled.Brush
+  GiftCatalog.DATES -> Icons.Filled.Restaurant
+  GiftCatalog.SECRET -> Icons.Filled.CardGiftcard
+  else -> Icons.Filled.NaturePeople
+}
+
+/**
+ * Một gợi ý cá nhân hóa: tên quà, lý do, ghi chú chuẩn bị và giá tham khảo. Không nhận ViewModel để xem trước được.
+ * [onShare] khác null thì hiện nút chia sẻ (đích tới ≥48dp); thẻ chỉ báo sự kiện, bản xem trước và Sharesheet do màn hình lo.
+ */
+@Composable
+internal fun PersonalizedGiftCard(
+  title: String,
+  reason: String,
+  preparation: String,
+  priceLabel: String?,
+  modifier: Modifier = Modifier,
+  onShare: (() -> Unit)? = null,
+  shareLabel: String = ""
+) {
+  Column(
+    modifier = modifier
+      .fillMaxWidth()
+      .background(Color.White, RoundedCornerShape(10.dp))
+      .heightIn(min = 48.dp)
+      .padding(horizontal = 10.dp, vertical = 8.dp)
+  ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Icon(
+        imageVector = Icons.Default.Favorite,
+        contentDescription = null,
+        tint = Color(0xFFFF4081),
+        modifier = Modifier.size(14.dp)
+      )
+      Spacer(modifier = Modifier.width(8.dp))
+      Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+      if (onShare != null) {
+        IconButton(
+          onClick = onShare,
+          modifier = Modifier
+            .size(48.dp)
+            .testTag("btn_share_gift_suggestion")
+        ) {
+          Icon(
+            imageVector = Icons.Filled.Share,
+            contentDescription = shareLabel,
+            tint = Color(0xFFC2185B),
+            modifier = Modifier.size(20.dp)
+          )
+        }
+      }
+    }
+    Text(text = reason, fontSize = 12.sp, color = Color(0xFF4A148C), modifier = Modifier.padding(top = 2.dp))
+    Text(text = preparation, fontSize = 12.sp, color = Color.DarkGray)
+    if (priceLabel != null) {
+      Text(text = priceLabel, fontSize = 11.sp, color = Color.Gray)
+    }
+  }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun PersonalizedGiftCardPreview() {
+  PersonalizedGiftCard(
+    title = "Bó hoa hồng bất ngờ",
+    reason = "Hợp sở thích chung của hai bạn và dịp sắp tới.",
+    preparation = "Còn khoảng hai tuần, đủ thời gian đặt và gói quà.",
+    priceLabel = "Giá tham khảo: 200.000–500.000 ₫"
+  )
+}
+
+/**
+ * Ghi lại điều đối tác thích, ngân sách quà (VND) và vùng dịp lễ để gợi ý sát hơn. Lưu vào hồ sơ cặp đôi trên máy này,
+ * nên cặp chưa ghép đôi vẫn dùng được. Hàng hồ sơ chỉ được cập nhật chứ không tạo ở đây: chưa có hồ sơ thì nút Lưu bị khoá kèm lời nhắc.
+ *
+ * ponytail: sở thích để trống ban đầu (không gieo sẵn); ngân sách 0/trống = không giới hạn; vùng chỉ VN/INTL (bấm lại chip để bỏ chọn)
+ * và độc lập với ngôn ngữ giao diện. Chưa kiểm tra trùng/chính tả sở thích; thêm gợi ý chọn nhanh khi cần.
+ */
+@Composable
+private fun PartnerPreferencesEditor(
+  profileExists: Boolean,
+  savedLikes: String,
+  savedBudgetVnd: Long,
+  savedRegion: String,
+  isEnglish: Boolean,
+  onSave: (String, Long, String) -> Unit
+) {
+  var expanded by remember { mutableStateOf(false) }
+  var likes by remember(savedLikes) { mutableStateOf(savedLikes) }
+  var budgetText by remember(savedBudgetVnd) { mutableStateOf(if (savedBudgetVnd > 0L) savedBudgetVnd.toString() else "") }
+  var region by remember(savedRegion) { mutableStateOf(savedRegion) }
+
+  Column(modifier = Modifier.fillMaxWidth()) {
+    TextButton(
+      onClick = { expanded = !expanded },
+      modifier = Modifier
+        .heightIn(min = 48.dp)
+        .testTag("btn_toggle_partner_preferences")
+    ) {
+      Text(
+        text = if (isEnglish) "Partner likes, budget and holidays" else "Sở thích đối tác, ngân sách và dịp lễ",
+        fontSize = 12.5.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFFC2185B)
+      )
+    }
+    if (expanded) {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+          value = likes,
+          onValueChange = { likes = it.take(200) },
+          label = { Text(if (isEnglish) "What your partner likes" else "Điều đối tác thích") },
+          placeholder = { Text(if (isEnglish) "e.g. coffee, travel, books (comma-separated)" else "VD: cà phê, du lịch, sách (cách nhau bằng dấu phẩy)") },
+          singleLine = true,
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("partner_likes_field")
+        )
+        OutlinedTextField(
+          value = budgetText,
+          onValueChange = { budgetText = it.filter(Char::isDigit).take(12) },
+          label = { Text(if (isEnglish) "Gift budget (VND)" else "Ngân sách quà (VND)") },
+          supportingText = { Text(if (isEnglish) "Leave empty or 0 for no limit" else "Để trống hoặc 0 nếu không giới hạn") },
+          singleLine = true,
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("partner_budget_field")
+        )
+        Text(
+          text = if (isEnglish) "Holiday region (independent of the app language)" else "Vùng dịp lễ (không phụ thuộc ngôn ngữ ứng dụng)",
+          fontSize = 12.sp,
+          color = Color.Gray
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          listOf(
+            Triple(GetPersonalizedGiftSuggestionsUseCase.REGION_VN, if (isEnglish) "Vietnam" else "Việt Nam", "partner_region_vn"),
+            Triple(GetPersonalizedGiftSuggestionsUseCase.REGION_INTL, if (isEnglish) "International" else "Quốc tế", "partner_region_intl")
+          ).forEach { (key, label, tag) ->
+            val isSelected = region == key
+            FilterChip(
+              selected = isSelected,
+              onClick = { region = if (isSelected) "" else key },
+              label = { Text(text = label, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium) },
+              colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = Color(0xFFC2185B),
+                selectedLabelColor = Color.White,
+                containerColor = Color(0xFFFFF5F8),
+                labelColor = Color(0xFF6B2B50)
+              ),
+              border = FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = isSelected,
+                borderColor = if (isSelected) Color(0xFFC2185B) else Color(0xFFFFD1DC)
+              ),
+              shape = RoundedCornerShape(14.dp),
+              modifier = Modifier.testTag(tag)
+            )
+          }
+        }
+        if (!profileExists) {
+          Text(
+            text = if (isEnglish) "Create your couple profile first (names and dates) to save these notes." else "Hãy tạo hồ sơ cặp đôi (tên và ngày) trước để lưu được các ghi chú này.",
+            fontSize = 11.sp,
+            color = Color.Gray
+          )
+        }
+        androidx.compose.material3.Button(
+          onClick = {
+            onSave(likes.trim(), budgetText.toLongOrNull() ?: 0L, region)
+            expanded = false
+          },
+          enabled = profileExists,
+          shape = RoundedCornerShape(12.dp),
+          colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFC2185B),
+            contentColor = Color.White
+          ),
+          modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .testTag("btn_save_partner_preferences")
+        ) {
+          Text(if (isEnglish) "Save" else "Lưu", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+        }
+      }
+    }
+  }
+}
+
+@Composable
+internal fun IllustrationCaption(isEnglish: Boolean, modifier: Modifier = Modifier) {
+  Surface(
+    shape = RoundedCornerShape(20.dp),
+    color = Color.Black.copy(alpha = 0.35f),
+    modifier = modifier
+  ) {
+    Text(
+      text = if (isEnglish) "Illustration" else "Ảnh minh họa",
+      fontSize = 10.sp,
+      color = Color.White,
+      modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+    )
   }
 }
 

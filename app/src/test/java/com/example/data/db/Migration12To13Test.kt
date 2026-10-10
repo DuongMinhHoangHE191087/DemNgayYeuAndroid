@@ -51,13 +51,15 @@ class Migration12To13Test {
         (2, 'Hoa hồng', 'Quà lãng mạn', 'Gợi ý', 'Ý nghĩa', '', '', 0, '', '', 0, '', '', '')
       """.trimIndent()
     )
+    // v12 milestones has no DEFAULTs, so every NOT NULL column must be supplied.
     v12.execSQL(
       """
       INSERT INTO milestones
-        (id, title, dateText, subtitle, categoryTag, secondaryTag, imageUrl, daysRemaining)
+        (id, title, dateText, subtitle, categoryTag, secondaryTag, imageUrl, daysRemaining,
+         isPast, isImportant, notificationEnabled, isSaved, alarmTimeFormatted, isUserCreated)
       VALUES
-        (1, '100 ngày', '2024-04-10', '', 'Cột Mốc', '', '', 0),
-        (2, '1 năm', '2025-01-01', '', 'Cột Mốc', '', '', 0)
+        (1, '100 ngày', '2024-04-10', '', 'Cột Mốc', '', '', 0, 1, 0, 0, 0, '', 0),
+        (2, '1 năm', '2025-01-01', '', 'Cột Mốc', '', '', 0, 1, 0, 0, 0, '', 0)
       """.trimIndent()
     )
     v12.close()

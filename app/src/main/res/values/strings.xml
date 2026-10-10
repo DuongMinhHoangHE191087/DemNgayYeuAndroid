@@ -180,7 +180,6 @@
     <!-- Gift Screen -->
     <string name="gift_screen_title">Gift Suggestions</string>
     <string name="gift_cat_all">All</string>
-    <string name="gift_cat_ai">AI Suggestions ✨</string>
     <string name="gift_cat_jewelry">Jewelry</string>
     <string name="gift_cat_tech">Tech Gadgets</string>
     <string name="gift_cat_flowers">Flowers &amp; Cards</string>
@@ -220,24 +219,16 @@
     <!-- Paywall Screen -->
     <string name="paywall_title">INLOVE PREMIUM</string>
     <string name="paywall_sub">Unlimited Love — Cherish every precious moment together</string>
-    <string name="paywall_benefits_header">VIP Privileges</string>
-    <string name="paywall_benefit_ads">100% Ad-Free forever</string>
-    <string name="paywall_benefit_ai">Personalized gift ideas &amp; love letter suggestions</string>
-    <string name="paywall_benefit_cloud">HD memory photo backup to the cloud</string>
-    <string name="paywall_benefit_lock">PIN-protected private app lock</string>
-    <string name="paywall_benefit_theme">Exclusive couple themes &amp; Premium badges</string>
-    <string name="paywall_plan_yearly_title">1-Year Plan — Most Popular ❤️</string>
-    <string name="paywall_plan_yearly_price">$12.99 / year</string>
-    <string name="paywall_plan_yearly_sub">3 days free trial, then ~$1.08/month</string>
-    <string name="paywall_plan_yearly_badge">SAVE 50%</string>
+    <string name="paywall_benefits_header">Benefits</string>
+    <string name="paywall_benefit_ads">No ads while your plan is active (Lifetime: forever)</string>
+    <string name="paywall_plan_yearly_title">1-Year Plan ❤️</string>
+    <string name="paywall_plan_yearly_sub">Billed yearly, cancel anytime</string>
     <string name="paywall_plan_monthly_title">1-Month Plan</string>
-    <string name="paywall_plan_monthly_price">$1.99 / month</string>
     <string name="paywall_plan_monthly_sub">Flexible billing, cancel anytime</string>
-    <string name="paywall_plan_lifetime_title">Lifetime Eternal Access 💫</string>
-    <string name="paywall_plan_lifetime_price">$29.99 one-time</string>
-    <string name="paywall_plan_lifetime_sub">Pay once — Cherish love forever</string>
+    <string name="paywall_plan_lifetime_title">Lifetime Plan 💫</string>
+    <string name="paywall_plan_lifetime_sub">Pay once — ad-free for as long as the app is supported</string>
     <string name="paywall_plan_lifetime_badge">LIFETIME</string>
-    <string name="paywall_btn_trial">🎁 START 3-DAY FREE TRIAL</string>
+    <string name="paywall_btn_trial">🎁 START FREE TRIAL</string>
     <string name="paywall_btn_monthly">💳 SUBSCRIBE MONTHLY NOW</string>
     <string name="paywall_btn_lifetime">👑 UPGRADE LIFETIME NOW</string>
     <string name="paywall_btn_restore">Restore Purchases</string>
@@ -261,4 +252,27 @@
     <string name="auth_btn_guest">Continue as Guest</string>
     <string name="auth_switch_to_register">Don\'t have an account? Sign up</string>
     <string name="auth_switch_to_login">Already have an account? Sign in</string>
+    <!-- Paywall disclosures (derived from the Google Play offer) -->
+    <string name="paywall_benefit_support">Supports the development of InLove ❤️</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="paywall_loading_prices">Loading prices from Google Play…</string>
+    <string name="paywall_btn_yearly">SUBSCRIBE YEARLY NOW</string>
+    <string name="paywall_period_year">year</string>
+    <string name="paywall_period_month">month</string>
+    <string name="paywall_trial_unknown_length">the introductory period</string>
+    <plurals name="paywall_trial_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="paywall_disclosure_unavailable">Subscription details are loading from Google Play. You can purchase once the price appears.</string>
+    <string name="paywall_disclosure_trial">Free for %1$s, then %2$s per %3$s. Renews automatically until you cancel in Google Play.</string>
+    <string name="paywall_disclosure_paid">%1$s per %2$s. Renews automatically until you cancel in Google Play.</string>
+    <string name="paywall_disclosure_lifetime">%1$s, one-time purchase. No renewal.</string>
+    <string name="paywall_cancel_info">Payment is charged to your Google Play account. Manage or cancel any time in Google Play &gt; Subscriptions.</string>
+    <string name="paywall_pending">⏳ Your payment is being processed by Google Play.</string>
+    <string name="paywall_connecting">Connecting to Google Play, please try again…</string>
+    <string name="paywall_close">Close</string>
+    <string name="settings_legal_privacy">Privacy Policy</string>
+    <string name="settings_legal_terms">Terms of Service</string>
+    <string name="settings_legal_delete">Request account &amp; data deletion</string>
 </resources>

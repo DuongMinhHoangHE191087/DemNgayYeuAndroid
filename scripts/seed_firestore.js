@@ -24,7 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-// Tải .env ở gốc repo nếu có (cùng file mà app/build.gradle.kts đọc CLOUDINARY_*/SMTP_*) —
+// Tải .env ở gốc repo nếu có (script này chỉ dùng FIREBASE_* và SEED_*; không dùng CLOUDINARY_* hay SMTP_*) —
 // KHÔNG bắt buộc: nếu chưa `npm install` dotenv ở scripts/, script vẫn chạy tiếp bằng
 // process.env thật (CI/CD thường set biến môi trường trực tiếp, không qua file .env).
 try {

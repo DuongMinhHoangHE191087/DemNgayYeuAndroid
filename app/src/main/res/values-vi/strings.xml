@@ -180,7 +180,6 @@
     <!-- Gift Screen -->
     <string name="gift_screen_title">Gợi Ý Quà Tặng</string>
     <string name="gift_cat_all">Tất cả</string>
-    <string name="gift_cat_ai">AI Đề Xuất ✨</string>
     <string name="gift_cat_jewelry">Trang Sức</string>
     <string name="gift_cat_tech">Công Nghệ</string>
     <string name="gift_cat_flowers">Hoa &amp; Thiệp</string>
@@ -220,24 +219,16 @@
     <!-- Paywall Screen -->
     <string name="paywall_title">INLOVE PREMIUM</string>
     <string name="paywall_sub">Tình yêu không giới hạn — Gắn kết mọi kỷ niệm trọn vẹn</string>
-    <string name="paywall_benefits_header">Đặc Quyền VIP</string>
-    <string name="paywall_benefit_ads">Tắt hoàn toàn 100% quảng cáo vĩnh viễn</string>
-    <string name="paywall_benefit_ai">Gợi ý quà tặng &amp; thư tình theo sở thích riêng</string>
-    <string name="paywall_benefit_cloud">Sao lưu ảnh kỷ niệm HD lên đám mây</string>
-    <string name="paywall_benefit_lock">Khóa ứng dụng bằng mã PIN riêng tư</string>
-    <string name="paywall_benefit_theme">Huy hiệu Premium &amp; Theme độc quyền dành cho cặp đôi</string>
-    <string name="paywall_plan_yearly_title">Gói 1 Năm — Được Yêu Thích ❤️</string>
-    <string name="paywall_plan_yearly_price">299.000 đ / năm</string>
-    <string name="paywall_plan_yearly_sub">3 ngày dùng thử miễn phí, sau đó ~24.900 đ/tháng</string>
-    <string name="paywall_plan_yearly_badge">TIẾT KIỆM 50%</string>
+    <string name="paywall_benefits_header">Quyền lợi</string>
+    <string name="paywall_benefit_ads">Không quảng cáo khi gói còn hiệu lực (Trọn đời: vĩnh viễn)</string>
+    <string name="paywall_plan_yearly_title">Gói 1 Năm ❤️</string>
+    <string name="paywall_plan_yearly_sub">Thanh toán theo năm, hủy bất kỳ lúc nào</string>
     <string name="paywall_plan_monthly_title">Gói 1 Tháng</string>
-    <string name="paywall_plan_monthly_price">49.000 đ / tháng</string>
     <string name="paywall_plan_monthly_sub">Thanh toán linh hoạt, hủy bất kỳ lúc nào</string>
-    <string name="paywall_plan_lifetime_title">Gói Trọn Đời Vĩnh Cửu 💫</string>
-    <string name="paywall_plan_lifetime_price">699.000 đ một lần</string>
-    <string name="paywall_plan_lifetime_sub">Thanh toán duy nhất 1 lần — Sử dụng mãi mãi</string>
-    <string name="paywall_plan_lifetime_badge">MÃI MÃI</string>
-    <string name="paywall_btn_trial">🎁 BẮT ĐẦU DÙNG THỬ 3 NGÀY MIỄN PHÍ</string>
+    <string name="paywall_plan_lifetime_title">Gói Trọn Đời 💫</string>
+    <string name="paywall_plan_lifetime_sub">Thanh toán một lần — không quảng cáo khi ứng dụng còn được hỗ trợ</string>
+    <string name="paywall_plan_lifetime_badge">TRỌN ĐỜI</string>
+    <string name="paywall_btn_trial">🎁 BẮT ĐẦU DÙNG THỬ MIỄN PHÍ</string>
     <string name="paywall_btn_monthly">💳 ĐĂNG KÝ THÁNG NGAY</string>
     <string name="paywall_btn_lifetime">👑 NÂNG CẤP TRỌN ĐỜI NGAY</string>
     <string name="paywall_btn_restore">Khôi phục gói mua (Restore Purchases)</string>
@@ -261,4 +252,26 @@
     <string name="auth_btn_guest">Tiếp tục với chế độ Khách</string>
     <string name="auth_switch_to_register">Chưa có tài khoản? Đăng ký ngay</string>
     <string name="auth_switch_to_login">Đã có tài khoản? Đăng nhập</string>
+    <!-- Paywall disclosures (derived from the Google Play offer) -->
+    <string name="paywall_benefit_support">Ủng hộ việc phát triển InLove ❤️</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="paywall_loading_prices">Đang tải giá từ Google Play…</string>
+    <string name="paywall_btn_yearly">ĐĂNG KÝ NĂM NGAY</string>
+    <string name="paywall_period_year">năm</string>
+    <string name="paywall_period_month">tháng</string>
+    <string name="paywall_trial_unknown_length">giai đoạn dùng thử</string>
+    <plurals name="paywall_trial_days">
+        <item quantity="other">%d ngày</item>
+    </plurals>
+    <string name="paywall_disclosure_unavailable">Thông tin gói đang được tải từ Google Play. Bạn có thể mua khi giá hiển thị.</string>
+    <string name="paywall_disclosure_trial">Miễn phí %1$s, sau đó %2$s mỗi %3$s. Tự động gia hạn cho đến khi bạn hủy trên Google Play.</string>
+    <string name="paywall_disclosure_paid">%1$s mỗi %2$s. Tự động gia hạn cho đến khi bạn hủy trên Google Play.</string>
+    <string name="paywall_disclosure_lifetime">%1$s, thanh toán một lần. Không gia hạn.</string>
+    <string name="paywall_cancel_info">Thanh toán được tính vào tài khoản Google Play của bạn. Quản lý hoặc hủy bất kỳ lúc nào tại Google Play &gt; Gói đăng ký.</string>
+    <string name="paywall_pending">⏳ Giao dịch đang được Google Play xử lý.</string>
+    <string name="paywall_connecting">Đang kết nối Google Play, vui lòng thử lại…</string>
+    <string name="paywall_close">Đóng</string>
+    <string name="settings_legal_privacy">Chính sách bảo mật</string>
+    <string name="settings_legal_terms">Điều khoản dịch vụ</string>
+    <string name="settings_legal_delete">Yêu cầu xóa tài khoản &amp; dữ liệu</string>
 </resources>

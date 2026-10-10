@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,11 +26,12 @@ class RepositoryScopeLifecycleTest {
     val job = SupervisorJob()
     val scope = CoroutineScope(job + UnconfinedTestDispatcher())
 
-    val repo = OnlineCoupleRepository(db.inLoveDao(), ApplicationProvider.getApplicationContext(), scope)
+    val repo = OnlineCoupleRepository(db.inLoveDao(), ApplicationProvider.getApplicationContext(), scope, useFirestore = false)
     repo.switchDemoUser() // launches on the injected scope
 
     job.cancel()
     assert(!scope.isActive) { "cancelling the caller's scope must stop the repository's own coroutines" }
+    runBlocking { job.join() } // refreshState chạy trên IO: chờ xong rồi mới đóng DB
     db.close()
   }
 }

@@ -57,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,8 +88,12 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import com.example.data.media.LocalMediaStore
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // ==========================================
 // 1. LANGUAGE SELECTION DIALOG (BILINGUAL)
@@ -483,13 +488,13 @@ fun UserGuideDialog(
                 "Save your real, cherished moments with actual photos and videos:",
               points = if (language == AppLanguage.VI) listOf(
                 "Chụp ảnh mới hoặc chọn ảnh/video có sẵn trên máy — có ở cả trang chủ và tab Kỷ Niệm.",
-                "Ảnh/video tự động tải lên Cloudinary; nếu mạng yếu, app lưu tạm trên máy và báo rõ, không giả vờ đã lên cloud.",
-                "Đặt quyền riêng tư cho từng kỷ niệm: Cặp đôi, Riêng tư chỉ mình bạn, hoặc Công khai.",
+                "Ảnh/video của kỷ niệm chia sẻ với người thương được tải lên khi bạn lưu. Nếu mạng yếu hoặc tải lên lỗi, kỷ niệm chưa được lưu và app sẽ báo để bạn thử lại.",
+                "Đặt quyền riêng tư cho từng kỷ niệm: Chỉ 2 người (chia sẻ với người thương) hoặc Chỉ mình tôi (chỉ lưu trên máy này).",
                 "Nhấn vào ảnh để xem chi tiết, đánh dấu Yêu thích, hoặc xóa khi không cần nữa."
               ) else listOf(
                 "Capture a new photo or pick an existing photo/video from your device — available on both Home and the Memories tab.",
-                "Media uploads to Cloudinary automatically; on a weak connection it's kept on-device instead and clearly marked as such, never claimed as backed up when it isn't.",
-                "Set a privacy level per memory: Couple-only, Private to just you, or Public.",
+                "Memories shared with your partner upload their photo or video when you save. On a weak connection or a failed upload, the memory isn't saved and the app tells you so you can try again.",
+                "Set a privacy level per memory: Couple Only (shared with your partner) or Just Me (kept only on this device).",
                 "Tap any memory to view details, mark it a favorite, or delete it."
               )
             )
@@ -732,12 +737,15 @@ fun WallpaperPickerDialog(
   val strings = LocalizedStrings.get(language)
   var selectedUrl by remember { mutableStateOf(currentWallpaperUrl) }
 
+  val scope = rememberCoroutineScope()
   val photoPickerLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.PickVisualMedia()
   ) { uri: Uri? ->
     uri?.let {
-      val savedPath = copyUriToInternalStorage(context, it)
-      selectedUrl = savedPath ?: it.toString()
+      scope.launch {
+        val copied = withContext(Dispatchers.IO) { LocalMediaStore.copyPickedUri(context, it) }
+        selectedUrl = copied?.let { file -> Uri.fromFile(file).toString() } ?: it.toString()
+      }
     }
   }
 

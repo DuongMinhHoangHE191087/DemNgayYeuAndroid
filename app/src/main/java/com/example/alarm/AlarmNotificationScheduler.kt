@@ -6,10 +6,17 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
-import com.example.data.db.AppDatabase
+import com.example.data.db.AccountDataVault
+import com.example.data.db.InLoveDao
 import com.example.data.model.AnniversaryDateEntity
 import com.example.data.model.MilestoneEntity
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -17,6 +24,14 @@ import java.util.Locale
 object AlarmNotificationScheduler {
 
   private const val TAG = "AlarmScheduler"
+  private const val PREFS_NAME = "inlove_notifications"
+  private const val KEY_ANNIVERSARY_ENABLED = "anniversary_enabled"
+
+  // reminder_settings keys; a missing row counts as enabled.
+  internal const val CADENCE_EXACT_DAY = "exact_day"
+
+  // Clock seam: tests pin it so the date and time rules stay deterministic.
+  internal var nowMillis: () -> Long = { System.currentTimeMillis() }
 
   /**
    * Parses various date formats into Triple(day, month, year?).
@@ -79,6 +94,40 @@ object AlarmNotificationScheduler {
     return null
   }
 
+  internal fun today(): LocalDate =
+    Instant.ofEpochMilli(nowMillis()).atZone(ZoneId.systemDefault()).toLocalDate()
+
+  /** A day the month does not have (Feb 29 in common years, Apr 31) falls on the month's last day. */
+  internal fun occurrenceDate(day: Int, month: Int, year: Int): LocalDate {
+    val yearMonth = YearMonth.of(year, month)
+    return yearMonth.atDay(minOf(day, yearMonth.lengthOfMonth()))
+  }
+
+  /**
+   * Calendar day of the next occurrence. An annual date rolls to next year once its time has passed today;
+   * a one-off date keeps its own year.
+   */
+  internal fun nextOccurrenceDate(
+    day: Int,
+    month: Int,
+    year: Int?,
+    isAnnual: Boolean,
+    hourOfDay: Int = 9,
+    minute: Int = 0
+  ): LocalDate {
+    val currentYear = today().year
+    if (!isAnnual) return occurrenceDate(day, month, year ?: currentYear)
+    val thisYear = occurrenceDate(day, month, currentYear)
+    return if (millisOn(thisYear, hourOfDay, minute) < nowMillis()) {
+      occurrenceDate(day, month, currentYear + 1)
+    } else {
+      thisYear
+    }
+  }
+
+  private fun millisOn(date: LocalDate, hourOfDay: Int = 9, minute: Int = 0): Long =
+    ZonedDateTime.of(date, LocalTime.of(hourOfDay, minute), ZoneId.systemDefault()).toInstant().toEpochMilli()
+
   /**
    * Calculates next upcoming timestamp in millis for an anniversary at specified hour:minute.
    */
@@ -89,31 +138,7 @@ object AlarmNotificationScheduler {
     isAnnual: Boolean = true,
     hourOfDay: Int = 9,
     minute: Int = 0
-  ): Long {
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply {
-      set(Calendar.MONTH, month - 1)
-      set(Calendar.DAY_OF_MONTH, day)
-      set(Calendar.HOUR_OF_DAY, hourOfDay)
-      set(Calendar.MINUTE, minute)
-      set(Calendar.SECOND, 0)
-      set(Calendar.MILLISECOND, 0)
-    }
-
-    if (isAnnual) {
-      target.set(Calendar.YEAR, now.get(Calendar.YEAR))
-      if (target.before(now)) {
-        // If already passed this year, advance to next year
-        target.add(Calendar.YEAR, 1)
-      }
-    } else {
-      if (year != null) {
-        target.set(Calendar.YEAR, year)
-      }
-    }
-
-    return target.timeInMillis
-  }
+  ): Long = millisOn(nextOccurrenceDate(day, month, year, isAnnual, hourOfDay, minute), hourOfDay, minute)
 
   /**
    * Schedules an alarm with AlarmManager.
@@ -131,7 +156,7 @@ object AlarmNotificationScheduler {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
       ?: return false
 
-    if (triggerAtMillis <= System.currentTimeMillis()) {
+    if (triggerAtMillis <= nowMillis()) {
       Log.d(TAG, "Skipping past alarm trigger $triggerAtMillis for reminder $reminderId")
       return false
     }
@@ -143,6 +168,7 @@ object AlarmNotificationScheduler {
       putExtra(ReminderAlarmReceiver.EXTRA_REMINDER_ID, reminderId)
       putExtra(ReminderAlarmReceiver.EXTRA_CHANNEL_ID, channelId)
       putExtra(ReminderAlarmReceiver.EXTRA_TARGET_TAB, targetTab)
+      putExtra(ReminderAlarmReceiver.EXTRA_OWNER, AccountDataVault.currentToken(context))
     }
 
     val pendingIntent = PendingIntent.getBroadcast(
@@ -152,29 +178,17 @@ object AlarmNotificationScheduler {
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
+    // Cancel first: a re-set replaces the alarm whether or not the platform merges a repeated PendingIntent.
+    alarmManager.cancel(pendingIntent)
     try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (alarmManager.canScheduleExactAlarms()) {
-          alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerAtMillis,
-            pendingIntent
-          )
-        } else {
-          alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerAtMillis,
-            pendingIntent
-          )
-        }
-      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      if (exactGranted(alarmManager)) {
         alarmManager.setExactAndAllowWhileIdle(
           AlarmManager.RTC_WAKEUP,
           triggerAtMillis,
           pendingIntent
         )
       } else {
-        alarmManager.setExact(
+        alarmManager.setAndAllowWhileIdle(
           AlarmManager.RTC_WAKEUP,
           triggerAtMillis,
           pendingIntent
@@ -201,6 +215,21 @@ object AlarmNotificationScheduler {
     }
   }
 
+  /** Exact alarms need the user's grant from API 31; before that they are always allowed. */
+  fun exactAlarmAllowed(sdkInt: Int, canScheduleExact: Boolean): Boolean =
+    sdkInt < Build.VERSION_CODES.S || canScheduleExact
+
+  /** False means alarms still fire, but inexactly: Doze can delay them by minutes. */
+  fun exactAlarmsGranted(context: Context): Boolean {
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return false
+    return exactGranted(alarmManager)
+  }
+
+  private fun exactGranted(alarmManager: AlarmManager): Boolean = exactAlarmAllowed(
+    Build.VERSION.SDK_INT,
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarmManager.canScheduleExactAlarms()
+  )
+
   fun cancelAlarm(
     context: Context,
     reminderId: Long,
@@ -220,66 +249,89 @@ object AlarmNotificationScheduler {
     Log.d(TAG, "Canceled alarm for reminder $reminderId")
   }
 
+  /** Request code of an anniversary's advance reminder. */
+  fun advanceAlarmId(anniversaryId: Long): Long = 100000L + anniversaryId * 10L + 1L
+
+  /** Request code of an anniversary's day-of reminder; the morning check posts the same notification id. */
+  fun dayOfAlarmId(anniversaryId: Long): Long = 100000L + anniversaryId * 10L + 2L
+
+  /** Cadence keys the user switched off. A reminder_settings row is the only switch; no row means on. */
+  suspend fun disabledCadenceKeys(dao: InLoveDao): Set<String> =
+    dao.getReminderCadencesList().filterNot { it.isEnabled }.map { it.key }.toSet()
+
   /**
-   * Schedules advance reminder and day-of reminder for a specific anniversary date.
+   * Schedules the advance reminder (reminderDaysBefore days before, 09:00) and the day-of reminder (09:00).
+   * 7_days, 3_days and 1_day switch off the advance reminder of that day count; exact_day switches off the
+   * day-of reminder. Any alarm that is switched off or can no longer fire is cancelled.
    */
   fun scheduleAnniversaryNotification(
     context: Context,
-    anniversary: AnniversaryDateEntity
+    anniversary: AnniversaryDateEntity,
+    disabledCadence: Set<String>
   ): Boolean {
-    val parsed = parseDateToMonthDayYear(anniversary.dateText) ?: return false
-    val anniversaryMillis = calculateNextOccurrenceMillis(
-      day = parsed.first,
-      month = parsed.second,
-      year = parsed.third,
-      isAnnual = anniversary.isAnnual,
-      hourOfDay = 9,
-      minute = 0
-    )
-
+    val parsed = parseDateToMonthDayYear(anniversary.dateText)
+    if (!anniversary.notificationEnabled || parsed == null) {
+      cancelAnniversaryNotification(context, anniversary.id)
+      return false
+    }
+    val date = nextOccurrenceDate(parsed.first, parsed.second, parsed.third, anniversary.isAnnual)
+    val now = nowMillis()
     var successAny = false
 
-    // 1. Advance notification (e.g. 7 days, 3 days, 1 day before at 09:00 AM)
-    if (anniversary.reminderDaysBefore > 0) {
-      val advanceMillis = anniversaryMillis - (anniversary.reminderDaysBefore * 24 * 60 * 60 * 1000L)
-      if (advanceMillis > System.currentTimeMillis()) {
-        val advanceId = (100000L + anniversary.id * 10L + 1L)
-        val advanceScheduled = scheduleAlarm(
-          context = context,
-          reminderId = advanceId,
-          title = "🔔 Sắp Đến: ${anniversary.title}",
-          message = "Còn ${anniversary.reminderDaysBefore} ngày nữa là đến ngày kỷ niệm '${anniversary.title}' (${anniversary.dateText}). Đừng quên chuẩn bị điều bất ngờ cho người ấy nhé! 💕",
-          triggerAtMillis = advanceMillis,
-          action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
-          channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
-          targetTab = "calendar"
-        )
-        if (advanceScheduled) successAny = true
-      }
+    // 1. Advance notification, daysBefore days before the date at 09:00
+    val advanceKey = when (anniversary.reminderDaysBefore) {
+      7 -> "7_days"
+      3 -> "3_days"
+      1 -> "1_day"
+      else -> null
+    }
+    val advanceOn = anniversary.reminderDaysBefore > 0 && (advanceKey == null || advanceKey !in disabledCadence)
+    val advanceMillis = millisOn(date.minusDays(anniversary.reminderDaysBefore.toLong()))
+    if (advanceOn && advanceMillis > now) {
+      val advanceScheduled = scheduleAlarm(
+        context = context,
+        reminderId = advanceAlarmId(anniversary.id),
+        title = "🔔 Sắp Đến: ${anniversary.title}",
+        message = "Còn ${anniversary.reminderDaysBefore} ngày nữa là đến ngày kỷ niệm '${anniversary.title}' (${anniversary.dateText}). Đừng quên chuẩn bị điều bất ngờ cho người ấy nhé! 💕",
+        triggerAtMillis = advanceMillis,
+        action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
+        channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
+        targetTab = "calendar"
+      )
+      if (advanceScheduled) successAny = true
+    } else {
+      cancelAlarm(context, advanceAlarmId(anniversary.id), ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
     }
 
     // 2. Day-of notification (at 09:00 AM)
-    if (anniversaryMillis > System.currentTimeMillis()) {
-      val dayOfId = (100000L + anniversary.id * 10L + 2L)
+    val dayOfMillis = millisOn(date)
+    if (CADENCE_EXACT_DAY !in disabledCadence && dayOfMillis > now) {
+      val (dayOfTitle, dayOfMessage) = dayOfTexts(anniversary.title, anniversary.dateText)
       val dayOfScheduled = scheduleAlarm(
         context = context,
-        reminderId = dayOfId,
-        title = "🎉 Hôm Nay: ${anniversary.title}!",
-        message = "Hôm nay là ngày kỷ niệm đặc biệt '${anniversary.title}' (${anniversary.dateText})! Chúc hai bạn một ngày ngập tràn ngọt ngào và yêu thương! ❤️✨",
-        triggerAtMillis = anniversaryMillis,
+        reminderId = dayOfAlarmId(anniversary.id),
+        title = dayOfTitle,
+        message = dayOfMessage,
+        triggerAtMillis = dayOfMillis,
         action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
         channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
         targetTab = "calendar"
       )
       if (dayOfScheduled) successAny = true
+    } else {
+      cancelAlarm(context, dayOfAlarmId(anniversary.id), ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
     }
 
     return successAny
   }
 
+  /** Day-of text. The morning check posts into the same notification slot, so both paths share it. */
+  internal fun dayOfTexts(title: String, dateText: String): Pair<String, String> =
+    "🎉 Hôm Nay: $title!" to "Hôm nay là ngày kỷ niệm đặc biệt '$title' ($dateText)! Chúc hai bạn một ngày ngập tràn ngọt ngào và yêu thương! ❤️✨"
+
   fun cancelAnniversaryNotification(context: Context, anniversaryId: Long) {
-    cancelAlarm(context, 100000L + anniversaryId * 10L + 1L, ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
-    cancelAlarm(context, 100000L + anniversaryId * 10L + 2L, ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
+    cancelAlarm(context, advanceAlarmId(anniversaryId), ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
+    cancelAlarm(context, dayOfAlarmId(anniversaryId), ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
   }
 
   /**
@@ -296,7 +348,7 @@ object AlarmNotificationScheduler {
       minute = 0
     )
 
-    if (milestoneMillis > System.currentTimeMillis()) {
+    if (milestoneMillis > nowMillis()) {
       val milestoneId = (200000L + milestone.id)
       return scheduleAlarm(
         context = context,
@@ -317,20 +369,23 @@ object AlarmNotificationScheduler {
   }
 
   /**
-   * Schedules a daily morning heartbeat check at 09:00 AM.
+   * Cancels the alarms the outgoing account set from its own rows, so they cannot fire under the next account.
+   */
+  suspend fun cancelOutgoingAccountAlarms(context: Context, dao: InLoveDao) {
+    // ponytail: Firestore milestone offsets and the 400001 summary id stay scheduled; the owner fence drops them when they fire.
+    dao.getAnniversaryDatesList().forEach { cancelAnniversaryNotification(context, it.id) }
+    dao.getMilestonesList().filter { it.isUserCreated }.forEach { cancelMilestoneNotification(context, it.id) }
+    dao.getCustomRemindersList().forEach { cancelAlarm(context, it.id) }
+  }
+
+  /**
+   * Schedules the daily morning check at the next 09:00. Each run re-arms the next one.
    */
   fun scheduleDailyMorningCheck(context: Context) {
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-    val now = Calendar.getInstance()
-    val next9Am = Calendar.getInstance().apply {
-      set(Calendar.HOUR_OF_DAY, 9)
-      set(Calendar.MINUTE, 0)
-      set(Calendar.SECOND, 0)
-      set(Calendar.MILLISECOND, 0)
-      if (before(now)) {
-        add(Calendar.DAY_OF_YEAR, 1)
-      }
-    }
+    val today = today()
+    val todayAt9 = millisOn(today)
+    val next9Am = if (todayAt9 > nowMillis()) todayAt9 else millisOn(today.plusDays(1))
 
     val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
       action = ReminderAlarmReceiver.ACTION_DAILY_ANNIVERSARY_CHECK
@@ -343,84 +398,69 @@ object AlarmNotificationScheduler {
     )
 
     try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        alarmManager.setAndAllowWhileIdle(
-          AlarmManager.RTC_WAKEUP,
-          next9Am.timeInMillis,
-          pendingIntent
-        )
-      } else {
-        alarmManager.set(
-          AlarmManager.RTC_WAKEUP,
-          next9Am.timeInMillis,
-          pendingIntent
-        )
-      }
-      Log.d(TAG, "Scheduled daily anniversary morning check at ${next9Am.time}")
+      alarmManager.setAndAllowWhileIdle(
+        AlarmManager.RTC_WAKEUP,
+        next9Am,
+        pendingIntent
+      )
+      Log.d(TAG, "Scheduled daily anniversary morning check at ${Date(next9Am)}")
     } catch (e: Exception) {
       Log.e(TAG, "Error scheduling daily morning check", e)
     }
   }
 
   /**
-   * Queries Room DB and reschedules alarms for all enabled anniversaries, couple profile, and milestones.
+   * Makes the alarms match the database: anniversaries, milestones, the couple anniversary, personal reminders,
+   * and the daily check. Runs on boot, on a clock or timezone change, on account switch, and after edits.
+   * Returns the number of alarms scheduled.
    */
-  suspend fun scheduleAllAnniversariesFromDb(context: Context): Int {
+  suspend fun scheduleAllAnniversariesFromDb(context: Context, dao: InLoveDao): Int {
     var scheduledCount = 0
     try {
-      val dao = AppDatabase.getDatabase(context).inLoveDao()
-      val anniversaries = dao.getAnniversaryDatesList()
-      for (ann in anniversaries) {
-        if (ann.notificationEnabled) {
-          if (scheduleAnniversaryNotification(context, ann)) {
-            scheduledCount++
-          }
-        } else {
-          cancelAnniversaryNotification(context, ann.id)
-        }
-      }
-
-      val milestones = dao.getMilestonesList()
-      for (ms in milestones) {
-        if (ms.notificationEnabled && !ms.isPast) {
-          if (scheduleMilestoneNotification(context, ms)) {
-            scheduledCount++
-          }
-        }
-      }
-
-      // Schedule couple profile main anniversary
-      val profile = dao.getCoupleProfileSync()
-      if (profile != null) {
-        val parsed = parseDateToMonthDayYear(profile.anniversaryDate)
-        if (parsed != null) {
-          val triggerMillis = calculateNextOccurrenceMillis(
-            day = parsed.first,
-            month = parsed.second,
-            year = parsed.third,
-            isAnnual = true,
-            hourOfDay = 9,
-            minute = 0
-          )
-          if (triggerMillis > System.currentTimeMillis()) {
-            scheduleAlarm(
-              context = context,
-              reminderId = 400001L,
-              title = "💑 Kỷ Niệm Ngày Yêu Nhau: ${profile.loveTitle} ❤️",
-              message = "Chúc mừng ngày kỷ niệm chính thức yêu nhau của hai bạn! Chặng đường ${profile.loveDays} ngày yêu thương ngọt ngào! 🎉🌹",
-              triggerAtMillis = triggerMillis,
-              action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
-              channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
-              targetTab = "home"
-            )
-            scheduledCount++
-          }
-        }
-      }
-
-      // Schedule recurring daily check
       scheduleDailyMorningCheck(context)
-      Log.d(TAG, "Successfully rescheduled $scheduledCount anniversary/milestone alarms from DB.")
+      val disabledCadence = disabledCadenceKeys(dao)
+
+      for (ann in dao.getAnniversaryDatesList()) {
+        if (scheduleAnniversaryNotification(context, ann, disabledCadence)) {
+          scheduledCount++
+        }
+      }
+
+      for (ms in dao.getMilestonesList()) {
+        if (ms.notificationEnabled && !ms.isPast && scheduleMilestoneNotification(context, ms)) {
+          scheduledCount++
+        } else {
+          cancelMilestoneNotification(context, ms.id)
+        }
+      }
+
+      // Couple anniversary: fixed id 400001. A missing or unreadable date cancels the alarm it left behind.
+      val profile = dao.getCoupleProfileSync()
+      val parsed = profile?.let { parseDateToMonthDayYear(it.anniversaryDate) }
+      val coupleScheduled = profile != null && parsed != null && scheduleAlarm(
+        context = context,
+        reminderId = 400001L,
+        title = "💑 Kỷ Niệm Ngày Yêu Nhau: ${profile.loveTitle} ❤️",
+        message = "Chúc mừng ngày kỷ niệm chính thức yêu nhau của hai bạn! Chặng đường ${profile.loveDays} ngày yêu thương ngọt ngào! 🎉🌹",
+        triggerAtMillis = calculateNextOccurrenceMillis(parsed.first, parsed.second, parsed.third, isAnnual = true),
+        action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
+        channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
+        targetTab = "home"
+      )
+      if (coupleScheduled) {
+        scheduledCount++
+      } else {
+        cancelAlarm(context, 400001L, ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
+      }
+
+      // Personal alarms keep their trigger time on the reminder row; a past trigger is skipped.
+      for (reminder in dao.getCustomRemindersList()) {
+        val triggerMillis = reminder.alarmTimeMillis ?: continue
+        if (scheduleAlarm(context, reminder.id, reminder.title, reminder.details, triggerMillis)) {
+          scheduledCount++
+        }
+      }
+      Log.d(TAG, "Successfully rescheduled $scheduledCount alarms from DB.")
     } catch (e: Exception) {
       Log.e(TAG, "Failed scheduleAllAnniversariesFromDb: ${e.message}", e)
     }
@@ -443,6 +483,14 @@ object AlarmNotificationScheduler {
       channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
       targetTab = "calendar"
     )
+  }
+
+  // Device-wide switch for anniversary notices. Alarms stay armed while it is off; delivery drops them.
+  fun anniversaryNotificationsEnabled(context: Context): Boolean =
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_ANNIVERSARY_ENABLED, true)
+
+  fun setAnniversaryNotificationsEnabled(context: Context, enabled: Boolean) {
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putBoolean(KEY_ANNIVERSARY_ENABLED, enabled).apply()
   }
 
   fun formatAlarmTime(millis: Long): String {

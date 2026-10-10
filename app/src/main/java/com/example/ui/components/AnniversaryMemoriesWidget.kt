@@ -1,7 +1,6 @@
 @file:Suppress("FunctionName")
 package com.example.ui.components
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -91,13 +90,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.example.data.media.LocalMediaStore
 import com.example.data.model.SharedMemoryEntity
+import com.example.domain.media.MemoryMediaFile
 import com.example.ui.theme.Primary
 import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -123,6 +124,7 @@ fun AnniversaryMemoriesWidget(
   // State for Add Photo dialog
   var showAddDialog by remember { mutableStateOf(false) }
   var pendingPhotoUri by remember { mutableStateOf<String?>(null) }
+  var pendingMedia by remember { mutableStateOf<MemoryMediaFile?>(null) }
   var selectedDetailMemory by remember { mutableStateOf<SharedMemoryEntity?>(null) }
 
   // Gallery Photo Picker Launcher safely guarded for runtime and test environments
@@ -132,9 +134,19 @@ fun AnniversaryMemoriesWidget(
       contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
       uri?.let {
-        val savedPath = copyPhotoUriToStorage(context, it)
-        pendingPhotoUri = savedPath ?: it.toString()
-        showAddDialog = true
+        // Copy and validate off the main thread so a large photo does not block the UI.
+        coroutineScope.launch {
+          val pick = withContext(Dispatchers.IO) { LocalMediaStore.prepare(context, it) }
+          val media = pick.media
+          val cover = pick.coverUri
+          if (media == null || cover == null) {
+            pick.error?.let { viewModel.showToast(it) }
+            return@launch
+          }
+          pendingMedia = media
+          pendingPhotoUri = cover
+          showAddDialog = true
+        }
       }
     }
   } else null
@@ -403,6 +415,7 @@ fun AnniversaryMemoriesWidget(
             AnniversaryPhotoCarouselItem(
               memory = memory,
               isVietnamese = isVietnamese,
+              resolveMedia = { viewModel.resolveMemoryMediaUrl(memory) },
               onClick = { selectedDetailMemory = memory },
               onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) }
             )
@@ -523,27 +536,36 @@ fun AnniversaryMemoriesWidget(
   }
 
   // DIALOG 1: ADD PHOTO FROM GALLERY TO SPECIFIC ANNIVERSARY
-  if (showAddDialog && pendingPhotoUri != null) {
+  if (showAddDialog) pendingPhotoUri?.let { photoUri ->
     AddAnniversaryPhotoDialog(
-      initialPhotoUri = pendingPhotoUri!!,
+      initialPhotoUri = photoUri,
+      initialMedia = pendingMedia,
       preselectedAnniversary = if (selectedFilter != "Tất cả" && selectedFilter != "All") selectedFilter else (defaultAnniversaryList.firstOrNull() ?: "Ngày Bắt Đầu Yêu"),
       anniversaryOptions = defaultAnniversaryList,
       isVietnamese = isVietnamese,
+      onPickError = viewModel::showToast,
       onDismiss = {
         showAddDialog = false
         pendingPhotoUri = null
+        pendingMedia = null
       },
-      onSave = { title, dateText, uri, note, location, anniversaryTitle ->
-        viewModel.addSharedMemory(
-          title = title,
-          dateText = dateText,
-          photoUri = uri,
-          note = note,
-          location = location,
-          anniversaryTitle = anniversaryTitle
-        )
+      onSave = { title, dateText, uri, note, location, anniversaryTitle, media ->
+        coroutineScope.launch {
+          viewModel.saveSharedMemory(
+            title = title,
+            dateText = dateText,
+            photoUri = uri,
+            note = note,
+            location = location,
+            media = media,
+            coverUri = uri,
+            privacyLevel = "COUPLE_ONLY",
+            anniversaryTitle = anniversaryTitle
+          )
+        }
         showAddDialog = false
         pendingPhotoUri = null
+        pendingMedia = null
       }
     )
   }
@@ -553,6 +575,7 @@ fun AnniversaryMemoriesWidget(
     AnniversaryPhotoDetailDialog(
       memory = memory,
       isVietnamese = isVietnamese,
+      resolveMedia = { viewModel.resolveMemoryMediaUrl(memory) },
       onDismiss = { selectedDetailMemory = null },
       onToggleFavorite = { viewModel.toggleMemoryFavorite(memory) },
       onDelete = {
@@ -570,10 +593,17 @@ fun AnniversaryMemoriesWidget(
 private fun AnniversaryPhotoCarouselItem(
   memory: SharedMemoryEntity,
   isVietnamese: Boolean,
+  resolveMedia: suspend () -> String?,
   onClick: () -> Unit,
   onToggleFavorite: () -> Unit
 ) {
   val context = LocalContext.current
+  val photoModel = rememberMemoryUri(
+    memoryId = memory.syncId,
+    localUri = memory.photoUri,
+    cloudPublicId = memory.cloudinaryPublicId.takeIf { memory.mediaType != "VIDEO" },
+    resolve = resolveMedia,
+  )
 
   Card(
     shape = RoundedCornerShape(20.dp),
@@ -588,10 +618,12 @@ private fun AnniversaryPhotoCarouselItem(
     Box(modifier = Modifier.fillMaxSize()) {
       // 1. COIL IMAGE LOADER WITH SHIMMER & ERROR HANDLING
       SubcomposeAsyncImage(
-        model = ImageRequest.Builder(context)
-          .data(memory.photoUri)
-          .crossfade(true)
-          .build(),
+        model = photoModel?.let { url ->
+          ImageRequest.Builder(context)
+            .data(url)
+            .crossfade(true)
+            .build()
+        },
         contentDescription = memory.title,
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize(),
@@ -869,13 +901,16 @@ private fun EmptyAnniversaryPhotoCard(
 @Composable
 private fun AddAnniversaryPhotoDialog(
   initialPhotoUri: String,
+  initialMedia: MemoryMediaFile?,
   preselectedAnniversary: String,
   anniversaryOptions: List<String>,
   isVietnamese: Boolean,
+  onPickError: (String) -> Unit,
   onDismiss: () -> Unit,
-  onSave: (title: String, dateText: String, photoUri: String, note: String, location: String, anniversaryTitle: String) -> Unit
+  onSave: (title: String, dateText: String, photoUri: String, note: String, location: String, anniversaryTitle: String, media: MemoryMediaFile?) -> Unit
 ) {
   val context = LocalContext.current
+  val coroutineScope = rememberCoroutineScope()
   val todayFormatted = remember {
     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
   }
@@ -886,6 +921,7 @@ private fun AddAnniversaryPhotoDialog(
   var location by remember { mutableStateOf("") }
   var selectedAnniversary by remember { mutableStateOf(preselectedAnniversary) }
   var currentPhotoUri by remember { mutableStateOf(initialPhotoUri) }
+  var currentMedia by remember { mutableStateOf(initialMedia) }
 
   // Launcher to change photo if desired (safely guarded)
   val registryOwner = LocalActivityResultRegistryOwner.current
@@ -894,8 +930,17 @@ private fun AddAnniversaryPhotoDialog(
       contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
       uri?.let {
-        val saved = copyPhotoUriToStorage(context, it)
-        currentPhotoUri = saved ?: it.toString()
+        coroutineScope.launch {
+          val pick = withContext(Dispatchers.IO) { LocalMediaStore.prepare(context, it) }
+          val media = pick.media
+          val cover = pick.coverUri
+          if (media == null || cover == null) {
+            pick.error?.let { onPickError(it) }
+            return@launch
+          }
+          currentMedia = media
+          currentPhotoUri = cover
+        }
       }
     }
   } else null
@@ -1116,7 +1161,7 @@ private fun AddAnniversaryPhotoDialog(
             val finalTitle = title.trim().ifBlank {
               if (isVietnamese) "Khoảnh Khắc Kỷ Niệm" else "Anniversary Moment"
             }
-            onSave(finalTitle, dateText, currentPhotoUri, note, location, selectedAnniversary)
+            onSave(finalTitle, dateText, currentPhotoUri, note, location, selectedAnniversary, currentMedia)
           },
           colors = ButtonDefaults.buttonColors(containerColor = Primary),
           shape = RoundedCornerShape(16.dp),
@@ -1146,11 +1191,18 @@ private fun AddAnniversaryPhotoDialog(
 private fun AnniversaryPhotoDetailDialog(
   memory: SharedMemoryEntity,
   isVietnamese: Boolean,
+  resolveMedia: suspend () -> String?,
   onDismiss: () -> Unit,
   onToggleFavorite: () -> Unit,
   onDelete: () -> Unit
 ) {
   var showDeleteConfirm by remember { mutableStateOf(false) }
+  val mediaUri = rememberMemoryUri(
+    memoryId = memory.syncId,
+    localUri = memory.photoUri,
+    cloudPublicId = memory.cloudinaryPublicId.takeIf { memory.mediaType != "VIDEO" },
+    resolve = resolveMedia,
+  )
 
   Dialog(onDismissRequest = onDismiss) {
     Surface(
@@ -1173,7 +1225,7 @@ private fun AnniversaryPhotoDetailDialog(
             .height(280.dp)
         ) {
           SubcomposeAsyncImage(
-            model = memory.photoUri,
+            model = mediaUri,
             contentDescription = memory.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -1335,23 +1387,5 @@ private fun AnniversaryPhotoDetailDialog(
         }
       }
     }
-  }
-}
-
-/**
- * Helper to copy picked gallery photo URI to internal app storage, ensuring persistence.
- */
-private fun copyPhotoUriToStorage(context: Context, uri: Uri): String? {
-  return try {
-    val filename = "anniversary_mem_${System.currentTimeMillis()}.jpg"
-    val destFile = File(context.filesDir, filename)
-    context.contentResolver.openInputStream(uri)?.use { input ->
-      FileOutputStream(destFile).use { output ->
-        input.copyTo(output)
-      }
-    }
-    Uri.fromFile(destFile).toString()
-  } catch (e: Exception) {
-    null
   }
 }

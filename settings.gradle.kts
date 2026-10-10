@@ -46,7 +46,8 @@ dependencyResolutionManagement {
 rootProject.name = "InLove"
 
 include(":app")
-includeBuild("appplugin") {
+// SDK nội bộ: ưu tiên APPPLUGIN_DIR, rồi ./appplugin, rồi bản clone cạnh repo (../appplugin).
+includeBuild(System.getenv("APPPLUGIN_DIR") ?: if (file("appplugin").exists()) "appplugin" else "../appplugin") {
   dependencySubstitution {
     substitute(module("com.app.plugin:appplugin")).using(project(":"))
   }

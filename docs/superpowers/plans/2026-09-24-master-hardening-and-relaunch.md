@@ -4,8 +4,15 @@
 >
 > **Cách dùng:** mỗi Task có checkbox `- [ ]`. Superpower `executing-plans` / `subagent-driven-development` chạy tuần tự theo Task, cập nhật ledger tại `.superpowers/sdd/2026-09-24-master-hardening-and-relaunch/progress.md`. KHÔNG đổi Product ID billing thật hoặc xoá dữ liệu người dùng thật mà không xác nhận với chủ dự án.
 
+> **Đối soát 2026-10-08** (chi tiết: `docs/superpowers/plans/2026-10-08-release-execution-plan.md`). Chỉ tick khi có bằng chứng.
+> - A1: code xong, chưa xác minh runtime. A2: có test repo, thiếu test ViewModel. A3: đã dùng `VipProductIds` (tick). A4: `changePassword` đã cập nhật Firebase; OTP/security-answer local còn. A5: mở. A6: `exportSchema` và `MIGRATION_12_13` có; test `@Ignore`. A7: ký và R8 bật; keep rules còn rộng. A8: code dùng `requireEnv`; rotate là việc owner. A9: `firestore.rules` có `hasOnly`; test emulator chưa chạy. A10: chưa xác minh. A11: fraction 0.05 nhưng brain tắt; owner xác nhận.
+> - B1: một phần (invite listener có; tìm kiếm còn local). B2: một phần. B3: chưa xác minh. B4: mở (`upgradeSubscription` còn). B5: quyết định (light cố định). B6: một phần. B7: client xong; xoá Cloudinary mở.
+> - C1: một phần (`Shapes` có, chưa có `Shape.kt`). C2–C6: mở hoặc chưa xác minh. D3: mở (20 seed). D1, D2, D4, E1: chưa xác minh.
+> - F3: xong (tick). Data Safety, domain, trang xoá tài khoản web: mở.
+> - Đính chính: minSdk của app là 24 (không phải 26, xem `AGENTS.md`); appplugin: catalog 2.3.0, sibling 2.4.2 (P1-2).
+
 ## Global Constraints
-- Target SDK 36, Min SDK 26 (app) / 26 (appplugin), Java 17.
+- Target SDK 36, Min SDK 24 (app; đính chính 2026-10-08) / 26 (appplugin), Java 17.
 - `appplugin/` là **git repo lồng riêng** (`appplugin/.git`), không được `git add -A` từ root cuốn theo — luôn `git status` trước khi add.
 - Máy build hiện dùng Gradle daemon JDK 25 (`eclipse_adoptium-25-amd64-windows.2`) — đã từng OOM crash (`app/hs_err_pid15228.log`). Cân nhắc pin daemon về JDK 17 (`org.gradle.java.home`) nếu OOM lặp lại.
 - Mọi thay đổi billing/entitlement phải giữ nguyên tắc: **Entitlements.recompute() là nguồn sự thật duy nhất nối quyền lợi → quảng cáo** (đã đúng thiết kế trong appplugin) — không tạo thêm đường tắt thứ hai.
@@ -28,7 +35,7 @@
 
 ### Task A3: Thống nhất Product ID billing (đơn nguồn sự thật)
 **Files:** `app/src/main/java/com/example/billing/BillingManager.kt`, `app/src/main/java/com/example/InLoveApplication.kt`
-- [ ] Tạo `object VipProductIds` (trong `com.example.billing`) chứa 3 hằng số hiện dùng thật trong `BillingManager` (`vip_monthly`, `vip_yearly`, `vip_lifetime` — đây là ID đã cấu hình Paywall/Play Console thật). **Không đổi giá trị này** — chỉ trỏ `MonetizationSdk.configure { inappProducts / subsProducts / removeAdsProducts }` trong `InLoveApplication.kt` về cùng `VipProductIds` thay vì hardcode `inlove_vip_*` (ID chưa từng khớp Play Console).
+- [x] Tạo `object VipProductIds` (trong `com.example.billing`) — đối soát 2026-10-08: dùng ở `InLoveApplication.kt:79–81` chứa 3 hằng số hiện dùng thật trong `BillingManager` (`vip_monthly`, `vip_yearly`, `vip_lifetime` — đây là ID đã cấu hình Paywall/Play Console thật). **Không đổi giá trị này** — chỉ trỏ `MonetizationSdk.configure { inappProducts / subsProducts / removeAdsProducts }` trong `InLoveApplication.kt` về cùng `VipProductIds` thay vì hardcode `inlove_vip_*` (ID chưa từng khớp Play Console).
 - [ ] Ghi rõ trong code comment: BillingManager là billing client THẬT duy nhất chạy purchase flow; `IapHelper`/`MonetizationSdk` phía appplugin chỉ dùng để đồng bộ `Entitlements` (tắt quảng cáo), không tự chạy song song một luồng mua hàng khác. Xem xét: có nên tắt `IapHelper.init()` (đặt `startBilling=false` hoặc không khai `inappProducts/subsProducts` trong `configure`) để tránh 2 `BillingClient` cùng lúc — **cần xác nhận với chủ dự án trước khi tắt**, ghi vào ledger nếu chưa quyết được, chuyển sang Task A3b.
 - [x] Sau khi PURCHASED, gọi `Entitlements.grant(productId)`/`sync(...)` từ `BillingManager` để cầu nối quyền lợi sang appplugin's `AdsHelper.setRemoveAds` — đã code (xem ledger).
 - [x] **QUYẾT ĐỊNH (đã đọc toàn bộ `IapHelper.kt` 516 dòng để trả lời câu hỏi treo ở trên):** GIỮ NGUYÊN 2 `BillingClient`, không tắt `IapHelper`. Lý do:
@@ -205,7 +212,7 @@
 
 - [ ] Data Safety form khai đủ SDK đã liệt kê (Firebase*, AdMob + toàn bộ mediation adapters, AppsFlyer, Cloudinary, databuckets ingest endpoint).
 - [ ] Privacy Policy URL thống nhất 1 domain (hiện `inloveapp.com` / `inlove.app` / `inlove-app.web.app` lẫn lộn — chọn 1, sửa tất cả nơi tham chiếu).
-- [ ] UMP "Privacy options" entry point trong Settings (hiện chưa có, bắt buộc nếu phục vụ EEA/UK).
+- [x] UMP "Privacy options" entry point trong Settings (đối soát 2026-10-08: `SettingsScreen.kt:681`, `PrivacyOptionsRowTest` 4 test) (hiện chưa có, bắt buộc nếu phục vụ EEA/UK).
 - [ ] Account deletion hoàn tất (Task B7) + link web deletion hoạt động thật.
 - [ ] Release build ký đúng keystore thật (Task A7), R8 bật, version code/name hợp lý cho lần submit đầu.
 - [x] **`PurchaseRouter` — đã đọc toàn bộ file (309 dòng) và xác nhận: KHÔNG phải rủi ro thật cho InLove hiện tại.** Mặc định `WEB_SHOP_OFF` (an toàn), chỉ bật khi Firebase Remote Config gửi `web_shop.enabled=true` qua `FirHelperConfig.kt` → `PurchaseRouter.apply()`. Nhưng `:app` KHÔNG hề gọi `PurchaseRouter.purchase()` ở bất kỳ đâu (grep xác nhận 0 kết quả) — `PaywallScreen.kt` gọi thẳng `BillingManager.launchPurchaseFlow()` (Play Billing thuần), router bị bỏ qua hoàn toàn dù Remote Config nói gì. Không cần hành động thêm trừ khi sau này chủ động nối `:app` qua router.

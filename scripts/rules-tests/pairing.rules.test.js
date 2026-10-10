@@ -28,7 +28,7 @@ describe('pairing security rules (Task 10 design)', function () {
     await testEnv.clearFirestore();
   });
 
-  it('duplicate accept is a no-op: creating relationships/{id} twice for the same accepted invite does not throw a second create', async () => {
+  it('a client cannot create relationships/{id} even for an ACCEPTED invite (server-only via acceptCoupleInvite); the server-created doc keeps its identity locked', async () => {
     const uidA = 'uid_a';
     const uidB = 'uid_b';
     const inviteId = 'inv_1';
@@ -43,14 +43,18 @@ describe('pairing security rules (Task 10 design)', function () {
     const relRef = bCtx.collection('relationships').doc(inviteId);
     const relData = { partnerAId: uidA, partnerBId: uidB, user1: uidA, user2: uidB, status: 'ACTIVE' };
 
-    await assertSucceeds(relRef.set(relData)); // first create: allowed
+    await assertFails(relRef.set(relData)); // `allow create: if false` — only the Admin SDK function creates it
 
-    // A second "create" attempt on the same id is a set() that Firestore server-side treats
-    // as create-vs-update based on whether the doc exists; since it already exists, this is
-    // evaluated against the `update` rule, which locks partnerAId/partnerBId, so an attempt
-    // that tries to change them must fail:
+    // The relationship as acceptCoupleInvite would have written it (Admin SDK bypasses rules).
+    // Re-accept idempotency lives in the callable (src/pairing.js) and has no test yet.
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await ctx.firestore().collection('relationships').doc(inviteId).set(relData);
+    });
+
+    // The doc now exists, so set() is evaluated against the `update` rule, which locks
+    // partnerAId/partnerBId: changing them must fail...
     await assertFails(relRef.set({ ...relData, partnerBId: 'uid_attacker' }));
-    // Re-sending the SAME data must succeed (idempotent retry, matches Task 11 Step 5's retry path):
+    // ...while re-sending the SAME data (identity unchanged, caller is a member) still succeeds.
     await assertSucceeds(relRef.set(relData));
   });
 
@@ -114,7 +118,11 @@ describe('pairing security rules (Task 10 design)', function () {
     const aCtx = testEnv.authenticatedContext(uidA).firestore();
     const bCtx = testEnv.authenticatedContext(uidB).firestore();
     const cCtx = testEnv.authenticatedContext(uidC).firestore();
-    const memoryDoc = { syncId: 'sync-1', title: 'First trip', updatedAt: Date.now(), deleted: false };
+    // Full memory shape the app writes (MemorySyncAdapter): text-only, so no media fields are set.
+    const memoryDoc = {
+      syncId: 'sync-1', relationshipId: relId, authorId: uidA, title: 'First trip',
+      photoUri: '', videoUri: '', cloudinaryPublicId: '', updatedAt: Date.now(), deleted: false,
+    };
 
     // Member A writes, member B (the SyncCoordinator content-tier listener on the other
     // device) can read it straight back — this is the exact path Task 6/8 rely on, and the
@@ -122,10 +130,14 @@ describe('pairing security rules (Task 10 design)', function () {
     // top-level default-deny otherwise).
     await assertSucceeds(aCtx.collection(`relationships/${relId}/memories`).doc('sync-1').set(memoryDoc));
     await assertSucceeds(bCtx.collection(`relationships/${relId}/memories`).doc('sync-1').get());
-    await assertSucceeds(bCtx.collection(`relationships/${relId}/anniversaries`).doc('sync-2').set({ syncId: 'sync-2', title: 'Anniversary', updatedAt: Date.now(), deleted: false }));
+    await assertSucceeds(bCtx.collection(`relationships/${relId}/anniversaries`).doc('sync-2').set({
+      syncId: 'sync-2', relationshipId: relId, title: 'Anniversary', updatedAt: Date.now(), deleted: false,
+    }));
 
     // A non-member cannot read or write either subcollection of this relationship.
     await assertFails(cCtx.collection(`relationships/${relId}/memories`).doc('sync-1').get());
-    await assertFails(cCtx.collection(`relationships/${relId}/memories`).doc('sync-3').set({ syncId: 'sync-3', title: 'Intrusion', updatedAt: Date.now(), deleted: false }));
+    await assertFails(cCtx.collection(`relationships/${relId}/memories`).doc('sync-3').set({
+      syncId: 'sync-3', relationshipId: relId, authorId: uidC, title: 'Intrusion', updatedAt: Date.now(), deleted: false,
+    }));
   });
 });

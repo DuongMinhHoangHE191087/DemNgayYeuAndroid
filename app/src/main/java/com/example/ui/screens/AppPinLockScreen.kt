@@ -23,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,6 +35,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import com.example.data.repository.UnlockResult
+import com.example.ui.util.AppLanguage
+import com.example.ui.util.findActivity
+import com.example.ui.util.unlockFailureText
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +76,23 @@ fun AppPinLockScreen(
   var enteredPin by remember { mutableStateOf("") }
   var errorMessage by remember { mutableStateOf<String?>(null) }
   var showPasswordFallbackDialog by remember { mutableStateOf(false) }
+  val isEnglish = viewModel.appLanguage.collectAsState().value == AppLanguage.EN
+  val context = LocalContext.current
+  val canUseFacebook = remember(account.uid) { viewModel.authRepo.isFacebookLinked }
+  var isBusy by remember { mutableStateOf(false) }
+
+  // Persisted brute-force lock: survives process death, counts down on screen.
+  var lockedUntil by remember { mutableLongStateOf(viewModel.authRepo.lockedUntilMillis()) }
+  var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+  LaunchedEffect(lockedUntil) {
+    while (System.currentTimeMillis() < lockedUntil) {
+      nowMs = System.currentTimeMillis()
+      delay(500)
+    }
+    nowMs = System.currentTimeMillis()
+  }
+  val lockSeconds = ((lockedUntil - nowMs + 999) / 1000).coerceAtLeast(0)
+  val isLocked = lockSeconds > 0
 
   Box(
     modifier = modifier
@@ -120,7 +148,7 @@ fun AppPinLockScreen(
         )
 
         Text(
-          text = "Xin chào ${account.displayName}, vui lòng nhập mã PIN 4 số",
+          text = if (isEnglish) "Hi ${account.displayName}, enter your 4-digit PIN" else "Xin chào ${account.displayName}, vui lòng nhập mã PIN 4 số",
           style = MaterialTheme.typography.bodyMedium,
           color = Color(0xFF757575),
           textAlign = TextAlign.Center,
@@ -152,7 +180,15 @@ fun AppPinLockScreen(
           }
         }
 
-        if (errorMessage != null) {
+        if (isLocked) {
+          Spacer(modifier = Modifier.height(12.dp))
+          Text(
+            text = if (isEnglish) "Locked for ${lockSeconds}s after too many wrong tries" else "Đã khóa tạm ${lockSeconds}s do nhập sai nhiều lần",
+            color = Color(0xFFD32F2F),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold
+          )
+        } else if (errorMessage != null) {
           Spacer(modifier = Modifier.height(12.dp))
           Text(
             text = errorMessage.orEmpty(),
@@ -229,15 +265,20 @@ fun AppPinLockScreen(
                       .size(68.dp)
                       .clip(CircleShape)
                       .clickable {
-                        if (enteredPin.length < 4) {
+                        if (enteredPin.length < 4 && !isLocked && !isBusy) {
                           val nextPin = enteredPin + key
                           enteredPin = nextPin
                           errorMessage = null
                           if (nextPin.length == 4) {
-                            val success = viewModel.authRepo.unlockWithPin(nextPin)
-                            if (!success) {
-                              errorMessage = "Mã PIN không chính xác! Vui lòng thử lại."
-                              enteredPin = ""
+                            isBusy = true
+                            scope.launch {
+                              val result = viewModel.authRepo.unlockWithPin(nextPin)
+                              isBusy = false
+                              if (result !is UnlockResult.Success) {
+                                errorMessage = unlockFailureText(result, isEnglish)
+                                if (result is UnlockResult.Locked) lockedUntil = result.untilMillis
+                                enteredPin = ""
+                              }
                             }
                           }
                         }
@@ -266,7 +307,33 @@ fun AppPinLockScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(bottom = 12.dp)
       ) {
-        TextButton(
+        if (canUseFacebook) {
+          Button(
+            onClick = {
+              val activity = context.findActivity() ?: return@Button
+              isBusy = true
+              scope.launch {
+                val result = viewModel.authRepo.unlockWithFacebook(activity)
+                isBusy = false
+                if (result !is UnlockResult.Success) viewModel.showToast(unlockFailureText(result, isEnglish).orEmpty())
+              }
+            },
+            enabled = !isBusy,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2)),
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(48.dp)
+              .testTag("btn_pin_use_facebook")
+          ) {
+            Text(
+              text = if (isEnglish) "Unlock with Facebook" else "Mở khóa bằng Facebook",
+              fontWeight = FontWeight.SemiBold
+            )
+          }
+        }
+
+        if (!viewModel.authRepo.isProviderOnly(account)) TextButton(
           onClick = { showPasswordFallbackDialog = true },
           modifier = Modifier.testTag("btn_pin_use_password")
         ) {
@@ -297,7 +364,7 @@ fun AppPinLockScreen(
   }
 
   // Fallback Password Dialog
-  if (showPasswordFallbackDialog) {
+  if (showPasswordFallbackDialog && !viewModel.authRepo.isProviderOnly(account)) {
     var passwordInput by remember { mutableStateOf("") }
     var pwdError by remember { mutableStateOf<String?>(null) }
 
@@ -356,11 +423,14 @@ fun AppPinLockScreen(
 
             androidx.compose.material3.Button(
               onClick = {
-                val ok = viewModel.authRepo.unlockWithAccountPassword(passwordInput)
-                if (ok) {
-                  showPasswordFallbackDialog = false
-                } else {
-                  pwdError = "Mật khẩu không đúng!"
+                scope.launch {
+                  val result = viewModel.authRepo.unlockWithAccountPassword(passwordInput)
+                  if (result is UnlockResult.Success) {
+                    showPasswordFallbackDialog = false
+                  } else {
+                    pwdError = unlockFailureText(result, isEnglish, "password")
+                    if (result is UnlockResult.Locked) lockedUntil = result.untilMillis
+                  }
                 }
               },
               colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),

@@ -37,10 +37,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.WorkspacePremium
 import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.material3.Button
@@ -70,18 +66,18 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
-import com.android.billingclient.api.ProductDetails
 import com.example.ads.AdsManager
 import com.example.billing.BillingManager
 import com.example.billing.PurchaseEvent
 import com.example.billing.findBestOffer
-import com.example.billing.getFormattedPrice
+import com.example.billing.toPlanOffer
 
 // ─── Nội dung chọn gói ───────────────────────────────────────────────────────
 private enum class PaywallPlan { YEARLY, MONTHLY, LIFETIME }
@@ -91,7 +87,8 @@ private enum class PaywallPlan { YEARLY, MONTHLY, LIFETIME }
  *
  * Đặc điểm UI:
  *  - Nền gradient Soft Rose & Cream lãng mạn, thanh lịch, đồng bộ 100% Light Mode.
- *  - 3 gói đăng ký (Năm nổi bật với nhãn "TIẾT KIỆM 50%", Tháng, Trọn đời).
+ *  - 3 gói (Năm, Tháng, Trọn đời); giá/dùng thử/gia hạn lấy động từ Google Play,
+ *    không gắn nhãn "phổ biến"/"tiết kiệm" khi chưa có số liệu chứng minh.
  *  - Danh sách đặc quyền VIP với icon tích xanh lá rõ ràng.
  *  - Nút CTA gradient Rose-Crimson lớn, góc bo tròn.
  *  - Nút nhỏ "Khôi phục gói mua" ở chân trang — bắt buộc theo Google Play Policy.
@@ -112,10 +109,13 @@ fun PaywallScreen(
     billingManager: BillingManager,
     adsManager: AdsManager,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hostActivity: Activity? = null
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    // MainActivity re-wraps LocalContext with createConfigurationContext (locale), which hides the
+    // Activity, so the host passes it explicitly.
+    val activity = com.example.billing.resolveHostActivity(hostActivity, context)
     val uriHandler = LocalUriHandler.current
 
     val productDetailsList by billingManager.productDetailsList.collectAsState()
@@ -162,7 +162,7 @@ fun PaywallScreen(
                     statusMessage = context.getString(R.string.paywall_restore_success)
                 }
                 is PurchaseEvent.Pending -> {
-                    statusMessage = "⏳ Giao dịch đang được xử lý bởi Google Play."
+                    statusMessage = context.getString(R.string.paywall_pending)
                     isRestoring = false
                 }
                 is PurchaseEvent.Error -> {
@@ -228,7 +228,7 @@ fun PaywallScreen(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Đóng",
+                        contentDescription = stringResource(R.string.paywall_close),
                         tint = Color(0xFF8A2E5B)
                     )
                 }
@@ -306,47 +306,44 @@ fun PaywallScreen(
                     text = stringResource(R.string.paywall_benefit_ads)
                 )
                 VipBenefitItem(
-                    icon = Icons.Default.SmartToy,
-                    text = stringResource(R.string.paywall_benefit_ai)
-                )
-                VipBenefitItem(
-                    icon = Icons.Default.PhotoLibrary,
-                    text = stringResource(R.string.paywall_benefit_cloud)
-                )
-                VipBenefitItem(
-                    icon = Icons.Default.Lock,
-                    text = stringResource(R.string.paywall_benefit_lock)
-                )
-                VipBenefitItem(
-                    icon = Icons.Default.WorkspacePremium,
-                    text = stringResource(R.string.paywall_benefit_theme)
+                    icon = Icons.Default.CheckCircle,
+                    text = stringResource(R.string.paywall_benefit_support)
                 )
             }
 
             Spacer(modifier = Modifier.height(22.dp))
 
-            // Dynamic prices from Google Play Store ProductDetails
-            val dynamicYearlyPrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_YEARLY }
-                ?.getFormattedPrice(preferFreeTrial = false)
-                ?: stringResource(R.string.paywall_plan_yearly_price)
+            // Prices, trial and renewal text all come from the eligible Google Play offer (never hard-coded)
+            val yearlyOffer = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_YEARLY }?.toPlanOffer()
+            val monthlyOffer = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_MONTHLY }?.toPlanOffer()
+            val lifetimeOffer = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_LIFETIME }?.toPlanOffer()
+            val loadingPrice = stringResource(R.string.paywall_price_loading)
+            val dynamicYearlyPrice = yearlyOffer?.price ?: loadingPrice
+            val dynamicMonthlyPrice = monthlyOffer?.price ?: loadingPrice
+            val dynamicLifetimePrice = lifetimeOffer?.price ?: loadingPrice
 
-            val dynamicMonthlyPrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_MONTHLY }
-                ?.getFormattedPrice(preferFreeTrial = false)
-                ?: stringResource(R.string.paywall_plan_monthly_price)
-
-            val dynamicLifetimePrice = productDetailsList.find { it.productId == BillingManager.PRODUCT_VIP_LIFETIME }
-                ?.getFormattedPrice()
-                ?: stringResource(R.string.paywall_plan_lifetime_price)
+            val selectedProductId = when (selectedPlan) {
+                PaywallPlan.YEARLY -> BillingManager.PRODUCT_VIP_YEARLY
+                PaywallPlan.MONTHLY -> BillingManager.PRODUCT_VIP_MONTHLY
+                PaywallPlan.LIFETIME -> BillingManager.PRODUCT_VIP_LIFETIME
+            }
+            val selectedDetails = productDetailsList.find { it.productId == selectedProductId }
+            val selectedOffer = when (selectedPlan) {
+                PaywallPlan.YEARLY -> yearlyOffer
+                PaywallPlan.MONTHLY -> monthlyOffer
+                PaywallPlan.LIFETIME -> lifetimeOffer
+            }
+            val canPurchase = activity != null && selectedDetails != null && selectedOffer != null
 
             // ── Các gói đăng ký ───────────────────────────────────────────────
 
-            // Gói NĂM — nổi bật nhất (recommended)
+            // Gói NĂM — không gắn nhãn so sánh (chưa có dữ liệu chứng minh "phổ biến"/"tiết kiệm")
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_yearly_title),
                 price = dynamicYearlyPrice,
                 subText = stringResource(R.string.paywall_plan_yearly_sub),
-                badge = stringResource(R.string.paywall_plan_yearly_badge),
-                badgeColor = Color(0xFFFF2D75),
+                badge = null,
+                badgeColor = Color.Transparent,
                 isSelected = selectedPlan == PaywallPlan.YEARLY,
                 onClick = { selectedPlan = PaywallPlan.YEARLY }
             )
@@ -407,40 +404,61 @@ fun PaywallScreen(
                 }
             }
 
+            // ── Disclosure right above the CTA: price, trial length, renewal and how to cancel
+            val disclosure = when {
+                selectedOffer == null -> stringResource(R.string.paywall_disclosure_unavailable)
+                selectedPlan == PaywallPlan.LIFETIME -> stringResource(R.string.paywall_disclosure_lifetime, selectedOffer.price)
+                else -> {
+                    val period = stringResource(
+                        if (selectedPlan == PaywallPlan.YEARLY) R.string.paywall_period_year else R.string.paywall_period_month
+                    )
+                    if (selectedOffer.hasTrial) {
+                        val length = selectedOffer.trialDays?.let { context.resources.getQuantityString(R.plurals.paywall_trial_days, it, it) }
+                            ?: stringResource(R.string.paywall_trial_unknown_length)
+                        stringResource(R.string.paywall_disclosure_trial, length, selectedOffer.price, period)
+                    } else {
+                        stringResource(R.string.paywall_disclosure_paid, selectedOffer.price, period)
+                    }
+                }
+            }
+            Text(
+                text = disclosure,
+                fontSize = 12.sp,
+                color = Color(0xFF6B3A52),
+                textAlign = TextAlign.Center,
+                lineHeight = 17.sp,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).testTag("paywall_disclosure")
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
             // ── Nút CTA chính ─────────────────────────────────────────────────
             Button(
                 onClick = {
-                    if (activity == null) return@Button
+                    val host = activity ?: return@Button
+                    val details = selectedDetails ?: return@Button
                     statusMessage = null
-
-                    val productId = when (selectedPlan) {
-                        PaywallPlan.YEARLY -> BillingManager.PRODUCT_VIP_YEARLY
-                        PaywallPlan.MONTHLY -> BillingManager.PRODUCT_VIP_MONTHLY
-                        PaywallPlan.LIFETIME -> BillingManager.PRODUCT_VIP_LIFETIME
-                    }
-
-                    val details = productDetailsList.find { it.productId == productId }
-                    if (details != null) {
-                        // Lấy offer token cho gói subscription (SUBS) ưu tiên free trial nếu có
-                        val offerToken = details.findBestOffer(preferFreeTrial = (selectedPlan == PaywallPlan.YEARLY))
-                            ?.offerToken ?: ""
-                        billingManager.launchPurchaseFlow(activity, details, offerToken)
-                    } else {
-                        // Sản phẩm chưa load — thử kết nối lại
-                        billingManager.startBillingConnection()
-                        statusMessage = "Đang kết nối Google Play Store, vui lòng thử lại..."
-                    }
+                    // Same offer the disclosure was derived from
+                    val offerToken = details.findBestOffer(preferFreeTrial = true)?.offerToken
+                    // Subscriptions need an offer token; only the lifetime (INAPP) product has none
+                    if (offerToken == null && selectedPlan != PaywallPlan.LIFETIME) return@Button
+                    billingManager.launchPurchaseFlow(host, details, offerToken ?: "")
                 },
+                enabled = canPurchase,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(56.dp)
+                    .testTag("paywall_cta"),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                ),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .graphicsLayer { alpha = if (canPurchase) 1f else 0.5f }
                         .background(
                             Brush.horizontalGradient(
                                 colors = listOf(Color(0xFFFF2D75), Color(0xFFE91E63))
@@ -450,10 +468,12 @@ fun PaywallScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = when (selectedPlan) {
-                            PaywallPlan.YEARLY -> stringResource(R.string.paywall_btn_trial)
-                            PaywallPlan.MONTHLY -> stringResource(R.string.paywall_btn_monthly)
-                            PaywallPlan.LIFETIME -> stringResource(R.string.paywall_btn_lifetime)
+                        text = when {
+                            selectedOffer == null -> stringResource(R.string.paywall_loading_prices)
+                            selectedPlan == PaywallPlan.LIFETIME -> stringResource(R.string.paywall_btn_lifetime)
+                            selectedOffer.hasTrial -> stringResource(R.string.paywall_btn_trial)
+                            selectedPlan == PaywallPlan.YEARLY -> stringResource(R.string.paywall_btn_yearly)
+                            else -> stringResource(R.string.paywall_btn_monthly)
                         },
                         color = Color.White,
                         fontSize = 15.sp,
@@ -503,7 +523,7 @@ fun PaywallScreen(
             // Nút Quản Lý & Hủy Gói Thuê Bao Trực Tiếp trên Google Play (Google Play Policy Bắt Buộc)
             TextButton(
                 onClick = {
-                    uriHandler.openUri("https://play.google.com/store/account/subscriptions?package=com.aistudio.inlove.kmrv")
+                    uriHandler.openUri(com.example.config.LegalLinks.MANAGE_SUBSCRIPTIONS)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -528,7 +548,7 @@ fun PaywallScreen(
 
             // ── Subscription disclosure text — Google Play Store yêu cầu ────
             Text(
-                text = stringResource(R.string.paywall_plan_yearly_sub),
+                text = stringResource(R.string.paywall_cancel_info),
                 fontSize = 11.sp,
                 color = Color(0xFF8C6B7B),
                 textAlign = TextAlign.Center,
@@ -553,8 +573,7 @@ fun PaywallScreen(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
-                        // ⚠️ PRODUCTION: Thay bằng URL điều khoản thực của ứng dụng
-                        uriHandler.openUri("https://inloveapp.com/terms")
+                        uriHandler.openUri(com.example.config.LegalLinks.termsOfService)
                     }
                 )
                 Text(text = "  •  ", color = Color(0xFFC498AE), fontSize = 11.sp)
@@ -567,8 +586,7 @@ fun PaywallScreen(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
-                        // ⚠️ PRODUCTION: Thay bằng URL chính sách thực của ứng dụng
-                        uriHandler.openUri("https://inloveapp.com/privacy")
+                        uriHandler.openUri(com.example.config.LegalLinks.privacyPolicy)
                     }
                 )
             }

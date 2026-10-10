@@ -213,8 +213,7 @@ fun PairingScreen(
       contentPadding = PaddingValues(vertical = 16.dp)
     ) {
       // 1. INCOMING INVITATION CARD (LỜI MỜI SET LOVE TỪ NGƯỜI KHÁC - THÔNG TIN KỶ NIỆM THỐNG NHẤT)
-      if (incomingInvite != null) {
-        val invite = incomingInvite!!
+      incomingInvite?.let { invite ->
         item {
           Card(
             shape = RoundedCornerShape(22.dp),
@@ -684,7 +683,7 @@ fun PairingScreen(
                         Text("Gửi nhịp tim", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                       }
 
-                      // Mở Album Cloudinary
+                      // Mở tab Kỷ Niệm (album ảnh và video)
                       OutlinedButton(
                         onClick = {
                           viewModel.setTab(1)
@@ -745,11 +744,11 @@ fun PairingScreen(
                   color = Color(0xFFE65100)
                 )
 
-                if (outgoingInvite != null) {
-                  val outDays = ProfileUtils.calculateLoveDays(outgoingInvite!!.proposedStartDate)
+                outgoingInvite?.let { outInv ->
+                  val outDays = ProfileUtils.calculateLoveDays(outInv.proposedStartDate)
                   Spacer(modifier = Modifier.height(6.dp))
                   Text(
-                    text = "Gửi tới: " + outgoingInvite!!.targetCoupleCode + " • Ngày yêu đề xuất: " + outgoingInvite!!.proposedStartDateText + " (" + outDays + " ngày)",
+                    text = "Gửi tới: " + outInv.targetCoupleCode + " • Ngày yêu đề xuất: " + outInv.proposedStartDateText + " (" + outDays + " ngày)",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.DarkGray
@@ -832,8 +831,7 @@ fun PairingScreen(
                 }
 
                 // THÔNG TIN SET LOVE CHỈ HIỂN THỊ SAU KHI ĐÃ CHỌN NGƯỜI
-                if (searchedUser != null) {
-                  val target = searchedUser!!
+                searchedUser?.let { target ->
                   Spacer(modifier = Modifier.height(16.dp))
 
                   Card(
@@ -1114,18 +1112,18 @@ fun PairingScreen(
   }
 
   // 2. Identity & Date Verification Dialog for Incoming Invite
-  if (selectedInviteForVerification != null) {
+  selectedInviteForVerification?.let { inv ->
     VerifyInviteDialog(
-      invite = selectedInviteForVerification!!,
+      invite = inv,
       onDismiss = { viewModel.dismissInspectInvite() },
       onAccept = { confirmedDateMillis ->
         viewModel.acceptSetLoveInvite(
-          inviteId = selectedInviteForVerification!!.inviteId,
+          inviteId = inv.inviteId,
           confirmedStartDateMillis = confirmedDateMillis
         )
       },
       onReject = {
-        viewModel.rejectSetLoveInvite(selectedInviteForVerification!!.inviteId)
+        viewModel.rejectSetLoveInvite(inv.inviteId)
       }
     )
   }

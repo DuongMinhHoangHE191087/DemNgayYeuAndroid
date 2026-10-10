@@ -13,7 +13,10 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
 import com.example.R
+import com.example.data.db.AccountDataVault
 import com.example.data.db.AppDatabase
+import com.example.data.db.InLoveDao
+import com.example.data.seed.HolidayDates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,6 +26,14 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     val action = intent.action ?: ACTION_REMINDER_ALARM
     Log.d(TAG, "onReceive triggered with action: $action")
+    if (action != ACTION_DAILY_ANNIVERSARY_CHECK && isSetByAnotherAccount(context, intent)) {
+      Log.i(TAG, "Dropped alarm set by another account")
+      return
+    }
+    if (action == ACTION_ANNIVERSARY_ALARM && !AlarmNotificationScheduler.anniversaryNotificationsEnabled(context)) {
+      Log.i(TAG, "Dropped anniversary alarm: anniversary notifications are off")
+      return
+    }
 
     when (action) {
       ACTION_DAILY_ANNIVERSARY_CHECK -> {
@@ -30,9 +41,14 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
           try {
             Log.d(TAG, "Executing daily morning anniversary check...")
-            checkAndNotifyTodayAnniversaries(context)
-            // Reschedule tomorrow's check
+            // Re-arm tomorrow's check first, so a failure below cannot stop the daily cycle.
             AlarmNotificationScheduler.scheduleDailyMorningCheck(context)
+            val dao = AppDatabase.getDatabase(context).inLoveDao()
+            // Refresh before the check, so a stale legacy row cannot post on the wrong day.
+            HolidayDates.refreshExisting(dao, AlarmNotificationScheduler.today())
+            checkAndNotifyTodayAnniversaries(context, dao)
+            // Annual alarms are one-shot: scheduling again rolls them on to next year.
+            AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context, dao)
           } catch (e: Exception) {
             Log.e(TAG, "Error in daily anniversary check: ${e.message}", e)
           } finally {
@@ -84,35 +100,41 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     }
   }
 
-  private suspend fun checkAndNotifyTodayAnniversaries(context: Context) {
-    try {
-      val dao = AppDatabase.getDatabase(context).inLoveDao()
-      val anniversaries = dao.getAnniversaryDatesList().filter { it.notificationEnabled }
-      val today = java.util.Calendar.getInstance()
-      val currentDay = today.get(java.util.Calendar.DAY_OF_MONTH)
-      val currentMonth = today.get(java.util.Calendar.MONTH) + 1 // 1-12
-
-      for (ann in anniversaries) {
-        val (day, month) = AlarmNotificationScheduler.parseDateToMonthDayYear(ann.dateText) ?: continue
-        if (day == currentDay && month == currentMonth) {
-          // It's today!
-          showNotification(
-            context = context,
-            title = "🎉 Hôm Nay: ${ann.title}!",
-            message = "Hôm nay là ngày kỷ niệm '${ann.title}' (${ann.dateText})! Chúc hai bạn một ngày ngập tràn ngọt ngào và hạnh phúc! ❤️",
-            notificationId = (100000 + ann.id * 10).toInt(),
-            channelId = CHANNEL_ANNIVERSARIES_ID,
-            targetTab = "calendar"
-          )
-        }
-      }
-    } catch (e: Exception) {
-      Log.e(TAG, "Failed checkAndNotifyTodayAnniversaries", e)
-    }
+  /** Alarms with no owner were scheduled before owners were recorded; switch-out cancels them with their rows. */
+  private fun isSetByAnotherAccount(context: Context, intent: Intent): Boolean {
+    val owner = intent.getStringExtra(EXTRA_OWNER) ?: return false
+    return owner != AccountDataVault.currentToken(context)
   }
 
   companion object {
     private const val TAG = "ReminderAlarmReceiver"
+
+    /** Posts today's day-of notice for each anniversary whose day and month match today; the slot is shared with its day-of alarm. */
+    internal suspend fun checkAndNotifyTodayAnniversaries(context: Context, dao: InLoveDao) {
+      try {
+        if (!AlarmNotificationScheduler.anniversaryNotificationsEnabled(context)) return
+        val disabledCadence = AlarmNotificationScheduler.disabledCadenceKeys(dao)
+        if (AlarmNotificationScheduler.CADENCE_EXACT_DAY in disabledCadence) return
+        val today = AlarmNotificationScheduler.today()
+        for (ann in dao.getAnniversaryDatesList().filter { it.notificationEnabled }) {
+          val (day, month, year) = AlarmNotificationScheduler.parseDateToMonthDayYear(ann.dateText) ?: continue
+          if (day != today.dayOfMonth || month != today.monthValue) continue
+          // A one-off date from another year is not today's occurrence.
+          if (!ann.isAnnual && year != null && year != today.year) continue
+          val (title, message) = AlarmNotificationScheduler.dayOfTexts(ann.title, ann.dateText)
+          showNotification(
+            context = context,
+            title = title,
+            message = message,
+            notificationId = AlarmNotificationScheduler.dayOfAlarmId(ann.id).toInt(),
+            channelId = CHANNEL_ANNIVERSARIES_ID,
+            targetTab = "calendar"
+          )
+        }
+      } catch (e: Exception) {
+        Log.e(TAG, "Failed checkAndNotifyTodayAnniversaries", e)
+      }
+    }
 
     const val ACTION_REMINDER_ALARM = "com.example.inlove.ACTION_REMINDER_ALARM"
     const val ACTION_ANNIVERSARY_ALARM = "com.example.inlove.ACTION_ANNIVERSARY_ALARM"
@@ -129,6 +151,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     const val EXTRA_REMINDER_ID = "extra_reminder_id"
     const val EXTRA_TARGET_TAB = "extra_target_tab"
     const val EXTRA_CHANNEL_ID = "extra_channel_id"
+    // Account token that scheduled the alarm (AccountDataVault.currentToken); other accounts' alarms are dropped.
+    const val EXTRA_OWNER = "extra_owner_token"
 
     fun showNotification(
       context: Context,
@@ -188,6 +212,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         putExtra(EXTRA_TITLE, title)
         putExtra(EXTRA_MESSAGE, message)
         putExtra(EXTRA_REMINDER_ID, notificationId.toLong())
+        putExtra(EXTRA_OWNER, AccountDataVault.currentToken(context))
       }
       val snoozePendingIntent = PendingIntent.getBroadcast(
         context,

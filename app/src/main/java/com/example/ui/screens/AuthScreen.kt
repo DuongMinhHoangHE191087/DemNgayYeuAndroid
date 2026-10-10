@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import com.example.ui.util.findActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,6 +51,7 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -74,6 +77,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -132,6 +136,7 @@ fun AuthScreen(
 ) {
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
+  val authContext = androidx.compose.ui.platform.LocalContext.current
 
   var selectedTab by remember { mutableIntStateOf(0) } // 0: Đăng nhập, 1: Đăng ký
 
@@ -154,6 +159,7 @@ fun AuthScreen(
   var regSecurityAnswer by remember { mutableStateOf("") }
   var agreeToTerms by remember { mutableStateOf(true) }
   var isRegistering by remember { mutableStateOf(false) }
+  var askGuestData by remember { mutableStateOf(false) }
 
   // Lockout & Brute-force local tracker
   var isLockedOut by remember { mutableStateOf(false) }
@@ -571,6 +577,38 @@ fun AuthScreen(
               }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+              onClick = {
+                val activity = authContext.findActivity() ?: return@OutlinedButton
+                focusManager.clearFocus()
+                isLoggingIn = true
+                scope.launch {
+                  val result = viewModel.authRepo.loginWithFacebook(activity, rememberMe)
+                  isLoggingIn = false
+                  viewModel.showToast(result.second)
+                  if (result.first) {
+                    viewModel.closeAuthScreen()
+                    onBackToGuest()
+                  }
+                }
+              },
+              enabled = !isLoggingIn,
+              shape = RoundedCornerShape(14.dp),
+              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1877F2)),
+              modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .testTag("btn_login_facebook")
+            ) {
+              Text(
+                text = "Tiếp tục với Facebook",
+                color = Color(0xFF1877F2),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
+              )
+            }
+
             // Fast Test Login for QA / Developers only — must never reach a release build.
             // These buttons log in as fixed Firestore fixture accounts with NO credential
             // check at all; shipping this to real users is a one-tap account takeover of the
@@ -905,25 +943,55 @@ fun AuthScreen(
                 passwordsMatch &&
                 !isRegistering
 
+            val submitRegister: (Boolean) -> Unit = { keepGuestData ->
+              isRegistering = true
+              scope.launch {
+                val result = viewModel.authRepo.register(
+                  displayNameInput = regName,
+                  emailInput = regEmail,
+                  passwordInput = regPassword,
+                  confirmPasswordInput = regConfirmPassword,
+                  securityQuestionInput = regSecurityQuestion,
+                  securityAnswerInput = regSecurityAnswer,
+                  keepGuestData = keepGuestData
+                )
+                isRegistering = false
+                viewModel.showToast(result.second)
+                if (result.first) {
+                  viewModel.closeAuthScreen()
+                  onBackToGuest()
+                }
+              }
+            }
+
+            if (askGuestData) {
+              AlertDialog(
+                onDismissRequest = { askGuestData = false },
+                title = { Text("Dữ liệu đang có trên máy") },
+                text = {
+                  Text("Máy này đang có kỷ niệm, nhắc hẹn hoặc việc cần làm bạn đã tạo khi chưa đăng nhập. Bạn muốn giữ chúng cho tài khoản mới hay bắt đầu một tài khoản trống? (Dữ liệu cũ vẫn được cất lại ở chế độ khách.)")
+                },
+                confirmButton = {
+                  TextButton(
+                    onClick = { askGuestData = false; submitRegister(true) },
+                    modifier = Modifier.heightIn(min = 48.dp).testTag("btn_guest_data_keep")
+                  ) { Text("Giữ cho tài khoản mới") }
+                },
+                dismissButton = {
+                  TextButton(
+                    onClick = { askGuestData = false; submitRegister(false) },
+                    modifier = Modifier.heightIn(min = 48.dp).testTag("btn_guest_data_fresh")
+                  ) { Text("Bắt đầu mới") }
+                }
+              )
+            }
+
             Button(
               onClick = {
                 focusManager.clearFocus()
-                isRegistering = true
+                // Chỉ hỏi khi khách thật sự có dữ liệu; không có thì đăng ký ngay như trước.
                 scope.launch {
-                  val result = viewModel.authRepo.register(
-                    displayNameInput = regName,
-                    emailInput = regEmail,
-                    passwordInput = regPassword,
-                    confirmPasswordInput = regConfirmPassword,
-                    securityQuestionInput = regSecurityQuestion,
-                    securityAnswerInput = regSecurityAnswer
-                  )
-                  isRegistering = false
-                  viewModel.showToast(result.second)
-                  if (result.first) {
-                    viewModel.closeAuthScreen()
-                    onBackToGuest()
-                  }
+                  if (viewModel.authRepo.guestHasData()) askGuestData = true else submitRegister(true)
                 }
               },
               enabled = canRegister,
@@ -1038,32 +1106,11 @@ fun ForgotPasswordDialog(
   onDismiss: () -> Unit
 ) {
   val scope = rememberCoroutineScope()
-  var recoveryMethod by remember { mutableIntStateOf(0) } // 0: OTP 6 số, 1: Câu hỏi bảo mật
-
+  val isEnglish = viewModel.appLanguage.collectAsState().value == com.example.ui.util.AppLanguage.EN
   var emailInput by remember { mutableStateOf("") }
-  var otpCodeInput by remember { mutableStateOf("") }
-  var otpTimerSeconds by remember { mutableIntStateOf(0) }
-  var isSendingOtp by remember { mutableStateOf(false) }
-
-  var securityAnswerInput by remember { mutableStateOf("") }
-  var newPasswordInput by remember { mutableStateOf("") }
-  var confirmNewPasswordInput by remember { mutableStateOf("") }
-  var newPasswordVisible by remember { mutableStateOf(false) }
-  var isSubmitting by remember { mutableStateOf(false) }
-
-  // Same live match check the Register tab already has — without it, a mismatch here was only
-  // ever caught after the round-trip to AuthRepository, via a generic toast.
-  val newPasswordsMatch = remember(newPasswordInput, confirmNewPasswordInput) {
-    newPasswordInput.isNotEmpty() && newPasswordInput == confirmNewPasswordInput
-  }
-
-  // OTP Countdown
-  LaunchedEffect(otpTimerSeconds) {
-    if (otpTimerSeconds > 0) {
-      delay(1.seconds)
-      otpTimerSeconds -= 1
-    }
-  }
+  var isSending by remember { mutableStateOf(false) }
+  var resultMessage by remember { mutableStateOf<String?>(null) }
+  var resultOk by remember { mutableStateOf(false) }
 
   Dialog(
     onDismissRequest = onDismiss,
@@ -1094,255 +1141,75 @@ fun ForgotPasswordDialog(
             imageVector = Icons.Default.Key,
             contentDescription = null,
             tint = Color(0xFFE91E63),
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(26.dp)
           )
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
-          text = "Khôi Phục Mật Khẩu",
-          style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+          text = if (isEnglish) "Reset password" else "Đặt lại mật khẩu",
+          fontWeight = FontWeight.Bold,
+          fontSize = 18.sp,
           color = Color(0xFF212121)
         )
         Text(
-          text = "Chọn phương thức xác thực an toàn để đặt lại mật khẩu",
-          style = MaterialTheme.typography.bodySmall,
-          color = Color(0xFF757575),
+          text = if (isEnglish) "We will email you a secure link to choose a new password."
+          else "Chúng tôi sẽ gửi email chứa liên kết an toàn để bạn đặt mật khẩu mới.",
+          fontSize = 12.5.sp,
+          color = Color(0xFF616161),
           textAlign = TextAlign.Center,
-          modifier = Modifier.padding(bottom = 14.dp)
+          modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
         )
 
-        // Segmented selector
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF5F5F5))
-            .padding(4.dp)
-        ) {
-          Box(
-            modifier = Modifier
-              .weight(1f)
-              .clip(RoundedCornerShape(10.dp))
-              .background(if (recoveryMethod == 0) Color.White else Color.Transparent)
-              .clickable { recoveryMethod = 0 }
-              .padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center
-          ) {
-            Text(
-              text = "Mã OTP 6 số",
-              fontSize = 13.sp,
-              fontWeight = if (recoveryMethod == 0) FontWeight.Bold else FontWeight.Normal,
-              color = if (recoveryMethod == 0) Color(0xFFE91E63) else Color(0xFF616161)
-            )
-          }
-          Box(
-            modifier = Modifier
-              .weight(1f)
-              .clip(RoundedCornerShape(10.dp))
-              .background(if (recoveryMethod == 1) Color.White else Color.Transparent)
-              .clickable { recoveryMethod = 1 }
-              .padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center
-          ) {
-            Text(
-              text = "Câu hỏi bảo mật",
-              fontSize = 13.sp,
-              fontWeight = if (recoveryMethod == 1) FontWeight.Bold else FontWeight.Normal,
-              color = if (recoveryMethod == 1) Color(0xFFE91E63) else Color(0xFF616161)
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Email Input
         OutlinedTextField(
           value = emailInput,
-          onValueChange = { emailInput = it },
-          label = { Text("Email tài khoản") },
-          placeholder = { Text("Nhập email đã đăng ký") },
+          onValueChange = { emailInput = it.trim() },
+          label = { Text("Email") },
           singleLine = true,
-          shape = RoundedCornerShape(12.dp),
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+          shape = RoundedCornerShape(14.dp),
           colors = authTextFieldColors(),
-          modifier = Modifier.fillMaxWidth()
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("input_forgot_email")
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        if (recoveryMethod == 0) {
-          // OTP Section
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            OutlinedTextField(
-              value = otpCodeInput,
-              onValueChange = { if (it.length <= 6) otpCodeInput = it },
-              label = { Text("Mã OTP (6 số)") },
-              singleLine = true,
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-              shape = RoundedCornerShape(12.dp),
-              colors = authTextFieldColors(),
-              modifier = Modifier.weight(1f)
-            )
-
-            Button(
-              onClick = {
-                if (!AuthSecurityManager.isValidEmail(emailInput)) {
-                  viewModel.showToast("Vui lòng nhập email hợp lệ!")
-                  return@Button
-                }
-                isSendingOtp = true
-                scope.launch {
-                  val res = viewModel.authRepo.requestPasswordResetOtp(emailInput)
-                  isSendingOtp = false
-                  viewModel.showToast(res.second)
-                  if (res.first) {
-                    otpTimerSeconds = 60
-                  }
-                }
-              },
-              enabled = !isSendingOtp && otpTimerSeconds == 0 && emailInput.isNotBlank(),
-              shape = RoundedCornerShape(12.dp),
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63))
-            ) {
-              if (isSendingOtp) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
-              } else if (otpTimerSeconds > 0) {
-                Text("${otpTimerSeconds}s", fontSize = 12.sp)
-              } else {
-                Text("Gửi mã", fontSize = 12.sp)
-              }
-            }
-          }
-        } else {
-          // Security Answer Section
-          OutlinedTextField(
-            value = securityAnswerInput,
-            onValueChange = { securityAnswerInput = it },
-            label = { Text("Câu trả lời bảo mật") },
-            placeholder = { Text("Nhập câu trả lời đã cài khi đăng ký") },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            colors = authTextFieldColors(),
-            modifier = Modifier.fillMaxWidth()
+        resultMessage?.let {
+          Spacer(modifier = Modifier.height(10.dp))
+          Text(
+            text = it,
+            color = if (resultOk) Color(0xFF2E7D32) else Color(0xFFD32F2F),
+            fontSize = 12.5.sp,
+            textAlign = TextAlign.Center
           )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // New Password
-        OutlinedTextField(
-          value = newPasswordInput,
-          onValueChange = { newPasswordInput = it },
-          label = { Text("Mật khẩu mới") },
-          placeholder = { Text("Tối thiểu 8 ký tự, đủ độ mạnh") },
-          visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-          trailingIcon = {
-            IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
-              Icon(
-                imageVector = if (newPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                contentDescription = null
-              )
-            }
-          },
-          singleLine = true,
-          shape = RoundedCornerShape(12.dp),
-          colors = authTextFieldColors(),
-          modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Confirm New Password
-        OutlinedTextField(
-          value = confirmNewPasswordInput,
-          onValueChange = { confirmNewPasswordInput = it },
-          label = { Text("Xác nhận mật khẩu mới") },
-          visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-          singleLine = true,
-          shape = RoundedCornerShape(12.dp),
-          colors = authTextFieldColors(),
-          modifier = Modifier.fillMaxWidth()
-        )
-
-        if (confirmNewPasswordInput.isNotEmpty()) {
-          Spacer(modifier = Modifier.height(4.dp))
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(start = 4.dp)
-          ) {
-            Icon(
-              imageVector = if (newPasswordsMatch) Icons.Default.CheckCircle else Icons.Default.Close,
-              contentDescription = null,
-              tint = if (newPasswordsMatch) Color(0xFF43A047) else Color(0xFFE53935),
-              modifier = Modifier.size(14.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-              text = if (newPasswordsMatch) "Mật khẩu xác nhận hoàn toàn khớp!" else "Mật khẩu xác nhận chưa khớp!",
-              fontSize = 11.sp,
-              color = if (newPasswordsMatch) Color(0xFF43A047) else Color(0xFFE53935)
-            )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+          OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+            Text(if (isEnglish) "Close" else "Đóng")
           }
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Buttons
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          OutlinedButton(
-            onClick = onDismiss,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.weight(1f)
-          ) {
-            Text("Hủy")
-          }
-
           Button(
             onClick = {
-              isSubmitting = true
+              isSending = true
+              resultMessage = null
               scope.launch {
-                val res = if (recoveryMethod == 0) {
-                  viewModel.authRepo.resetPasswordWithOtp(
-                    emailInput = emailInput,
-                    enteredOtp = otpCodeInput,
-                    newPasswordInput = newPasswordInput,
-                    confirmPasswordInput = confirmNewPasswordInput
-                  )
-                } else {
-                  viewModel.authRepo.resetPasswordWithSecurityAnswer(
-                    emailInput = emailInput,
-                    securityAnswerInput = securityAnswerInput,
-                    newPasswordInput = newPasswordInput,
-                    confirmPasswordInput = confirmNewPasswordInput
-                  )
-                }
-                isSubmitting = false
-                viewModel.showToast(res.second)
-                if (res.first) {
-                  onDismiss()
-                }
+                val res = viewModel.authRepo.requestPasswordResetOtp(emailInput)
+                isSending = false
+                resultOk = res.first
+                resultMessage = if (res.first) {
+                  if (isEnglish) "If an account exists for this email, a reset link has been sent. Check your inbox and spam folder."
+                  else "Nếu email này có tài khoản, liên kết đặt lại mật khẩu đã được gửi. Hãy kiểm tra hộp thư và thư rác."
+                } else res.second
               }
             },
-            enabled = !isSubmitting && emailInput.isNotBlank() && newPasswordInput.length >= 8 && newPasswordsMatch,
-            shape = RoundedCornerShape(12.dp),
+            enabled = !isSending && emailInput.isNotBlank(),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-            modifier = Modifier.weight(1.5f)
+            modifier = Modifier
+              .weight(1f)
+              .testTag("btn_forgot_send")
           ) {
-            if (isSubmitting) {
-              CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
-            } else {
-              Text("Cập Nhật", fontWeight = FontWeight.Bold)
-            }
+            if (isSending) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            else Text(if (isEnglish) "Send link" else "Gửi liên kết")
           }
         }
       }

@@ -21,6 +21,9 @@ debug.keystore
 my-upload-key.jks
 license.properties
 
+# Local secrets: never commit. .env.example stays tracked (re-included below).
+.env
+.env.*
 !.env.example
 node_modules/
 scripts/serviceAccountKey.json
@@ -32,4 +35,11 @@ scripts/serviceAccountKey.json
 # JVM crash dumps (low-RAM Gradle daemon crashes)
 hs_err_pid*.log
 replay_pid*.log
+
+# Debug logs from Firebase and Firestore emulators and UI tests (never commit)
+firebase-debug*.log
+firestore-debug*.log
+ui-debug*.log
+database-debug*.log
+pubsub-debug*.log
 

@@ -2,6 +2,7 @@ package com.example.ui.viewmodel
 
 import android.app.Activity
 import android.app.Application
+import android.net.Uri
 import com.android.billingclient.api.ProductDetails
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,15 +15,31 @@ import com.example.data.model.GiftIdeaEntity
 import com.example.data.model.GiftReminderEntity
 import com.example.data.model.LoveBadgeEntity
 import com.example.data.model.MilestoneEntity
+import com.example.data.model.PRIVACY_PRIVATE
 import com.example.data.model.ReminderCadenceEntity
 import com.example.data.model.SharedMemoryEntity
+import com.example.alarm.AlarmNotificationScheduler
 import com.example.data.repository.InLoveRepository
+import com.example.domain.media.MediaKind
+import com.example.domain.media.MemoryMediaFile
+import com.example.domain.media.ResolveMemoryMediaUrlUseCase
+import com.example.domain.media.SaveSharedMemoryOutcome
+import com.example.domain.media.SaveSharedMemoryUseCase
+import com.example.domain.media.UploadMemoryMediaUseCase
+import com.example.domain.media.formatMediaSize
+import com.example.domain.usecase.GetPersonalizedGiftSuggestionsUseCase
+import com.example.domain.usecase.PersonalizedGiftSuggestion
 import com.example.ui.util.AppLanguage
+import com.example.ui.util.isProfileChanged
+import com.example.ui.util.profileFieldAfter
+import com.example.ui.util.profileUidOf
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -40,14 +57,16 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   val authRepo: com.example.data.repository.AuthRepository
   val authState: StateFlow<com.example.data.repository.AuthState>
 
-  val cloudinaryMediaService: com.example.data.cloudinary.ICloudinaryMediaService =
-    com.example.data.cloudinary.CloudinaryMediaService.getInstance()
+  // by lazy: AppServiceLocator.initialize() chạy trong init bên dưới, sau khi các property khai báo ở đây đã được tạo.
+  private val saveSharedMemoryUseCase by lazy { SaveSharedMemoryUseCase(UploadMemoryMediaUseCase(com.example.di.AppServiceLocator.memoryMediaRepository)) }
+  private val resolveMemoryMediaUrlUseCase by lazy { ResolveMemoryMediaUrlUseCase(com.example.di.AppServiceLocator.memoryMediaRepository) }
 
   private val _upcomingMilestones = MutableStateFlow<List<com.example.alarm.LoveMilestoneInfo>>(emptyList())
   val upcomingMilestones: StateFlow<List<com.example.alarm.LoveMilestoneInfo>> = _upcomingMilestones.asStateFlow()
 
   val milestones: StateFlow<List<MilestoneEntity>>
   val giftIdeas: StateFlow<List<GiftIdeaEntity>>
+  val personalizedGifts: StateFlow<List<PersonalizedGiftSuggestion>>
   val checklistItems: StateFlow<List<ChecklistItemEntity>>
   val customReminders: StateFlow<List<CustomReminderEntity>>
   val reminderCadences: StateFlow<List<ReminderCadenceEntity>>
@@ -163,7 +182,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   // SettingsScreen that reset every time the user left the screen. Persisted the same way as
   // appLanguage/wallpaper; still doesn't gate actual notification delivery (a bigger feature
   // than "make this toggle stop resetting"), so the subtitle copy in Settings must not claim it does.
-  private val _notificationsEnabled = MutableStateFlow(com.example.ui.util.LocaleManager.isNotificationsEnabled(application))
+  private val _notificationsEnabled = MutableStateFlow(com.example.alarm.AlarmNotificationScheduler.anniversaryNotificationsEnabled(application))
   val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
 
   private val _soundEnabled = MutableStateFlow(com.example.ui.util.LocaleManager.isSoundEnabled(application))
@@ -171,7 +190,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
   fun setNotificationsEnabled(enabled: Boolean) {
     _notificationsEnabled.value = enabled
-    com.example.ui.util.LocaleManager.saveNotificationsEnabled(getApplication(), enabled)
+    com.example.alarm.AlarmNotificationScheduler.setAnniversaryNotificationsEnabled(getApplication(), enabled)
   }
 
   fun setSoundEnabled(enabled: Boolean) {
@@ -300,11 +319,44 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     }
   }
 
+  /** Latest couple profile from Room; a card falls back to it when its online profile is replaced or vanishes. */
+  private var roomCouple: CoupleProfileEntity? = null
+
+  private fun resetBoyCard() {
+    val room = roomCouple
+    _boyName.value = room?.partner1Name ?: "Bạn"
+    _boyBirthDate.value = room?.partner1Birthday ?: ""
+    _boyAvatarUrl.value = room?.partner1ProfilePicture ?: ""
+    _boyAge.value = room?.partner1Age ?: 0
+    _boyZodiac.value = room?.partner1Zodiac ?: ""
+  }
+
+  private fun resetGirlCard() {
+    val room = roomCouple
+    _girlName.value = room?.partner2Name ?: "Người Thương"
+    _girlBirthDate.value = room?.partner2Birthday ?: ""
+    _girlAvatarUrl.value = room?.partner2ProfilePicture ?: ""
+    _girlAge.value = room?.partner2Age ?: 0
+    _girlZodiac.value = room?.partner2Zodiac ?: ""
+  }
+
+  private val dao: com.example.data.db.InLoveDao get() = AppDatabase.getDatabase(getApplication()).inLoveDao()
+
   init {
     val database = AppDatabase.getDatabase(application)
     repository = InLoveRepository(database.inLoveDao(), application)
     onlineRepo = com.example.data.repository.OnlineCoupleRepository(database.inLoveDao(), application, viewModelScope)
-    authRepo = com.example.data.repository.AuthRepository(database.inLoveDao(), onlineRepo, application, viewModelScope)
+    authRepo = com.example.data.repository.AuthRepository(
+      database.inLoveDao(), onlineRepo, application, viewModelScope,
+      vault = com.example.data.db.AccountDataVault(
+        application, database,
+        // Alarms of the outgoing scope must not fire in the next one (the receiver shows their text).
+        beforeSwitch = {
+          com.example.alarm.AlarmNotificationScheduler.cancelOutgoingAccountAlarms(application, database.inLoveDao())
+        },
+        afterSwitch = { com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(application, database.inLoveDao()) }
+      )
+    )
     authState = authRepo.authState
 
     currentOnlineUser = onlineRepo.currentUser
@@ -465,6 +517,37 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       emptyList()
     )
 
+    // Ngày sinh/ngày yêu là chữ tự do: không đọc được thì bỏ qua dịp đó, không đoán. Năm sinh không quan trọng nên lấy 2000.
+    // Sở thích nhập tay (likesCsv) hợp với sở thích chung của cặp đôi online; ngân sách 0 = không giới hạn.
+    // ponytail: today lấy tại thời điểm phát, mở app qua đêm thì đổi khi dữ liệu đổi.
+    val occasionDates = combine(boyBirthDate, girlBirthDate, anniversaryDate) { boy, girl, love ->
+      val birthdays = listOf(boy, girl).mapNotNull { text ->
+        AlarmNotificationScheduler.parseDateToMonthDayYear(text)?.let { (d, m, _) ->
+          AlarmNotificationScheduler.occurrenceDate(d, m, 2000)
+        }
+      }
+      val loveStart = AlarmNotificationScheduler.parseDateToMonthDayYear(love)?.let { (d, m, y) ->
+        y?.let { AlarmNotificationScheduler.occurrenceDate(d, m, it) }
+      }
+      birthdays to loveStart
+    }
+    personalizedGifts = combine(giftIdeas, mutualInterests, appLanguage, occasionDates, coupleProfile) { ideas, interests, lang, (birthdays, loveStart), profile ->
+      GetPersonalizedGiftSuggestionsUseCase(
+        ideas = ideas,
+        interests = interests + parseLikes(profile?.likesCsv),
+        budgetMaxVnd = profile?.budgetMaxVnd?.takeIf { it > 0 },
+        birthdays = birthdays,
+        loveStart = loveStart,
+        today = LocalDate.now(),
+        isEnglish = lang == AppLanguage.EN,
+        region = profile?.occasionRegion.orEmpty()
+      )
+    }.stateIn(
+      viewModelScope,
+      SharingStarted.WhileSubscribed(5000),
+      emptyList()
+    )
+
     presetPhotos = repository.presetPhotos
     presetAvatars = repository.presetAvatars
     presetWallpapers = repository.presetWallpapers
@@ -480,12 +563,21 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     viewModelScope.launch {
       repository.initializeDefaultDataIfEmpty(_appLanguage.value)
       // Automatically schedule all stored anniversaries & milestones in Room DB
-      com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(application)
+      com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(application, dao)
     }
 
     viewModelScope.launch {
+      var hadProfile = false
       repository.coupleProfile.collect { profile ->
-        if (profile != null) {
+        roomCouple = profile
+        if (profile == null) {
+          if (!hadProfile) return@collect
+          hadProfile = false
+          // Scope switched to one with no profile: don't inherit the previous couple's details.
+          resetBoyCard(); resetGirlCard()
+          _loveTitle.value = "Hành Trình Yêu Thương"; _loveDays.value = 1; _anniversaryDate.value = "Hôm nay"
+        } else {
+          hadProfile = true
           _boyName.value = profile.partner1Name
           _boyBirthDate.value = profile.partner1Birthday
           _boyAvatarUrl.value = profile.partner1ProfilePicture
@@ -503,28 +595,37 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       }
     }
 
-    // Sync online user and partner data dynamically into couple profile state
+    // Online profiles fill the couple cards; a card holds one profile at a time (see OnlineProfileRules.kt).
     viewModelScope.launch {
+      var applied: String? = null
       currentOnlineUser.collect { user ->
-        if (user.displayName.isNotBlank() && user.displayName != "Bạn") {
-          _boyName.value = user.displayName
-        }
-        if (user.birthDate.isNotBlank()) _boyBirthDate.value = user.birthDate
-        if (user.avatarUrl.isNotBlank()) _boyAvatarUrl.value = user.avatarUrl
-        if (user.age > 0) _boyAge.value = user.age
-        if (user.zodiac.isNotBlank()) _boyZodiac.value = user.zodiac
+        val uid = profileUidOf(user.uid)
+        if (isProfileChanged(applied, uid)) resetBoyCard()
+        val sameProfile = applied == uid
+        applied = uid
+        if (uid == null) return@collect
+        val name = user.displayName
+        _boyName.value = profileFieldAfter(_boyName.value, name, name.isBlank() || name == "Bạn", sameProfile)
+        _boyBirthDate.value = profileFieldAfter(_boyBirthDate.value, user.birthDate, user.birthDate.isBlank(), sameProfile)
+        _boyAvatarUrl.value = profileFieldAfter(_boyAvatarUrl.value, user.avatarUrl, user.avatarUrl.isBlank(), sameProfile)
+        _boyAge.value = profileFieldAfter(_boyAge.value, user.age, user.age <= 0, sameProfile)
+        _boyZodiac.value = profileFieldAfter(_boyZodiac.value, user.zodiac, user.zodiac.isBlank(), sameProfile)
       }
     }
 
     viewModelScope.launch {
+      var applied: String? = null
       partnerOnlineUser.collect { partner ->
-        if (partner != null) {
-          _girlName.value = partner.displayName
-          if (partner.birthDate.isNotBlank()) _girlBirthDate.value = partner.birthDate
-          if (partner.avatarUrl.isNotBlank()) _girlAvatarUrl.value = partner.avatarUrl
-          if (partner.age > 0) _girlAge.value = partner.age
-          if (partner.zodiac.isNotBlank()) _girlZodiac.value = partner.zodiac
-        }
+        val uid = profileUidOf(partner?.uid)
+        if (isProfileChanged(applied, uid)) resetGirlCard()
+        val sameProfile = applied == uid
+        applied = uid
+        if (partner == null || uid == null) return@collect
+        _girlName.value = profileFieldAfter(_girlName.value, partner.displayName, partner.displayName.isBlank(), sameProfile)
+        _girlBirthDate.value = profileFieldAfter(_girlBirthDate.value, partner.birthDate, partner.birthDate.isBlank(), sameProfile)
+        _girlAvatarUrl.value = profileFieldAfter(_girlAvatarUrl.value, partner.avatarUrl, partner.avatarUrl.isBlank(), sameProfile)
+        _girlAge.value = profileFieldAfter(_girlAge.value, partner.age, partner.age <= 0, sameProfile)
+        _girlZodiac.value = profileFieldAfter(_girlZodiac.value, partner.zodiac, partner.zodiac.isBlank(), sameProfile)
       }
     }
 
@@ -604,6 +705,21 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _toastMessage.value = null
   }
 
+  /** "Cà phê, du lịch" -> {"cà phê", "du lịch"}; rỗng/null -> tập rỗng. */
+  private fun parseLikes(csv: String?): Set<String> =
+    csv.orEmpty().split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+
+  /** Lưu sở thích, ngân sách (VND, 0 = không giới hạn) và vùng dịp lễ của đối tác; chỉ có tác dụng khi đã có hồ sơ cặp đôi. */
+  fun savePartnerPreferences(likesCsv: String, budgetMaxVnd: Long, occasionRegion: String) {
+    viewModelScope.launch {
+      repository.savePartnerPreferences(likesCsv.trim(), budgetMaxVnd, occasionRegion)
+      showToast(
+        if (_appLanguage.value == AppLanguage.VI) "Đã lưu sở thích của đối tác ❤️"
+        else "Partner preferences saved ❤️"
+      )
+    }
+  }
+
   fun toggleChecklist(item: ChecklistItemEntity) {
     viewModelScope.launch {
       repository.toggleChecklistItem(item)
@@ -628,6 +744,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun toggleCadence(item: ReminderCadenceEntity) {
     viewModelScope.launch {
       repository.toggleCadence(item)
+      // A cadence toggle changes which advance and day-of alarms stay armed, so reschedule now.
+      com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(getApplication(), dao)
       showToast(if (!item.isEnabled) "Đã bật: ${item.label}" else "Đã tắt: ${item.label}")
     }
   }
@@ -656,28 +774,50 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _showSetAlarmDialog.value = false
   }
 
-  fun scheduleReminderAlarm(
-    title: String,
-    message: String,
-    triggerAtMillis: Long,
-    reminderId: Long = System.currentTimeMillis()
-  ) {
-    val context = getApplication<Application>()
-    val success = com.example.alarm.AlarmNotificationScheduler.scheduleAlarm(
-      context = context,
-      reminderId = reminderId,
-      title = title,
-      message = message,
-      triggerAtMillis = triggerAtMillis
-    )
-    if (success) {
+  // Personal alarms live on their reminder row, so reboot, timezone change and account switch-in can restore them.
+  fun scheduleReminderAlarm(title: String, message: String, triggerAtMillis: Long, reminderId: Long?) {
+    viewModelScope.launch {
+      val context = getApplication<Application>()
       val formatted = com.example.alarm.AlarmNotificationScheduler.formatAlarmTime(triggerAtMillis)
-      showToast("⏰ Đã hẹn giờ báo thức lúc $formatted!")
-      triggerFloatingHearts()
-    } else {
-      showToast("Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.")
+      // A missing or stale id gets a new reminder row; its id is the alarm's request code.
+      val existing = reminderId?.takeIf { repository.hasCustomReminder(it) }
+      val id = existing ?: repository.addCustomReminder(title, formatted.substringAfter(" - "), message)
+      val success = com.example.alarm.AlarmNotificationScheduler.scheduleAlarm(
+        context = context,
+        reminderId = id,
+        title = title,
+        message = message,
+        triggerAtMillis = triggerAtMillis
+      )
+      if (success) {
+        repository.setCustomReminderAlarm(id, triggerAtMillis, formatted)
+        val exactWarning = if (com.example.alarm.AlarmNotificationScheduler.exactAlarmsGranted(context)) "" else " Quyền báo thức chính xác đang tắt, báo thức có thể trễ."
+        showToast("⏰ Đã hẹn giờ báo thức lúc $formatted!$exactWarning")
+        triggerFloatingHearts()
+      } else {
+        // A new row is dropped; an existing row must not keep a time that nothing will ring.
+        if (existing == null) repository.deleteCustomReminder(id) else repository.setCustomReminderAlarm(id, null, "")
+        showToast("Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.")
+      }
+      _showSetAlarmDialog.value = false
     }
-    _showSetAlarmDialog.value = false
+  }
+
+  // A test alarm fires one second from now and stores nothing.
+  fun testReminderAlarm(title: String, message: String) {
+    viewModelScope.launch {
+      val context = getApplication<Application>()
+      val now = System.currentTimeMillis()
+      val success = com.example.alarm.AlarmNotificationScheduler.scheduleAlarm(
+        context = context,
+        reminderId = now,
+        title = title,
+        message = message,
+        triggerAtMillis = now + 1000L
+      )
+      showToast(if (success) "⏰ Báo thức thử sẽ kêu sau 1 giây!" else "Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.")
+      _showSetAlarmDialog.value = false
+    }
   }
 
   fun cancelReminderAlarm(reminderId: Long) {
@@ -704,7 +844,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
   fun deleteMilestone(id: Long) {
     viewModelScope.launch {
-      cancelReminderAlarm(id)
+      val context = getApplication<Application>()
+      com.example.alarm.AlarmNotificationScheduler.cancelMilestoneNotification(context, id)
       repository.deleteMilestone(id)
       showToast("Đã xóa ngày kỷ niệm khỏi lịch.")
     }
@@ -813,8 +954,12 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     val cleanTitle = title.trim().ifEmpty { _loveTitle.value.ifBlank { "Hành Trình Yêu Thương" } }
 
     viewModelScope.launch {
+      val existing = repository.getCoupleProfileSync() // REPLACE ghi đè hàng: giữ lại sở thích đã nhập
       val entity = CoupleProfileEntity(
         id = 1,
+        likesCsv = existing?.likesCsv ?: "",
+        budgetMaxVnd = existing?.budgetMaxVnd ?: 0,
+        occasionRegion = existing?.occasionRegion ?: "",
         partner1Name = cleanBoy,
         partner1Birthday = cleanBoyBirth,
         partner1ProfilePicture = cleanBoyAvatar,
@@ -949,32 +1094,6 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   }
 
   /**
-   * Upgrade user to VIP tier and remove all banner advertisements.
-   */
-  fun upgradeSubscription(tier: com.example.data.model.SubscriptionTier) {
-    viewModelScope.launch {
-      val currentAuth = authState.value
-      val uid = if (currentAuth is com.example.data.repository.AuthState.Authenticated) {
-        currentAuth.account.uid
-      } else {
-        currentOnlineUser.value.uid
-      }
-      val role = if (tier != com.example.data.model.SubscriptionTier.FREE) {
-        com.example.data.model.UserRole.USER_VIP
-      } else {
-        com.example.data.model.UserRole.USER_FREE
-      }
-      val success = authRepo.updateUserSubscription(uid, role, tier)
-      if (success) {
-        onlineRepo.setCurrentUserId(uid)
-        showToast("✨ Chúc mừng bạn đã nâng cấp ${tier.titleVi}! Toàn bộ quảng cáo đã được ẩn.")
-      } else {
-        showToast("Không thể cập nhật gói đăng ký. Vui lòng thử lại sau.")
-      }
-    }
-  }
-
-  /**
    * Mở giao diện thanh toán Google Play Billing cho gói đăng ký VIP.
    */
   fun upgradeWithBilling(
@@ -1007,23 +1126,23 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   }
 
   /**
-   * Generates AI-powered gift suggestions tailored to partner and mutual interests.
+   * Thêm quà gợi ý theo sở thích chung vào danh mục (mẫu có sẵn, không gọi AI).
    */
   fun triggerAiGiftSuggestions(occasion: String = "Kỷ niệm ngày yêu") {
     viewModelScope.launch {
       val partner = partnerOnlineUser.value
       val partnerName = partner?.effectiveDisplayName ?: girlName.value
-      val interests = mutualInterests.value
-      showToast("🤖 Trợ lý AI đang sáng tạo ý tưởng quà tặng theo sở thích...")
+      val interests = mutualInterests.value + parseLikes(coupleProfile.value?.likesCsv)
+      showToast("✨ Đang thêm gợi ý quà theo sở thích chung...")
       val result = repository.generateAiGiftSuggestions(
         partnerName = partnerName,
         mutualInterests = interests,
         occasion = occasion
       )
       if (result.isSuccess) {
-        showToast("✨ Đã tạo ${result.getOrNull()?.size ?: 0} gợi ý quà tặng AI mới!")
+        showToast("✨ Đã thêm ${result.getOrNull()?.size ?: 0} gợi ý quà tặng theo sở thích!")
       } else {
-        showToast("Trợ lý AI đang cập nhật. Đã nạp danh mục quà tặng lãng mạn mặc định.")
+        showToast("Chưa thêm được gợi ý mới. Bạn vẫn có thể xem toàn bộ danh mục quà tặng.")
       }
     }
   }
@@ -1205,73 +1324,107 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _showMemoryDialog.value = false
   }
 
-  fun addSharedMemory(
+  /**
+   * Lưu kỷ niệm. Ảnh/video được tải lên và máy chủ xác nhận trước, rồi mới ghi vào Room, nên kỷ niệm
+   * không bao giờ trỏ tới một ảnh chưa được xác nhận. Trả về false khi chưa lưu để hộp thoại giữ nguyên.
+   */
+  suspend fun saveSharedMemory(
     title: String,
     dateText: String,
     photoUri: String,
-    note: String = "",
-    location: String = "",
+    note: String,
+    location: String,
+    media: MemoryMediaFile?,
+    coverUri: String?,
+    privacyLevel: String,
     anniversaryTitle: String = "Kỷ Niệm Ngày Yêu",
-    mediaType: String = "IMAGE",
-    videoUri: String? = null,
-    cloudinaryPublicId: String? = null,
-    cloudinaryUrl: String? = null,
-    isCloudinaryStored: Boolean = true,
-    fileSizeFormatted: String = "",
-    durationSeconds: Int = 0,
-    privacyLevel: String = "COUPLE_ONLY"
-  ) {
-    viewModelScope.launch {
-      val validTitle = title.trim().ifEmpty { "Khoảnh Khắc Ngọt Ngào" }
-      val validDate = dateText.trim().ifEmpty { "Hôm nay" }
-      val defaultFallback = presetPhotos.value.firstOrNull() ?: ""
-      val validUri = photoUri.trim().ifEmpty { defaultFallback }
-      val validAnniversary = anniversaryTitle.trim().ifEmpty { "Kỷ Niệm Ngày Yêu" }
-      val myUid = currentOnlineUser.value.uid.ifBlank { "user_123" }
-      val myName = currentOnlineUser.value.effectiveDisplayName.ifBlank { "Bạn" }
+  ): Boolean = viewModelScope.async {
+    persistSharedMemory(title, dateText, photoUri, note, location, media, coverUri, privacyLevel, anniversaryTitle)
+  }.await()
 
+  // Chạy trong viewModelScope (không theo hộp thoại) nên việc lưu không bị huỷ khi người dùng đóng màn hình giữa chừng.
+  private suspend fun persistSharedMemory(
+    title: String,
+    dateText: String,
+    photoUri: String,
+    note: String,
+    location: String,
+    media: MemoryMediaFile?,
+    coverUri: String?,
+    privacyLevel: String,
+    anniversaryTitle: String,
+  ): Boolean {
+    val vi = _appLanguage.value == AppLanguage.VI
+    val me = currentOnlineUser.value
+    val isVideo = media?.kind == MediaKind.VIDEO
+    val validTitle = title.trim().ifEmpty { "Khoảnh Khắc Ngọt Ngào" }
+    val outcome = saveSharedMemoryUseCase(
+      signedIn = me.uid.isNotBlank(),
+      relationshipId = me.relationshipId,
+      wantsShare = privacyLevel != PRIVACY_PRIVATE,
+      media = media,
+    ) { memoryId, shareWithCouple, publicId ->
       repository.addSharedMemory(
         title = validTitle,
-        dateText = validDate,
-        photoUri = validUri,
+        dateText = dateText.trim().ifEmpty { "Hôm nay" },
+        photoUri = (coverUri ?: photoUri).trim().ifEmpty { presetPhotos.value.firstOrNull().orEmpty() },
         note = note.trim(),
         location = location.trim(),
-        anniversaryTitle = validAnniversary,
-        authorId = myUid,
-        authorName = myName,
-        mediaType = mediaType,
-        videoUri = videoUri,
-        cloudinaryPublicId = cloudinaryPublicId,
-        cloudinaryUrl = cloudinaryUrl,
-        isCloudinaryStored = isCloudinaryStored,
-        fileSizeFormatted = fileSizeFormatted,
-        durationSeconds = durationSeconds,
-        privacyLevel = privacyLevel,
-        relationshipId = currentOnlineUser.value.relationshipId
+        authorId = me.uid,
+        authorName = me.effectiveDisplayName.ifBlank { "Bạn" },
+        mediaType = if (isVideo) "VIDEO" else "IMAGE",
+        videoUri = media?.takeIf { isVideo }?.let { Uri.fromFile(it.file).toString() },
+        cloudinaryPublicId = publicId,
+        fileSizeFormatted = media?.let { formatMediaSize(it.sizeBytes) } ?: "",
+        durationSeconds = media?.durationSeconds ?: 0,
+        privacyLevel = if (shareWithCouple) privacyLevel else PRIVACY_PRIVATE,
+        relationshipId = me.relationshipId,
+        syncId = memoryId,
+        anniversaryTitle = anniversaryTitle.trim().ifEmpty { "Kỷ Niệm Ngày Yêu" },
       )
-      triggerFloatingHearts()
-      // isCloudinaryStored = false means CloudinaryStorageService's upload attempt failed and
-      // fell back to on-device-only storage (no automatic retry exists for this path, unlike
-      // the Firestore sync outbox) — the toast must say so, not claim a Cloudinary save that
-      // didn't happen. Silently claiming success here is what let a lost upload look "saved"
-      // to the user.
-      val msg = if (isCloudinaryStored) {
-        if (_appLanguage.value == AppLanguage.VI) {
-          if (mediaType == "VIDEO") "Đã lưu video kỷ niệm lên Cloudinary & Album! 🎬☁️"
-          else "Đã lưu kỷ niệm \"$validTitle\" lên Cloudinary & Album! 📸💕"
-        } else {
-          if (mediaType == "VIDEO") "Saved memory video to Cloudinary! 🎬☁️"
-          else "Saved memory \"$validTitle\" to Cloudinary & Album! 📸💕"
-        }
-      } else {
-        if (_appLanguage.value == AppLanguage.VI) {
-          "Đã lưu \"$validTitle\" trên máy — tải lên Cloudinary thất bại, hãy kiểm tra kết nối mạng và thử lại sau! ⚠️📱"
-        } else {
-          "Saved \"$validTitle\" on this device only — Cloudinary upload failed, check your connection and try again later! ⚠️📱"
-        }
-      }
-      showToast(msg)
     }
+    return when (outcome) {
+      is SaveSharedMemoryOutcome.Saved -> {
+        triggerFloatingHearts()
+        showToast(
+          when {
+            outcome.unpaired -> if (vi) "Chưa ghép đôi nên \"$validTitle\" được lưu riêng trên máy." else "Not paired yet, so \"$validTitle\" is saved on this device only."
+            isVideo -> if (vi) "Đã lưu video kỷ niệm! 🎬💕" else "Saved video memory! 🎬💕"
+            else -> if (vi) "Đã lưu kỷ niệm \"$validTitle\"! 📸💕" else "Saved memory \"$validTitle\"! 📸💕"
+          }
+        )
+        true
+      }
+      SaveSharedMemoryOutcome.NotSignedIn -> {
+        showToast(if (vi) "Hãy đăng nhập để chia sẻ kỷ niệm với người ấy." else "Sign in to share memories with your partner.")
+        false
+      }
+      is SaveSharedMemoryOutcome.InvalidMedia -> {
+        showToast(outcome.message)
+        false
+      }
+      SaveSharedMemoryOutcome.UploadFailed -> {
+        showToast(
+          if (vi) "Chưa tải được ảnh hoặc video lên, kỷ niệm chưa được lưu. Hãy kiểm tra mạng và thử lại."
+          else "Couldn't upload the photo or video, so the memory wasn't saved. Check your connection and try again."
+        )
+        false
+      }
+      SaveSharedMemoryOutcome.SaveFailed -> {
+        showToast(if (vi) "Không lưu được kỷ niệm, hãy thử lại." else "Couldn't save the memory. Please try again.")
+        false
+      }
+    }
+  }
+
+  /** URL phân phối tạm (khoảng 15 phút) cho ảnh/video đã tải lên của kỷ niệm; null nếu không có hoặc lỗi. */
+  suspend fun resolveMemoryMediaUrl(memory: SharedMemoryEntity): String? {
+    // Use case từ chối kỷ niệm không thuộc cặp đôi đang đăng nhập, trước khi gọi máy chủ.
+    return resolveMemoryMediaUrlUseCase(
+      currentRelationshipId = currentOnlineUser.value.relationshipId,
+      relationshipId = memory.relationshipId.orEmpty(),
+      memoryId = memory.syncId,
+    ).getOrNull()
   }
 
   fun updateSharedMemory(memory: SharedMemoryEntity) {
@@ -1389,7 +1542,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         notificationEnabled = true,
         reminderDaysBefore = reminderDaysBefore
       )
-      com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, ann)
+      val disabledCadence = com.example.alarm.AlarmNotificationScheduler.disabledCadenceKeys(dao)
+      com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, ann, disabledCadence)
       _showAddAnniversaryDialog.value = false
       triggerFloatingHearts()
       showToast("Đã lưu ngày kỷ niệm & kích hoạt thông báo tự động! 🔔")
@@ -1401,7 +1555,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       repository.updateAnniversaryDate(item)
       val context = getApplication<Application>()
       if (item.notificationEnabled) {
-        com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, item)
+        val disabledCadence = com.example.alarm.AlarmNotificationScheduler.disabledCadenceKeys(dao)
+        com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, item, disabledCadence)
       } else {
         com.example.alarm.AlarmNotificationScheduler.cancelAnniversaryNotification(context, item.id)
       }
@@ -1425,27 +1580,12 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       val updated = item.copy(notificationEnabled = willBeEnabled)
       repository.updateAnniversaryDate(updated)
       if (willBeEnabled) {
-        val scheduled = com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, updated)
+        val disabledCadence = com.example.alarm.AlarmNotificationScheduler.disabledCadenceKeys(dao)
+        val scheduled = com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, updated, disabledCadence)
         showToast(if (scheduled) "🔔 Đã bật thông báo kỷ niệm '${item.title}'" else "Đã bật thông báo '${item.title}'")
       } else {
         com.example.alarm.AlarmNotificationScheduler.cancelAnniversaryNotification(context, item.id)
         showToast("🔕 Đã tắt thông báo kỷ niệm '${item.title}'")
-      }
-    }
-  }
-
-  private val _globalAnniversaryNotifications = MutableStateFlow(true)
-  val globalAnniversaryNotifications: StateFlow<Boolean> = _globalAnniversaryNotifications.asStateFlow()
-
-  fun toggleGlobalAnniversaryNotifications(enabled: Boolean) {
-    _globalAnniversaryNotifications.value = enabled
-    val context = getApplication<Application>()
-    viewModelScope.launch {
-      if (enabled) {
-        val count = com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context)
-        showToast("🔔 Đã bật & đồng bộ lại $count thông báo kỷ niệm!")
-      } else {
-        showToast("🔕 Đã tạm dừng thông báo ngày kỷ niệm.")
       }
     }
   }
@@ -1474,7 +1614,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun resyncAllAnniversaryAlarms() {
     val context = getApplication<Application>()
     viewModelScope.launch {
-      val count = com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context)
+      val count = com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context, dao)
       showToast("⏰ Đã quét & kích hoạt lại $count thông báo kỷ niệm từ cơ sở dữ liệu!")
     }
   }
@@ -1783,5 +1923,11 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       val res = authRepo.togglePinEnabled(enabled)
       showToast(res.second)
     }
+  }
+  override fun onCleared() {
+    // The app-lifetime SyncCoordinator holds a callback into this ViewModel's repository; drop it
+    // (and its Firestore listeners) so the cleared ViewModel can be collected. restoreSession restarts it.
+    try { com.example.di.AppServiceLocator.syncCoordinator.stop() } catch (_: Exception) {}
+    super.onCleared()
   }
 }

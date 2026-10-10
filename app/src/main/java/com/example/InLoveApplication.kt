@@ -32,12 +32,11 @@ class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider 
     }
 
     override fun onCreate() {
-        if (isRunningInTest) {
-            try {
-                FirebaseApp.initializeApp(this)
-            } catch (_: Throwable) {}
-            return
-        }
+        // Unit test không khởi tạo Firebase: trên Robolectric, Firebase Sessions ném
+        // NameNotFoundException ở thread nền (applicationId không có trong PackageManager giả)
+        // và lỗi đó làm hỏng runTest chạy sau. Test nào cần FirebaseApp tự gọi initializeApp.
+        // ponytail: nếu sau này có test Firebase thật, dùng Application riêng cho test thay vì bỏ qua ở đây.
+        if (isRunningInTest) return
 
         // Firebase + App Check PHẢI được cài đặt trước khi AppPluginBase.onCreate() chạy:
         // AppPluginBase -> AppPluginManager.initPlugin() tự gọi FirebaseApp.initializeApp()
@@ -66,22 +65,27 @@ class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider 
         // billing client THẬT duy nhất chạy purchase flow). MonetizationSdk/IapHelper phía
         // appplugin chỉ dùng các ID này để đồng bộ Entitlements (tắt quảng cáo cho VIP), không
         // tự chạy một luồng mua hàng song song — xem VipProductIds.kt để biết chi tiết.
-        val report = MonetizationSdk.configure(this) {
-            // Off: InLove is not a game, has no backend training/BigQuery pipeline deployed
-            // for this brain (per appplugin's own docs), and AdsManagerImpl's explicit 30s
-            // interstitial interval cap is already the real, auditable gate. Re-enabling later
-            // must follow the SDK's own staged rollout (5% -> 20% -> 100%, >=2 weeks per step
-            // with a holdout comparison, appplugin/DOC/38_INTEGRATION_GUIDE.md:126-144) — the
-            // value below is left in place as a starting point for that, not a live setting.
-            brainEnabled = false
-            brainRolloutFraction = 0.05
-            childDirected = false
+        // Third-party SDK: a failure here must degrade to "no ads", not kill the process at launch.
+        try {
+            val report = MonetizationSdk.configure(this) {
+                // Off: InLove is not a game, has no backend training/BigQuery pipeline deployed
+                // for this brain (per appplugin's own docs), and AdsManagerImpl's explicit 30s
+                // interstitial interval cap is already the real, auditable gate. Re-enabling later
+                // must follow the SDK's own staged rollout (5% -> 20% -> 100%, >=2 weeks per step
+                // with a holdout comparison, appplugin/DOC/38_INTEGRATION_GUIDE.md:126-144) — the
+                // value below is left in place as a starting point for that, not a live setting.
+                brainEnabled = false
+                brainRolloutFraction = 0.05
+                childDirected = false
 
-            inappProducts = listOf(VipProductIds.LIFETIME)
-            subsProducts = listOf(VipProductIds.MONTHLY, VipProductIds.YEARLY)
-            removeAdsProducts = setOf(VipProductIds.MONTHLY, VipProductIds.YEARLY, VipProductIds.LIFETIME)
+                inappProducts = listOf(VipProductIds.LIFETIME)
+                subsProducts = listOf(VipProductIds.MONTHLY, VipProductIds.YEARLY)
+                removeAdsProducts = setOf(VipProductIds.MONTHLY, VipProductIds.YEARLY, VipProductIds.LIFETIME)
+            }
+            Log.i("InLoveApp", "MonetizationSdk initialized:\n${report.describe()}")
+        } catch (t: Throwable) {
+            Log.e("InLoveApp", "MonetizationSdk configure failed: ${t.message}")
         }
-        Log.i("InLoveApp", "MonetizationSdk initialized:\n${report.describe()}")
     }
 
     private fun installAppCheckProviderFactory() {

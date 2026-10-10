@@ -1,6 +1,8 @@
 package com.example.ui.util
 
 import java.security.MessageDigest
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 import java.security.SecureRandom
 import java.util.Locale
 
@@ -31,6 +33,8 @@ object AuthSecurityManager {
   const val MAX_FAILED_ATTEMPTS = 5
   const val LOCKOUT_DURATION_MILLIS = 3 * 60 * 1000L // 3 minutes lockout
   private const val HASH_ITERATIONS = 2048
+  private const val PIN_V2_ITERATIONS = 120_000
+  const val PIN_V2_PREFIX = "v2\$"
 
   private val secureRandom = SecureRandom()
 
@@ -95,6 +99,34 @@ object AuthSecurityManager {
    */
   fun hashPin(pin: String, salt: String): String {
     return hashPassword("PIN_${pin.trim()}", salt)
+  }
+
+  /**
+   * Slow PIN hash (PBKDF2, 120k iterations) with a version prefix. HmacSHA1 variant on purpose:
+   * the HmacSHA256 variant only exists from API 26 and minSdk is 24, and the algorithm must not
+   * change when the OS is upgraded or every stored PIN would stop matching.
+   */
+  fun hashPinV2(pin: String, salt: String): String {
+    val spec = PBEKeySpec(pin.trim().toCharArray(), salt.toByteArray(Charsets.UTF_8), PIN_V2_ITERATIONS, 256)
+    try {
+      return PIN_V2_PREFIX + SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1").generateSecret(spec).encoded.toHexString()
+    } finally {
+      spec.clearPassword()
+    }
+  }
+
+  fun isPinV2(stored: String) = stored.startsWith(PIN_V2_PREFIX)
+
+  /** Constant-time comparison for hashes and secrets. */
+  fun secureEquals(a: String, b: String): Boolean =
+    MessageDigest.isEqual(a.toByteArray(Charsets.UTF_8), b.toByteArray(Charsets.UTF_8))
+
+  /** Accepts v2 hashes, v1 salted-SHA256 hashes and legacy plaintext 4-digit PINs. */
+  fun verifyPin(pin: String, salt: String, stored: String): Boolean = when {
+    stored.isEmpty() -> false
+    isPinV2(stored) -> secureEquals(hashPinV2(pin, salt), stored)
+    stored.length == 4 -> secureEquals(pin.trim(), stored)
+    else -> secureEquals(hashPin(pin, salt), stored)
   }
 
   /**

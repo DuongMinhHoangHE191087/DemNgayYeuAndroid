@@ -8,6 +8,7 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
+  alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -34,13 +35,12 @@ android {
     minSdk = 24
     targetSdk = 36
     versionCode = 1
-    versionName = "1.0"
+    versionName = "1.0.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${getEnv("CLOUDINARY_CLOUD_NAME", "dt6p7wm6i")}\"")
-    buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${getEnv("CLOUDINARY_UPLOAD_PRESET", "inlove_unsigned")}\"")
-    buildConfigField("String", "CLOUDINARY_FOLDER", "\"${getEnv("CLOUDINARY_FOLDER", "inlove_memories")}\"")
+    // Owner-controlled HTTPS site hosting /privacy, /terms and /delete-account (see docs/release/PLAY_RELEASE_CHECKLIST.md)
+    buildConfigField("String", "LEGAL_BASE_URL", "\"${getEnv("LEGAL_BASE_URL", "https://inloveapp.com")}\"")
   }
 
   packaging {
@@ -75,6 +75,7 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = true
       isShrinkResources = true
+      signingConfig = signingConfigs.getByName("release")
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       val releaseAppId = project.findProperty("ADMOB_APP_ID_RELEASE")?.toString() ?: ""
       val releaseBannerId = project.findProperty("ADMOB_BANNER_ID_RELEASE")?.toString() ?: ""
@@ -97,6 +98,7 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    isCoreLibraryDesugaringEnabled = true // java.time trên API 24-25
   }
 
   buildFeatures {
@@ -104,6 +106,11 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  // Room's MigrationTestHelper reads app/schemas/<db>/<version>.json from the merged assets (Migration12To13Test).
+  // AGP's unit-test variant reads the debug merge, not test-source-set assets, so the schemas ride in debug assets only.
+  sourceSets {
+    getByName("debug") { assets.srcDirs(files("$projectDir/schemas")) }
+  }
   dependenciesInfo {
     includeInApk = false
     includeInBundle = true
@@ -124,6 +131,11 @@ secrets {
   ignoreList.addAll(
     listOf(
       "FIREBASE_APPCHECK_DEBUG_TOKEN",
+      // Khóa phía server Cloudinary: không bao giờ vào BuildConfig, kể cả khi còn sót trong .env của máy dev.
+      "CLOUDINARY_API_KEY",
+      "CLOUDINARY_API_SECRET",
+      "CLOUDINARY_TOKEN_KEY",
+      "CLOUDINARY_DELIVERY_MODE",
       "CLOUDINARY_CLOUD_NAME",
       "CLOUDINARY_UPLOAD_PRESET",
       "CLOUDINARY_FOLDER",
@@ -152,6 +164,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // This makes it easy to add them back in the future if needed.
 dependencies {
   implementation(libs.appplugin)
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
@@ -180,6 +193,10 @@ dependencies {
   implementation(libs.firebase.ai)
   // Firestore support
   implementation(libs.firebase.firestore)
+  // Crashlytics runtime
+  implementation(libs.firebase.crashlytics)
+  // Callable Cloud Functions: upload ký số và URL phát Cloudinary (docs/architecture/MEDIA_CLOUDINARY.md)
+  implementation(libs.firebase.functions)
 
   // Firebase Auth and Google Sign-In via Credential Manager:
   implementation(libs.firebase.auth)
@@ -207,7 +224,7 @@ dependencies {
   implementation(libs.google.play.services.ads)
   implementation(libs.user.messaging.platform)
 
-  // Google Play Billing Client KTX v7 — Subscriptions & In-App Purchases
+  // Google Play Billing Client KTX — Subscriptions & In-App Purchases (version: libs.versions.toml `billingKtx`)
   implementation(libs.google.play.billing.ktx)
 
   // WorkManager — offline sync outbox (data-sync-and-real-pairing plan, Task 6)
@@ -234,4 +251,22 @@ dependencies {
   debugImplementation(libs.firebase.appcheck.debug)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
+}
+
+// Chặn đóng gói release thiếu cấu hình: AdMob App ID rỗng làm app crash lúc khởi động, thiếu
+// keystore thì AAB không ký được. Chỉ áp cho task bundle/assemble/package Release (lint/test vẫn chạy).
+gradle.taskGraph.whenReady {
+  val packaging = allTasks.any { it.project == project && Regex("^(bundle|assemble|package)Release$").matches(it.name) }
+  if (!packaging) return@whenReady
+  val missing = buildList {
+    listOf("ADMOB_APP_ID_RELEASE", "ADMOB_BANNER_ID_RELEASE").forEach {
+      val v = project.findProperty(it)?.toString()
+      if (v.isNullOrBlank()) add("-P$it (gradle property)")
+      else if (!Regex("""ca-app-pub-\d{16}[~/]\d{10}""").matches(v)) add("-P$it sai định dạng (ca-app-pub-XXXXXXXXXXXXXXXX~NNNNNNNNNN)")
+    }
+    listOf("STORE_PASSWORD", "KEY_PASSWORD").forEach { if (System.getenv(it).isNullOrBlank()) add("env $it") }
+    val ks = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+    if (!file(ks).exists()) add("keystore file ($ks) — set env KEYSTORE_PATH")
+  }
+  if (missing.isNotEmpty()) throw GradleException("Release build thiếu cấu hình: ${missing.joinToString("; ")}")
 }

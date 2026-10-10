@@ -14,15 +14,16 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Check if user is a member of the relationship (supports partnerA/B, user1/2, and 3NF user1Uid/user2Uid)
+    // Check if user is a member of the relationship (supports partnerA/B, user1/2, and 3NF user1Uid/user2Uid).
+    // get(key, '') so a missing legacy field is a plain non-match, not a rule evaluation error.
     function isRelationshipMember(relData) {
       return isAuthenticated() && (
-        request.auth.uid == relData.partnerAId ||
-        request.auth.uid == relData.partnerBId ||
-        request.auth.uid == relData.user1 ||
-        request.auth.uid == relData.user2 ||
-        request.auth.uid == relData.user1Uid ||
-        request.auth.uid == relData.user2Uid
+        request.auth.uid == relData.get('partnerAId', '') ||
+        request.auth.uid == relData.get('partnerBId', '') ||
+        request.auth.uid == relData.get('user1', '') ||
+        request.auth.uid == relData.get('user2', '') ||
+        request.auth.uid == relData.get('user1Uid', '') ||
+        request.auth.uid == relData.get('user2Uid', '')
       );
     }
 
@@ -97,21 +98,16 @@ service cloud.firestore {
     // ===============================================================
     match /relationships/{relationshipId} {
       allow get, list: if isRelationshipMember(resource.data);
-      // Relationship id MUST equal the id of the invite it was accepted from. This is what
-      // closes pairing without a Cloud Function: creating this doc requires that invite to
-      // already be ACCEPTED and to name the same two people, and a second create attempt on
-      // the same id is routed by Firestore to the `update` rule below (which locks identity
-      // fields), making replay a safe no-op instead of a second relationship.
-      allow create: if isAuthenticated() &&
-        (request.resource.data.partnerAId == request.auth.uid || request.resource.data.partnerBId == request.auth.uid) &&
-        exists(/databases/$(database)/documents/invites/$(relationshipId)) &&
-        get(/databases/$(database)/documents/invites/$(relationshipId)).data.status == 'ACCEPTED' &&
-        get(/databases/$(database)/documents/invites/$(relationshipId)).data.senderUid == request.resource.data.partnerAId &&
-        get(/databases/$(database)/documents/invites/$(relationshipId)).data.targetUid == request.resource.data.partnerBId;
+      // Chỉ Cloud Function `acceptCoupleInvite` (Admin SDK, bỏ qua rules) được tạo relationship:
+      // nó nhận lời mời + tạo relationship (id = id lời mời) trong một transaction và ép
+      // "mỗi uid một quan hệ đang hoạt động". Client tự tạo sẽ không có transaction đó.
+      // Phải deploy function TRƯỚC khi deploy rules này / phát hành app dùng nó.
+      allow create: if false;
       // Khoá TẤT CẢ field xác định thành viên — thiếu partnerAId/partnerBId trước đây cho
       // phép một partner tự thay thế người kia bằng một uid bất kỳ (chiếm quyền đọc toàn bộ
       // memories/anniversaries đã gắn relationshipId này).
       allow update: if isRelationshipMember(resource.data) &&
+        !(resource.data.status == 'TERMINATED' && request.resource.data.status == 'ACTIVE') &&
         (!('partnerAId' in resource.data) || request.resource.data.partnerAId == resource.data.partnerAId) &&
         (!('partnerBId' in resource.data) || request.resource.data.partnerBId == resource.data.partnerBId) &&
         (!('user1' in resource.data) || request.resource.data.user1 == resource.data.user1) &&
@@ -127,16 +123,68 @@ service cloud.firestore {
     // from the top-level /memories, /anniversaries collections below).
     // Both partners get full read/write; no sender/receiver asymmetry here.
     // ===============================================================
+    function isActiveRelMember(relId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/relationships/$(relId)) &&
+        isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data) &&
+        get(/databases/$(database)/documents/relationships/$(relId)).data.status == 'ACTIVE';
+    }
+
+    // Media helpers (docs/architecture/MEDIA_CLOUDINARY.md). A client may never store a public
+    // link or a device path in a memory: photoUri is empty or a preset photo, videoUri is always
+    // empty (video lives in Cloudinary under cloudinaryPublicId).
+    function isPresetPhoto(url) {
+      return exists(/databases/$(database)/documents/preset_assets/photos) &&
+        url in get(/databases/$(database)/documents/preset_assets/photos).data.urls;
+    }
+
+    function mediaFieldsAllowed(data) {
+      return !('cloudinaryUrl' in data) &&
+        !('isCloudinaryStored' in data) &&
+        data.get('videoUri', '') == '' &&
+        (data.get('photoUri', '') == '' || isPresetPhoto(data.photoUri));
+    }
+
+    // The server confirmed this upload, it is still active, it belongs to this couple, and the
+    // caller is the one who uploaded it.
+    function ownsActiveAsset(memId, relId) {
+      let asset = get(/databases/$(database)/documents/mediaAssets/$(memId)).data;
+      return asset.state == 'active' && asset.relationshipId == relId && asset.ownerUid == request.auth.uid;
+    }
+
+    // Reads stay open to members of any status (so a terminated couple can still see history
+    // locally-synced); writes require an ACTIVE relationship and a doc that names this relationship.
+    // cloudinaryPublicId may be set only at create, only to inlove_mem_<this id>, and only with a
+    // confirmed asset. Afterwards it may stay the same or be cleared; it cannot be attached to a new file.
     match /relationships/{relId}/memories/{memId} {
-      allow read, write: if isAuthenticated() &&
+      allow read: if isAuthenticated() &&
         exists(/databases/$(database)/documents/relationships/$(relId)) &&
         isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data);
+      allow create: if isActiveRelMember(relId) &&
+        request.resource.data.relationshipId == relId &&
+        request.resource.data.syncId == memId &&
+        request.resource.data.authorId == request.auth.uid &&
+        mediaFieldsAllowed(request.resource.data) &&
+        (request.resource.data.get('cloudinaryPublicId', '') == '' ||
+         (request.resource.data.cloudinaryPublicId == 'inlove_mem_' + memId && ownsActiveAsset(memId, relId)));
+      allow update: if isActiveRelMember(relId) &&
+        request.resource.data.relationshipId == relId &&
+        request.resource.data.syncId == memId &&
+        request.resource.data.get('authorId', '') == resource.data.get('authorId', '') &&
+        mediaFieldsAllowed(request.resource.data) &&
+        (request.resource.data.get('cloudinaryPublicId', '') == '' ||
+         request.resource.data.cloudinaryPublicId == resource.data.get('cloudinaryPublicId', ''));
+      allow delete: if isActiveRelMember(relId);
     }
 
     match /relationships/{relId}/anniversaries/{annId} {
-      allow read, write: if isAuthenticated() &&
+      allow read: if isAuthenticated() &&
         exists(/databases/$(database)/documents/relationships/$(relId)) &&
         isRelationshipMember(get(/databases/$(database)/documents/relationships/$(relId)).data);
+      allow create, update: if isActiveRelMember(relId) &&
+        request.resource.data.relationshipId == relId &&
+        request.resource.data.syncId == annId;
+      allow delete: if isActiveRelMember(relId);
     }
 
     // ===============================================================
@@ -148,10 +196,15 @@ service cloud.firestore {
         resource.data.receiverUid == request.auth.uid ||
         resource.data.targetUid == request.auth.uid
       );
-      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+      // Always created PENDING and addressed to someone else: a client can never mint an
+      // already-ACCEPTED invite (that would let it force a relationship onto a victim).
+      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid &&
+        request.resource.data.status == 'PENDING' &&
+        request.resource.data.targetUid != request.auth.uid;
       // Receiver may only move PENDING -> ACCEPTED/DECLINED. Sender may only move
       // PENDING -> CANCELLED. Identity fields stay locked as before.
       allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
         request.resource.data.senderUid == resource.data.senderUid &&
         (!('receiverUid' in resource.data) || request.resource.data.receiverUid == resource.data.receiverUid) &&
         (!('targetUid' in resource.data) || request.resource.data.targetUid == resource.data.targetUid) &&
@@ -164,24 +217,13 @@ service cloud.firestore {
     }
 
     // ===============================================================
-    // Memories Collection (Strict membership check: author or partner only)
+    // Memories Collection (legacy top-level; Strict membership check: author or partner only)
     // ===============================================================
     match /memories/{memoryId} {
       allow get, list: if isMemoryMember(resource.data);
-      // authorUid == mình là chưa đủ: nếu request gắn relationshipId thì phải thật sự là
-      // thành viên relationship đó, nếu không bất kỳ user nào cũng gắn được memory vào
-      // relationship của người khác (memory đó sẽ hiện ra trong list của cặp đôi kia).
-      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid &&
-        (!('relationshipId' in request.resource.data) ||
-         request.resource.data.relationshipId == null || request.resource.data.relationshipId == "" ||
-         (exists(/databases/$(database)/documents/relationships/$(request.resource.data.relationshipId)) &&
-          isRelationshipMember(get(/databases/$(database)/documents/relationships/$(request.resource.data.relationshipId)).data)));
-      allow update: if isAuthenticated() && (
-        resource.data.authorUid == request.auth.uid ||
-        isMemoryMember(resource.data)
-      ) &&
-        request.resource.data.authorUid == resource.data.authorUid &&
-        (!('relationshipId' in resource.data) || request.resource.data.relationshipId == resource.data.relationshipId);
+      // The app writes memories only under relationships/{id}/memories. New rows here are refused;
+      // the author may still delete their own rows (RemoteAccountCleanup on account deletion).
+      allow create, update: if false;
       allow delete: if isAuthenticated() && resource.data.authorUid == request.auth.uid;
     }
 
@@ -229,6 +271,22 @@ service cloud.firestore {
     match /checklist_templates/{checklistId} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // ===============================================================
+    // Media bookkeeping (written only by Cloud Functions; Admin SDK bypasses rules)
+    // ===============================================================
+    match /mediaAssets/{assetId} {
+      allow read, write: if false;
+    }
+
+    match /mediaQuota/{quotaId} {
+      allow read, write: if false;
+    }
+
+    // Việc xoá tài khoản: chỉ callable `requestAccountDeletion` + trigger (Admin SDK) ghi; client không đọc/ghi.
+    match /accountDeletions/{uid} {
+      allow read, write: if false;
     }
 
     // ===============================================================

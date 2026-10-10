@@ -11,6 +11,7 @@ import com.example.data.model.GiftReminderEntity
 import com.example.data.model.LoveBadgeEntity
 import com.example.data.model.MilestoneEntity
 import com.example.data.model.ReminderCadenceEntity
+import com.example.data.model.PRIVACY_PRIVATE
 import com.example.data.model.SharedMemoryEntity
 import com.example.data.model.SyncOutboxEntity
 import com.example.data.sync.AnniversarySyncAdapter
@@ -68,12 +69,35 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     val hasGifts = dao.getAllGiftIdeas().first().isNotEmpty()
     val hasBadges = dao.getAllLoveBadges().first().isNotEmpty()
 
+    // The gift catalog repairs itself on every start, so it runs before the cloud/offline branch below.
+    ensureSeedGiftCatalog(language)
+
     if (!hasMilestones || !hasGifts || !hasBadges) {
       syncAllCloudPresets()
       // If offline on cold start, populate safe seed data so the app is immediately usable
       seedOfflineDataIfStillEmpty(language)
     } else {
       fetchPresetAssetsFromFirestore()
+    }
+  }
+
+  /**
+   * Cài đủ 20 ý tưởng quà mỗi lần khởi động và không xoá dòng nào. Dòng cũ không có remoteId
+   * (REPLACE từng gộp chúng thành một dòng) được nhận lại theo ảnh hoặc tiêu đề để giữ id và trạng thái yêu thích.
+   */
+  suspend fun ensureSeedGiftCatalog(language: com.example.ui.util.AppLanguage) {
+    val rows = dao.getAllGiftIdeas().first()
+    val takenRemoteIds = rows.map { it.remoteId }.toSet()
+    com.example.data.seed.GiftIdeasSeed.all.forEach { seed ->
+      val entity = seed.toEntity(language)
+      val legacy = rows.firstOrNull {
+        it.remoteId.isBlank() && com.example.domain.content.GiftCatalog.seedRemoteIdFor(it) == seed.remoteId
+      }
+      if (legacy != null && seed.remoteId !in takenRemoteIds) {
+        dao.updateGiftIdea(entity.copy(id = legacy.id, isFavorited = legacy.isFavorited))
+      } else {
+        dao.upsertGiftIdeaByRemoteId(entity)
+      }
     }
   }
 
@@ -265,6 +289,10 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     dao.insertCoupleProfile(profile.copy(id = 1, updatedAt = System.currentTimeMillis()))
   }
 
+  suspend fun savePartnerPreferences(likesCsv: String, budgetMaxVnd: Long, occasionRegion: String) {
+    dao.updatePartnerPreferences(likesCsv, budgetMaxVnd.coerceAtLeast(0), occasionRegion)
+  }
+
   suspend fun toggleChecklistItem(item: ChecklistItemEntity) {
     dao.updateChecklistItem(item.copy(isCompleted = !item.isCompleted))
   }
@@ -305,6 +333,13 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     dao.deleteCustomReminderById(id)
   }
 
+  // ponytail: loads every custom reminder row; a by-id query is the upgrade when the list grows.
+  suspend fun hasCustomReminder(id: Long): Boolean = dao.getCustomRemindersList().any { it.id == id }
+
+  suspend fun setCustomReminderAlarm(id: Long, millis: Long?, formatted: String) {
+    dao.setCustomReminderAlarm(id, millis, formatted)
+  }
+
   suspend fun deleteMilestone(id: Long) {
     dao.deleteMilestoneById(id)
   }
@@ -337,12 +372,12 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     mediaType: String = "IMAGE",
     videoUri: String? = null,
     cloudinaryPublicId: String? = null,
-    cloudinaryUrl: String? = null,
-    isCloudinaryStored: Boolean = true,
     fileSizeFormatted: String = "",
     durationSeconds: Int = 0,
     privacyLevel: String = "COUPLE_ONLY",
-    relationshipId: String? = null
+    relationshipId: String? = null,
+    // Ảnh/video đã tải lên dùng chính mã này làm memoryId phía máy chủ, nên syncId phải khớp với publicId.
+    syncId: String = UUID.randomUUID().toString(),
   ) {
     val now = System.currentTimeMillis()
     val memory = SharedMemoryEntity(
@@ -360,27 +395,54 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
       mediaType = mediaType,
       videoUri = videoUri,
       cloudinaryPublicId = cloudinaryPublicId,
-      cloudinaryUrl = cloudinaryUrl,
-      isCloudinaryStored = isCloudinaryStored,
       fileSizeFormatted = fileSizeFormatted,
       durationSeconds = durationSeconds,
       privacyLevel = privacyLevel,
-      syncId = UUID.randomUUID().toString(),
+      syncId = syncId,
       updatedAt = now,
-      pendingSync = true
+      pendingSync = privacyLevel != PRIVACY_PRIVATE
     )
+    if (privacyLevel == PRIVACY_PRIVATE) {
+      // Riêng tư: chỉ lưu ở máy này, không vào sync_outbox nên không bao giờ rời máy.
+      dao.insertSharedMemory(memory)
+      return
+    }
     dao.insertSharedMemoryWithOutbox(memory, outboxEntryFor(MemorySyncAdapter.entityType, memory.syncId, memory))
     SyncWorker.enqueueImmediate(appContext)
   }
 
   suspend fun updateSharedMemory(memory: SharedMemoryEntity) {
-    val withSync = ensureSyncId(memory).copy(updatedAt = System.currentTimeMillis(), pendingSync = true)
-    dao.updateSharedMemoryWithOutbox(withSync, outboxEntryFor(MemorySyncAdapter.entityType, withSync.syncId, withSync))
-    SyncWorker.enqueueImmediate(appContext)
+    val previous = dao.getAllSharedMemories().first().firstOrNull { it.id == memory.id }
+    // Riêng tư là một chiều: ảnh đã chia sẻ có thể đã nằm trên Cloudinary công khai, nên không cho quay lại chia sẻ.
+    val privacy = if (previous?.privacyLevel == PRIVACY_PRIVATE) PRIVACY_PRIVATE else memory.privacyLevel
+    val local = ensureSyncId(memory).copy(
+      privacyLevel = privacy,
+      updatedAt = System.currentTimeMillis(),
+      pendingSync = privacy != PRIVACY_PRIVATE
+    )
+    when {
+      privacy != PRIVACY_PRIVATE -> {
+        dao.updateSharedMemoryWithOutbox(local, outboxEntryFor(MemorySyncAdapter.entityType, local.syncId, local))
+        SyncWorker.enqueueImmediate(appContext)
+      }
+      previous != null && previous.privacyLevel != PRIVACY_PRIVATE -> {
+        // Chia sẻ → riêng tư: gửi tombstone (đã bỏ nội dung) để bạn đời không còn thấy; bản đầy đủ vẫn ở máy này.
+        // Máy chủ giải phóng tệp trên đám mây khi publicId bị xoá, nên máy này không còn giữ publicId nữa.
+        val privateLocal = local.copy(cloudinaryPublicId = null)
+        val tombstone = privateLocal.copy(privacyLevel = previous.privacyLevel, deleted = true)
+        dao.updateSharedMemoryWithOutbox(privateLocal, outboxEntryFor(MemorySyncAdapter.entityType, local.syncId, tombstone))
+        SyncWorker.enqueueImmediate(appContext)
+      }
+      else -> dao.updateSharedMemory(local) // riêng tư → riêng tư: chỉ ở máy này
+    }
   }
 
   suspend fun deleteSharedMemory(id: Long) {
     val existing = dao.getAllSharedMemories().first().firstOrNull { it.id == id } ?: return
+    if (existing.privacyLevel == PRIVACY_PRIVATE) {
+      dao.softDeleteSharedMemoryById(id, System.currentTimeMillis()) // riêng tư: không có gì để xoá trên đám mây
+      return
+    }
     val tombstone = ensureSyncId(existing).copy(deleted = true, updatedAt = System.currentTimeMillis(), pendingSync = true)
     dao.deleteSharedMemoryWithOutbox(
       id, tombstone.updatedAt, outboxEntryFor(MemorySyncAdapter.entityType, tombstone.syncId, tombstone)
@@ -453,13 +515,22 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
   private fun ensureSyncId(item: AnniversaryDateEntity): AnniversaryDateEntity =
     if (item.syncId.isBlank()) item.copy(syncId = UUID.randomUUID().toString()) else item
 
-  private fun outboxEntryFor(entityType: String, syncId: String, memory: SharedMemoryEntity): SyncOutboxEntity =
-    SyncOutboxEntity(
+  private fun outboxEntryFor(entityType: String, syncId: String, memory: SharedMemoryEntity): SyncOutboxEntity {
+    // Tombstone chỉ mang khoá để xoá đúng bản ghi: không đẩy nội dung, ảnh hay link media lên đám mây.
+    val payload = if (memory.deleted) memory.stripForTombstone() else memory
+    return SyncOutboxEntity(
       entityType = entityType,
       syncId = syncId,
       operation = if (memory.deleted) "DELETE" else "UPSERT",
-      payloadJson = SyncWorker.moshiAdapterFor<SharedMemoryEntity>().toJson(memory)
+      payloadJson = SyncWorker.moshiAdapterFor<SharedMemoryEntity>().toJson(payload)
     )
+  }
+
+  private fun SharedMemoryEntity.stripForTombstone(): SharedMemoryEntity = copy(
+    title = "", dateText = "", photoUri = "", note = "", location = "", anniversaryTitle = "",
+    authorName = "", fileSizeFormatted = "", videoUri = null, cloudinaryPublicId = null, cloudinaryUrl = null,
+    isFavorite = false, durationSeconds = 0, deleted = true
+  )
 
   private fun outboxEntryFor(entityType: String, syncId: String, item: AnniversaryDateEntity): SyncOutboxEntity =
     SyncOutboxEntity(
@@ -563,7 +634,8 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
   }
 
   /**
-   * Generates AI-powered gift suggestions tailored to the couple's mutual interests and occasion.
+   * Builds template-based gift suggestions from the couple's mutual interests and occasion (no AI model involved).
+   * ponytail: name kept for existing callers; rows still carry isAiGenerated=true so the personalized chip filters them.
    */
   suspend fun generateAiGiftSuggestions(
     partnerName: String,
@@ -579,7 +651,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
           GiftIdeaEntity(
             title = "Set Bình Giữ Nhiệt Khắc Tên & Cà Phê Đặc Sản Cho $cleanPartner",
             category = "Trải nghiệm & Thưởng thức",
-            badgeText = "AI Phù Hợp Sở Thích ☕",
+            badgeText = "Hợp Sở Thích ☕",
             tag = "Cà phê & Gắn kết",
             description = "Dành riêng cho hai bạn yêu thích nhâm nhi cà phê sáng cùng nhau. Bình khắc ngày kỷ niệm giúp giữ trọn hương vị ấm áp.",
             imageUrl = "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=800&auto=format&fit=crop",
@@ -587,6 +659,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
             actionText = "Xem mẫu khắc tên đôi",
             isAiGenerated = true,
             targetInterests = "coffee",
+            remoteId = "tpl_coffee_${occasion}_$cleanPartner",
             suggestedOccasion = occasion
           )
         )
@@ -597,7 +670,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
           GiftIdeaEntity(
             title = "Chuyến Dã Ngoại Glamping Hoàng Hôn Cùng $cleanPartner",
             category = "Địa điểm hẹn hò",
-            badgeText = "AI Trải Nghiệm Lãng Mạn ✈️",
+            badgeText = "Trải Nghiệm Lãng Mạn ✈️",
             tag = "Du lịch đôi",
             description = "Trải nghiệm cắm trại cao cấp giữa thiên nhiên thoáng đãng, nướng BBQ và ngắm bầu trời đêm lãng mạn chỉ có 2 người.",
             imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800&auto=format&fit=crop",
@@ -605,6 +678,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
             actionText = "Lên lịch trình hẹn hò",
             isAiGenerated = true,
             targetInterests = "travel",
+            remoteId = "tpl_travel_${occasion}_$cleanPartner",
             suggestedOccasion = occasion
           )
         )
@@ -615,7 +689,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
           GiftIdeaEntity(
             title = "Rạp Phim Mini Tại Gia & Danh Sách Tình Ca Dành Riêng $cleanPartner",
             category = "Công nghệ & Cảm xúc",
-            badgeText = "AI Ý Tưởng Ấm Cúng 🎬",
+            badgeText = "Ý Tưởng Ấm Cúng 🎬",
             tag = "Chill tại nhà",
             description = "Biến phòng ngủ thành rạp chiếu phim riêng tư lãng mạn. Cùng nhau xem lại những bộ phim tình cảm hai bạn yêu thích.",
             imageUrl = "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=800&auto=format&fit=crop",
@@ -623,6 +697,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
             actionText = "Xem danh sách phim gợi ý",
             isAiGenerated = true,
             targetInterests = "cinema,music",
+            remoteId = "tpl_cinema_${occasion}_$cleanPartner",
             suggestedOccasion = occasion
           )
         )
@@ -634,7 +709,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
         GiftIdeaEntity(
           title = "Cuốn Sách '100 Điều Tuyệt Vời Nhất Về $cleanPartner'",
           category = "Kỷ vật Handmade",
-          badgeText = "AI Độc Quyền Cho $cleanPartner ✨",
+          badgeText = "Dành Riêng Cho $cleanPartner ✨",
           tag = occasionText,
           description = "Món quà tinh thần chạm tới đáy tim được cá nhân hóa từng trang viết tay những kỷ niệm ngọt ngào nhất của hai bạn.",
           imageUrl = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=800&auto=format&fit=crop",
@@ -642,14 +717,15 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
           actionText = "Bắt đầu soạn thảo lời yêu",
           isAiGenerated = true,
           targetInterests = mutualInterests.joinToString(","),
+          remoteId = "tpl_book_${occasion}_$cleanPartner",
           suggestedOccasion = occasion
         )
       )
 
-      dao.insertGiftIdeas(generated)
-      Result.success(generated)
+      val stored = generated.map { item -> dao.upsertGiftIdeaByRemoteId(item); dao.getGiftIdeaByRemoteId(item.remoteId) ?: item }
+      Result.success(stored)
     } catch (e: Exception) {
-      Log.e("InLoveRepository", "Error generating AI gifts: ${e.message}", e)
+      Log.e("InLoveRepository", "Error generating template gift suggestions:${e.message}", e)
       Result.failure(e)
     }
   }
@@ -698,14 +774,6 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
             notificationEnabled = true
           )
         )
-      )
-    }
-
-    if (dao.getAllGiftIdeas().first().isEmpty()) {
-      // GiftIdeasSeed: 18 bilingual ideas replacing this previous 2-item placeholder list
-      // (the data file already existed, fully written, but nothing ever called it).
-      dao.insertGiftIdeas(
-        com.example.data.seed.GiftIdeasSeed.all.map { it.toEntity(language) }
       )
     }
 
@@ -772,27 +840,28 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     if (dao.getAllAnniversaryDates().first().isEmpty()) {
       dao.insertAnniversaryDates(buildHolidayAnniversaries(language))
     }
+    // Rows seeded by an older build keep their old date until this refresh moves them on.
+    com.example.data.seed.HolidayDates.refreshExisting(dao, java.time.LocalDate.now())
   }
 
   /**
-   * Resolves each holiday (Vietnamese for VI, Western for EN — matching GiftIdeasSeed's
-   * per-language rather than additive approach) to its next upcoming occurrence. Fixed-date
-   * holidays are computed for every year via java.time; lunar/rule-based ones fall back to
-   * whatever years VietnameseHolidays/WesternHolidays' own verified-year tables cover, and are
-   * skipped entirely once past without a next-year entry — never a guessed date.
+   * Builds the holiday rows for the current language: Vietnamese holidays for VI, Western for EN. Fixed-date
+   * holidays repeat every year (isAnnual = true). Lunar and rule-based holidays are one-off rows dated to their
+   * next verified occurrence (isAnnual = false); HolidayDates.refreshExisting moves them on once they pass. A
+   * lunar holiday with no verified year ahead is left out rather than given a guessed date.
    */
   private fun buildHolidayAnniversaries(language: com.example.ui.util.AppLanguage): List<AnniversaryDateEntity> {
     val today = java.time.LocalDate.now()
     val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
     val now = System.currentTimeMillis()
 
-    fun toEntity(title: String, date: java.time.LocalDate): AnniversaryDateEntity {
+    fun toEntity(title: String, date: java.time.LocalDate, isAnnual: Boolean = true): AnniversaryDateEntity {
       val daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, date).toInt()
       return AnniversaryDateEntity(
         title = title,
         dateText = date.format(formatter),
         type = "CUSTOM",
-        isAnnual = true,
+        isAnnual = isAnnual,
         daysRemaining = daysRemaining,
         updatedAt = now
       )
@@ -809,10 +878,8 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
         toEntity("${h.emoji} ${h.titleVi}", nextFixedOccurrence(h.month, h.day))
       }
       val lunar = com.example.data.seed.VietnameseHolidays.lunarHolidays.mapNotNull { h ->
-        val date = com.example.data.seed.VietnameseHolidays.resolvedDate(h, today.year)
-          ?.takeIf { !it.isBefore(today) }
-          ?: com.example.data.seed.VietnameseHolidays.resolvedDate(h, today.year + 1)
-        date?.let { toEntity("${h.emoji} ${h.titleVi}", it) }
+        com.example.data.seed.HolidayDates.nextLunar(h, today)
+          ?.let { toEntity("${h.emoji} ${h.titleVi}", it, isAnnual = false) }
       }
       fixed + lunar
     } else {
@@ -820,9 +887,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
         toEntity("${h.emoji} ${h.titleEn}", nextFixedOccurrence(h.month, h.day))
       }
       val ruleBased = com.example.data.seed.WesternHolidays.ruleBasedHolidays.map { h ->
-        var date = h.resolve(today.year)
-        if (date.isBefore(today)) date = h.resolve(today.year + 1)
-        toEntity("${h.emoji} ${h.titleEn}", date)
+        toEntity("${h.emoji} ${h.titleEn}", com.example.data.seed.HolidayDates.nextRuleBased(h, today), isAnnual = false)
       }
       fixed + ruleBased
     }

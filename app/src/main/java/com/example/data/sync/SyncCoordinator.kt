@@ -7,6 +7,7 @@ import com.example.data.model.OnlineInviteEntity
 import com.example.data.model.OnlineRelationshipEntity
 import com.example.data.model.OnlineStatus
 import com.example.data.model.RelationshipStatus
+import com.example.data.model.PRIVACY_PRIVATE
 import com.example.data.model.SharedMemoryEntity
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -43,8 +44,18 @@ class SyncCoordinator(
   private var activeRelationshipId: String? = null
   private var onRelationshipChanged: suspend () -> Unit = {}
 
+  // Session fence: every start()/stop() bumps [generation], and every account scope switch bumps
+  // AccountDataVault.epoch. Listener callbacks and the coroutines they launch capture both and
+  // drop their writes once either moved, so a late snapshot of the previous account can never
+  // land in the next account's tables.
+  @Volatile private var generation = 0L
+  private var epochAtStart = 0L
+  private fun isLive(gen: Long) = gen == generation && epochAtStart == com.example.data.db.AccountDataVault.epoch.get()
+
   fun start(uid: String, onRelationshipChanged: suspend () -> Unit = {}) {
     stop()
+    val gen = generation
+    epochAtStart = com.example.data.db.AccountDataVault.epoch.get()
     this.onRelationshipChanged = onRelationshipChanged
     val fs = firestore ?: return
 
@@ -53,15 +64,16 @@ class SyncCoordinator(
     // as an empty result and could tear down the content tier the other one just started.
     val relationshipsListener = fs.collection("relationships")
       .where(Filter.or(Filter.equalTo("user1", uid), Filter.equalTo("user2", uid)))
-      .addSnapshotListener { snapshot, _ -> handleRelationshipSnapshot(snapshot, uid) }
+      .addSnapshotListener { snapshot, _ -> handleRelationshipSnapshot(snapshot, uid, gen) }
     val invitesListener = fs.collection("invites")
       .whereEqualTo("targetUid", uid)
-      .addSnapshotListener { snapshot, _ -> handleInviteSnapshot(snapshot) }
+      .addSnapshotListener { snapshot, _ -> handleInviteSnapshot(snapshot, gen) }
 
     identityRegistrations = listOf(relationshipsListener, invitesListener)
   }
 
   fun stop() {
+    generation++
     identityRegistrations.forEach { it.remove() }
     identityRegistrations = emptyList()
     stopContentListeners()
@@ -74,14 +86,17 @@ class SyncCoordinator(
     activeRelationshipId = null
   }
 
-  private fun handleRelationshipSnapshot(snapshot: com.google.firebase.firestore.QuerySnapshot?, uid: String) {
+  private fun handleRelationshipSnapshot(snapshot: com.google.firebase.firestore.QuerySnapshot?, uid: String, gen: Long) {
     val fs = firestore ?: return
+    if (!isLive(gen)) return
     // One query now returns every relationship doc involving me, so "the" active one is
     // simply the ACTIVE doc among these results (at most one — Task 11's accept flow always
     // issues a fresh id per pairing and never reuses a terminated one).
     val activeDoc = snapshot?.documents?.firstOrNull { it.getString("status") == RelationshipStatus.ACTIVE }
     scope.launch {
+      if (!isLive(gen)) return@launch
       snapshot?.documents?.forEach { doc ->
+        if (!isLive(gen)) return@launch
         val rel = OnlineRelationshipEntity(
           relationshipId = doc.id,
           user1 = doc.getString("user1") ?: return@forEach,
@@ -102,6 +117,7 @@ class SyncCoordinator(
       // Keep MY OWN OnlineUserEntity row in sync with what the identity tier just learned —
       // this is the piece that makes a remote pairing/breakup event reach the local
       // read-cache OnlineCoupleRepository.refreshState() actually reads.
+      if (!isLive(gen)) return@launch
       val me = dao.getOnlineUserByUidSync(uid)
       if (me != null) {
         val updatedMe = when {
@@ -112,7 +128,7 @@ class SyncCoordinator(
           me.relationshipId != null -> me.copy(status = OnlineStatus.SINGLE, partnerId = null, relationshipId = null)
           else -> null
         }
-        if (updatedMe != null && updatedMe != me) {
+        if (updatedMe != null && updatedMe != me && isLive(gen)) {
           dao.updateOnlineUser(updatedMe)
           onRelationshipChanged()
         }
@@ -121,14 +137,15 @@ class SyncCoordinator(
       val activeId = activeDoc?.id
       if (activeId != activeRelationshipId) {
         stopContentListeners()
-        if (activeId != null) startContentListeners(fs, activeId)
+        if (activeId != null && isLive(gen)) startContentListeners(fs, activeId, gen)
       }
     }
   }
 
-  private fun handleInviteSnapshot(snapshot: com.google.firebase.firestore.QuerySnapshot?) {
+  private fun handleInviteSnapshot(snapshot: com.google.firebase.firestore.QuerySnapshot?, gen: Long) {
     scope.launch {
       snapshot?.documents?.forEach { doc ->
+        if (!isLive(gen)) return@launch
         val invite = OnlineInviteEntity(
           inviteId = doc.id,
           senderUid = doc.getString("senderUid") ?: return@forEach,
@@ -154,13 +171,15 @@ class SyncCoordinator(
     }
   }
 
-  private fun startContentListeners(fs: FirebaseFirestore, relationshipId: String) {
+  private fun startContentListeners(fs: FirebaseFirestore, relationshipId: String, gen: Long) {
     activeRelationshipId = relationshipId
     val memoriesListener = fs.collection(MemorySyncAdapter.collectionPath(relationshipId))
       .addSnapshotListener { snapshot, _ ->
         scope.launch {
           snapshot?.documents?.forEach { doc ->
-            MemorySyncAdapter.fromFirestoreDoc(doc)?.let { applyRemoteMemory(it) }
+            if (!isLive(gen)) return@launch
+            // Only accept docs that really belong to the relationship this listener serves.
+            MemorySyncAdapter.fromFirestoreDoc(doc)?.takeIf { it.relationshipId == relationshipId }?.let { applyRemoteMemory(it) }
           }
         }
       }
@@ -168,7 +187,8 @@ class SyncCoordinator(
       .addSnapshotListener { snapshot, _ ->
         scope.launch {
           snapshot?.documents?.forEach { doc ->
-            AnniversarySyncAdapter.fromFirestoreDoc(doc)?.let { applyRemoteAnniversary(it) }
+            if (!isLive(gen)) return@launch
+            AnniversarySyncAdapter.fromFirestoreDoc(doc)?.takeIf { it.relationshipId == relationshipId }?.let { applyRemoteAnniversary(it) }
           }
         }
       }
@@ -178,12 +198,23 @@ class SyncCoordinator(
   /** Last-write-wins merge: a local pending edit only loses to a STRICTLY newer remote update. */
   suspend fun applyRemoteMemory(remote: SharedMemoryEntity) {
     val local = dao.getSharedMemoryBySyncId(remote.syncId)
+    // Kỷ niệm riêng tư chỉ ở máy này: bản từ đám mây (kể cả tombstone do chính máy này gửi khi đổi sang riêng tư) không được ghi đè.
+    if (local != null && local.privacyLevel == PRIVACY_PRIVATE) return
     if (local != null && local.pendingSync && local.updatedAt >= remote.updatedAt) {
       Log.d("SyncCoordinator", "keeping local pending memory ${remote.syncId}, remote is not newer")
       return
     }
     if (local != null) {
-      dao.updateSharedMemory(remote.copy(id = local.id, pendingSync = false))
+      // Máy nhận không bao giờ có URI hay publicId cục bộ của người kia: giữ ảnh/video đã có trên máy này.
+      dao.updateSharedMemory(
+        remote.copy(
+          id = local.id,
+          pendingSync = false,
+          photoUri = remote.photoUri.ifBlank { local.photoUri },
+          videoUri = remote.videoUri ?: local.videoUri,
+          cloudinaryPublicId = remote.cloudinaryPublicId ?: local.cloudinaryPublicId
+        )
+      )
     } else if (!remote.deleted) {
       // A tombstone this device never had a local row for (e.g. deleted on the other device
       // before this one ever synced it down) needs no local row: inserting one would just be

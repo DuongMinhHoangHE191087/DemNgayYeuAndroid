@@ -22,7 +22,7 @@
 - [x] ✅ Sửa lỗi xoá tài khoản: trước đây xoá dữ liệu đám mây trước rồi mới xoá tài khoản đăng nhập, nếu bước sau lỗi thì mất dữ liệu mà tài khoản vẫn còn
 - [x] ✅✅ Xoá 3 lời quảng cáo VIP không đúng sự thật ("AI không giới hạn", "Cloud lưu trữ không giới hạn", và đặc biệt "Khoá vân tay/FaceID" — hoàn toàn không có trong app, chỉ dùng mã PIN) — rủi ro Google Play từ chối/gỡ app vì quảng cáo sai sự thật
 - [x] ✅ Bật rút gọn mã (R8) + shrink resources cho bản release (`isMinifyEnabled = true`, `isShrinkResources = true`) — theo `docs/superpowers/plans/2026-09-30-ads-monetization-sdk-compliance.md` Task 5. **Chưa build/ký thật** (sandbox không có mạng để chạy Gradle, không có keystore thật) — cần bạn tự chạy `./gradlew :app:assembleRelease` và kiểm tra `mapping.txt` trước khi đổi thành ✅✅.
-- [x] ✅ Room database đã có `MIGRATION_12_13` (version 12→13, table-rebuild cho các cột sync mới, backfill tránh crash UNIQUE INDEX) — theo `docs/superpowers/plans/2026-09-29-data-sync-and-real-pairing.md` Task 1/6. Có `Migration12To13Test.kt` nhưng chưa chạy được (không có mạng để resolve Gradle trong sandbox này) — cần bạn tự chạy `./gradlew :app:testDebugUnitTest` để xác nhận.
+- [ ] ⏳ Room database đã có `MIGRATION_12_13` (version 12→13, table-rebuild cho các cột sync mới, backfill tránh crash UNIQUE INDEX) — theo `docs/superpowers/plans/2026-09-29-data-sync-and-real-pairing.md` Task 1/6. Có `Migration12To13Test.kt` nhưng đang `@Ignore` (thiếu fixture `12.json` đã export từ schema v12). Chạy lại 2026-10-08: suite PASS, 1 skipped. Migration trên dữ liệu thật chưa được chứng minh.
 - [x] ✅ Sửa lỗi Cloudinary: khi tải ảnh lên thất bại, app vẫn báo "đã lưu thành công" — toast và 3 badge trong màn hình Kỷ niệm giờ đọc đúng `isCloudinaryStored` thay vì luôn báo Cloud (`fec27b8`, `6866afd`)
 - [x] 📝 **Đã quyết định (bạn chọn "Tắt hẳn"):** `brainEnabled = false` — AdsBrain tắt hoàn toàn thay vì rollout theo giai đoạn, vì InLove không phải game và không có pipeline BigQuery cho brain này. Theo `docs/superpowers/plans/2026-09-30-ads-monetization-sdk-compliance.md` Task 4.
 - [x] ✅ Phát hiện & vá lỗi mới khi code review: 2 nút "Tester A/B" ở màn Đăng nhập gọi thẳng `loginTestUser` (không kiểm tra mật khẩu) và **không hề có điều kiện chặn bản release** — bất kỳ ai cài app thật đều đăng nhập được vào tài khoản demo dùng chung. Cùng dạng rủi ro với vụ lộ mật khẩu test đã xoá khỏi git trước đây, nhưng lần này là một "cửa hậu" sống trong UI. Đã bọc trong `BuildConfig.DEBUG` (`0b6f8e4`).
@@ -68,8 +68,8 @@ toàn mà không cần build thật để xác nhận (đọc lại bằng tay k
 
 - [x] ✅✅ Lịch ngày lễ Việt Nam: 15 ngày dương lịch cố định + 5 ngày âm lịch (Tết, Trung Thu, Giỗ Tổ, Vu Lan, Rằm tháng Giêng) — **đã tra cứu và xác minh thật qua tìm kiếm web**, không phải đoán, cho các năm 2025-2028
 - [x] ✅✅ Lịch ngày lễ Mỹ/phương Tây: 9 ngày cố định + 4 ngày tính theo công thức đúng cho mọi năm (Ngày của Mẹ, Ngày của Cha, Lễ Tạ Ơn...)
-- [x] ✅ Mở rộng danh mục gợi ý quà từ 2 lên 18 món, đầy đủ song ngữ Việt/Anh, chia theo 4 khoảng giá và nhiều dịp
-- [x] ✅ Cả 3 bộ dữ liệu mẫu đã nối vào app thật: 18 gợi ý quà thay 2 món cũ, lịch ngày lễ VN/phương Tây tự seed vào Lịch khi cài đặt lần đầu (`a70610a`, `6d497d2`)
+- [x] ✅ Mở rộng danh mục gợi ý quà từ 2 lên 20 món, đầy đủ song ngữ Việt/Anh, chia theo 4 khoảng giá và nhiều dịp
+- [x] ✅ Cả 3 bộ dữ liệu mẫu đã nối vào app thật: 20 gợi ý quà thay 2 món cũ, lịch ngày lễ VN/phương Tây tự seed vào Lịch khi cài đặt lần đầu (`a70610a`, `6d497d2`)
 
 ## 🔵 Nghiên cứu — đã hoàn thành
 

@@ -37,7 +37,10 @@ class PrivacyOptionsRowTest {
       com.example.ui.screens.AdPrivacyOptionsRow(visible = false, isEnglish = true, onClick = {})
     }
     composeRule.onNodeWithTag("settings_privacy_options_row").assertDoesNotExist()
+  }
 
+  @Test
+  fun adPrivacyOptionsRow_rendersWhenVisibleIsTrue() {
     composeRule.setContent {
       com.example.ui.screens.AdPrivacyOptionsRow(visible = true, isEnglish = true, onClick = {})
     }

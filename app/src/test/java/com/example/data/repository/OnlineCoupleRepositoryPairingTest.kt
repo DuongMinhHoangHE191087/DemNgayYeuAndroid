@@ -7,6 +7,8 @@ import com.example.data.model.OnlineStatus
 import com.example.data.model.RelationshipStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Test
@@ -14,6 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+/** Repo init chạy refreshState trên IO; mỗi test phải chờ nó xong (cancelAndJoin) trước khi đóng DB. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class OnlineCoupleRepositoryPairingTest {
@@ -24,7 +27,7 @@ class OnlineCoupleRepositoryPairingTest {
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
       .allowMainThreadQueries().build()
     val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
-    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
 
     // Seed a terminated relationship between A and B from a past pairing.
     val terminatedRelId = "rel_old"
@@ -56,6 +59,7 @@ class OnlineCoupleRepositoryPairingTest {
     assert(newRel != null)
     assert(newRel!!.relationshipId == newInviteId) { "relationship id must equal the accepted invite id, per Task 10's rule design" }
     assert(newRel.relationshipId != terminatedRelId) { "must not resurrect the old terminated relationship id" }
+    scope.coroutineContext.job.cancelAndJoin()
     db.close()
   }
 
@@ -65,7 +69,7 @@ class OnlineCoupleRepositoryPairingTest {
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
       .allowMainThreadQueries().build()
     val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
-    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
 
     db.inLoveDao().insertOnlineUser(
       com.example.data.model.OnlineUserEntity(uid = "uid_a", coupleCode = "AAAA-1111", isCurrentUser = true, status = OnlineStatus.PENDING_INVITE)
@@ -87,6 +91,7 @@ class OnlineCoupleRepositoryPairingTest {
       "cancelling an outgoing invite must delete its local row — leaving it PENDING locally " +
         "let the receiver still Accept an invite the sender believed was cancelled"
     }
+    scope.coroutineContext.job.cancelAndJoin()
     db.close()
   }
 
@@ -96,7 +101,7 @@ class OnlineCoupleRepositoryPairingTest {
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
       .allowMainThreadQueries().build()
     val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
-    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
 
     db.inLoveDao().insertOnlineUser(
       com.example.data.model.OnlineUserEntity(uid = "uid_a", coupleCode = "AAAA-1111", isCurrentUser = false, status = OnlineStatus.PENDING_INVITE)
@@ -120,6 +125,7 @@ class OnlineCoupleRepositoryPairingTest {
     assert(db.inLoveDao().getInviteByIdSync(incomingId) == null)
     val sender = db.inLoveDao().getOnlineUserByUidSync("uid_a")
     assert(sender?.status == OnlineStatus.SINGLE) { "the sender's PENDING_INVITE lock must be released on decline" }
+    scope.coroutineContext.job.cancelAndJoin()
     db.close()
   }
 
@@ -128,7 +134,7 @@ class OnlineCoupleRepositoryPairingTest {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
     val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
-    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope)
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
     db.inLoveDao().insertOnlineUser(com.example.data.model.OnlineUserEntity(uid = "uid_b", coupleCode = "B", isCurrentUser = true, relationshipId = "rel_1", status = OnlineStatus.COUPLED))
     db.inLoveDao().insertOnlineRelationship(
       com.example.data.model.OnlineRelationshipEntity(relationshipId = "rel_1", user1 = "uid_a", user2 = "uid_b", startDate = 1L, status = RelationshipStatus.ACTIVE)
@@ -138,6 +144,20 @@ class OnlineCoupleRepositoryPairingTest {
     val (success, _) = repo.confirmBreakup()
 
     assert(success)
+    scope.coroutineContext.job.cancelAndJoin()
+    db.close()
+  }
+
+  @Test
+  fun publishCoupleCode_withoutFirestore_returnsFailure() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
+    val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
+
+    // Không có Firestore thì không được báo thành công: AuthRepository dựa vào kết quả này để ghi log.
+    assert(repo.publishCoupleCode(uid = "uid_a", code = "AAAA-1111").isFailure) { "publish must not report success without Firestore" }
+    scope.coroutineContext.job.cancelAndJoin()
     db.close()
   }
 }

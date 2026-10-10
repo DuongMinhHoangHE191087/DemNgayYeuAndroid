@@ -82,8 +82,64 @@ class CloudEnrichmentDataTest {
     )
     assertTrue(
       "seeding with AppLanguage.EN must produce English titles, not Vietnamese",
-      giftIdeas.any { it.title == "Everlasting Rose Bouquet with Handwritten Card" }
+      giftIdeas.any { it.title == "Everlasting Rose Bouquet" }
     )
+  }
+
+  @Test
+  fun `custom milestones and gift ideas created locally coexist instead of replacing each other`() = runBlocking {
+    fun milestone(title: String) = com.example.data.model.MilestoneEntity(
+      title = title, dateText = "", subtitle = "", categoryTag = "", secondaryTag = "", imageUrl = "", daysRemaining = 1
+    )
+    repository.addMilestone(milestone("A"))
+    repository.addMilestone(milestone("B"))
+    repository.addMilestone(milestone("C"))
+    assertEquals(3, db.inLoveDao().getAllMilestones().first().size)
+
+    fun gift(title: String) = com.example.data.model.GiftIdeaEntity(
+      title = title, category = "", badgeText = "", tag = "", description = "", imageUrl = ""
+    )
+    db.inLoveDao().insertGiftIdeas(listOf(gift("x"), gift("y")))
+    assertEquals(2, db.inLoveDao().getAllGiftIdeas().first().size)
+  }
+
+  @Test
+  fun `seeding the gift catalog twice is idempotent`() = runBlocking {
+    val all = com.example.data.seed.GiftIdeasSeed.all
+    db.inLoveDao().insertGiftIdeas(all.map { it.toEntity(com.example.ui.util.AppLanguage.VI) })
+    db.inLoveDao().insertGiftIdeas(all.map { it.toEntity(com.example.ui.util.AppLanguage.VI) })
+    assertEquals(all.size, db.inLoveDao().getAllGiftIdeas().first().size)
+  }
+
+  @Test
+  fun `ensureSeedGiftCatalog adopts a collapsed legacy row, keeping its id and favorite`() = runBlocking {
+    val playlist = com.example.data.seed.GiftIdeasSeed.all.last()
+    db.inLoveDao().insertGiftIdeas(listOf(playlist.toEntity(com.example.ui.util.AppLanguage.EN).copy(remoteId = "", isFavorited = true)))
+    val legacyId = db.inLoveDao().getAllGiftIdeas().first().single().id
+
+    repository.ensureSeedGiftCatalog(com.example.ui.util.AppLanguage.EN)
+
+    val rows = db.inLoveDao().getAllGiftIdeas().first()
+    assertEquals("one legacy row plus nineteen seeds must become twenty", com.example.data.seed.GiftIdeasSeed.all.size, rows.size)
+    assertTrue("no blank remoteId may remain", rows.none { it.remoteId.isBlank() })
+    val adopted = rows.single { it.remoteId == playlist.remoteId }
+    assertEquals("the adopted row keeps its id", legacyId, adopted.id)
+    assertTrue("the adopted row keeps its favorite", adopted.isFavorited)
+  }
+
+  @Test
+  fun `ensureSeedGiftCatalog run twice keeps twenty rows and every favorite`() = runBlocking {
+    val all = com.example.data.seed.GiftIdeasSeed.all
+    db.inLoveDao().insertGiftIdeas(all.map { it.toEntity(com.example.ui.util.AppLanguage.VI) })
+    val bracelet = db.inLoveDao().getGiftIdeaByRemoteId(all[3].remoteId)!!
+    db.inLoveDao().updateGiftIdea(bracelet.copy(isFavorited = true))
+
+    repository.ensureSeedGiftCatalog(com.example.ui.util.AppLanguage.EN)
+    repository.ensureSeedGiftCatalog(com.example.ui.util.AppLanguage.EN)
+
+    val rows = db.inLoveDao().getAllGiftIdeas().first()
+    assertEquals("two runs must not duplicate seeds", all.size, rows.size)
+    assertTrue("a favorite survives every re-seed", rows.single { it.remoteId == all[3].remoteId }.isFavorited)
   }
 
   @Test

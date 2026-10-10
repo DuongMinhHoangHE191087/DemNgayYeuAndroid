@@ -71,7 +71,11 @@ import com.example.ui.viewmodel.InLoveViewModel
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
+    // Giao diện v1 chỉ có chế độ sáng: ép thanh hệ thống kiểu sáng để icon không bị trắng-trên-trắng khi máy ở dark mode.
+    enableEdgeToEdge(
+      statusBarStyle = androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+      navigationBarStyle = androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+    )
 
     // Khởi tạo AppServiceLocator & Ads / Billing Services
     com.example.di.AppServiceLocator.initialize(applicationContext)
@@ -81,12 +85,7 @@ class MainActivity : ComponentActivity() {
       android.util.Log.d("MainActivity", "AdsMobMy.startSdkInit skipped: ${e.message}")
     }
     val adsManager = com.example.di.AppServiceLocator.adsManager
-    adsManager.requestConsentAndInitialize(this) { canRequestAds ->
-      if (canRequestAds) {
-        adsManager.preloadInterstitial(this, BuildConfig.ADMOB_INTERSTITIAL_ID)
-        adsManager.preloadAppOpenAd(this, BuildConfig.ADMOB_AOA_ID)
-      }
-    }
+    adsManager.requestConsentAndInitialize(this)
     com.example.di.AppServiceLocator.billingManager.startBillingConnection()
 
     setContent {
@@ -213,15 +212,15 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       }
     } else null
 
-    LaunchedEffect(permissionLauncher) {
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU && permissionLauncher != null) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.POST_NOTIFICATIONS
-          ) != android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-          permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
+    // Asked when the user first sets an alarm or anniversary, not at launch.
+    val requestNotificationPermission = {
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU && permissionLauncher != null &&
+        androidx.core.content.ContextCompat.checkSelfPermission(
+          context,
+          android.Manifest.permission.POST_NOTIFICATIONS
+        ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+      ) {
+        permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
       }
     }
 
@@ -450,6 +449,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         initialDateText = prefilledAnniversaryDate,
         onDismiss = { viewModel.closeAddAnniversaryDialog() },
         onConfirm = { title, dateText, type, description, isAnnual, reminderDaysBefore ->
+          requestNotificationPermission()
           viewModel.addAnniversaryDate(title, dateText, type, description, isAnnual, reminderDaysBefore)
         }
       )
@@ -468,13 +468,15 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       GiftDetailDialog(
         gift = gift,
         onDismiss = { viewModel.closeGiftDetail() },
-        onToggleFavorite = { viewModel.toggleGiftFavorite(gift) }
+        onToggleFavorite = { viewModel.toggleGiftFavorite(gift) },
+        isEnglish = appLanguage == AppLanguage.EN
       )
     }
 
     if (showVipProposalDetail) {
       VipProposalDialog(
-        onDismiss = { viewModel.closeVipProposal() }
+        onDismiss = { viewModel.closeVipProposal() },
+        isEnglish = appLanguage == AppLanguage.EN
       )
     }
 
@@ -510,23 +512,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         currentLanguage = appLanguage,
         presetPhotos = presetPhotos,
         onDismiss = { viewModel.closeMemoryDialog() },
-        onSaveMemory = { title, dateText, photoUri, note, location, mediaType, videoUri, cloudinaryPublicId, cloudinaryUrl, isCloudinaryStored, fileSizeFormatted, durationSeconds, privacyLevel ->
-          viewModel.addSharedMemory(
-            title = title,
-            dateText = dateText,
-            photoUri = photoUri,
-            note = note,
-            location = location,
-            mediaType = mediaType,
-            videoUri = videoUri,
-            cloudinaryPublicId = cloudinaryPublicId,
-            cloudinaryUrl = cloudinaryUrl,
-            isCloudinaryStored = isCloudinaryStored,
-            fileSizeFormatted = fileSizeFormatted,
-            durationSeconds = durationSeconds,
-            privacyLevel = privacyLevel
-          )
-          viewModel.closeMemoryDialog()
+        onSaveMemory = { title, dateText, photoUri, note, location, media, coverUri, privacyLevel ->
+          viewModel.saveSharedMemory(title, dateText, photoUri, note, location, media, coverUri, privacyLevel)
         }
       )
     }
@@ -541,11 +528,13 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         reminderId = alarmDialogReminderId,
         onDismiss = { viewModel.closeSetAlarmDialog() },
         onSchedule = { title, message, triggerMillis, reminderId ->
+          requestNotificationPermission()
           viewModel.scheduleReminderAlarm(title, message, triggerMillis, reminderId)
           viewModel.closeSetAlarmDialog()
         },
         onTestNow = { title, message ->
-          viewModel.scheduleReminderAlarm(title, message, System.currentTimeMillis() + 1000L)
+          requestNotificationPermission()
+          viewModel.testReminderAlarm(title, message)
         }
       )
     }
@@ -616,7 +605,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         PaywallScreen(
           billingManager = com.example.di.AppServiceLocator.billingManager,
           adsManager = com.example.di.AppServiceLocator.adsManager,
-          onDismiss = { viewModel.setVipDialogVisible(false) }
+          onDismiss = { viewModel.setVipDialogVisible(false) },
+          hostActivity = registryOwner as? android.app.Activity
         )
       }
     }

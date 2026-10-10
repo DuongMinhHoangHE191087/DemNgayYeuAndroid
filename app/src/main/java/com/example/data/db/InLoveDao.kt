@@ -117,6 +117,9 @@ interface InLoveDao {
   @Query("SELECT * FROM reminder_settings")
   fun getAllReminderCadences(): Flow<List<ReminderCadenceEntity>>
 
+  @Query("SELECT * FROM reminder_settings")
+  suspend fun getReminderCadencesList(): List<ReminderCadenceEntity>
+
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertReminderCadences(items: List<ReminderCadenceEntity>)
 
@@ -129,6 +132,10 @@ interface InLoveDao {
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertCoupleProfile(profile: CoupleProfileEntity)
+
+  // ponytail: no-op khi chưa có hàng hồ sơ (onboarding tạo nó); UI chỉ mở editor khi đã có hồ sơ.
+  @Query("UPDATE couple_profile SET likesCsv = :likes, budgetMaxVnd = :budget, occasionRegion = :region WHERE id = 1")
+  suspend fun updatePartnerPreferences(likes: String, budget: Long, region: String)
 
   // Shared Memories
   @Query("SELECT * FROM shared_memories WHERE deleted = 0 ORDER BY id DESC")
@@ -153,11 +160,17 @@ interface InLoveDao {
   @Insert
   suspend fun insertOutboxEntry(entry: SyncOutboxEntity): Long
 
-  @Query("SELECT * FROM sync_outbox ORDER BY createdAt ASC LIMIT :limit")
+  // Dòng đã lỗi nhiều lần xuống cuối hàng đợi, để một dòng hỏng không chặn các thay đổi phía sau.
+  @Query("SELECT * FROM sync_outbox ORDER BY attemptCount ASC, createdAt ASC LIMIT :limit")
   suspend fun getPendingOutboxEntries(limit: Int = 20): List<SyncOutboxEntity>
 
   @Query("DELETE FROM sync_outbox WHERE id = :id")
   suspend fun deleteOutboxEntry(id: Long)
+
+  // Payload là snapshot đầy đủ, nên bản mới nhất của một memory thay thế mọi bản cũ còn chờ.
+  // Nếu giữ bản UPSERT cũ, nó có thể được gửi lại sau khi tombstone đã đi và ghi đè xoá.
+  @Query("DELETE FROM sync_outbox WHERE entityType = :entityType AND syncId = :syncId")
+  suspend fun deleteOutboxForSync(entityType: String, syncId: String)
 
   @Query("UPDATE sync_outbox SET attemptCount = attemptCount + 1, lastError = :error WHERE id = :id")
   suspend fun markOutboxAttemptFailed(id: Long, error: String)
@@ -166,6 +179,7 @@ interface InLoveDao {
   @Transaction
   suspend fun insertSharedMemoryWithOutbox(memory: SharedMemoryEntity, outbox: SyncOutboxEntity): Long {
     val newId = insertSharedMemory(memory)
+    deleteOutboxForSync(outbox.entityType, outbox.syncId)
     insertOutboxEntry(outbox)
     return newId
   }
@@ -173,12 +187,14 @@ interface InLoveDao {
   @Transaction
   suspend fun updateSharedMemoryWithOutbox(memory: SharedMemoryEntity, outbox: SyncOutboxEntity) {
     updateSharedMemory(memory)
+    deleteOutboxForSync(outbox.entityType, outbox.syncId)
     insertOutboxEntry(outbox)
   }
 
   @Transaction
   suspend fun deleteSharedMemoryWithOutbox(id: Long, deletedAt: Long, outbox: SyncOutboxEntity) {
     softDeleteSharedMemoryById(id, deletedAt)
+    deleteOutboxForSync(outbox.entityType, outbox.syncId)
     insertOutboxEntry(outbox)
   }
 
@@ -215,6 +231,7 @@ interface InLoveDao {
   @Transaction
   suspend fun insertAnniversaryDateWithOutbox(item: AnniversaryDateEntity, outbox: SyncOutboxEntity): Long {
     val newId = insertAnniversaryDate(item)
+    deleteOutboxForSync(outbox.entityType, outbox.syncId)
     insertOutboxEntry(outbox)
     return newId
   }
@@ -222,12 +239,14 @@ interface InLoveDao {
   @Transaction
   suspend fun updateAnniversaryDateWithOutbox(item: AnniversaryDateEntity, outbox: SyncOutboxEntity) {
     updateAnniversaryDate(item)
+    deleteOutboxForSync(outbox.entityType, outbox.syncId)
     insertOutboxEntry(outbox)
   }
 
   @Transaction
   suspend fun deleteAnniversaryDateWithOutbox(id: Long, deletedAt: Long, outbox: SyncOutboxEntity) {
     softDeleteAnniversaryDateById(id, deletedAt)
+    deleteOutboxForSync(outbox.entityType, outbox.syncId)
     insertOutboxEntry(outbox)
   }
 
@@ -246,6 +265,9 @@ interface InLoveDao {
 
   @Query("SELECT * FROM custom_reminders ORDER BY id DESC")
   suspend fun getCustomRemindersList(): List<CustomReminderEntity>
+
+  @Query("UPDATE custom_reminders SET alarmTimeMillis = :millis, alarmTimeFormatted = :formatted WHERE id = :id")
+  suspend fun setCustomReminderAlarm(id: Long, millis: Long?, formatted: String)
 
   // Gift Reminders Persistence
   @Query("SELECT * FROM gift_reminders ORDER BY isCompleted ASC, id DESC")

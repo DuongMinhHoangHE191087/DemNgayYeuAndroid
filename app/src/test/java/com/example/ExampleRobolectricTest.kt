@@ -14,7 +14,9 @@ import com.example.data.model.SubscriptionTier
 import com.example.data.model.UserRole
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
@@ -33,6 +35,7 @@ import org.robolectric.annotation.Config
 class ExampleRobolectricTest {
 
   private lateinit var db: AppDatabase
+  private val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
 
   @Before
   fun createDb() {
@@ -44,6 +47,7 @@ class ExampleRobolectricTest {
 
   @After
   fun closeDb() {
+    runBlocking { scope.coroutineContext.job.cancelAndJoin() }
     db.close()
   }
 
@@ -141,7 +145,7 @@ class ExampleRobolectricTest {
     db.inLoveDao().insertOnlineRelationship(testRel)
 
     val onlineRepo = com.example.data.repository.OnlineCoupleRepository(
-      db.inLoveDao(), context, CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+      db.inLoveDao(), context, scope, useFirestore = false
     )
     onlineRepo.setCurrentUserId(userA.uid)
     onlineRepo.refreshState()

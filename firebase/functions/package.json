@@ -1,0 +1,18 @@
+{
+  "name": "inlove-functions",
+  "private": true,
+  "description": "Cloud Functions cho InLove: ký upload Cloudinary, cấp URL giao hàng có hạn, dọn tài sản media mồ côi.",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "migrate:legacy-media": "node scripts/migrate-legacy-media.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.11.0",
+    "firebase-admin": "^14.5.0",
+    "firebase-functions": "^7.4.0"
+  }
+}

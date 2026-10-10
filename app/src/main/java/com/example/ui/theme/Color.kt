@@ -62,3 +62,10 @@ val CardBorder = Color(0xFFFFC6DB)
 val TextDarkPlum = Color(0xFF1F0416)
 val TextSubtlePlum = Color(0xFF4A1934)
 
+// VIP banner / upsell accents (Settings)
+val VipGold = Color(0xFFFFB300)
+val VipGoldContainer = Color(0xFFFFF8E1)
+val VipGoldBorder = Color(0xFFFFD54F)
+val VipGoldText = Color(0xFFB78103)
+val UpsellBorderPink = Color(0xFFF48FB1)
+

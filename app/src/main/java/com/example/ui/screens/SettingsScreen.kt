@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import com.example.ui.util.findActivity
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -98,7 +100,13 @@ import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
 import com.example.ui.theme.SurfaceContainerHigh
+import com.example.ui.theme.SurfaceContainerLow
 import com.example.ui.theme.SurfaceContainerLowest
+import com.example.ui.theme.UpsellBorderPink
+import com.example.ui.theme.VipGold
+import com.example.ui.theme.VipGoldBorder
+import com.example.ui.theme.VipGoldContainer
+import com.example.ui.theme.VipGoldText
 import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
 
@@ -144,6 +152,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   // Account & Security States
   val authState by viewModel.authState.collectAsState()
   var showChangePasswordDialog by remember { mutableStateOf(false) }
+  val settingsScope = androidx.compose.runtime.rememberCoroutineScope()
+  var facebookLinked by remember { mutableStateOf(viewModel.authRepo.isFacebookLinked) }
   var showSetPinDialog by remember { mutableStateOf(false) }
   var showSecurityAuditLogsDialog by remember { mutableStateOf(false) }
   var showDevicesDialog by remember { mutableStateOf(false) }
@@ -163,6 +173,19 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
     contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
+    item {
+      val isOnlineNow by viewModel.isOnline.collectAsState()
+      val mode = com.example.domain.AppMode.resolve(
+        signedIn = authState is com.example.data.repository.AuthState.Authenticated,
+        paired = relationshipStatus == com.example.data.model.OnlineStatus.COUPLED
+      )
+      Text(
+        text = com.example.domain.AppMode.describe(mode, isOnlineNow, isEnglish),
+        fontSize = 12.sp,
+        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+      )
+    }
+
     // 1. User's Own Profile Card (Unified Single Card with Search/Couple Code & Copy)
     item {
       Text(
@@ -372,7 +395,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             modifier = Modifier.fillMaxWidth()
           ) {
             AsyncImage(
-              model = if (isCoupled) partnerUser!!.avatarUrl.ifEmpty { girlAvatarUrl } else girlAvatarUrl.ifEmpty { "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" },
+              model = if (isCoupled) partnerUser?.avatarUrl.orEmpty().ifEmpty { girlAvatarUrl } else girlAvatarUrl.ifEmpty { "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" },
               contentDescription = "Partner Avatar",
               modifier = Modifier
                 .size(54.dp)
@@ -386,7 +409,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Column(modifier = Modifier.weight(1f)) {
               Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                  text = if (isCoupled) partnerUser!!.displayName else girlName.ifEmpty { if (isEnglish) "Partner" else "Người thương" },
+                  text = if (isCoupled) partnerUser?.displayName.orEmpty() else girlName.ifEmpty { if (isEnglish) "Partner" else "Người thương" },
                   fontWeight = FontWeight.Bold,
                   fontSize = 16.sp
                 )
@@ -407,8 +430,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
 
               val partnerSubtitle = if (isCoupled) {
                 val loveSince = activeRelationship?.startDateText?.ifBlank { null }
-                if (!loveSince.isNullOrBlank()) (if (isEnglish) "Code: ${partnerUser!!.coupleCode} • In love since $loveSince" else "Mã: ${partnerUser!!.coupleCode} • Yêu từ $loveSince")
-                else (if (isEnglish) "Code: ${partnerUser!!.coupleCode}" else "Mã: ${partnerUser!!.coupleCode}")
+                if (!loveSince.isNullOrBlank()) (if (isEnglish) "Code: ${partnerUser?.coupleCode.orEmpty()} • In love since $loveSince" else "Mã: ${partnerUser?.coupleCode.orEmpty()} • Yêu từ $loveSince")
+                else (if (isEnglish) "Code: ${partnerUser?.coupleCode.orEmpty()}" else "Mã: ${partnerUser?.coupleCode.orEmpty()}")
               } else {
                 val girlSub = listOfNotNull(
                   if (girlAge > 0) "${girlAge}t" else null,
@@ -536,7 +559,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   )
                   Spacer(modifier = Modifier.width(6.dp))
                   Text(
-                    text = if (isEnglish) "Couple invitation from ${incomingInvite!!.effectiveSenderName}" else "Lời mời ghép đôi từ ${incomingInvite!!.effectiveSenderName}",
+                    text = if (isEnglish) "Couple invitation from ${incomingInvite?.effectiveSenderName.orEmpty()}" else "Lời mời ghép đôi từ ${incomingInvite?.effectiveSenderName.orEmpty()}",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = Color(0xFF880E4F)
@@ -544,7 +567,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                  text = (if (isEnglish) "Proposed start date: " else "Đề xuất ngày bắt đầu: ") + (incomingInvite!!.proposedStartDateText.ifEmpty { if (isEnglish) "Not set" else "Chưa đặt" }),
+                  text = (if (isEnglish) "Proposed start date: " else "Đề xuất ngày bắt đầu: ") + (incomingInvite?.proposedStartDateText.orEmpty().ifEmpty { if (isEnglish) "Not set" else "Chưa đặt" }),
                   fontSize = 12.sp,
                   color = Color.DarkGray
                 )
@@ -656,21 +679,23 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       // Activity, in the same MainActivity.onCreate setContent block, specifically usable
       // for this.
       val activity = androidx.activity.compose.LocalActivityResultRegistryOwner.current as? android.app.Activity
-      val showPrivacyRow = remember {
-        try { com.app.plugin.consent.ConsentManager.isPrivacyOptionsRequired(context) } catch (e: Exception) { false }
-      }
+      val showPrivacyRow by com.example.privacy.AppPrivacyCoordinator.privacyOptionsRequired.collectAsState()
       AdPrivacyOptionsRow(
         visible = showPrivacyRow && activity != null,
         isEnglish = isEnglish,
         onClick = {
           val act = activity ?: return@AdPrivacyOptionsRow
-          try {
-            com.app.plugin.consent.ConsentManager.showPrivacyOptions(act)
-          } catch (e: Exception) {
-            android.util.Log.d("SettingsScreen", "showPrivacyOptions failed: ${e.message}")
-          }
+          com.example.privacy.AppPrivacyCoordinator.showPrivacyOptions(act)
         }
       )
+      Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        TextButton(onClick = { uriHandler.openUri(com.example.config.LegalLinks.privacyPolicy) }) {
+          Text(stringResource(R.string.settings_legal_privacy), fontSize = 12.sp)
+        }
+        TextButton(onClick = { uriHandler.openUri(com.example.config.LegalLinks.termsOfService) }) {
+          Text(stringResource(R.string.settings_legal_terms), fontSize = 12.sp)
+        }
+      }
     }
 
     // 2.5. VIP Subscription Banner & Entry Point to Paywall
@@ -679,11 +704,11 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         Card(
           shape = RoundedCornerShape(20.dp),
           colors = CardDefaults.cardColors(
-            containerColor = if (isVip) Color(0xFFFFF8E1) else Color(0xFFFFF0F5)
+            containerColor = if (isVip) VipGoldContainer else SurfaceContainerLow
           ),
           border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isVip) Color(0xFFFFD54F) else Color(0xFFF48FB1)
+            if (isVip) VipGoldBorder else UpsellBorderPink
           ),
           elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
           modifier = Modifier
@@ -699,7 +724,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               modifier = Modifier
                 .size(46.dp)
                 .clip(CircleShape)
-                .background(if (isVip) Color(0xFFFFB300) else Primary),
+                .background(if (isVip) VipGold else Primary),
               contentAlignment = Alignment.Center
             ) {
               Icon(
@@ -715,7 +740,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 text = if (isVip) (if (isEnglish) "InLove VIP Member 👑" else "Thành Viên InLove VIP 👑") else (if (isEnglish) "Upgrade to Love VIP ✨" else "Nâng Cấp Gói VIP Tình Yêu ✨"),
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                color = if (isVip) Color(0xFFB78103) else Primary
+                color = if (isVip) VipGoldText else Primary
               )
               Spacer(modifier = Modifier.height(2.dp))
               Text(
@@ -734,7 +759,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Icon(
               imageVector = Icons.Filled.ChevronRight,
               contentDescription = null,
-              tint = if (isVip) Color(0xFFFFB300) else Primary
+              tint = if (isVip) VipGold else Primary
             )
           }
         }
@@ -1140,12 +1165,35 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
 
           // Account-specific options (Change Password & Audit Logs)
           if (currentAccount != null) {
-            // Change Password Button
+            // Change Password Button (provider-only accounts have no local password)
+            if (currentAccount?.let { !viewModel.authRepo.isProviderOnly(it) } != false) {
+              SettingClickableRow(
+                icon = Icons.Filled.Shield,
+                title = if (isEnglish) "Change Account Password" else "Đổi mật khẩu tài khoản",
+                subtitle = if (isEnglish) "Require current password & strength check" else "Yêu cầu mật khẩu cũ & đánh giá độ mạnh",
+                onClick = { showChangePasswordDialog = true }
+              )
+            }
+
+            // Facebook link: lets the user sign in / unlock / recover a forgotten PIN with Facebook
             SettingClickableRow(
-              icon = Icons.Filled.Shield,
-              title = if (isEnglish) "Change Account Password" else "Đổi mật khẩu tài khoản",
-              subtitle = if (isEnglish) "Require current password & strength check" else "Yêu cầu mật khẩu cũ & đánh giá độ mạnh",
-              onClick = { showChangePasswordDialog = true }
+              icon = Icons.Filled.Key,
+              title = if (isEnglish) "Facebook sign-in & unlock" else "Đăng nhập & mở khóa bằng Facebook",
+              subtitle = if (facebookLinked) {
+                if (isEnglish) "Linked — can unlock the app and recover a forgotten PIN" else "Đã liên kết — mở khóa và khôi phục khi quên PIN"
+              } else {
+                if (isEnglish) "Tap to link your Facebook account" else "Chạm để liên kết tài khoản Facebook"
+              },
+              onClick = {
+                if (!facebookLinked) {
+                  val activity = context.findActivity()
+                  if (activity != null) settingsScope.launch {
+                    val result = viewModel.authRepo.linkFacebook(activity)
+                    viewModel.showToast(result.second)
+                    facebookLinked = viewModel.authRepo.isFacebookLinked
+                  }
+                }
+              }
             )
 
             // Security Audit Logs
@@ -1533,11 +1581,11 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           )
           TextButton(
             onClick = {
-              uriHandler.openUri("https://inlove-app.web.app/delete-account")
+              uriHandler.openUri(com.example.config.LegalLinks.accountDeletion)
             },
             contentPadding = PaddingValues(0.dp)
           ) {
-            Text("https://inlove-app.web.app/delete-account", fontSize = 12.sp, color = Color(0xFF1976D2))
+            Text(com.example.config.LegalLinks.accountDeletion, fontSize = 12.sp, color = Color(0xFF1976D2))
           }
         }
       },

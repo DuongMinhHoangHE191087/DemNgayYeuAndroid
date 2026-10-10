@@ -8,6 +8,10 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "functions": {
+    "source": "firebase/functions",
+    "ignore": ["node_modules", "test", "scripts", "*.log", ".env", ".env.*"]
+  },
   "emulators": {
     "firestore": {
       "port": 8080

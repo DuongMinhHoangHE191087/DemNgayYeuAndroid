@@ -1104,8 +1104,7 @@ fun CalendarScreen(
             onSetAlarm = {
               viewModel.openSetAlarmDialog(
                 title = if (isEnglish) "Anniversary: ${milestone.title}" else "Kỷ niệm: ${milestone.title}",
-                message = if (isEnglish) "Today is anniversary ${milestone.title}! ${milestone.subtitle}" else "Hôm nay là ngày kỷ niệm ${milestone.title}! ${milestone.subtitle}",
-                reminderId = milestone.id
+                message = if (isEnglish) "Today is anniversary ${milestone.title}! ${milestone.subtitle}" else "Hôm nay là ngày kỷ niệm ${milestone.title}! ${milestone.subtitle}"
               )
             }
           )

@@ -21,9 +21,13 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.privacy.AppPrivacyCoordinator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Triển khai chuẩn production của [AdsManager] — Thread-safe & Lifecycle-aware.
@@ -44,8 +48,19 @@ class AdsManagerImpl : AdsManager,
     DefaultLifecycleObserver {
 
     // ─── UMP Consent State ───────────────────────────────────────────────────
-    private val _canRequestAds = MutableStateFlow(false)
-    override val canRequestAds: StateFlow<Boolean> = _canRequestAds.asStateFlow()
+    override val canRequestAds: StateFlow<Boolean> get() = AppPrivacyCoordinator.canRequestAds
+
+    /** Guards against initializing the SDK (and preloading) twice from the two consent paths. */
+    private val sdkInitialized = AtomicBoolean(false)
+
+    init {
+        // Consent withdrawn (or never granted): drop everything already loaded so nothing is shown.
+        CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).launch {
+            AppPrivacyCoordinator.canRequestAds.collect { allowed ->
+                if (!allowed) releaseLoadedAds()
+            }
+        }
+    }
 
     // ─── Trạng thái VIP ──────────────────────────────────────────────────────
     @Volatile private var isVipUser: Boolean = false
@@ -95,60 +110,58 @@ class AdsManagerImpl : AdsManager,
     // ─── Initialize & UMP Consent ─────────────────────────────────────────────
 
     override fun requestConsentAndInitialize(activity: Activity, onConsentCompleted: (canRequestAds: Boolean) -> Unit) {
-        ConsentManager.request(activity) { _ ->
-            val canRequest = ConsentManager.canRequestAds()
-            _canRequestAds.value = canRequest
-            if (canRequest) {
-                initialize(activity.applicationContext)
-            }
-            onConsentCompleted(canRequest)
-        }
+        val appContext = activity.applicationContext
+        AppPrivacyCoordinator.attach(appContext)
+        // A stored UMP answer from an earlier session lets returning users start without waiting.
+        if (AppPrivacyCoordinator.canRequestAds.value) initialize(appContext)
 
-        val canRequestNow = ConsentManager.canRequestAds()
-        _canRequestAds.value = canRequestNow
-        if (canRequestNow) {
-            initialize(activity.applicationContext)
+        ConsentManager.request(activity) { _ ->
+            AppPrivacyCoordinator.refresh()
+            val canRequest = AppPrivacyCoordinator.canRequestAds.value
+            if (canRequest) initialize(appContext)
+            onConsentCompleted(canRequest)
         }
     }
 
     override fun initialize(context: Context) {
-        // 1. Cấu hình Test Device IDs — MERGE vào cấu hình hiện có, không tạo Builder() rỗng:
-        // appplugin's AdsMobMy.startNetwork() can set/replace this same global object in either
-        // order relative to this call, and its own history (AdsMobMy.kt:106-111) documents the
-        // exact failure a fresh Builder() causes: whichever call runs second silently erases the
-        // other's fields (production traffic served test ads, or a debug build served real ads).
+        // Only ever initialize once, and never for a VIP user or before consent allows ads.
+        if (!isEligible(isVipUser, AppPrivacyCoordinator.canRequestAds.value)) return
+        if (!sdkInitialized.compareAndSet(false, true)) return
+
+        // MERGE test devices into the existing configuration, never a fresh Builder(): appplugin's
+        // AdsMobMy.startNetwork() sets the same global object in either order, and a fresh Builder
+        // erases the other side's fields (test ads in production, or real ads in debug).
         applyTestDeviceIds(testDeviceIds)
 
-        // 2. Khởi tạo SDK. Callback fire sau khi tất cả ad network adapters sẵn sàng.
         MobileAds.initialize(context) {
-            // 3. Preload sẵn quảng cáo (chỉ khi có consent UMP và không phải VIP)
-            if (!isVipUser && _canRequestAds.value) {
+            if (isEligible(isVipUser, canRequestAds.value)) {
                 preloadInterstitial(context.applicationContext, defaultInterstitialAdUnitId)
                 preloadAppOpenAd(context.applicationContext, defaultAppOpenAdUnitId)
             }
         }
     }
 
+    private fun releaseLoadedAds() {
+        interstitialAd = null
+        appOpenAd = null
+        isInterstitialLoading = false
+        isAppOpenLoading = false
+    }
+
     // ─── VIP Status ──────────────────────────────────────────────────────────
 
     override fun setVipStatus(isVip: Boolean) {
         this.isVipUser = isVip
-        AdsHelper.instance.setRemoveAds(if (isVip) 1 else 0)
-        if (isVip) {
-            // Giải phóng toàn bộ cache quảng cáo ngay lập tức khi mua VIP thành công.
-            // Người dùng VIP sẽ không bao giờ thấy quảng cáo cho đến khi gói hết hạn.
-            interstitialAd = null
-            appOpenAd = null
-            isInterstitialLoading = false
-            isAppOpenLoading = false
-        }
+        runCatching { AdsHelper.instance.setRemoveAds(if (isVip) 1 else 0) }
+        // Giải phóng toàn bộ cache quảng cáo ngay khi VIP; không nạp lại cho đến khi gói hết hạn.
+        if (isVip) releaseLoadedAds()
     }
 
     // ─── Interstitial Ad ─────────────────────────────────────────────────────
 
     override fun preloadInterstitial(context: Context, adUnitId: String) {
         // Guard: không nạp nếu VIP, chưa có consent UMP, adUnitId rỗng, đang có ad sẵn, hoặc đang load dở
-        if (isVipUser || !_canRequestAds.value || adUnitId.isBlank() || interstitialAd != null || isInterstitialLoading) return
+        if (!INTERSTITIAL_ENABLED || !isEligible(isVipUser, canRequestAds.value, adUnitId) || interstitialAd != null || isInterstitialLoading) return
 
         isInterstitialLoading = true
         val adRequest = AdRequest.Builder().build()
@@ -159,8 +172,9 @@ class AdsManagerImpl : AdsManager,
             adRequest,
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
-                    interstitialAd = ad
                     isInterstitialLoading = false
+                    // VIP or consent may have changed while the request was in flight.
+                    interstitialAd = if (isEligible(isVipUser, canRequestAds.value)) ad else null
                 }
 
                 override fun onAdFailedToLoad(error: LoadAdError) {
@@ -183,11 +197,11 @@ class AdsManagerImpl : AdsManager,
         val currentAd = interstitialAd
 
         // Guard: bỏ qua nếu VIP, chưa đủ interval 30s, hoặc ad chưa load xong
-        if (isVipUser || currentAd == null || !isIntervalOk) {
+        if (!INTERSTITIAL_ENABLED || !isEligible(isVipUser, canRequestAds.value) || currentAd == null || !isIntervalOk) {
             // Callback ngay để người dùng tiếp tục thao tác — không bao giờ block UI
             onAdDismissed()
             // Kích hoạt load lại nếu ad chưa sẵn sàng
-            if (!isVipUser && currentAd == null) {
+            if (currentAd == null) {
                 preloadInterstitial(activity.applicationContext, defaultInterstitialAdUnitId)
             }
             return
@@ -233,7 +247,7 @@ class AdsManagerImpl : AdsManager,
 
     override fun preloadAppOpenAd(context: Context, adUnitId: String) {
         // Guard: không nạp nếu VIP, chưa có consent UMP, adUnitId rỗng, ad còn hợp lệ, hoặc đang load dở
-        if (isVipUser || !_canRequestAds.value || adUnitId.isBlank() || isAppOpenAdAvailable() || isAppOpenLoading) return
+        if (!APP_OPEN_ENABLED || !isEligible(isVipUser, canRequestAds.value, adUnitId) || isAppOpenAdAvailable() || isAppOpenLoading) return
 
         isAppOpenLoading = true
         AppOpenAd.load(
@@ -242,9 +256,9 @@ class AdsManagerImpl : AdsManager,
             AdRequest.Builder().build(),
             object : AppOpenAd.AppOpenAdLoadCallback() {
                 override fun onAdLoaded(ad: AppOpenAd) {
-                    appOpenAd = ad
-                    appOpenLoadTime = System.currentTimeMillis()
                     isAppOpenLoading = false
+                    appOpenAd = if (isEligible(isVipUser, canRequestAds.value)) ad else null
+                    appOpenLoadTime = System.currentTimeMillis()
                 }
 
                 override fun onAdFailedToLoad(error: LoadAdError) {
@@ -275,8 +289,8 @@ class AdsManagerImpl : AdsManager,
         // 1. VIP → không bao giờ hiện quảng cáo
         // 2. Suppressed → đang ở Paywall / Splash / Permission Dialog → không được phép hiện
         // 3. Ad chưa load xong hoặc đã hết hạn → bỏ qua
-        if (isVipUser || isAoaSuppressed || !isAppOpenAdAvailable()) {
-            if (!isVipUser && appOpenAd == null && !isAppOpenLoading) {
+        if (!APP_OPEN_ENABLED || !isEligible(isVipUser, canRequestAds.value) || isAoaSuppressed || !isAppOpenAdAvailable()) {
+            if (appOpenAd == null && !isAppOpenLoading) {
                 preloadAppOpenAd(activity.applicationContext, defaultAppOpenAdUnitId)
             }
             return
@@ -332,6 +346,18 @@ class AdsManagerImpl : AdsManager,
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
 
     companion object {
+        /**
+         * v1 is banner-only (Play ad-policy friendly for a couples/memories app). Flip these to
+         * re-enable full-screen formats; keep a single App Open owner (appplugin's AppPluginBase
+         * also manages one) before doing so.
+         */
+        const val INTERSTITIAL_ENABLED = false
+        const val APP_OPEN_ENABLED = false
+
+        /** An ad may be requested/kept/shown only for a non-VIP user with UMP consent and a unit id. */
+        internal fun isEligible(isVip: Boolean, canRequestAds: Boolean, adUnitId: String = "x"): Boolean =
+            !isVip && canRequestAds && adUnitId.isNotBlank()
+
         internal fun applyTestDeviceIds(testDeviceIds: List<String>) {
             val merged = MobileAds.getRequestConfiguration().toBuilder()
                 .setTestDeviceIds(testDeviceIds)

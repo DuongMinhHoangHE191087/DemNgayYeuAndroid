@@ -34,6 +34,7 @@ object AppServiceLocator {
     @Volatile private var _syncCoordinator: com.example.data.sync.SyncCoordinator? = null
     @Volatile private var _networkMonitor: com.example.data.sync.NetworkMonitor? = null
     @Volatile private var _entitlementRepository: com.example.billing.EntitlementRepository? = null
+    @Volatile private var _memoryMediaRepository: com.example.domain.media.MemoryMediaRepository? = null
 
     /** Singleton instance của [AdsManager] — throw [IllegalStateException] nếu chưa initialize */
     val adsManager: AdsManager
@@ -54,6 +55,10 @@ object AppServiceLocator {
     /** Singleton instance của [com.example.billing.EntitlementRepository] — throw [IllegalStateException] nếu chưa initialize */
     val entitlementRepository: com.example.billing.EntitlementRepository
         get() = _entitlementRepository ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.domain.media.MemoryMediaRepository] — throw [IllegalStateException] nếu chưa initialize */
+    val memoryMediaRepository: com.example.domain.media.MemoryMediaRepository
+        get() = _memoryMediaRepository ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
 
     /**
      * Khởi tạo tất cả services. Phải gọi sớm nhất có thể — trong `Application.onCreate()`
@@ -91,7 +96,10 @@ object AppServiceLocator {
         if (_adsManager == null) {
             synchronized(this) {
                 if (_adsManager == null) {
-                    _adsManager = AdsManagerImpl()
+                    _adsManager = AdsManagerImpl().also {
+                        // Cached VIP is known synchronously; apply it before consent/SDK start can load anything.
+                        _entitlementRepository?.let { repo -> it.setVipStatus(repo.isVipUser.value) }
+                    }
                 }
             }
         }
@@ -100,6 +108,14 @@ object AppServiceLocator {
             synchronized(this) {
                 if (_networkMonitor == null) {
                     _networkMonitor = com.example.data.sync.NetworkMonitor(appContext)
+                }
+            }
+        }
+
+        if (_memoryMediaRepository == null) {
+            synchronized(this) {
+                if (_memoryMediaRepository == null) {
+                    _memoryMediaRepository = com.example.data.media.FirebaseMemoryMediaRepository()
                 }
             }
         }

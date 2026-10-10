@@ -4,6 +4,21 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/appplugin" name="appplugin">
+                <projects>
+                  <project path="$PROJECT_DIR$/appplugin" />
+                  <project path="$PROJECT_DIR$/appplugin/app" />
+                  <project path="$PROJECT_DIR$/appplugin/appplugin-game" />
+                  <project path="$PROJECT_DIR$/appplugin/appplugin-max" />
+                  <project path="$PROJECT_DIR$/appplugin/appplugin-nextgen" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
@@ -11,6 +26,10 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/appplugin" />
+            <option value="$PROJECT_DIR$/appplugin/app" />
+            <option value="$PROJECT_DIR$/appplugin/appplugin-game" />
+            <option value="$PROJECT_DIR$/appplugin/appplugin-max" />
+            <option value="$PROJECT_DIR$/appplugin/appplugin-nextgen" />
           </set>
         </option>
       </GradleProjectSettings>
