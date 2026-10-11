@@ -65,6 +65,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -241,8 +242,8 @@ fun LoveDaysCalculatorWidget(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(16.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp)
+        .padding(12.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
       // 1. Header with icon, title, and "Đổi ngày" button
       Row(
@@ -256,7 +257,7 @@ fun LoveDaysCalculatorWidget(
         ) {
           Box(
             modifier = Modifier
-              .size(38.dp)
+              .size(32.dp)
               .clip(CircleShape)
               .background(Color(0xFFFCE4EC)),
             contentAlignment = Alignment.Center
@@ -269,50 +270,16 @@ fun LoveDaysCalculatorWidget(
             )
           }
 
-          Column {
-            Text(
-              text = if (isVietnamese) "Bộ Đếm & Tính Ngày Yêu" else "Love Days Calculator",
-              fontWeight = FontWeight.Bold,
-              fontSize = 16.sp,
-              color = Color(0xFF1F0416)
-            )
-            Text(
-              text = if (isVietnamese) "Tính toán chính xác thời gian bên nhau" else "Calculates total days & time together",
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Medium,
-              color = Color(0xFF4A1934)
-            )
-          }
+          Text(
+            text = if (isVietnamese) "Bộ Đếm Ngày Yêu" else "Love Days",
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = Color(0xFF1F0416)
+          )
         }
 
-        // Action button to trigger Material 3 date picker
-        Surface(
-          shape = RoundedCornerShape(50.dp),
-          color = Color(0xFFFFF0F5),
-          border = BorderStroke(1.dp, Color(0xFFFFC6DB)),
-          modifier = Modifier
-            .clickable { showM3DatePicker = true }
-            .testTag("btn_widget_pick_date")
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Filled.EditCalendar,
-              contentDescription = null,
-              tint = Color(0xFFFF4081),
-              modifier = Modifier.size(14.dp)
-            )
-            Text(
-              text = if (isVietnamese) "Đổi ngày" else "Pick Date",
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color(0xFFC2185B)
-            )
-          }
-        }
       }
 
       // 2. Anniversary Start Date Banner
@@ -342,12 +309,6 @@ fun LoveDaysCalculatorWidget(
               modifier = Modifier.size(15.dp)
             )
             Text(
-              text = if (isVietnamese) "Ngày bắt đầu yêu:" else "Anniversary Start:",
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Medium,
-              color = Color(0xFF4A1934)
-            )
-            Text(
               text = anniversaryDate,
               fontSize = 13.sp,
               fontWeight = FontWeight.ExtraBold,
@@ -355,11 +316,11 @@ fun LoveDaysCalculatorWidget(
             )
           }
 
-          Text(
-            text = if (isVietnamese) "Chạm để đổi 📅" else "Tap to change 📅",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFFFF4081)
+          Icon(
+            imageVector = Icons.Filled.EditCalendar,
+            contentDescription = if (isVietnamese) "Đổi ngày" else "Change date",
+            tint = Color(0xFFFF4081),
+            modifier = Modifier.size(18.dp)
           )
         }
       }
@@ -379,49 +340,24 @@ fun LoveDaysCalculatorWidget(
         Column(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp, horizontal = 12.dp),
+            .padding(vertical = 8.dp, horizontal = 12.dp),
           horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.spacedBy(4.dp)
+          verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Filled.VolunteerActivism,
-              contentDescription = null,
-              tint = Color(0xFFFF4081),
-              modifier = Modifier.size(16.dp)
-            )
-            Text(
-              text = if (isVietnamese) "TỔNG SỐ NGÀY BÊN NHAU" else "TOTAL DAYS TOGETHER",
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color(0xFFC2185B),
-              letterSpacing = 0.8.sp
-            )
-            Icon(
-              imageVector = Icons.Filled.VolunteerActivism,
-              contentDescription = null,
-              tint = Color(0xFFFF4081),
-              modifier = Modifier.size(16.dp)
-            )
-          }
-
           // Prominent Big Number
           Text(
             text = "%,d".format(breakdown.totalDays),
-            fontSize = 44.sp,
+            fontSize = 34.sp,
             fontWeight = FontWeight.ExtraBold,
             color = Color(0xFF1F0416),
-            lineHeight = 46.sp
+            lineHeight = 38.sp
           )
 
           Text(
             text = if (isVietnamese) {
-              "Đã cùng nhau đi qua ${breakdown.years} năm, ${breakdown.months} tháng & ${breakdown.days} ngày ngọt ngào"
+              "${breakdown.years} năm ${breakdown.months} tháng ${breakdown.days} ngày"
             } else {
-              "Walking together for ${breakdown.years} yrs, ${breakdown.months} mos & ${breakdown.days} sweet days"
+              "${breakdown.years}y ${breakdown.months}m ${breakdown.days}d"
             },
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
@@ -440,7 +376,7 @@ fun LoveDaysCalculatorWidget(
         TimeUnitItemCard(
           icon = Icons.Filled.CalendarMonth,
           title = if (isVietnamese) "Năm & Tháng" else "Years & Mos",
-          value = "${breakdown.years}N ${breakdown.months}T",
+          value = if (isVietnamese) "${breakdown.years}N ${breakdown.months}T" else "${breakdown.years}y ${breakdown.months}m",
           sub = "${breakdown.days} ${if (isVietnamese) "ngày" else "days"}",
           tint = Color(0xFFE91E63),
           modifier = Modifier.weight(1f)
@@ -507,9 +443,9 @@ fun LoveDaysCalculatorWidget(
               )
               Text(
                 text = if (isVietnamese) {
-                  "Mốc tiếp theo: %,d Ngày".format(breakdown.nextMilestoneDays)
+                  "Mốc: %,d ngày".format(breakdown.nextMilestoneDays)
                 } else {
-                  "Next Milestone: %,d Days".format(breakdown.nextMilestoneDays)
+                  "Next: %,d days".format(breakdown.nextMilestoneDays)
                 },
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -562,7 +498,7 @@ fun LoveDaysCalculatorWidget(
             containerColor = Color(0xFFFF4081)
           ),
           modifier = Modifier
-            .weight(1.2f)
+            .weight(1f)
             .testTag("btn_sync_days_to_counter")
         ) {
           Icon(
@@ -573,9 +509,10 @@ fun LoveDaysCalculatorWidget(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = if (isVietnamese) "Đồng bộ lên Trang chủ" else "Sync to Home Counter",
+            text = if (isVietnamese) "Đồng bộ" else "Sync",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
+            maxLines = 1,
             color = Color.White
           )
         }
@@ -586,7 +523,7 @@ fun LoveDaysCalculatorWidget(
           shape = RoundedCornerShape(14.dp),
           border = BorderStroke(1.2.dp, Color(0xFFFF80AB)),
           modifier = Modifier
-            .weight(0.8f)
+            .weight(1f)
             .testTag("btn_manual_anniversary_input")
         ) {
           Icon(
@@ -600,6 +537,7 @@ fun LoveDaysCalculatorWidget(
             text = if (isVietnamese) "Nhập ngày" else "Edit Date",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
+            maxLines = 1,
             color = Color(0xFFC2185B)
           )
         }
@@ -760,7 +698,6 @@ private fun ManualDateInputDialog(
           placeholder = "dd/MM/yyyy",
           dialogTitle = if (isVietnamese) "Chọn Ngày Bắt Đầu Yêu" else "Select Start Date",
           quickPresets = DatePickerPresets.relationshipStartDatePresets(),
-          helperText = DatePickerUtils.getFriendlyDateDescription(dateText),
           testTag = "input_anniversary_text"
         )
 

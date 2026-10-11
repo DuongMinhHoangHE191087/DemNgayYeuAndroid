@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -67,6 +68,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -79,6 +81,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -90,6 +94,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.model.OnlineStatus
+import com.example.data.model.RelationshipStatus
+import androidx.compose.material.icons.filled.HeartBroken
 import com.example.data.repository.OnlineCoupleRepository
 import com.example.ui.util.ProfileUtils
 import com.example.ui.viewmodel.InLoveViewModel
@@ -377,7 +383,7 @@ fun PairingScreen(
               verticalAlignment = Alignment.CenterVertically
             ) {
               Text(
-                text = "MÃ KẾT NỐI SET LOVE CỦA BẠN",
+                text = "MÃ CỦA BẠN",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF880E4F)
@@ -393,9 +399,9 @@ fun PairingScreen(
               ) {
                 Text(
                   text = when (relationshipStatus) {
-                    OnlineStatus.COUPLED -> "ĐÃ CÓ ĐÔI ❤️"
-                    OnlineStatus.PENDING_INVITE -> "CHỜ GHÉP ĐÔI ⏳"
-                    else -> "CHƯA KẾT NỐI 🕊️"
+                    OnlineStatus.COUPLED -> "❤️"
+                    OnlineStatus.PENDING_INVITE -> "⏳"
+                    else -> "🕊️"
                   },
                   fontSize = 11.sp,
                   fontWeight = FontWeight.Bold,
@@ -471,31 +477,6 @@ fun PairingScreen(
               }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Surface(
-              shape = RoundedCornerShape(10.dp),
-              color = Color.White.copy(alpha = 0.8f),
-              modifier = Modifier.fillMaxWidth()
-            ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Settings,
-                  contentDescription = null,
-                  tint = Color(0xFF5C6BC0),
-                  modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                  text = "Hồ sơ của bạn được điều chỉnh trong mục Cài đặt.",
-                  fontSize = 12.sp,
-                  color = Color(0xFF616161)
-                )
-              }
-            }
           }
         }
       }
@@ -574,19 +555,6 @@ fun PairingScreen(
                       }
                     }
                   }
-                }
-
-                Surface(
-                  shape = RoundedCornerShape(10.dp),
-                  color = Color.White,
-                  modifier = Modifier.fillMaxWidth()
-                ) {
-                  Text(
-                    text = "🔒 Thông tin đối tác là chỉ đọc, không thể điều chỉnh tại đây.",
-                    fontSize = 12.sp,
-                    color = Color(0xFF757575),
-                    modifier = Modifier.padding(10.dp)
-                  )
                 }
 
                 // Ngày kỷ niệm yêu thống nhất
@@ -700,15 +668,62 @@ fun PairingScreen(
                   }
                 }
 
-                OutlinedButton(
-                  onClick = {
-                    viewModel.setTab(4)
-                    onNavigateBack()
-                  },
-                  shape = RoundedCornerShape(12.dp),
-                  modifier = Modifier.fillMaxWidth()
-                ) {
-                  Text("Quản lý trạng thái Set Love trong Cài đặt")
+                val rel by viewModel.activeRelationship.collectAsState()
+                val pendingBreakup = rel?.status == RelationshipStatus.PENDING_BREAKUP
+                val byMe = pendingBreakup && rel?.breakupRequestedBy == currentUser.uid
+                var confirmBreakup by remember { mutableStateOf(false) }
+                val dangerColors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+
+                if (!pendingBreakup) {
+                  TextButton(
+                    onClick = { confirmBreakup = true },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFC62828)),
+                    modifier = Modifier.fillMaxWidth().testTag("request_breakup_button")
+                  ) {
+                    Icon(Icons.Default.HeartBroken, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Hủy Set Love", fontSize = 13.sp)
+                  }
+                } else {
+                  Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFFFEBEE),
+                    modifier = Modifier.fillMaxWidth()
+                  ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                      Text(
+                        text = if (byMe) "⏳ Đang chờ người ấy xác nhận hủy Set Love" else "Người ấy muốn hủy Set Love. Bạn đồng ý?",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = Color(0xFFB71C1C)
+                      )
+                      Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                          onClick = { viewModel.rejectBreakup() },
+                          shape = RoundedCornerShape(10.dp),
+                          modifier = Modifier.weight(1f).testTag("reject_breakup_button")
+                        ) { Text(if (byMe) "Rút lại" else "Từ chối", fontSize = 12.sp) }
+                        Button(
+                          onClick = { if (byMe) viewModel.forceBreakup() else viewModel.confirmBreakup() },
+                          colors = dangerColors,
+                          shape = RoundedCornerShape(10.dp),
+                          modifier = Modifier.weight(1f).testTag("confirm_breakup_button")
+                        ) { Text(if (byMe) "Hủy ngay" else "Xác nhận", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                      }
+                    }
+                  }
+                }
+
+                if (confirmBreakup) {
+                  AlertDialog(
+                    onDismissRequest = { confirmBreakup = false },
+                    title = { Text("Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold) },
+                    text = { Text("Người ấy sẽ nhận thông báo. Khi đồng ý, hai bạn trở về trạng thái Độc thân và kỷ niệm chung bị khóa.") },
+                    confirmButton = {
+                      Button(onClick = { confirmBreakup = false; viewModel.requestBreakup() }, colors = dangerColors) { Text("Gửi yêu cầu") }
+                    },
+                    dismissButton = { OutlinedButton(onClick = { confirmBreakup = false }) { Text("Hủy bỏ") } }
+                  )
                 }
               }
             }
@@ -789,7 +804,7 @@ fun PairingScreen(
             ) {
               Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                  text = "Tìm Kiếm Người Ấy Để Set Love",
+                  text = "Tìm người ấy",
                   fontWeight = FontWeight.Bold,
                   fontSize = 16.sp,
                   color = Color(0xFF880E4F)
@@ -806,7 +821,7 @@ fun PairingScreen(
                   OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.updateSearchQuery(it) },
-                    placeholder = { Text("Mã hoặc link người ấy (vd: LOVE-9966)...", fontSize = 14.sp) },
+                    placeholder = { Text("LOVE-9966", fontSize = 14.sp) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = pairingTextFieldColors(),
@@ -1031,25 +1046,11 @@ fun PairingScreen(
           Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
               Text(
-                text = "Sở Thích Cá Nhân",
+                text = "Sở thích",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
               )
-              Spacer(modifier = Modifier.weight(1f))
-              Text(
-                text = "Gợi ý quà tặng",
-                fontSize = 11.sp,
-                color = Color(0xFFE91E63),
-                fontWeight = FontWeight.SemiBold
-              )
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-              text = "Hệ thống sẽ lấy giao điểm sở thích của cả hai để gợi ý quà và lịch hẹn phù hợp nhất khi kết đôi.",
-              fontSize = 11.sp,
-              color = Color.Gray
-            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1061,16 +1062,26 @@ fun PairingScreen(
               val myInterests = currentUser.interests
               OnlineCoupleRepository.AVAILABLE_INTERESTS.forEach { (key, label) ->
                 val isSelected = myInterests.contains(key)
-                FilterChip(
-                  selected = isSelected,
-                  onClick = { viewModel.toggleInterest(key) },
-                  label = { Text(text = label, fontSize = 12.sp) },
-                  colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFFFFEBEE),
-                    selectedLabelColor = Color(0xFFC2185B)
-                  )
-                )
+                // Emoji-only circles; the labels end with their emoji.
+                Box(
+                  contentAlignment = Alignment.Center,
+                  modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) Color(0xFFFFEBEE) else Color(0xFFF5F5F5))
+                    .border(if (isSelected) 2.dp else 0.dp, Color(0xFFC2185B), CircleShape)
+                    .clickable(onClickLabel = label) { viewModel.toggleInterest(key) }
+                    .semantics { contentDescription = label.substringBeforeLast(' ') }
+                ) {
+                  Text(text = label.substringAfterLast(' '), fontSize = 20.sp)
+                }
               }
+            }
+            val pickedNames = OnlineCoupleRepository.AVAILABLE_INTERESTS
+              .filter { currentUser.interests.contains(it.first) }
+              .joinToString(" · ") { it.second.substringBeforeLast(' ') }
+            if (pickedNames.isNotEmpty()) {
+              Text(text = pickedNames, fontSize = 12.sp, color = Color(0xFFC2185B), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
             }
 
             if (mutualInterests.isNotEmpty()) {

@@ -125,6 +125,10 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   private val _isAllNotificationsRead = MutableStateFlow(false)
   val isAllNotificationsRead: StateFlow<Boolean> = _isAllNotificationsRead.asStateFlow()
 
+  private val _showNotifications = MutableStateFlow(false)
+  val showNotifications: StateFlow<Boolean> = _showNotifications.asStateFlow()
+  fun setShowNotifications(show: Boolean) { _showNotifications.value = show }
+
   private val _showAddReminderDialog = MutableStateFlow(false)
   val showAddReminderDialog: StateFlow<Boolean> = _showAddReminderDialog.asStateFlow()
 
@@ -1515,6 +1519,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     type: String = "LOVE",
     description: String = "",
     isAnnual: Boolean = true,
+    notificationEnabled: Boolean = true,
     reminderDaysBefore: Int = 3
   ) {
     if (title.isBlank()) {
@@ -1528,6 +1533,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         type = type,
         description = description.trim(),
         isAnnual = isAnnual,
+        notificationEnabled = notificationEnabled,
         reminderDaysBefore = reminderDaysBefore,
         relationshipId = currentOnlineUser.value.relationshipId
       )
@@ -1539,14 +1545,17 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         type = type,
         description = description.trim(),
         isAnnual = isAnnual,
-        notificationEnabled = true,
+        notificationEnabled = notificationEnabled,
         reminderDaysBefore = reminderDaysBefore
       )
       val disabledCadence = com.example.alarm.AlarmNotificationScheduler.disabledCadenceKeys(dao)
       com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, ann, disabledCadence)
       _showAddAnniversaryDialog.value = false
       triggerFloatingHearts()
-      showToast("Đã lưu ngày kỷ niệm & kích hoạt thông báo tự động! 🔔")
+      showToast(
+        if (notificationEnabled) "Đã lưu ngày kỷ niệm & kích hoạt thông báo tự động! 🔔"
+        else "Đã lưu ngày kỷ niệm! 💕"
+      )
     }
   }
 

@@ -13,6 +13,6 @@ class AppModeTest {
 
   @Test fun offlineMessageOnlyWhenSignedIn() {
     assertTrue(AppMode.describe(AccountMode.PAIRED, online = false, english = true).contains("Offline"))
-    assertEquals("Guest — data stays on this device", AppMode.describe(AccountMode.GUEST, online = false, english = true))
+    assertEquals("Guest · on this device", AppMode.describe(AccountMode.GUEST, online = false, english = true))
   }
 }

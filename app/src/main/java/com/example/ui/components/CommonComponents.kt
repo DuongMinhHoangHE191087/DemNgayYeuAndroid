@@ -1,8 +1,16 @@
 @file:Suppress("FunctionName")
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,106 +75,101 @@ const val COUPLE_AVATAR_URL =
 @Composable
 fun InLoveTopBar(
   title: String,
-  onHeartClick: () -> Unit = {},
+  hasUnread: Boolean = false,
+  onBellClick: () -> Unit = {},
   onProfileClick: () -> Unit = {},
   includeStatusBarPadding: Boolean = true
 ) {
-  Surface(
-    color = Color.White.copy(alpha = 0.98f),
+  val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+  Box(
     modifier = Modifier
       .fillMaxWidth()
-      .shadow(elevation = 3.dp)
+      .shadow(elevation = 8.dp, shape = barShape, ambientColor = Primary.copy(alpha = 0.25f), spotColor = Primary.copy(alpha = 0.25f))
+      .clip(barShape)
+      .background(Brush.verticalGradient(listOf(Color.White, Color(0xFFFFF3F7))))
   ) {
     Row(
       modifier = Modifier
         .fillMaxWidth()
         .then(if (includeStatusBarPadding) Modifier.statusBarsPadding() else Modifier)
-        .padding(horizontal = 16.dp, vertical = 8.dp),
+        .padding(horizontal = 16.dp, vertical = 6.dp),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.SpaceBetween
     ) {
-      // Left brand & screen title
+      Row(
+        modifier = Modifier.weight(1f),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        Icon(
+          imageVector = Icons.Filled.Favorite,
+          contentDescription = null,
+          tint = Primary,
+          modifier = Modifier.size(18.dp)
+        )
+        Text(
+          text = title,
+          color = OnSurface,
+          fontSize = 18.sp,
+          fontWeight = FontWeight.Bold,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis
+        )
+      }
+
       Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
       ) {
-        // App logo icon badge
-        Box(
-          modifier = Modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-              Brush.linearGradient(
-                listOf(RoseGradientStart, RoseGradientMid)
-              )
-            ),
-          contentAlignment = Alignment.Center
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Favorite,
-            contentDescription = "InLove Logo",
-            tint = Color.White,
-            modifier = Modifier.size(20.dp)
-          )
-        }
-
-        Column {
-          Text(
-            text = "INLOVE",
-            color = Primary,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-          )
-          Text(
-            text = title,
-            color = OnSurface,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
-        }
-      }
-
-      // Right actions: heart button + couple profile avatar
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        IconButton(
-          onClick = onHeartClick,
-          modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(PrimaryFixed.copy(alpha = 0.5f))
-            .testTag("topbar_heart_button")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Favorite,
-            contentDescription = "Chia sẻ kỷ niệm",
-            tint = Primary,
-            modifier = Modifier.size(20.dp)
-          )
-        }
-
-        Box(
-          modifier = Modifier
-            .size(36.dp)
-            .clip(CircleShape)
-            .shadow(4.dp, CircleShape)
-            .clickable { onProfileClick() }
-            .testTag("topbar_profile_avatar")
-        ) {
-          AsyncImage(
-            model = COUPLE_AVATAR_URL,
-            contentDescription = "Profile",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(36.dp)
-          )
-        }
+        NotificationBellButton(hasUnread = hasUnread, onClick = onBellClick)
+        ProfileAvatarButton(onClick = onProfileClick)
       }
     }
+  }
+}
+
+/** Glass bell with an unread dot; replaces the old heart button. */
+@Composable
+fun NotificationBellButton(hasUnread: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+  Box(
+    contentAlignment = Alignment.Center,
+    modifier = modifier
+      .size(36.dp)
+      .clip(CircleShape)
+      .background(PrimaryFixed.copy(alpha = 0.55f))
+      .clickable { onClick() }
+      .testTag("topbar_bell_button")
+  ) {
+    Icon(
+      imageVector = if (hasUnread) Icons.Filled.Notifications else Icons.Outlined.Notifications,
+      contentDescription = "Notifications",
+      tint = Primary,
+      modifier = Modifier.size(20.dp)
+    )
+    AnimatedVisibility(visible = hasUnread, modifier = Modifier.align(Alignment.TopEnd).padding(7.dp)) {
+      Box(Modifier.size(8.dp).clip(CircleShape).background(Primary).border(1.5.dp, Color.White, CircleShape))
+    }
+  }
+}
+
+/** Single profile entry point, shared by the top bar and Home so the top-right corner is identical on every tab. */
+@Composable
+fun ProfileAvatarButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+  Box(
+    modifier = modifier
+      .size(36.dp)
+      .shadow(4.dp, CircleShape)
+      .clip(CircleShape)
+      .border(1.5.dp, Primary.copy(alpha = 0.6f), CircleShape)
+      .clickable { onClick() }
+      .testTag("topbar_profile_avatar")
+  ) {
+    AsyncImage(
+      model = COUPLE_AVATAR_URL,
+      contentDescription = "Profile",
+      contentScale = ContentScale.Crop,
+      modifier = Modifier.size(36.dp)
+    )
   }
 }
 
@@ -214,47 +217,49 @@ fun InLoveBottomNav(
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
       ) {
+        // Icon-only tabs; the selected tab grows into a pill that reveals its label.
         tabs.forEachIndexed { index, tab ->
           val isSelected = selectedTab == index
           val icon = if (isSelected) tab.activeIcon else tab.inactiveIcon
+          val spring = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+          val weight by animateFloatAsState(if (isSelected) 2f else 1f, spring, label = "nav_weight")
+          val iconScale by animateFloatAsState(if (isSelected) 1.12f else 1f, spring, label = "nav_icon_scale")
+          val pill by animateColorAsState(
+            if (isSelected) PrimaryFixed.copy(alpha = 0.75f) else Color.Transparent,
+            label = "nav_pill"
+          )
+          val tint by animateColorAsState(if (isSelected) Primary else OnSurfaceVariant, label = "nav_tint")
 
           Box(
             modifier = Modifier
-              .weight(1f)
-              .clip(RoundedCornerShape(20.dp))
+              .weight(weight)
+              .padding(horizontal = 3.dp)
+              .clip(RoundedCornerShape(22.dp))
+              .background(pill)
               .clickable { onTabSelected(index) }
-              .padding(vertical = 4.dp)
+              .padding(vertical = 9.dp)
               .testTag(tab.tag),
             contentAlignment = Alignment.Center
           ) {
-            Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              verticalArrangement = Arrangement.Center
-            ) {
-              Box(
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(
+                imageVector = icon,
+                contentDescription = tab.title,
+                tint = tint,
                 modifier = Modifier
-                  .clip(RoundedCornerShape(12.dp))
-                  .background(
-                    if (isSelected) PrimaryFixed.copy(alpha = 0.7f) else Color.Transparent
-                  )
-                  .padding(horizontal = 8.dp, vertical = 2.dp),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = icon,
-                  contentDescription = tab.title,
-                  tint = if (isSelected) Primary else OnSurfaceVariant,
-                  modifier = Modifier.size(20.dp)
+                  .size(22.dp)
+                  .graphicsLayer { scaleX = iconScale; scaleY = iconScale }
+              )
+              AnimatedVisibility(visible = isSelected) {
+                Text(
+                  text = tab.title,
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.ExtraBold,
+                  color = Primary,
+                  maxLines = 1,
+                  modifier = Modifier.padding(start = 4.dp)
                 )
               }
-              Spacer(modifier = Modifier.height(1.dp))
-              Text(
-                text = tab.title,
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
-                color = if (isSelected) Primary else OnSurfaceVariant,
-                maxLines = 1
-              )
             }
           }
         }

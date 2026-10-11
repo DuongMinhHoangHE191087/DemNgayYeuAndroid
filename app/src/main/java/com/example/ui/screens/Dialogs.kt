@@ -32,14 +32,22 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.DinnerDining
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.Mood
+import androidx.compose.material.icons.filled.Diamond
+import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.filled.ChevronRight
@@ -243,7 +251,6 @@ fun AddMilestoneDialog(
   var title by remember { mutableStateOf("") }
   var dateText by remember { mutableStateOf("15 Tháng 11, 2026") }
   var categoryTag by remember { mutableStateOf("Hẹn Hò") }
-  var daysRemainingStr by remember { mutableStateOf("67") }
   var isImportant by remember { mutableStateOf(false) }
   var imageUrl by remember(presetPhotos) {
     mutableStateOf(presetPhotos.firstOrNull() ?: DEFAULT_MILESTONE_IMAGE_URL)
@@ -251,6 +258,8 @@ fun AddMilestoneDialog(
 
   AlertDialog(
     onDismissRequest = onDismiss,
+    containerColor = Color.White,
+    shape = RoundedCornerShape(28.dp),
     title = {
       Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -262,7 +271,7 @@ fun AddMilestoneDialog(
           tint = Primary
         )
         Text(
-          text = "Thêm Kỷ Niệm Mới",
+          text = "Kỷ niệm mới",
           fontWeight = FontWeight.Bold,
           fontSize = 18.sp
         )
@@ -276,56 +285,71 @@ fun AddMilestoneDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Tiêu đề sự kiện") },
-          placeholder = { Text("Ví dụ: Kỷ niệm chuyến đi Đà Lạt") },
+          label = { Text("Tiêu đề") },
           modifier = Modifier.fillMaxWidth().testTag("input_milestone_title"),
-          singleLine = true
+          singleLine = true,
+          shape = RoundedCornerShape(12.dp),
+          colors = inLoveFieldColors()
         )
 
         InLoveDatePickerField(
           value = dateText,
-          onValueChange = { newDate ->
-            dateText = newDate
-            val parsedMillis = DatePickerUtils.parseDateToUtcMillis(newDate)
-            if (parsedMillis != null) {
-              val now = System.currentTimeMillis()
-              val diff = parsedMillis - now
-              val days = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(diff).toInt()
-              daysRemainingStr = kotlin.math.max(0, days).toString()
-            }
-          },
-          label = "Ngày tháng sự kiện (dd/MM/yyyy) *",
+          onValueChange = { dateText = it },
+          label = "Ngày",
           placeholder = "15/11/2026",
-          dialogTitle = "Chọn ngày sự kiện / kỷ niệm",
+          dialogTitle = "Chọn ngày",
           quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
-          helperText = DatePickerUtils.getFriendlyDateDescription(dateText),
           modifier = Modifier.fillMaxWidth(),
           testTag = "input_milestone_date"
         )
 
-        OutlinedTextField(
-          value = categoryTag,
-          onValueChange = { categoryTag = it },
-          label = { Text("Thẻ phân loại") },
-          placeholder = { Text("Ví dụ: Du Lịch / Sinh Nhật / Tình Yêu") },
-          modifier = Modifier.fillMaxWidth(),
-          singleLine = true
+        // Icon-only category picker; the selected name shows once below.
+        val categoryOptions = listOf(
+          "Hẹn Hò" to Icons.Filled.LocalCafe,
+          "Du Lịch" to Icons.Filled.Flight,
+          "Sinh Nhật" to Icons.Filled.Cake,
+          "Tình Yêu" to Icons.Filled.Favorite,
+          "Kỷ Niệm" to Icons.Filled.Star
         )
-
-        OutlinedTextField(
-          value = daysRemainingStr,
-          onValueChange = { daysRemainingStr = it },
-          label = { Text("Số ngày còn lại (hoặc âm nếu đã qua)") },
-          modifier = Modifier.fillMaxWidth(),
-          singleLine = true
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          categoryOptions.forEach { (name, icon) ->
+            val isSelected = categoryTag == name
+            val bg by androidx.compose.animation.animateColorAsState(
+              if (isSelected) Primary else SurfaceContainerHigh, label = "cat_bg"
+            )
+            val scale by androidx.compose.animation.core.animateFloatAsState(
+              if (isSelected) 1.12f else 1f,
+              androidx.compose.animation.core.spring(androidx.compose.animation.core.Spring.DampingRatioMediumBouncy),
+              label = "cat_scale"
+            )
+            Box(
+              contentAlignment = Alignment.Center,
+              modifier = Modifier
+                .size(40.dp)
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .clip(CircleShape)
+                .background(bg)
+                .clickable { categoryTag = name }
+            ) {
+              Icon(
+                imageVector = icon,
+                contentDescription = name,
+                tint = if (isSelected) Color.White else OnSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+              )
+            }
+          }
+        }
+        Text(
+          text = categoryTag,
+          fontSize = 12.sp,
+          fontWeight = FontWeight.Bold,
+          color = Primary,
+          textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+          modifier = Modifier.fillMaxWidth()
         )
 
         if (presetPhotos.isNotEmpty()) {
-          Text(
-            text = "Ảnh minh hoạ cho kỷ niệm:",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold
-          )
           LazyRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.fillMaxWidth()
@@ -358,7 +382,7 @@ fun AddMilestoneDialog(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.SpaceBetween
         ) {
-          Text(text = "Đánh dấu là mốc Quan Trọng ⭐", fontSize = 13.sp)
+          Icon(Icons.Filled.Star, contentDescription = "Quan trọng", tint = if (isImportant) Primary else OnSurfaceVariant)
           Switch(
             checked = isImportant,
             onCheckedChange = { isImportant = it },
@@ -370,7 +394,10 @@ fun AddMilestoneDialog(
     confirmButton = {
       Button(
         onClick = {
-          val days = daysRemainingStr.toIntOrNull() ?: 30
+          val parsedMillis = DatePickerUtils.parseDateToUtcMillis(dateText)
+          val days = parsedMillis?.let {
+            java.util.concurrent.TimeUnit.MILLISECONDS.toDays(it - System.currentTimeMillis()).toInt().coerceAtLeast(0)
+          } ?: 30
           // Derived from the actual picked date, not a hardcoded "Chủ Nhật" that used to be
           // wrong for every date except an actual Sunday.
           val subtitle = DatePickerUtils.getVietnameseDayOfWeek(dateText) ?: "Kỷ Niệm"
@@ -386,9 +413,10 @@ fun AddMilestoneDialog(
           )
         },
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier.testTag("btn_submit_milestone")
       ) {
-        Text("Tạo Kỷ Niệm", fontWeight = FontWeight.Bold)
+        Text("Tạo", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
@@ -2067,6 +2095,7 @@ fun AddAnniversaryDateDialog(
     type: String,
     description: String,
     isAnnual: Boolean,
+    notificationEnabled: Boolean,
     reminderDaysBefore: Int
   ) -> Unit
 ) {
@@ -2076,6 +2105,7 @@ fun AddAnniversaryDateDialog(
   var selectedType by remember { mutableStateOf("LOVE") }
   var description by remember { mutableStateOf("") }
   var isAnnual by remember { mutableStateOf(true) }
+  var notificationEnabled by remember { mutableStateOf(true) }
   var reminderDaysBefore by remember { mutableIntStateOf(3) }
 
   val typeOptions = if (isEnglish) {
@@ -2111,7 +2141,7 @@ fun AddAnniversaryDateDialog(
           tint = Primary
         )
         Text(
-          text = if (isEnglish) "Add Special Anniversary" else "Thêm Ngày Kỷ Niệm Mới",
+          text = if (isEnglish) "New anniversary" else "Ngày kỷ niệm",
           fontWeight = FontWeight.Bold,
           fontSize = 18.sp,
           color = OnSurface
@@ -2126,95 +2156,86 @@ fun AddAnniversaryDateDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text(if (isEnglish) "Anniversary Title *" else "Tên ngày kỷ niệm *") },
-          placeholder = { Text(if (isEnglish) "e.g., The day we first fell in love" else "Ví dụ: Ngày chính thức yêu nhau") },
+          label = { Text(if (isEnglish) "Title" else "Tiêu đề") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_anniversary_title"),
-          singleLine = true
+          singleLine = true,
+          shape = RoundedCornerShape(12.dp),
+          colors = inLoveFieldColors()
         )
 
         InLoveDatePickerField(
           value = dateText,
           onValueChange = { dateText = it },
-          label = if (isEnglish) "Date (dd/MM/yyyy) *" else "Ngày kỷ niệm (dd/MM/yyyy) *",
+          label = if (isEnglish) "Date" else "Ngày",
           placeholder = "dd/MM/yyyy",
-          dialogTitle = if (isEnglish) "Select Date" else "Chọn ngày kỷ niệm",
+          dialogTitle = if (isEnglish) "Select Date" else "Chọn ngày",
           quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
-          helperText = DatePickerUtils.getFriendlyDateDescription(dateText),
           modifier = Modifier.fillMaxWidth(),
           testTag = "input_anniversary_date"
         )
 
+        // Icon-only type picker; the selected type's name shows once below.
+        val typeIcons = mapOf(
+          "LOVE" to Icons.Filled.Favorite,
+          "FIRST_DATE" to Icons.Filled.LocalCafe,
+          "FIRST_KISS" to Icons.Filled.Mood,
+          "PROPOSAL" to Icons.Filled.Diamond,
+          "WEDDING" to Icons.Filled.Celebration,
+          "CUSTOM" to Icons.Filled.Star
+        )
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+          typeOptions.forEach { (typeKey, label) ->
+            val isSelected = selectedType == typeKey
+            val bg by androidx.compose.animation.animateColorAsState(
+              if (isSelected) Primary else SurfaceContainerHigh, label = "type_bg"
+            )
+            val scale by androidx.compose.animation.core.animateFloatAsState(
+              if (isSelected) 1.12f else 1f,
+              androidx.compose.animation.core.spring(androidx.compose.animation.core.Spring.DampingRatioMediumBouncy),
+              label = "type_scale"
+            )
+            Box(
+              contentAlignment = Alignment.Center,
+              modifier = Modifier
+                .size(40.dp)
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .clip(CircleShape)
+                .background(bg)
+                .clickable { selectedType = typeKey }
+            ) {
+              Icon(
+                imageVector = typeIcons.getValue(typeKey),
+                contentDescription = label,
+                tint = if (isSelected) Color.White else OnSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+              )
+            }
+          }
+        }
         Text(
-          text = if (isEnglish) "Anniversary Type:" else "Loại kỷ niệm:",
+          text = typeOptions.firstOrNull { it.first == selectedType }?.second.orEmpty(),
           fontSize = 12.sp,
           fontWeight = FontWeight.Bold,
-          color = OnSurfaceVariant
+          color = Primary,
+          textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+          modifier = Modifier.fillMaxWidth()
         )
-
-        // Type selection chips
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-          typeOptions.take(3).forEach { (typeKey, label) ->
-            val isSelected = selectedType == typeKey
-            Surface(
-              shape = RoundedCornerShape(16.dp),
-              color = if (isSelected) Primary else SurfaceContainerHigh,
-              modifier = Modifier
-                .weight(1f)
-                .clickable { selectedType = typeKey }
-            ) {
-              Text(
-                text = label,
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) Color.White else OnSurface,
-                modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                maxLines = 1
-              )
-            }
-          }
-        }
-
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-          typeOptions.drop(3).forEach { (typeKey, label) ->
-            val isSelected = selectedType == typeKey
-            Surface(
-              shape = RoundedCornerShape(16.dp),
-              color = if (isSelected) Primary else SurfaceContainerHigh,
-              modifier = Modifier
-                .weight(1f)
-                .clickable { selectedType = typeKey }
-            ) {
-              Text(
-                text = label,
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) Color.White else OnSurface,
-                modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                maxLines = 1
-              )
-            }
-          }
-        }
 
         OutlinedTextField(
           value = description,
           onValueChange = { description = it },
-          label = { Text(if (isEnglish) "Love Notes & Emotion" else "Ghi chú / Cảm xúc") },
-          placeholder = { Text(if (isEnglish) "Unforgettable sweet moment..." else "Khoảnh khắc đáng nhớ nhất...") },
+          label = { Text(if (isEnglish) "Note" else "Ghi chú") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_anniversary_desc"),
-          maxLines = 3
+          maxLines = 3,
+          shape = RoundedCornerShape(12.dp),
+          colors = inLoveFieldColors()
         )
 
         Row(
@@ -2222,10 +2243,10 @@ fun AddAnniversaryDateDialog(
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically
         ) {
-          Text(
-            text = if (isEnglish) "Repeat Every Year:" else "Lặp lại hàng năm:",
-            fontSize = 13.sp,
-            color = OnSurface
+          Icon(
+            Icons.Filled.Repeat,
+            contentDescription = if (isEnglish) "Repeat every year" else "Lặp lại hàng năm",
+            tint = if (isAnnual) Primary else OnSurfaceVariant
           )
           Switch(
             checked = isAnnual,
@@ -2237,39 +2258,56 @@ fun AddAnniversaryDateDialog(
           )
         }
 
-        Text(
-          text = if (isEnglish) "Remind In Advance:" else "Hẹn giờ thông báo trước:",
-          fontSize = 12.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = OnSurface
-        )
-        val reminderOptions = if (isEnglish) {
-          listOf(0 to "Same Day", 1 to "1 Day", 3 to "3 Days", 7 to "7 Days")
-        } else {
-          listOf(0 to "Đúng ngày", 1 to "1 ngày", 3 to "3 ngày", 7 to "7 ngày")
-        }
         Row(
           modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          reminderOptions.forEach { (days, label) ->
-            val isSelected = reminderDaysBefore == days
-            Surface(
-              shape = RoundedCornerShape(12.dp),
-              color = if (isSelected) Primary else SurfaceContainerHigh,
-              modifier = Modifier
-                .weight(1f)
-                .clickable { reminderDaysBefore = days }
-            ) {
-              Text(
-                text = label,
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) Color.White else OnSurface,
-                modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                maxLines = 1
-              )
+          Icon(
+            Icons.Filled.Notifications,
+            contentDescription = if (isEnglish) "Notify me" else "Nhắc tôi",
+            tint = if (notificationEnabled) Primary else OnSurfaceVariant
+          )
+          Switch(
+            checked = notificationEnabled,
+            onCheckedChange = { notificationEnabled = it },
+            modifier = Modifier.testTag("switch_anniversary_notify"),
+            colors = SwitchDefaults.colors(
+              checkedThumbColor = Color.White,
+              checkedTrackColor = Primary
+            )
+          )
+        }
+
+        if (notificationEnabled) {
+          val reminderOptions = if (isEnglish) {
+            listOf(0 to "Same Day", 1 to "1 Day", 3 to "3 Days", 7 to "7 Days")
+          } else {
+            listOf(0 to "Đúng ngày", 1 to "1 ngày", 3 to "3 ngày", 7 to "7 ngày")
+          }
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+          ) {
+            reminderOptions.forEach { (days, label) ->
+              val isSelected = reminderDaysBefore == days
+              Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) Primary else SurfaceContainerHigh,
+                modifier = Modifier
+                  .weight(1f)
+                  .clickable { reminderDaysBefore = days }
+              ) {
+                Text(
+                  text = label,
+                  fontSize = 10.sp,
+                  fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                  color = if (isSelected) Color.White else OnSurface,
+                  modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp),
+                  textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                  maxLines = 1
+                )
+              }
             }
           }
         }
@@ -2278,12 +2316,12 @@ fun AddAnniversaryDateDialog(
     confirmButton = {
       Button(
         onClick = {
-          onConfirm(title, dateText, selectedType, description, isAnnual, reminderDaysBefore)
+          onConfirm(title, dateText, selectedType, description, isAnnual, notificationEnabled, reminderDaysBefore)
         },
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         modifier = Modifier.testTag("btn_save_anniversary_date")
       ) {
-        Text(if (isEnglish) "Save Anniversary" else "Lưu Kỷ Niệm", fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "Save" else "Lưu", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
@@ -2440,3 +2478,17 @@ fun AddGiftReminderDialog(
 }
 
 
+
+
+@Composable
+private fun inLoveFieldColors() = OutlinedTextFieldDefaults.colors(
+  focusedTextColor = Color(0xFF1E1E24),
+  unfocusedTextColor = Color(0xFF1E1E24),
+  focusedContainerColor = Color.White,
+  unfocusedContainerColor = Color.White,
+  focusedBorderColor = Primary,
+  unfocusedBorderColor = Color(0xFFC7C7CC),
+  focusedLabelColor = Primary,
+  unfocusedLabelColor = Color(0xFF424242),
+  cursorColor = Primary
+)

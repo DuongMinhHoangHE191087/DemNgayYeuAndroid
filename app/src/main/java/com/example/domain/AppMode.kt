@@ -12,7 +12,7 @@ object AppMode {
 
   fun describe(mode: AccountMode, online: Boolean, english: Boolean): String {
     val base = when (mode) {
-      AccountMode.GUEST -> if (english) "Guest — data stays on this device" else "Khách — dữ liệu chỉ lưu trên máy này"
+      AccountMode.GUEST -> if (english) "Guest · on this device" else "Khách · trên máy"
       AccountMode.SIGNED_IN -> if (english) "Signed in — not paired yet" else "Đã đăng nhập — chưa ghép đôi"
       AccountMode.PAIRED -> if (english) "Paired with your partner" else "Đã ghép đôi với người ấy"
     }

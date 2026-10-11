@@ -8,7 +8,7 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
-  alias(libs.plugins.firebase.crashlytics)
+  alias(libs.plugins.firebase.crashlytics.plugin)
 }
 
 android {

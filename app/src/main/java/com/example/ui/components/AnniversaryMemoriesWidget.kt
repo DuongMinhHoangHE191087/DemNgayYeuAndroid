@@ -76,6 +76,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -213,7 +216,7 @@ fun AnniversaryMemoriesWidget(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(vertical = 16.dp)
+        .padding(vertical = 12.dp)
         .animateContentSize()
     ) {
       // 1. WIDGET HEADER
@@ -230,7 +233,7 @@ fun AnniversaryMemoriesWidget(
         ) {
           Box(
             modifier = Modifier
-              .size(38.dp)
+              .size(32.dp)
               .clip(CircleShape)
               .background(
                 Brush.linearGradient(
@@ -249,36 +252,26 @@ fun AnniversaryMemoriesWidget(
 
           Spacer(modifier = Modifier.width(10.dp))
 
-          Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Text(
-                text = if (isVietnamese) "KHOẢNH KHẮC KỶ NIỆM" else "ANNIVERSARY MEMORIES",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Primary,
-                letterSpacing = 0.8.sp
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Color(0xFFFFE4EC),
-                modifier = Modifier.padding(bottom = 1.dp)
-              ) {
-                Text(
-                  text = "${filteredMemories.size} ảnh",
-                  fontSize = 10.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color(0xFFC2185B),
-                  modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-              }
-            }
-
+          Text(
+            text = if (isVietnamese) "Khoảnh khắc kỷ niệm" else "Memories",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF26071B),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false)
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFFFE4EC)
+          ) {
             Text(
-              text = if (isVietnamese) "Ghi dấu từng ngày kỷ niệm" else "Captured Couple Moments",
-              fontSize = 15.sp,
+              text = "${filteredMemories.size}",
+              fontSize = 10.sp,
               fontWeight = FontWeight.Bold,
-              color = Color(0xFF26071B)
+              color = Color(0xFFC2185B),
+              modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
             )
           }
         }
@@ -304,10 +297,11 @@ fun AnniversaryMemoriesWidget(
               modifier = Modifier.size(16.dp)
             )
             Text(
-              text = if (isVietnamese) "+ Thêm ảnh" else "+ Add photo",
+              text = if (isVietnamese) "Thêm" else "Add",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
-              color = Primary
+              color = Primary,
+              maxLines = 1
             )
           }
         }
@@ -327,28 +321,11 @@ fun AnniversaryMemoriesWidget(
         val allFilterLabel = if (isVietnamese) "Tất cả" else "All"
         val isAllSelected = selectedFilter == "Tất cả" || selectedFilter == "All"
 
-        FilterChip(
-          selected = isAllSelected,
-          onClick = { viewModel.selectAnniversaryFilter(allFilterLabel) },
-          label = {
-            Text(
-              text = if (isVietnamese) "🌟 Tất cả kỷ niệm" else "🌟 All Anniversaries",
-              fontSize = 12.sp,
-              fontWeight = if (isAllSelected) FontWeight.Bold else FontWeight.Medium
-            )
-          },
-          colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Primary,
-            selectedLabelColor = Color.White,
-            containerColor = Color(0xFFFFF5F8),
-            labelColor = Color(0xFF6B2B50)
-          ),
-          border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = isAllSelected,
-            borderColor = if (isAllSelected) Primary else Color(0xFFFFD1DC)
-          ),
-          shape = RoundedCornerShape(14.dp)
+        AnniversaryFilterPill(
+          emoji = "🌟",
+          name = if (isVietnamese) "Tất cả kỷ niệm" else "All Anniversaries",
+          isSelected = isAllSelected,
+          onClick = { viewModel.selectAnniversaryFilter(allFilterLabel) }
         )
 
         defaultAnniversaryList.forEach { anniversaryName ->
@@ -362,29 +339,11 @@ fun AnniversaryMemoriesWidget(
             anniversaryName.contains("Sinh Nhật") -> "🎂"
             else -> "✨"
           }
-
-          FilterChip(
-            selected = isSelected,
-            onClick = { viewModel.selectAnniversaryFilter(anniversaryName) },
-            label = {
-              Text(
-                text = "$chipIcon $anniversaryName",
-                fontSize = 12.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-              )
-            },
-            colors = FilterChipDefaults.filterChipColors(
-              selectedContainerColor = Primary,
-              selectedLabelColor = Color.White,
-              containerColor = Color(0xFFFFF5F8),
-              labelColor = Color(0xFF6B2B50)
-            ),
-            border = FilterChipDefaults.filterChipBorder(
-              enabled = true,
-              selected = isSelected,
-              borderColor = if (isSelected) Primary else Color(0xFFFFD1DC)
-            ),
-            shape = RoundedCornerShape(14.dp)
+          AnniversaryFilterPill(
+            emoji = chipIcon,
+            name = anniversaryName,
+            isSelected = isSelected,
+            onClick = { viewModel.selectAnniversaryFilter(anniversaryName) }
           )
         }
       }
@@ -519,18 +478,14 @@ fun AnniversaryMemoriesWidget(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = if (isVietnamese) "Xem tất cả ${memories.size} ảnh trong Album" else "View all ${memories.size} photos in Album",
+            text = if (isVietnamese) "Xem tất cả (${memories.size})" else "View all (${memories.size})",
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Primary
+            color = Primary,
+            maxLines = 1
           )
         }
 
-        Text(
-          text = if (isVietnamese) "Vuốt để xem thêm •" else "Swipe for more •",
-          fontSize = 11.sp,
-          color = Color(0xFF9E778E)
-        )
       }
     }
   }
@@ -840,13 +795,13 @@ private fun EmptyAnniversaryPhotoCard(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(20.dp),
+        .padding(12.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center
     ) {
       Box(
         modifier = Modifier
-          .size(46.dp)
+          .size(36.dp)
           .clip(CircleShape)
           .background(Color(0xFFFFE4EC)),
         contentAlignment = Alignment.Center
@@ -855,27 +810,21 @@ private fun EmptyAnniversaryPhotoCard(
           imageVector = Icons.Filled.PhotoAlbum,
           contentDescription = null,
           tint = Primary,
-          modifier = Modifier.size(26.dp)
+          modifier = Modifier.size(20.dp)
         )
       }
 
-      Spacer(modifier = Modifier.height(8.dp))
+      Spacer(modifier = Modifier.height(6.dp))
 
       Text(
         text = if (isVietnamese) "Chưa có ảnh cho \"$anniversaryName\"" else "No photos for \"$anniversaryName\"",
-        fontSize = 14.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
         color = Color(0xFF26071B),
-        textAlign = TextAlign.Center
-      )
-
-      Text(
-        text = if (isVietnamese) "Hãy chọn những bức ảnh ngọt ngào từ thư viện để lưu giữ khoảnh khắc này nhé!"
-        else "Select sweet photos from your device gallery to capture this special occasion!",
-        fontSize = 12.sp,
-        color = Color(0xFF6B2B50),
         textAlign = TextAlign.Center,
-        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(bottom = 8.dp)
       )
 
       Button(
@@ -886,9 +835,10 @@ private fun EmptyAnniversaryPhotoCard(
         Icon(Icons.Filled.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(16.dp))
         Spacer(modifier = Modifier.width(6.dp))
         Text(
-          text = if (isVietnamese) "Chọn ảnh từ Thư Viện" else "Choose from Gallery",
+          text = if (isVietnamese) "Chọn ảnh" else "Choose photos",
           fontWeight = FontWeight.Bold,
-          fontSize = 13.sp
+          fontSize = 12.sp,
+          maxLines = 1
         )
       }
     }
@@ -1387,5 +1337,25 @@ private fun AnniversaryPhotoDetailDialog(
         }
       }
     }
+  }
+}
+
+/** Emoji-only pill; only the selected one spells out its name. */
+@Composable
+private fun AnniversaryFilterPill(emoji: String, name: String, isSelected: Boolean, onClick: () -> Unit) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
+    modifier = Modifier
+      .heightIn(min = 40.dp)
+      .clip(RoundedCornerShape(20.dp))
+      .background(if (isSelected) Primary else Color(0xFFFFF5F8))
+      .clickable(onClick = onClick)
+      .animateContentSize()
+      .padding(horizontal = 12.dp)
+      .semantics { contentDescription = name }
+  ) {
+    Text(text = emoji, fontSize = 18.sp)
+    if (isSelected) Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
   }
 }

@@ -33,7 +33,12 @@ import androidx.compose.material.icons.filled.AlarmOn
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Brush
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Check
@@ -230,38 +235,11 @@ fun GiftScreen(
                 )
               )
             )
-            .padding(16.dp)
+            .padding(12.dp)
         ) {
-          Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = PrimaryFixed.copy(alpha = 0.8f)
-          ) {
-            Row(
-              modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Filled.AutoAwesome,
-                contentDescription = null,
-                tint = Primary,
-                modifier = Modifier.size(14.dp)
-              )
-              Text(
-                text = if (isEnglish) "SPECIAL ANNIVERSARY COMING" else "SẮP ĐẾN KỶ NIỆM ĐẶC BIỆT",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = OnPrimaryFixed,
-                letterSpacing = 0.5.sp
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(6.dp))
-
           Text(
             text = if (isEnglish) "Gift & Surprise Ideas" else "Gợi Ý Quà & Bất Ngờ",
-            fontSize = 20.sp,
+            fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             color = OnSurface
           )
@@ -269,13 +247,13 @@ fun GiftScreen(
           Spacer(modifier = Modifier.height(4.dp))
 
           Text(
-            text = if (isEnglish) "1,000 days anniversary is coming in 3 days! Have you prepared anything special? 🎁" else "Kỷ niệm 1.000 ngày sắp đến trong 3 ngày nữa! Bạn đã chuẩn bị điều tuyệt vời gì chưa? 🎁",
-            fontSize = 13.sp,
+            text = if (isEnglish) "1,000 days anniversary in 3 days 🎁" else "Kỷ niệm 1.000 ngày còn 3 ngày 🎁",
+            fontSize = 12.sp,
             color = OnSurfaceVariant,
-            lineHeight = 18.sp
+            maxLines = 1
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(8.dp))
 
           // Progress Row
           Row(
@@ -294,13 +272,13 @@ fun GiftScreen(
                 modifier = Modifier.size(15.dp)
               )
               Text(
-                text = if (isEnglish) "Preparation Progress" else "Tiến độ chuẩn bị",
+                text = if (isEnglish) "Progress" else "Tiến độ",
                 fontSize = 12.sp,
                 color = OnSurfaceVariant
               )
             }
             Text(
-              text = if (isEnglish) "${progressPercent.toInt()}% Completed" else "${progressPercent.toInt()}% Hoàn tất",
+              text = "${progressPercent.toInt()}%",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = Primary
@@ -332,30 +310,6 @@ fun GiftScreen(
         modifier = Modifier.fillMaxWidth().testTag("mutual_interests_gift_card")
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Icon(
-                imageVector = Icons.Default.AutoAwesome,
-                contentDescription = null,
-                tint = Color(0xFFE91E63),
-                modifier = Modifier.size(18.dp)
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = if (isEnglish) "Personalized suggestions" else "Gợi ý cá nhân hóa",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Color(0xFF880E4F)
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(8.dp))
-
           if (mutualInterests.isNotEmpty()) {
             Text(
               text = if (isEnglish) "You both love: ${mutualInterests.joinToString(" • ")}" else "Hai bạn cùng yêu thích: ${mutualInterests.joinToString(" • ")}",
@@ -401,7 +355,7 @@ fun GiftScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
               Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
               Spacer(modifier = Modifier.width(8.dp))
-              Text(if (isEnglish) "✨ Add suggestions by your interests" else "✨ Gợi ý thêm theo sở thích", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+              Text(if (isEnglish) "More ideas" else "Gợi ý thêm", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
           }
 
@@ -446,13 +400,29 @@ fun GiftScreen(
               .clickable { viewModel.setGiftCategory(chip.key) }
               .testTag("gift_tab_${chip.key}")
           ) {
-            Text(
-              text = chip.label,
-              fontSize = 12.sp,
-              fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-              color = if (isSelected) Color.White else OnSurfaceVariant,
-              modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-            )
+            // Icon-only tabs; only the selected one spells out its name.
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(6.dp),
+              modifier = Modifier
+                .animateContentSize()
+                .padding(horizontal = 12.dp, vertical = 9.dp)
+            ) {
+              Icon(
+                imageVector = giftChipIcon(chip.key),
+                contentDescription = chip.label,
+                tint = if (isSelected) Color.White else OnSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+              )
+              if (isSelected) {
+                Text(
+                  text = chip.label,
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color.White
+                )
+              }
+            }
           }
         }
       }
@@ -1219,6 +1189,12 @@ fun GiftIdeaCard(
   }
 }
 
+private fun giftChipIcon(key: String) = when (key) {
+  GiftCatalog.ALL_KEY -> Icons.Filled.GridView
+  GiftCatalog.AI_KEY -> Icons.Filled.AutoFixHigh
+  else -> giftCategoryIcon(key)
+}
+
 /** Icon for a gift's category; the Room id is not a content key. */
 private fun giftCategoryIcon(categoryKey: String) = when (categoryKey) {
   GiftCatalog.ROMANTIC -> Icons.Filled.Favorite
@@ -1263,7 +1239,7 @@ internal fun PersonalizedGiftCard(
         IconButton(
           onClick = onShare,
           modifier = Modifier
-            .size(48.dp)
+            .size(40.dp)
             .testTag("btn_share_gift_suggestion")
         ) {
           Icon(
@@ -1275,10 +1251,8 @@ internal fun PersonalizedGiftCard(
         }
       }
     }
-    Text(text = reason, fontSize = 12.sp, color = Color(0xFF4A148C), modifier = Modifier.padding(top = 2.dp))
-    Text(text = preparation, fontSize = 12.sp, color = Color.DarkGray)
     if (priceLabel != null) {
-      Text(text = priceLabel, fontSize = 11.sp, color = Color.Gray)
+      Text(text = priceLabel, fontSize = 11.sp, color = Color.Gray, maxLines = 1)
     }
   }
 }
@@ -1363,24 +1337,26 @@ private fun PartnerPreferencesEditor(
             Triple(GetPersonalizedGiftSuggestionsUseCase.REGION_INTL, if (isEnglish) "International" else "Quốc tế", "partner_region_intl")
           ).forEach { (key, label, tag) ->
             val isSelected = region == key
-            FilterChip(
-              selected = isSelected,
-              onClick = { region = if (isSelected) "" else key },
-              label = { Text(text = label, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = Color(0xFFC2185B),
-                selectedLabelColor = Color.White,
-                containerColor = Color(0xFFFFF5F8),
-                labelColor = Color(0xFF6B2B50)
-              ),
-              border = FilterChipDefaults.filterChipBorder(
-                enabled = true,
-                selected = isSelected,
-                borderColor = if (isSelected) Color(0xFFC2185B) else Color(0xFFFFD1DC)
-              ),
-              shape = RoundedCornerShape(14.dp),
-              modifier = Modifier.testTag(tag)
-            )
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(6.dp),
+              modifier = Modifier
+                .heightIn(min = 40.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(if (isSelected) Color(0xFFC2185B) else Color(0xFFFFF5F8))
+                .clickable { region = if (isSelected) "" else key }
+                .animateContentSize()
+                .padding(horizontal = 12.dp)
+                .testTag(tag)
+            ) {
+              Icon(
+                imageVector = if (key == GetPersonalizedGiftSuggestionsUseCase.REGION_VN) Icons.Filled.Flag else Icons.Filled.Public,
+                contentDescription = label,
+                tint = if (isSelected) Color.White else Color(0xFF6B2B50),
+                modifier = Modifier.size(18.dp)
+              )
+              if (isSelected) Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
           }
         }
         if (!profileExists) {

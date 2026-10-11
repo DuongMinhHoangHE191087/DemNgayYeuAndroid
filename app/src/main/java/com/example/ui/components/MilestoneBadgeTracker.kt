@@ -451,7 +451,7 @@ fun MilestoneBadgeDashboardCard(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(18.dp)
+        .padding(12.dp)
     ) {
       // Top Title Row
       Row(
@@ -462,7 +462,7 @@ fun MilestoneBadgeDashboardCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
           Box(
             modifier = Modifier
-              .size(40.dp)
+              .size(32.dp)
               .clip(CircleShape)
               .background(
                 Brush.linearGradient(listOf(Color(0xFFFF80AB), Color(0xFFFF4081)))
@@ -473,21 +473,16 @@ fun MilestoneBadgeDashboardCard(
               imageVector = Icons.Filled.MilitaryTech,
               contentDescription = null,
               tint = Color.White,
-              modifier = Modifier.size(24.dp)
+              modifier = Modifier.size(20.dp)
             )
           }
-          Spacer(modifier = Modifier.width(10.dp))
+          Spacer(modifier = Modifier.width(8.dp))
           Column {
             Text(
-              text = if (appLanguage == AppLanguage.VI) "HUY HIỆU & CỘT MỐC TÌNH YÊU" else "LOVE MILESTONES & BADGES",
-              fontSize = 11.sp,
-              fontWeight = FontWeight.ExtraBold,
-              color = Primary,
-              letterSpacing = 0.8.sp
-            )
-            Text(
               text = rankTitle,
-              fontSize = 15.sp,
+              fontSize = 14.sp,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF26071B)
             )
@@ -521,7 +516,7 @@ fun MilestoneBadgeDashboardCard(
         }
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
+      Spacer(modifier = Modifier.height(8.dp))
 
       // Master Progress Bar with Heart
       val overallProgress = (unlockedCount.toFloat() / totalBadges.toFloat()).coerceIn(0f, 1f)
@@ -532,39 +527,17 @@ fun MilestoneBadgeDashboardCard(
       )
 
       Column {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-          Text(
-            text = if (appLanguage == AppLanguage.VI) {
-              "Đã mở khóa $unlockedCount huy hiệu trái tim"
-            } else {
-              "Unlocked $unlockedCount heart badges"
-            },
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF555555)
-          )
-          Text(
-            text = "${(overallProgress * 100).toInt()}%",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = Primary
-          )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
         Box(
           modifier = Modifier
             .fillMaxWidth()
-            .height(10.dp)
+            .height(8.dp)
             .clip(RoundedCornerShape(50.dp))
             .background(Color(0xFFF5E6EC))
         ) {
           Box(
             modifier = Modifier
               .fillMaxWidth(animatedOverallProgress)
-              .height(10.dp)
+              .height(8.dp)
               .clip(RoundedCornerShape(50.dp))
               .background(
                 Brush.horizontalGradient(
@@ -575,89 +548,9 @@ fun MilestoneBadgeDashboardCard(
         }
       }
 
-      Spacer(modifier = Modifier.height(14.dp))
-
-      // Next Upcoming Milestone Countdown Teaser
-      if (nextLockedBadge != null) {
-        val daysLeft = nextLockedBadge.targetDays - loveDays
-        val badgeTitle = if (appLanguage == AppLanguage.VI) nextLockedBadge.titleVi else nextLockedBadge.titleEn
-
-        Surface(
-          shape = RoundedCornerShape(16.dp),
-          color = Color(0xFFFFF7F9),
-          border = BorderStroke(1.dp, Color(0xFFFFD5E5)),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.weight(1f)
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(34.dp)
-                  .clip(CircleShape)
-                  .background(Color(0xFFFFE4EC)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.HourglassTop,
-                  contentDescription = null,
-                  tint = Color(0xFFFF4081),
-                  modifier = Modifier.size(18.dp)
-                )
-              }
-              Spacer(modifier = Modifier.width(10.dp))
-              Column {
-                Text(
-                  text = if (appLanguage == AppLanguage.VI) "Mốc thưởng tiếp theo:" else "Next reward milestone:",
-                  fontSize = 11.sp,
-                  color = Color(0xFF777777),
-                  fontWeight = FontWeight.Medium
-                )
-                Text(
-                  text = "${nextLockedBadge.targetDays} Ngày • $badgeTitle",
-                  fontSize = 13.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color(0xFF26071B),
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis
-                )
-              }
-            }
-
-            Surface(
-              shape = RoundedCornerShape(20.dp),
-              color = Primary,
-              shadowElevation = 2.dp
-            ) {
-              Text(
-                text = if (appLanguage == AppLanguage.VI) "Còn $daysLeft ngày" else "${daysLeft}d left",
-                color = Color.White,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-              )
-            }
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-      }
+      Spacer(modifier = Modifier.height(8.dp))
 
       // Horizontal Badges Quick Preview Strip
-      Text(
-        text = if (appLanguage == AppLanguage.VI) "Bộ Sưu Tập Huy Hiệu Nổi Bật" else "Featured Heart Badges",
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFF333333),
-        modifier = Modifier.padding(bottom = 8.dp)
-      )
-
       Row(
         modifier = Modifier
           .fillMaxWidth()

@@ -461,6 +461,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     type: String = "LOVE",
     description: String = "",
     isAnnual: Boolean = true,
+    notificationEnabled: Boolean = true,
     reminderDaysBefore: Int = 3,
     daysRemaining: Int = 0,
     relationshipId: String? = null
@@ -472,7 +473,7 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
       type = type,
       description = description,
       isAnnual = isAnnual,
-      notificationEnabled = true,
+      notificationEnabled = notificationEnabled,
       reminderDaysBefore = reminderDaysBefore,
       daysRemaining = daysRemaining,
       createdAt = now,

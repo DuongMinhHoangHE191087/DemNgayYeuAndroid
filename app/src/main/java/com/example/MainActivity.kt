@@ -35,6 +35,8 @@ import com.example.ui.components.FloatingHeartsOverlay
 import com.example.ui.components.InLoveBottomNav
 import com.example.ui.components.InLoveTopBar
 import com.example.ui.components.MilestoneBadgeShowcaseDialog
+import com.example.ui.components.NotificationsSheet
+import com.example.ui.components.rememberHasUnreadNotifications
 import com.example.ui.screens.AddAnniversaryDateDialog
 import com.example.ui.screens.AddChecklistDialog
 import com.example.ui.screens.AddGiftReminderDialog
@@ -107,6 +109,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val floatingHeartsTrigger by viewModel.floatingHeartsTrigger.collectAsState()
   val isMilestoneCelebration by viewModel.isMilestoneCelebration.collectAsState()
 
+  val showNotifications by viewModel.showNotifications.collectAsState()
+  val hasUnreadNotifications = rememberHasUnreadNotifications(viewModel)
   val showAddReminderDialog by viewModel.showAddReminderDialog.collectAsState()
   val showAddMilestoneDialog by viewModel.showAddMilestoneDialog.collectAsState()
   val showAddChecklistDialog by viewModel.showAddChecklistDialog.collectAsState()
@@ -150,8 +154,13 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val currentRegistryOwner = androidx.activity.compose.LocalActivityResultRegistryOwner.current
     ?: (rawContext as? androidx.activity.result.ActivityResultRegistryOwner)
 
+  // Wrap the real Activity (not createConfigurationContext's bare ContextImpl) so startActivity()
+  // and findActivity() keep working; only the resources are localized.
   val context = remember(rawContext, configuration) {
-    rawContext.createConfigurationContext(configuration)
+    val localizedResources = rawContext.createConfigurationContext(configuration).resources
+    object : android.content.ContextWrapper(rawContext) {
+      override fun getResources() = localizedResources
+    }
   }
 
   val compositionLocals = remember(configuration, context, currentRegistryOwner) {
@@ -193,7 +202,6 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     LaunchedEffect(toastMessage) {
       toastMessage?.let { msg ->
-        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
         snackbarHostState.showSnackbar(msg)
         viewModel.clearToast()
       }
@@ -311,13 +319,9 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
             InLoveTopBar(
               title = screenTitle,
-              onHeartClick = {
-                viewModel.triggerFloatingHearts()
-                viewModel.showToast(strings.countingDaysNotice.format(loveDays))
-              },
-              onProfileClick = {
-                viewModel.setTab(4)
-              },
+              hasUnread = hasUnreadNotifications,
+              onBellClick = { viewModel.setShowNotifications(true) },
+              onProfileClick = { viewModel.openEditProfileDialog() },
               includeStatusBarPadding = isVip
             )
           }
@@ -414,6 +418,10 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       )
     }
 
+    if (showNotifications) {
+      NotificationsSheet(viewModel = viewModel, onDismiss = { viewModel.setShowNotifications(false) })
+    }
+
     if (showAddReminderDialog) {
       AddReminderDialog(
         onDismiss = { viewModel.closeAddReminderDialog() },
@@ -448,9 +456,9 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
         initialDateText = prefilledAnniversaryDate,
         onDismiss = { viewModel.closeAddAnniversaryDialog() },
-        onConfirm = { title, dateText, type, description, isAnnual, reminderDaysBefore ->
-          requestNotificationPermission()
-          viewModel.addAnniversaryDate(title, dateText, type, description, isAnnual, reminderDaysBefore)
+        onConfirm = { title, dateText, type, description, isAnnual, notificationEnabled, reminderDaysBefore ->
+          if (notificationEnabled) requestNotificationPermission()
+          viewModel.addAnniversaryDate(title, dateText, type, description, isAnnual, notificationEnabled, reminderDaysBefore)
         }
       )
     }

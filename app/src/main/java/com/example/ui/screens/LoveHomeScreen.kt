@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +53,7 @@ import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
@@ -66,6 +68,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.ui.components.AnniversaryMemoriesWidget
 import com.example.ui.components.LoveDaysCalculatorWidget
 import com.example.ui.components.MilestoneBadgeDashboardCard
+import com.example.ui.components.NotificationBellButton
+import com.example.ui.components.rememberHasUnreadNotifications
+import com.example.ui.components.ProfileAvatarButton
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
 import androidx.compose.material3.Button
@@ -330,29 +335,35 @@ fun LoveHomeScreen(
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       // Top Quick Action Bar: Symmetrical, cohesive, soft pastel glassmorphic card
+      // +4dp so the avatar's right edge matches InLoveTopBar's 16dp gutter on the other tabs.
+      Row(
+        modifier = Modifier.padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
       Surface(
         shape = RoundedCornerShape(20.dp),
         color = Color.White.copy(alpha = 0.98f),
         shadowElevation = 4.dp,
         modifier = Modifier
-          .fillMaxWidth()
+          .weight(1f)
           .border(
             width = 1.2.dp,
             color = CardBorder,
             shape = RoundedCornerShape(20.dp)
           )
-          .padding(vertical = 2.dp)
+          .padding(vertical = 0.dp)
       ) {
         Row(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 6.dp),
+            .padding(horizontal = 4.dp, vertical = 2.dp),
           horizontalArrangement = Arrangement.SpaceAround,
           verticalAlignment = Alignment.CenterVertically
         ) {
           // 1. Change Wallpaper
           HomeQuickActionButton(
-            icon = Icons.Rounded.Favorite,
+            icon = Icons.Filled.Wallpaper,
             label = strings.actionWallpaper,
             onClick = { viewModel.openWallpaperDialog() },
             testTag = "btn_quick_wallpaper",
@@ -368,15 +379,6 @@ fun LoveHomeScreen(
             modifier = Modifier.weight(1f)
           )
 
-          // 3. Edit Partner / Companion Profile
-          HomeQuickActionButton(
-            icon = Icons.Filled.VolunteerActivism,
-            label = strings.actionCouple,
-            onClick = { viewModel.openEditCoupleDialog() },
-            testTag = "btn_quick_couple",
-            modifier = Modifier.weight(1f)
-          )
-
           // 4. User Guide
           HomeQuickActionButton(
             icon = Icons.AutoMirrored.Filled.MenuBook,
@@ -385,18 +387,15 @@ fun LoveHomeScreen(
             testTag = "btn_quick_guide",
             modifier = Modifier.weight(1f)
           )
-
-          // 5. Language Switcher (VI / EN)
-          HomeQuickActionButton(
-            icon = Icons.Filled.Language,
-            label = if (appLanguage == AppLanguage.VI) "VI 🇻🇳" else "EN 🇬🇧",
-            onClick = { viewModel.openLanguageDialog() },
-            testTag = "btn_quick_language",
-            modifier = Modifier.weight(1f)
-          )
         }
       }
-
+      NotificationBellButton(
+        hasUnread = rememberHasUnreadNotifications(viewModel),
+        onClick = { viewModel.setShowNotifications(true) }
+      )
+      ProfileAvatarButton(onClick = { viewModel.openEditProfileDialog() })
+      }
+      Spacer(modifier = Modifier.height(8.dp))
 
 
       // Offline Banner — backed by AppServiceLocator's NetworkMonitor, which was already
@@ -565,55 +564,21 @@ fun LoveHomeScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = if (isEnglish) "Pair 1-1 (Set Love) to sync love days in real-time with your partner"
-                     else "Ghép đôi 1-1 (Set Love) để đồng bộ ngày yêu cùng người ấy",
+              text = if (isEnglish) "Pair with your partner" else "Ghép đôi cùng người ấy",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = TextDarkPlum,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
               modifier = Modifier.weight(1f)
             )
             Text(
-              text = if (isEnglish) "Pair Now >" else "Bấm để ghép >",
+              text = if (isEnglish) "Pair >" else "Ghép >",
               fontSize = 11.5.sp,
               fontWeight = FontWeight.ExtraBold,
               color = Primary
             )
           }
-        }
-      }
-
-      // Romantic Pastel Streak Badge
-      Surface(
-        shape = RoundedCornerShape(50.dp),
-        color = Color(0xFFFFF0F5).copy(alpha = 0.95f),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
-        shadowElevation = 3.dp,
-        modifier = Modifier.padding(bottom = 6.dp)
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(6.dp),
-          modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Favorite,
-            contentDescription = null,
-            tint = Color(0xFFFF4081),
-            modifier = Modifier.size(13.dp)
-          )
-          Text(
-            text = if (isEnglish) "BOUND BY LOVE" else "GẮN KẾT YÊU THƯƠNG",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF880E4F),
-            letterSpacing = 1.sp
-          )
-          Icon(
-            imageVector = Icons.Filled.Favorite,
-            contentDescription = null,
-            tint = Color(0xFFFF4081),
-            modifier = Modifier.size(13.dp)
-          )
         }
       }
 
@@ -673,28 +638,20 @@ fun LoveHomeScreen(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(4.dp),
               modifier = Modifier
+                .widthIn(max = counterSurfaceSize - 24.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable { showEditLoveTitleDialog = true }
                 .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
-              Icon(
-                imageVector = Icons.Outlined.FavoriteBorder,
-                contentDescription = null,
-                tint = Color(0xFFFF80AB),
-                modifier = Modifier.size(14.dp)
-              )
               Text(
                 text = loveTitle,
                 fontSize = daysTitleFontSize,
                 fontWeight = FontWeight.Bold,
                 color = Primary,
-                letterSpacing = 0.5.sp
-              )
-              Icon(
-                imageVector = Icons.Filled.Edit,
-                contentDescription = "Edit Love Title",
-                tint = Primary.copy(alpha = 0.7f),
-                modifier = Modifier.size(13.dp)
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
               )
             }
 
@@ -768,7 +725,6 @@ fun LoveHomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
               .weight(1f)
-              .clickable { viewModel.openEditProfileDialog() }
               .testTag("current_user_profile_col")
           ) {
             Box(
@@ -781,29 +737,15 @@ fun LoveHomeScreen(
                   .clip(CircleShape)
                   .border(2.dp, Color(0xFF81D4FA), CircleShape)
                   .shadow(3.dp, CircleShape)
+                  .background(Color(0xFFE1F5FE)),
+                contentAlignment = Alignment.Center
               ) {
+                Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF81D4FA), modifier = Modifier.size(avatarInnerSize / 2))
                 AsyncImage(
                   model = currentOnlineUser.avatarUrl.ifEmpty { boyAvatarUrl },
                   contentDescription = currentOnlineUser.effectiveDisplayName,
                   contentScale = ContentScale.Crop,
                   modifier = Modifier.fillMaxSize()
-                )
-              }
-              // Mini edit badge
-              Box(
-                modifier = Modifier
-                  .size(20.dp)
-                  .align(Alignment.BottomEnd)
-                  .clip(CircleShape)
-                  .background(Color(0xFFE0F7FA))
-                  .border(1.5.dp, Color.White, CircleShape),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Edit,
-                  contentDescription = "Chỉnh sửa hồ sơ",
-                  tint = Color(0xFF00ACC1),
-                  modifier = Modifier.size(11.dp)
                 )
               }
             }
@@ -841,44 +783,50 @@ fun LoveHomeScreen(
                   )
                 }
               } else {
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFE0F7FA)
-                ) {
-                  Text(
-                    text = if (currentOnlineUser.age > 0) "${currentOnlineUser.age}t" else "$boyAge t",
-                    color = Color(0xFF00838F),
-                    fontSize = 10.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                  )
+                val myAge = if (currentOnlineUser.age > 0) currentOnlineUser.age else boyAge
+                if (myAge > 0) {
+                  Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = Color(0xFFE0F7FA)
+                  ) {
+                    Text(
+                      text = "${myAge}t",
+                      color = Color(0xFF00838F),
+                      fontSize = 10.5.sp,
+                      fontWeight = FontWeight.Bold,
+                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                  }
                 }
 
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFF3E5F5)
-                ) {
-                  Text(
-                    text = currentOnlineUser.zodiac.ifEmpty { boyZodiac },
-                    color = Color(0xFF7B1FA2),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                  )
+                val myZodiac = currentOnlineUser.zodiac.ifEmpty { boyZodiac }
+                if (myZodiac.isNotBlank()) {
+                  Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = Color(0xFFF3E5F5)
+                  ) {
+                    Text(
+                      text = myZodiac,
+                      color = Color(0xFF7B1FA2),
+                      fontSize = 10.sp,
+                      fontWeight = FontWeight.SemiBold,
+                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                  }
                 }
               }
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-              text = currentOnlineUser.birthDate.ifBlank {
-                boyBirthDate.ifEmpty { if (isEnglish) "Tap to set" else "Bấm để cài đặt" }
-              },
-              fontSize = 10.5.sp,
-              fontWeight = FontWeight.Medium,
-              color = TextSubtlePlum
-            )
+            val myBirth = currentOnlineUser.birthDate.ifBlank { boyBirthDate }
+            if (myBirth.isNotBlank()) {
+              Spacer(modifier = Modifier.height(2.dp))
+              Text(
+                text = myBirth,
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextSubtlePlum
+              )
+            }
           }
 
           // Center: Beating Romantic Heart Button with Dual Love Expanding Waves
@@ -1059,23 +1007,6 @@ fun LoveHomeScreen(
                     modifier = Modifier.fillMaxSize()
                   )
                 }
-                // Mini edit badge
-                Box(
-                  modifier = Modifier
-                    .size(20.dp)
-                    .align(Alignment.BottomEnd)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFCE4EC))
-                    .border(1.5.dp, Color.White, CircleShape),
-                  contentAlignment = Alignment.Center
-                ) {
-                  Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = if (isEnglish) "Edit Partner" else "Chỉnh sửa người thương",
-                    tint = Color(0xFFFF4081),
-                    modifier = Modifier.size(11.dp)
-                  )
-                }
               }
 
               Spacer(modifier = Modifier.height(4.dp))
@@ -1138,14 +1069,15 @@ fun LoveHomeScreen(
                 }
               }
 
-              Spacer(modifier = Modifier.height(2.dp))
-
-              Text(
-                text = girlBirthDate.ifEmpty { if (isEnglish) "Tap to edit" else "Chạm để chỉnh sửa" },
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextSubtlePlum
-              )
+              if (girlBirthDate.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                  text = girlBirthDate,
+                  fontSize = 10.5.sp,
+                  fontWeight = FontWeight.Medium,
+                  color = TextSubtlePlum
+                )
+              }
             }
           }
         }
@@ -1212,17 +1144,17 @@ fun LoveHomeScreen(
         Column(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(12.dp)
         ) {
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
           ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
               Box(
                 modifier = Modifier
-                  .size(36.dp)
+                  .size(32.dp)
                   .clip(CircleShape)
                   .background(Color(0xFFFCE4EC)),
                 contentAlignment = Alignment.Center
@@ -1237,17 +1169,12 @@ fun LoveHomeScreen(
               Spacer(modifier = Modifier.width(8.dp))
               Column {
                 Text(
-                  text = strings.nextMilestoneHeader,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.ExtraBold,
-                  color = Primary,
-                  letterSpacing = 0.8.sp
-                )
-                Text(
                   text = String.format(strings.nextMilestoneTitle, nextMilestone),
-                  fontSize = 16.sp,
+                  fontSize = 14.sp,
                   fontWeight = FontWeight.Bold,
-                  color = TextDarkPlum
+                  color = TextDarkPlum,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis
                 )
               }
             }
@@ -1304,25 +1231,6 @@ fun LoveHomeScreen(
 
           Spacer(modifier = Modifier.height(10.dp))
 
-          // Sweet Advice Box in Soft Pastel Tint
-          Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = Color(0xFFFFF7FA),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD1DF)),
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Text(
-              text = String.format(strings.romanticAdviceFormat, daysRemaining, nextMilestone, girlName),
-              fontSize = 12.sp,
-              lineHeight = 18.sp,
-              fontWeight = FontWeight.Medium,
-              color = TextDarkPlum,
-              modifier = Modifier.padding(10.dp)
-            )
-          }
-
-          Spacer(modifier = Modifier.height(12.dp))
-
           // Action Buttons: Gifts and Calendar
           Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1350,7 +1258,9 @@ fun LoveHomeScreen(
                 text = strings.btnGiftIdeas,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
               )
             }
 
@@ -1376,7 +1286,9 @@ fun LoveHomeScreen(
                 text = strings.btnAnniversaryCalendar,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
               )
             }
           }
@@ -1414,11 +1326,13 @@ fun LoveHomeScreen(
               text = if (isMilestoneReached) {
                 strings.milestoneCelebrationTitle
               } else {
-                "${strings.milestoneCelebrationBtn} (${String.format(strings.nextMilestoneTitle, nextMilestone)})"
+                strings.milestoneCelebrationBtn
               },
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
-              color = Color.White
+              color = Color.White,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis
             )
           }
         }
@@ -1644,7 +1558,7 @@ fun HomeQuickActionButton(
   ) {
     Box(
       modifier = Modifier
-        .size(36.dp)
+        .size(34.dp)
         .clip(CircleShape)
         .background(
           Brush.linearGradient(
@@ -1661,15 +1575,6 @@ fun HomeQuickActionButton(
         modifier = Modifier.size(17.dp)
       )
     }
-    Spacer(modifier = Modifier.height(3.dp))
-    Text(
-      text = label,
-      fontSize = 10.sp,
-      fontWeight = FontWeight.Bold,
-      color = TextDarkPlum,
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis
-    )
   }
 }
 

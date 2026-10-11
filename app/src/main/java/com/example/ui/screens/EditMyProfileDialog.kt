@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -133,7 +135,7 @@ fun EditMyProfileDialog(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = if (isEnglish) "Personal Profile Setup" else "Thiết Lập Hồ Sơ Cá Nhân",
+              text = if (isEnglish) "My profile" else "Hồ sơ của tôi",
               fontSize = 18.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF880E4F)
@@ -152,13 +154,7 @@ fun EditMyProfileDialog(
           }
         }
 
-        Text(
-          text = if (isEnglish) "You can only edit your own profile. Zodiac and age are automatically calculated from your birthday."
-                 else "Bạn chỉ có thể chỉnh sửa hồ sơ của chính mình. Cung hoàng đạo và tuổi sẽ tự động tính từ ngày sinh.",
-          fontSize = 12.sp,
-          color = Color.Gray,
-          modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 14.dp)
-        )
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Avatar Preview
         Box(
@@ -225,7 +221,7 @@ fun EditMyProfileDialog(
         OutlinedTextField(
           value = displayName,
           onValueChange = { displayName = it },
-          label = { Text(if (isEnglish) "Your Display Name" else "Tên hiển thị của bạn") },
+          label = { Text(if (isEnglish) "Name" else "Tên") },
           placeholder = { Text(if (isEnglish) "Leave empty to show 'Anonymous'" else "Để trống sẽ hiển thị 'Vô danh'") },
           singleLine = true,
           shape = RoundedCornerShape(14.dp),
@@ -245,26 +241,29 @@ fun EditMyProfileDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          FilterChip(
-            selected = gender == "MALE",
-            onClick = { gender = "MALE" },
-            label = { Text(if (isEnglish) "Male ♂" else "Nam ♂") },
-            colors = FilterChipDefaults.filterChipColors(
-              selectedContainerColor = Color(0xFFE1F5FE),
-              selectedLabelColor = Color(0xFF0288D1)
-            ),
-            modifier = Modifier.weight(1f)
-          )
-          FilterChip(
-            selected = gender == "FEMALE",
-            onClick = { gender = "FEMALE" },
-            label = { Text(if (isEnglish) "Female ♀" else "Nữ ♀") },
-            colors = FilterChipDefaults.filterChipColors(
-              selectedContainerColor = Color(0xFFFCE4EC),
-              selectedLabelColor = Color(0xFFC2185B)
-            ),
-            modifier = Modifier.weight(1f)
-          )
+          listOf(
+            Triple("MALE", Icons.Filled.Male, Color(0xFF0288D1)),
+            Triple("FEMALE", Icons.Filled.Female, Color(0xFFC2185B))
+          ).forEach { (key, icon, tint) ->
+            val selected = gender == key
+            Box(
+              contentAlignment = Alignment.Center,
+              modifier = Modifier
+                .weight(1f)
+                .height(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(if (selected) tint.copy(alpha = 0.14f) else Color(0xFFF5F5F5))
+                .border(if (selected) 1.5.dp else 0.dp, tint, RoundedCornerShape(14.dp))
+                .clickable { gender = key }
+            ) {
+              Icon(
+                imageVector = icon,
+                contentDescription = if (key == "MALE") (if (isEnglish) "Male" else "Nam") else (if (isEnglish) "Female" else "Nữ"),
+                tint = if (selected) tint else Color.Gray,
+                modifier = Modifier.size(24.dp)
+              )
+            }
+          }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -273,7 +272,7 @@ fun EditMyProfileDialog(
         OutlinedTextField(
           value = birthDate,
           onValueChange = { birthDate = it },
-          label = { Text(if (isEnglish) "Birthday (dd/MM/yyyy)" else "Ngày sinh (dd/MM/yyyy)") },
+          label = { Text(if (isEnglish) "Birthday" else "Ngày sinh") },
           placeholder = { Text("15/10/2004") },
           singleLine = true,
           shape = RoundedCornerShape(14.dp),
@@ -300,25 +299,15 @@ fun EditMyProfileDialog(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
           ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Icon(
-                imageVector = Icons.Default.AutoAwesome,
-                contentDescription = null,
-                tint = Color(0xFFE91E63),
-                modifier = Modifier.size(18.dp)
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = if (isEnglish) "Auto calculated:" else "Tự động tính:",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFC2185B)
-              )
-            }
-
+            Icon(
+              imageVector = Icons.Default.AutoAwesome,
+              contentDescription = null,
+              tint = Color(0xFFE91E63),
+              modifier = Modifier.size(18.dp)
+            )
             Text(
-              text = if (isEnglish) "$calculatedAge yrs • Sign ${calculatedZodiacPair.first} ${calculatedZodiacPair.second}"
-                     else "$calculatedAge tuổi • Cung ${calculatedZodiacPair.first} ${calculatedZodiacPair.second}",
+              text = if (isEnglish) "$calculatedAge yrs • ${calculatedZodiacPair.first} ${calculatedZodiacPair.second}"
+                     else "$calculatedAge tuổi • ${calculatedZodiacPair.first} ${calculatedZodiacPair.second}",
               fontSize = 12.sp,
               fontWeight = FontWeight.ExtraBold,
               color = Color(0xFF880E4F)
@@ -332,7 +321,7 @@ fun EditMyProfileDialog(
         OutlinedTextField(
           value = bio,
           onValueChange = { bio = it },
-          label = { Text(if (isEnglish) "Loving bio / introduction" else "Lời nhắn nhủ / Giới thiệu") },
+          label = { Text(if (isEnglish) "Bio" else "Giới thiệu") },
           placeholder = { Text(if (isEnglish) "Always loving and by your side 💕" else "Yêu thương và luôn ở bên em 💕") },
           shape = RoundedCornerShape(14.dp),
           maxLines = 3,
@@ -375,7 +364,7 @@ fun EditMyProfileDialog(
           ) {
             Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(6.dp))
-            Text(if (isEnglish) "Save Profile" else "Lưu hồ sơ", fontWeight = FontWeight.Bold)
+            Text(if (isEnglish) "Save" else "Lưu", fontWeight = FontWeight.Bold, maxLines = 1)
           }
         }
       }

@@ -5,6 +5,7 @@ import com.example.ui.util.AppLanguage
 import java.util.Calendar
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -59,6 +60,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -314,8 +319,8 @@ fun CalendarScreen(
       modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 16.dp),
-      contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
-      verticalArrangement = Arrangement.spacedBy(16.dp)
+      contentPadding = PaddingValues(top = 8.dp, bottom = 140.dp),
+      verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
       // 1. Month Bar & Navigation
       item {
@@ -328,14 +333,6 @@ fun CalendarScreen(
         val monthNamesVi = listOf(
           "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
           "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
-        )
-        val monthShortEn = listOf(
-          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        )
-        val monthShortVi = listOf(
-          "T1", "T2", "T3", "T4", "T5", "T6",
-          "T7", "T8", "T9", "T10", "T11", "T12"
         )
         Row(
           modifier = Modifier.fillMaxWidth(),
@@ -350,11 +347,11 @@ fun CalendarScreen(
               imageVector = Icons.Filled.CalendarToday,
               contentDescription = null,
               tint = Primary,
-              modifier = Modifier.size(24.dp)
+              modifier = Modifier.size(20.dp)
             )
             Text(
               text = if (isEnglish) "${monthNamesEn[displayMonth]} $displayYear" else "${monthNamesVi[displayMonth]}, $displayYear",
-              fontSize = 20.sp,
+              fontSize = 17.sp,
               fontWeight = FontWeight.Bold,
               color = OnSurface
             )
@@ -380,7 +377,7 @@ fun CalendarScreen(
                   }
                   calendarNavTick++
                 },
-                modifier = Modifier.size(48.dp).testTag("btn_calendar_prev")
+                modifier = Modifier.size(40.dp).testTag("btn_calendar_prev")
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronLeft,
@@ -389,13 +386,6 @@ fun CalendarScreen(
                   modifier = Modifier.size(18.dp)
                 )
               }
-              Text(
-                text = if (isEnglish) monthShortEn[displayMonth] else monthShortVi[displayMonth],
-                color = Primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                modifier = Modifier.padding(horizontal = 4.dp)
-              )
               IconButton(
                 onClick = {
                   if (activeViewMode == CalendarViewMode.MONTH) {
@@ -407,7 +397,7 @@ fun CalendarScreen(
                   }
                   calendarNavTick++
                 },
-                modifier = Modifier.size(48.dp).testTag("btn_calendar_next")
+                modifier = Modifier.size(40.dp).testTag("btn_calendar_next")
               ) {
                 Icon(
                   imageVector = Icons.Filled.ChevronRight,
@@ -448,7 +438,8 @@ fun CalendarScreen(
           horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
           filterOptions.forEach { (filterName, icon) ->
-            val isSelected = currentFilter == filterName
+            val isSelected = currentFilter == filterName ||
+              (filterName == "All (4)" && currentFilter == "Tất cả (4)") // VM default is Vietnamese
             Surface(
               shape = RoundedCornerShape(24.dp),
               color = if (isSelected) Color.Transparent else SurfaceContainerLowest.copy(alpha = 0.85f),
@@ -468,22 +459,27 @@ fun CalendarScreen(
                 .testTag("filter_pill_$filterName")
             ) {
               Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                modifier = Modifier
+                  .animateContentSize()
+                  .padding(horizontal = 12.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
               ) {
                 Icon(
                   imageVector = icon,
-                  contentDescription = null,
+                  contentDescription = filterName,
                   tint = if (isSelected) Color.White else OnSurfaceVariant,
-                  modifier = Modifier.size(16.dp)
+                  modifier = Modifier.size(18.dp)
                 )
-                Text(
-                  text = filterName,
-                  fontSize = 13.sp,
-                  fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                  color = if (isSelected) Color.White else OnSurfaceVariant
-                )
+                // Icon-only pills; only the selected one spells out its name.
+                if (isSelected) {
+                  Text(
+                    text = filterName,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                  )
+                }
               }
             }
           }
@@ -757,139 +753,6 @@ fun CalendarScreen(
               }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 3.3 Interactive Selected Day Schedule Card & Quick Reminder Upgrade
-            val selDay = selectedCal.get(Calendar.DAY_OF_MONTH)
-            val selMonth = selectedCal.get(Calendar.MONTH)
-            val selYear = selectedCal.get(Calendar.YEAR)
-            val formattedSelectedDate = String.format("%02d/%02d/%04d", selDay, selMonth + 1, selYear)
-            val dayMatchingMilestones = milestones.filter { matchesCalendarDay(it.dateText, selDay, selMonth) }
-            val dayMatchingAnniversaries = anniversaryDates.filter { matchesCalendarDay(it.dateText, selDay, selMonth) }
-
-            Surface(
-              shape = RoundedCornerShape(18.dp),
-              color = Color(0xFFFFF0F5),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFC0D3)),
-              modifier = Modifier.fillMaxWidth()
-            ) {
-              Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-              ) {
-                // Header: Selected Date Title & Event Count
-                Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically
-                ) {
-                  Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                  ) {
-                    Icon(
-                      imageVector = Icons.Filled.CalendarToday,
-                      contentDescription = null,
-                      tint = Primary,
-                      modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                      text = if (isEnglish) "Schedule for $formattedSelectedDate" else "Lịch hẹn ngày $formattedSelectedDate",
-                      fontWeight = FontWeight.Bold,
-                      fontSize = 13.sp,
-                      color = Primary
-                    )
-                  }
-
-                  val eventCount = dayMatchingMilestones.size + dayMatchingAnniversaries.size
-                  Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = if (eventCount > 0) Primary else Color(0xFFE0E0E0)
-                  ) {
-                    Text(
-                      text = if (isEnglish) "$eventCount events" else "$eventCount sự kiện",
-                      fontSize = 10.5.sp,
-                      fontWeight = FontWeight.Bold,
-                      color = if (eventCount > 0) Color.White else Color(0xFF616161),
-                      modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
-                  }
-                }
-
-                // Event list for this day if any
-                if (dayMatchingMilestones.isNotEmpty() || dayMatchingAnniversaries.isNotEmpty()) {
-                  dayMatchingMilestones.forEach { m ->
-                    Surface(
-                      shape = RoundedCornerShape(10.dp),
-                      color = Color.White,
-                      modifier = Modifier.fillMaxWidth()
-                    ) {
-                      Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                      ) {
-                        Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color(0xFFFF2D75), modifier = Modifier.size(15.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                          Text(m.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF26071B))
-                          if (m.subtitle.isNotBlank()) {
-                            Text(m.subtitle, fontSize = 11.sp, color = OnSurfaceVariant)
-                          }
-                        }
-                      }
-                    }
-                  }
-
-                  dayMatchingAnniversaries.forEach { a ->
-                    Surface(
-                      shape = RoundedCornerShape(10.dp),
-                      color = Color.White,
-                      modifier = Modifier.fillMaxWidth()
-                    ) {
-                      Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                      ) {
-                        Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = Color(0xFF8E24AA), modifier = Modifier.size(15.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                          Text(a.title, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF26071B))
-                          if (a.description.isNotBlank()) {
-                            Text(a.description, fontSize = 11.sp, color = OnSurfaceVariant)
-                          }
-                        }
-                      }
-                    }
-                  }
-                } else {
-                  Text(
-                    text = if (isEnglish) "No reminders or milestones yet for this date." else "Chưa có lời nhắc hoặc kỷ niệm nào trong ngày này.",
-                    fontSize = 11.5.sp,
-                    color = OnSurfaceVariant
-                  )
-                }
-
-                // Quick Action Button: Add Reminder with pre-filled selected date
-                Button(
-                  onClick = { viewModel.openAddAnniversaryDialog(formattedSelectedDate) },
-                  shape = RoundedCornerShape(12.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .height(38.dp)
-                    .testTag("btn_quick_add_reminder_date")
-                ) {
-                  Icon(Icons.Filled.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(15.dp))
-                  Spacer(modifier = Modifier.width(6.dp))
-                  Text(
-                    text = if (isEnglish) "Add Reminder for This Day" else "Thêm Nhắc Hẹn Cho Ngày Này",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                  )
-                }
-              }
-            }
           }
         }
       }
@@ -946,113 +809,20 @@ fun CalendarScreen(
                     color = OnSurface
                   )
                   Text(
-                    text = if (isEnglish) "Stored in Room (${anniversaryDates.size} special dates)" else "Lưu trữ Room (${anniversaryDates.size} ngày đặc biệt)",
+                    text = if (isEnglish) "${anniversaryDates.size} special dates" else "${anniversaryDates.size} ngày đặc biệt",
                     fontSize = 11.sp,
                     color = OnSurfaceVariant
                   )
                 }
               }
 
-              Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Primary.copy(alpha = 0.1f),
-                modifier = Modifier
-                  .clickable { viewModel.openAddAnniversaryDialog() }
-                  .testTag("btn_add_anniversary_header")
-              ) {
-                Row(
-                  modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                  Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(15.dp)
-                  )
-                  Text(
-                    text = if (isEnglish) "Add Date" else "Thêm ngày",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Primary
-                  )
-                }
-              }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Notification quick action triggers
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(8.dp),
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = PrimaryFixed.copy(alpha = 0.45f),
-                modifier = Modifier
-                  .weight(1f)
-                  .clickable { viewModel.triggerTestAnniversaryNotification() }
-                  .testTag("btn_test_anniversary_notification")
-              ) {
-                Row(
-                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.Center
-                ) {
-                  Icon(
-                    imageVector = Icons.Filled.NotificationsActive,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(14.dp)
-                  )
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text(
-                    text = if (isEnglish) "Test Alarm 🔔" else "Thử chuông báo 🔔",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Primary
-                  )
-                }
-              }
-
-              Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = SecondaryContainer.copy(alpha = 0.5f),
-                modifier = Modifier
-                  .weight(1f)
-                  .clickable { viewModel.resyncAllAnniversaryAlarms() }
-                  .testTag("btn_resync_anniversary_alarms")
-              ) {
-                Row(
-                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.Center
-                ) {
-                  Icon(
-                    imageVector = Icons.Filled.Alarm,
-                    contentDescription = null,
-                    tint = Secondary,
-                    modifier = Modifier.size(14.dp)
-                  )
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text(
-                    text = if (isEnglish) "Resync ⏰" else "Đồng bộ lại ⏰",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Secondary
-                  )
-                }
-              }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             if (anniversaryDates.isEmpty()) {
               Text(
-                text = if (isEnglish) "No custom anniversaries yet. Tap 'Add Date' to save your love story or special dates." else "Chưa có ngày kỷ niệm riêng. Nhấn 'Thêm ngày' để lưu ngày bắt đầu yêu, hẹn hò hoặc kỷ niệm đáng nhớ.",
+                text = if (isEnglish) "Tap + to add your first date" else "Nhấn + để thêm ngày đầu tiên",
                 fontSize = 12.sp,
                 color = OnSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp)
@@ -1111,139 +881,47 @@ fun CalendarScreen(
         }
       }
 
-      // 5. Sync Card
-      item {
-        Surface(
-          shape = RoundedCornerShape(20.dp),
-          color = SurfaceContainerLowest.copy(alpha = 0.7f),
-          shadowElevation = 1.dp,
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(10.dp),
-              modifier = Modifier.weight(1f)
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(40.dp)
-                  .clip(RoundedCornerShape(12.dp))
-                  .background(SurfaceContainerHighest)
-              ) {
-                AsyncImage(
-                  model = "https://lh3.googleusercontent.com/aida-public/AB6AXuCg-PmA8kAH3aEsx4nS5akuDkkWQeWMutmW8Lc76ASO-JMvtiwMNbsTfuYqBGpez7bHTAYekQNilJ5X5BHaP78pQf4tATX48UynvtOeQWG8kcCF-v9OqIdcm1OAjLGtZsO1ygTFLVd9qW-yngUnwCmOtlFWn_wzhCPvYfzMcFLVzeEoOX9NuP8fk911cjdlzd0yv0FvSo3h7qg26BWqyaqSpVwTuvKoKaZ20NJLOUWeBfHbRlqMZcIwfI1FL31cw1WGBrQ",
-                  contentDescription = "Sync thumbnail",
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier.fillMaxSize()
-                )
-              }
-              Column {
-                Text(
-                  text = if (isEnglish) "Timeline Data Synchronized" else "Đồng bộ dữ liệu mốc thời gian",
-                  fontSize = 12.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Primary
-                )
-                Text(
-                  text = if (isEnglish) "Migrated 4 events from previous timeline" else "Đã chuyển 4 sự kiện từ danh sách cũ",
-                  fontSize = 11.sp,
-                  color = OnSurfaceVariant
-                )
-              }
-            }
-
-            Icon(
-              imageVector = Icons.Filled.Verified,
-              contentDescription = "Verified",
-              tint = Primary,
-              modifier = Modifier.size(20.dp)
-            )
-          }
-        }
-      }
+      // room so the floating + never covers the last card
+      item { Spacer(modifier = Modifier.height(72.dp)) }
     }
 
-    // 6. Floating Action Buttons: "+ Nhắc Hẹn" & "+ Cột Mốc"
-    Row(
+    // 6. One "+" FAB; the menu picks what to create (reminder on/off is in the anniversary dialog)
+    Box(
       modifier = Modifier
         .align(Alignment.BottomEnd)
-        .padding(end = 16.dp, bottom = 85.dp),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-      verticalAlignment = Alignment.CenterVertically
+        .padding(end = 16.dp, bottom = 85.dp)
     ) {
-      // "+ Nhắc Hẹn" Button
+      var menuOpen by remember { mutableStateOf(false) }
       Surface(
-        shape = RoundedCornerShape(50.dp),
+        shape = CircleShape,
         shadowElevation = 8.dp,
         color = Color(0xFFFF2D75),
         modifier = Modifier
-          .clip(RoundedCornerShape(50.dp))
-          .clickable { viewModel.openAddAnniversaryDialog() }
+          .size(52.dp)
+          .clip(CircleShape)
+          .clickable { menuOpen = true }
           .testTag("btn_fab_add_anniversary")
       ) {
-        Row(
-          modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
+        Box(contentAlignment = Alignment.Center) {
           Icon(
-            imageVector = Icons.Filled.NotificationsActive,
-            contentDescription = null,
+            imageVector = Icons.Filled.Add,
+            contentDescription = if (isEnglish) "Add" else "Thêm",
             tint = Color.White,
-            modifier = Modifier.size(18.dp)
-          )
-          Text(
-            text = if (isEnglish) "+ Reminder" else "+ Nhắc Hẹn",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
+            modifier = Modifier.size(26.dp)
           )
         }
       }
-
-      // "+ Cột Mốc" Button
-      Surface(
-        shape = RoundedCornerShape(50.dp),
-        shadowElevation = 8.dp,
-        modifier = Modifier
-          .clip(RoundedCornerShape(50.dp))
-          .background(
-            Brush.horizontalGradient(
-              listOf(RoseGradientStart, RoseGradientMid, RoseGradientEnd)
-            )
-          )
-          .clickable { viewModel.openAddMilestoneDialog() }
-          .testTag("btn_add_milestone")
-      ) {
-        Row(
-          modifier = Modifier
-            .background(
-              Brush.horizontalGradient(
-                listOf(RoseGradientStart, RoseGradientMid, RoseGradientEnd)
-              )
-            )
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Add,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(18.dp)
-          )
-          Text(
-            text = if (isEnglish) "+ Milestone" else "+ Cột Mốc",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
-          )
-        }
+      DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+        DropdownMenuItem(
+          text = { Text(if (isEnglish) "Anniversary date" else "Ngày kỷ niệm") },
+          leadingIcon = { Icon(Icons.Filled.Favorite, contentDescription = null, tint = Primary) },
+          onClick = { menuOpen = false; viewModel.openAddAnniversaryDialog() }
+        )
+        DropdownMenuItem(
+          text = { Text(if (isEnglish) "Milestone" else "Cột mốc") },
+          leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null, tint = Primary) },
+          onClick = { menuOpen = false; viewModel.openAddMilestoneDialog() }
+        )
       }
     }
   }
@@ -1289,44 +967,26 @@ fun AnniversaryDateRow(
             modifier = Modifier.size(18.dp)
           )
         }
-        Column {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-          ) {
-            Text(
-              text = item.title,
-              fontSize = 13.5.sp,
-              fontWeight = FontWeight.Bold,
-              color = OnSurface
-            )
-            Text(
-              text = item.dateText,
-              fontSize = 11.5.sp,
-              color = Primary,
-              fontWeight = FontWeight.SemiBold
-            )
-            if (item.description.isNotBlank()) {
-              Text(
-                text = "• ${item.description}",
-                fontSize = 11.sp,
-                color = OnSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-              )
-            }
-          }
+        Column(modifier = Modifier.weight(1f)) {
           Text(
-            text = if (item.notificationEnabled) {
-              if (item.reminderDaysBefore > 0) {
-                if (isEnglish) "🔔 Remind ${item.reminderDaysBefore} days before & on the day (09:00)" else "🔔 Nhắc trước ${item.reminderDaysBefore} ngày & đúng ngày (09:00)"
-              } else {
-                if (isEnglish) "🔔 Remind on anniversary date (09:00)" else "🔔 Nhắc đúng ngày kỷ niệm (09:00)"
+            text = item.title,
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = OnSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+          )
+          Text(
+            text = buildString {
+              append(item.dateText)
+              append(if (item.notificationEnabled) " · 🔔" else " · 🔕")
+              if (item.notificationEnabled && item.reminderDaysBefore > 0) {
+                append(if (isEnglish) " ${item.reminderDaysBefore}d before" else " trước ${item.reminderDaysBefore} ngày")
               }
-            } else {
-              if (isEnglish) "🔕 Notification off" else "🔕 Thông báo đã tắt"
             },
-            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 11.sp,
             color = if (item.notificationEnabled) Primary.copy(alpha = 0.85f) else OnSurfaceVariant.copy(alpha = 0.5f),
             fontWeight = if (item.notificationEnabled) FontWeight.Medium else FontWeight.Normal
           )
@@ -1335,11 +995,11 @@ fun AnniversaryDateRow(
 
       Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(0.dp)
       ) {
         IconButton(
           onClick = onToggleNotification,
-          modifier = Modifier.size(48.dp)
+          modifier = Modifier.size(44.dp)
         ) {
           Icon(
             imageVector = if (item.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
@@ -1351,7 +1011,7 @@ fun AnniversaryDateRow(
 
         IconButton(
           onClick = onDelete,
-          modifier = Modifier.size(48.dp)
+          modifier = Modifier.size(44.dp)
         ) {
           Icon(
             imageVector = Icons.Filled.Delete,
@@ -1384,7 +1044,7 @@ fun MilestoneCard(
       .fillMaxWidth()
       .testTag("milestone_card_${milestone.id}")
   ) {
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.padding(12.dp)) {
       // Top Tag Row + Notification & Alarm & Delete buttons
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1488,15 +1148,16 @@ fun MilestoneCard(
         }
 
         // Action Icons Row: Alarm + Notification + Delete
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
         Row(
-          horizontalArrangement = Arrangement.spacedBy(4.dp),
+          horizontalArrangement = Arrangement.spacedBy(2.dp),
           verticalAlignment = Alignment.CenterVertically
         ) {
           // Set Alarm button
           IconButton(
             onClick = onSetAlarm,
             modifier = Modifier
-              .size(48.dp)
+              .size(34.dp)
               .clip(CircleShape)
               .background(SurfaceContainer)
               .testTag("btn_alarm_milestone_${milestone.id}")
@@ -1514,7 +1175,7 @@ fun MilestoneCard(
             IconButton(
               onClick = onNotificationToggle,
               modifier = Modifier
-                .size(48.dp)
+                .size(34.dp)
                 .clip(CircleShape)
                 .background(SurfaceContainer)
                 .testTag("btn_notif_milestone_${milestone.id}")
@@ -1532,7 +1193,7 @@ fun MilestoneCard(
           IconButton(
             onClick = onDelete,
             modifier = Modifier
-              .size(48.dp)
+              .size(34.dp)
               .clip(CircleShape)
               .background(SurfaceContainer)
               .testTag("btn_delete_milestone_${milestone.id}")
@@ -1545,9 +1206,10 @@ fun MilestoneCard(
             )
           }
         }
+        }
       }
 
-      Spacer(modifier = Modifier.height(12.dp))
+      Spacer(modifier = Modifier.height(8.dp))
 
       // Middle: Image + Title/Date + Countdown Pill
       Row(
@@ -1558,9 +1220,8 @@ fun MilestoneCard(
         // Photo
         Box(
           modifier = Modifier
-            .size(64.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .shadow(2.dp)
+            .size(48.dp)
+            .clip(RoundedCornerShape(12.dp))
         ) {
           AsyncImage(
             model = milestone.imageUrl,
@@ -1596,9 +1257,10 @@ fun MilestoneCard(
               modifier = Modifier.size(13.dp)
             )
             Text(
-              text = "${milestone.dateText} • ${milestone.subtitle}",
+              text = milestone.dateText,
               fontSize = 11.sp,
-              color = OnSurfaceVariant
+              color = OnSurfaceVariant,
+              maxLines = 1
             )
           }
         }
@@ -1646,22 +1308,16 @@ fun MilestoneCard(
                   Modifier.background(SurfaceContainerHigh)
                 }
               )
-              .padding(horizontal = 10.dp, vertical = 6.dp),
+              .padding(horizontal = 10.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
           ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
               Text(
-                text = if (isEnglish) "LEFT" else "CÒN",
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (milestone.isImportant) Color.White.copy(alpha = 0.9f) else OnSurfaceVariant
-              )
-              Text(
                 text = "${milestone.daysRemaining}",
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = if (milestone.isImportant) Color.White else Primary,
-                lineHeight = 26.sp
+                lineHeight = 22.sp
               )
               Text(
                 text = if (isEnglish) "days" else "ngày",
@@ -1675,15 +1331,21 @@ fun MilestoneCard(
 
       // Progress bar if present (e.g. 1000 days)
       if (milestone.progressPercent != null) {
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Row(
           modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-          Text(
-            text = if (isEnglish) "Milestone Progress" else "Tiến trình mốc lớn",
-            fontSize = 11.sp,
-            color = OnSurfaceVariant
+          LinearProgressIndicator(
+            progress = { milestone.progressPercent / 100f },
+            modifier = Modifier
+              .weight(1f)
+              .height(6.dp)
+              .clip(RoundedCornerShape(50.dp)),
+            color = Primary,
+            trackColor = SurfaceContainerHighest,
+            strokeCap = StrokeCap.Round
           )
           Text(
             text = "${milestone.progressPercent}%",
@@ -1692,17 +1354,6 @@ fun MilestoneCard(
             color = Primary
           )
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        LinearProgressIndicator(
-          progress = { milestone.progressPercent / 100f },
-          modifier = Modifier
-            .fillMaxWidth()
-            .height(7.dp)
-            .clip(RoundedCornerShape(50.dp)),
-          color = Primary,
-          trackColor = SurfaceContainerHighest,
-          strokeCap = StrokeCap.Round
-        )
       }
 
       Spacer(modifier = Modifier.height(12.dp))
@@ -1726,7 +1377,7 @@ fun MilestoneCard(
                 .clickable { onGiftClick() }
             ) {
               Row(
-                modifier = Modifier.padding(vertical = 9.dp),
+                modifier = Modifier.padding(vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
               ) {
@@ -1738,7 +1389,7 @@ fun MilestoneCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = if (isEnglish) "Gift Ideas" else "Gợi ý quà tặng",
+                  text = if (isEnglish) "Gift ideas" else "Gợi ý quà",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnPrimaryFixedVariant
@@ -1752,7 +1403,7 @@ fun MilestoneCard(
               modifier = Modifier.clickable { onEditClick() }
             ) {
               Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
               ) {
@@ -1786,7 +1437,7 @@ fun MilestoneCard(
                 .clickable { onGiftClick() }
             ) {
               Row(
-                modifier = Modifier.padding(vertical = 9.dp),
+                modifier = Modifier.padding(vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
               ) {
@@ -1798,7 +1449,7 @@ fun MilestoneCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = if (isEnglish) "Surprise Ideas & Gifts" else "Ý tưởng bất ngờ & Quà",
+                  text = if (isEnglish) "Gift ideas" else "Gợi ý quà",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.Bold,
                   color = OnSurface
@@ -1833,7 +1484,7 @@ fun MilestoneCard(
               .clickable { onAlbumClick() }
           ) {
             Row(
-              modifier = Modifier.padding(vertical = 9.dp),
+              modifier = Modifier.padding(vertical = 7.dp),
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.Center
             ) {
@@ -1845,7 +1496,7 @@ fun MilestoneCard(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (isEnglish) "View memories album (12 photos)" else "Xem lại album kỷ niệm (12 ảnh)",
+                text = if (isEnglish) "Memories album" else "Album kỷ niệm",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
@@ -1862,7 +1513,7 @@ fun MilestoneCard(
               .clickable { onEditClick() }
           ) {
             Row(
-              modifier = Modifier.padding(vertical = 9.dp),
+              modifier = Modifier.padding(vertical = 7.dp),
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.Center
             ) {
@@ -1874,7 +1525,7 @@ fun MilestoneCard(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (isEnglish) "Plan a date" else "Lên kế hoạch hẹn hò",
+                text = if (isEnglish) "Plan a date" else "Lên kế hoạch",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnPrimaryFixedVariant
@@ -1939,68 +1590,12 @@ fun FirestoreMilestonesSchedulerCard(
               fontSize = 15.sp,
               color = OnSurface
             )
-            Text(
-              text = if (isEnglish) "Auto-scheduled from anniversary" else "Tự động lên lịch từ Ngày Yêu Firestore",
-              fontSize = 11.sp,
-              color = OnSurfaceVariant
-            )
-          }
-        }
-
-        Surface(
-          shape = RoundedCornerShape(20.dp),
-          color = PrimaryContainer.copy(alpha = 0.8f)
-        ) {
-          Text(
-            text = if (isEnglish) "3 Alert Tiers" else "3 Cấp Báo Thức",
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Primary,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(12.dp))
-
-      // Informative alert rhythm banner
-      Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = SurfaceContainerLow,
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Row(
-          modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-          horizontalArrangement = Arrangement.SpaceAround,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-          ) {
-            Text("🔔", fontSize = 12.sp)
-            Text(if (isEnglish) "3 days before" else "Trước 3 ngày", fontSize = 11.sp, color = OnSurfaceVariant)
-          }
-          Text("•", color = OnSurfaceVariant.copy(alpha = 0.4f))
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-          ) {
-            Text("🌹", fontSize = 12.sp)
-            Text(if (isEnglish) "1 day before" else "Trước 1 ngày", fontSize = 11.sp, color = OnSurfaceVariant)
-          }
-          Text("•", color = OnSurfaceVariant.copy(alpha = 0.4f))
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-          ) {
-            Text("🎉", fontSize = 12.sp)
-            Text(if (isEnglish) "On the day" else "Đúng ngày", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Bold)
           }
         }
       }
 
       Spacer(modifier = Modifier.height(12.dp))
+
 
       // List of upcoming milestones
       if (upcomingMilestones.isEmpty()) {
@@ -2044,7 +1639,7 @@ fun FirestoreMilestonesSchedulerCard(
                       color = OnSurface
                     )
                     Text(
-                      text = "${ms.formattedDate} • ${ms.description}",
+                      text = ms.formattedDate,
                       fontSize = 11.sp,
                       color = OnSurfaceVariant
                     )
