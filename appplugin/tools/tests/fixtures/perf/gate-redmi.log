@@ -1,0 +1,44 @@
+gate log: DOC/testing/device-gate-65c9b673-20261002-175738.log; app logs: DOC/testing/device-gate-app-65c9b673-20261002-175738-cold1.log DOC/testing/device-gate-app-65c9b673-20261002-175738-post.log DOC/testing/device-gate-app-65c9b673-20261002-175738-cold2.log DOC/testing/device-gate-app-65c9b673-20261002-175738-crash.log; variant: utility apk=/private/tmp/claude-501/-Users-dungdm-appplugin/577a403c-0c19-4566-9e5a-5509230d4c0f/scratchpad/ereal200/src/../utility.apk sha256=4c29d4decb26166307cb0d90ca4553b82ce18398154a2645676abd8bed5bdec8 bytes=9050591; mapping sha256=79c7437550cdd63b982771d88f66f648475904561ff1b76d98cd53053c731d82 api=34
+precheck docker=0 sink=up
+Performing Streamed Install
+Success
+sink: sink up (http://127.0.0.1:8111/health 200); jsonl=/Users/dungdm/appplugin/scratchpad/sink200-redmi/events.jsonl lines before=0
+allowlist: 7 regex (tools/device_gate_allowlist.txt) = ProviderInstaller: Failed to report request stats: java\.lang\.NoSuchMethodException: (com\.google\.android\.gms\.common\.security\.ProviderInstallerImpl\.)?reportRequestStats2|Rejecting re-init on previously-failed class java\.lang\.Class<com\.appsflyer\.internal\.AFf1lSDK\$2>: java\.lang\.NoClassDefFoundError: Failed resolution of: Lcom/appsflyer/lvl/AppsFlyerLVL\$resultListener;|Caused by: java\.lang\.ClassNotFoundException: Didn't find class "com\.appsflyer\.lvl\.AppsFlyerLVL\$resultListener" on path|Rejecting re-init on previously-failed class java\.lang\.Class<com\.appsflyer\.internal\.AFj1sSDK\$2>: java\.lang\.NoClassDefFoundError: Failed resolution of: Lcom/miui/referrer/api/GetAppsReferrerStateListener;|Caused by: java\.lang\.ClassNotFoundException: Didn't find class "com\.miui\.referrer\.api\.GetAppsReferrerStateListener" on path|Rejecting re-init on previously-failed class java\.lang\.Class<com\.appsflyer\.internal\.AFe1hSDK\$AFa1vSDK>: java\.lang\.NoClassDefFoundError: Failed resolution of: Lcom/samsung/android/game/cloudgame/dev/sdk/CloudDevCallback;|Caused by: java\.lang\.ClassNotFoundException: Didn't find class "com\.samsung\.android\.game\.cloudgame\.dev\.sdk\.CloudDevCallback" on path
+load cold start: host=8.64 8.57 10.77 device=2.62 4.17 3.53 1/8619 13023
+TotalTime: 497
+WaitTime: 500
+app pid=13037
+r8 strings after cold start=0 (raw=0, allowlisted=0; need 0)
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode cold start: violations=1, with sdk frame=0, by sdk=0 (prefs first load=0, other=0; retraced with /private/tmp/claude-501/-Users-dungdm-appplugin/577a403c-0c19-4566-9e5a-5509230d4c0f/scratchpad/ereal200/src/../utility-mapping.txt; by sdk = first app frame is SDK, not Application.super.onCreate), sdk frames=0
+strictmode gate cold start: by sdk=0 (need 0; 1.4.0: mọi vi phạm do SDK phải = 0, kể cả lần nạp SharedPreferences đầu: prefs first load=0, other=0)
+strictmode armed cold start: n=1 (need >= 1)
+metrics cold start: prefs warmup waited=0 ms, timeouts=0, onCreate main-thread ms=22, optional prefs ms=5, initPlugin ms=manager=10 meta=1 helper+gate=6 logevent=4 total=21, TotalTime ms=497
+  [coldstart] FATAL=0 native=0 am_anr=0
+load seed=1: host=8.32 8.51 10.70 device=2.22 3.98 3.48 1/8719 13337
+monkey seed=1 exit=0 crash/anr lines=0 (DOC/testing/device-gate-monkey-65c9b673-20261002-175738-seed1.log)
+  [seed=1] FATAL=0 native=0 am_anr=0
+load seed=2: host=7.49 8.29 10.56 device=9.19 5.44 3.97 1/5798 15825
+monkey seed=2 exit=0 crash/anr lines=0 (DOC/testing/device-gate-monkey-65c9b673-20261002-175738-seed2.log)
+  [seed=2] FATAL=0 native=0 am_anr=0
+load seed=3: host=7.22 8.20 10.46 device=12.31 6.42 4.33 7/5715 16347
+monkey seed=3 exit=0 crash/anr lines=0 (DOC/testing/device-gate-monkey-65c9b673-20261002-175738-seed3.log)
+  [seed=3] FATAL=0 native=0 am_anr=0
+r8 strings after monkey=0 (raw=0, allowlisted=0; need 0, pid: 13037)
+  [post-monkey] FATAL=0 native=0 am_anr=0
+load cold start 2: host=6.89 8.01 10.32 device=13.07 7.03 4.59 1/5726 16976
+pm clear test.sdk.zd: Success
+[cold start 2, non-EEA] TotalTime: 411
+WaitTime: 418
+app pid (cold start 2)=17095
+r8 strings after cold start 2 (non-EEA)=0 (raw=0, allowlisted=0; need 0)
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode cold start 2 (non-EEA, appsflyer): violations=2, with sdk frame=0, by sdk=0 (prefs first load=0, other=0; retraced with /private/tmp/claude-501/-Users-dungdm-appplugin/577a403c-0c19-4566-9e5a-5509230d4c0f/scratchpad/ereal200/src/../utility-mapping.txt; by sdk = first app frame is SDK, not Application.super.onCreate), sdk frames=0
+strictmode gate cold start 2 (non-EEA, appsflyer): by sdk=0 (need 0; 1.4.0: mọi vi phạm do SDK phải = 0, kể cả lần nạp SharedPreferences đầu: prefs first load=0, other=0)
+strictmode armed cold start 2: n=1 (need >= 1)
+metrics cold start 2: prefs warmup waited=0 ms, timeouts=0, onCreate main-thread ms=29, optional prefs ms=1, initPlugin ms=manager=17 meta=0 helper+gate=4 logevent=7 total=28, TotalTime ms=411
+appsflyer started cold start 2: n=1 (need >= 1; đường af.init chỉ được đo khi n >= 1)
+  [coldstart2] FATAL=0 native=0 am_anr=0
+FATAL=0 am_anr=0 native=0 (need 0/0/0)
+sink jsonl lines before=0 after=161 (+161)
+RESULT: PASS

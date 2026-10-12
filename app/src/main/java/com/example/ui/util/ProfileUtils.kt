@@ -8,9 +8,11 @@ import java.util.concurrent.TimeUnit
 
 object ProfileUtils {
 
-  private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
-    isLenient = false
-  }
+  // ponytail: new instance per access, SimpleDateFormat is not thread-safe. ThreadLocal if allocation shows in profiles.
+  private val dateFormat
+    get() = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+      isLenient = false
+    }
 
   /**
    * Calculates Zodiac sign and emoji from birth date string formatted as "dd/MM/yyyy"
@@ -163,4 +165,18 @@ object ProfileUtils {
     val randomPart = (1..4).map { chars.random() }.joinToString("")
     return "LOVE-$randomPart"
   }
+
+  /** The old avatar file to delete after a save: only a `file:` URI directly inside [avatarsDir], and only when replaced. */
+  fun staleLocalAvatar(oldUrl: String, newUrl: String, avatarsDir: java.io.File): java.io.File? {
+    if (oldUrl == newUrl || !oldUrl.startsWith("file:")) return null
+    return try {
+      val file = java.io.File(java.net.URI(oldUrl)).canonicalFile
+      file.takeIf { it.exists() && it.parentFile == avatarsDir.canonicalFile }
+    } catch (e: Exception) {
+      null
+    }
+  }
+
+  /** A local `file:` path means nothing on the partner's phone, so never send it. */
+  fun shareableAvatar(url: String): String = if (url.startsWith("file:")) "" else url
 }

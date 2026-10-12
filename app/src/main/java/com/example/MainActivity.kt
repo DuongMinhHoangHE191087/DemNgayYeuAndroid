@@ -16,9 +16,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +41,7 @@ import com.example.ui.components.InLoveTopBar
 import com.example.ui.components.MilestoneBadgeShowcaseDialog
 import com.example.ui.components.NotificationsSheet
 import com.example.ui.components.rememberHasUnreadNotifications
+import com.example.ui.components.rememberTopNotification
 import com.example.ui.screens.AddAnniversaryDateDialog
 import com.example.ui.screens.AddChecklistDialog
 import com.example.ui.screens.AddGiftReminderDialog
@@ -102,6 +107,7 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
   val selectedTab by viewModel.selectedTab.collectAsState()
@@ -256,6 +262,15 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       else -> strings.navSettings
     }
 
+    val topBarState = rememberTopAppBarState()
+    val topBarScroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topBarState)
+    LaunchedEffect(selectedTab) {
+      topBarState.heightOffset = 0f
+      topBarState.contentOffset = 0f
+    }
+    val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
+    val topNotification = rememberTopNotification(viewModel)
+
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState()
 
     if (isFirstLaunch) {
@@ -289,42 +304,33 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     Scaffold(
       containerColor = Color.Transparent,
       topBar = {
-        if (selectedTab == 0) {
-          // Trang Chủ (Yêu Thích): Phần chữ yêu thích & trái tim được để trống trực tiếp để chèn quảng cáo (Banner Ad)
-          Box(
-            modifier = Modifier
-              .fillMaxWidth()
-              .statusBarsPadding()
-              .padding(top = 4.dp, bottom = 2.dp)
-          ) {
-            ComposeBannerAd(
-              isVip = isVip
-            )
-          }
-        } else {
-          Column(modifier = Modifier.fillMaxWidth()) {
-            // Khoảng trắng phía trên ứng dụng dành cho Banner Quảng Cáo AdMob ở trên cùng
-            if (!isVip) {
-              Box(
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .statusBarsPadding()
-                  .padding(top = 4.dp, bottom = 2.dp)
-              ) {
-                ComposeBannerAd(
-                  isVip = false
-                )
-              }
+        Column(modifier = Modifier.fillMaxWidth()) {
+          // Khoảng trắng phía trên ứng dụng dành cho Banner Quảng Cáo AdMob ở trên cùng
+          if (!isVip) {
+            Box(
+              modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(top = 4.dp, bottom = 2.dp)
+            ) {
+              ComposeBannerAd(
+                isVip = false
+              )
             }
-
-            InLoveTopBar(
-              title = screenTitle,
-              hasUnread = hasUnreadNotifications,
-              onBellClick = { viewModel.setShowNotifications(true) },
-              onProfileClick = { viewModel.openEditProfileDialog() },
-              includeStatusBarPadding = isVip
-            )
           }
+
+          InLoveTopBar(
+            title = screenTitle,
+            avatarUrl = currentOnlineUser.avatarUrl,
+            latest = topNotification,
+            isEnglish = appLanguage == AppLanguage.EN,
+            scrollBehavior = topBarScroll,
+            hasUnread = hasUnreadNotifications,
+            onBellClick = { viewModel.setShowNotifications(true) },
+            onProfileClick = { viewModel.openEditProfileDialog() },
+            onSeeAll = { viewModel.setShowNotifications(true) },
+            includeStatusBarPadding = isVip
+          )
         }
       },
       bottomBar = {
@@ -343,7 +349,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         )
       },
       snackbarHost = { SnackbarHost(snackbarHostState) },
-      modifier = Modifier.fillMaxSize()
+      modifier = Modifier.fillMaxSize().nestedScroll(topBarScroll.nestedScrollConnection)
     ) { innerPadding ->
       Box(
         modifier = Modifier
@@ -424,6 +430,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     if (showAddReminderDialog) {
       AddReminderDialog(
+        isEnglish = appLanguage == AppLanguage.EN,
         onDismiss = { viewModel.closeAddReminderDialog() },
         onConfirm = { title, dateText, note ->
           viewModel.addCustomReminder(title, dateText, note)
@@ -434,8 +441,10 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     if (showAddMilestoneDialog) {
       AddMilestoneDialog(
         presetPhotos = presetPhotos,
+        isEnglish = appLanguage == AppLanguage.EN,
         onDismiss = { viewModel.closeAddMilestoneDialog() },
         onConfirm = { title, dateText, subtitle, catTag, secTag, img, days, important ->
+          requestNotificationPermission()
           viewModel.addMilestone(title, dateText, subtitle, catTag, secTag, img, days, important)
         }
       )
@@ -443,6 +452,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     if (showAddChecklistDialog) {
       AddChecklistDialog(
+        isEnglish = appLanguage == AppLanguage.EN,
         onDismiss = { viewModel.closeAddChecklistDialog() },
         onConfirm = { text ->
           viewModel.addChecklist(text)
@@ -465,6 +475,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     if (showAddGiftReminderDialog) {
       AddGiftReminderDialog(
+        isEnglish = appLanguage == AppLanguage.EN,
         onDismiss = { viewModel.closeAddGiftReminderDialog() },
         onConfirm = { title, recipient, occasion, dueDateText, estimatedBudget, notes ->
           viewModel.addGiftReminder(title, recipient, occasion, dueDateText, estimatedBudget, notes)
@@ -543,7 +554,8 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         onTestNow = { title, message ->
           requestNotificationPermission()
           viewModel.testReminderAlarm(title, message)
-        }
+        },
+        isEnglish = appLanguage == AppLanguage.EN
       )
     }
 
@@ -579,22 +591,25 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
           dismissOnBackPress = true
         )
       ) {
-        PairingScreen(
-          viewModel = viewModel,
-          onNavigateBack = { viewModel.closePairingScreen() }
-        )
+        com.example.ui.theme.AppDensity {
+          PairingScreen(
+            viewModel = viewModel,
+            onNavigateBack = { viewModel.closePairingScreen() }
+          )
+        }
       }
     }
 
     val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsState()
-    val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
     val dynamicPresetAvatars by viewModel.presetAvatars.collectAsState()
-    val appLanguage by viewModel.appLanguage.collectAsState()
     if (showEditProfileDialog) {
       EditMyProfileDialog(
         currentUser = currentOnlineUser,
         presetAvatars = dynamicPresetAvatars,
         isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
+        canEditPhoto = authState is AuthState.Authenticated && currentOnlineUser.uid.isNotBlank(),
+        onPhotoPicked = { viewModel.saveLocalAvatar(it, false) },
+        onPhotoDiscarded = { viewModel.deleteUnsavedAvatar(it) },
         onDismiss = { viewModel.closeEditProfileDialog() },
         onSave = { name, birth, avatar, gender, bio ->
           viewModel.updateMyProfile(name, birth, avatar, gender, bio)
@@ -610,12 +625,18 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
           dismissOnBackPress = true
         )
       ) {
-        PaywallScreen(
-          billingManager = com.example.di.AppServiceLocator.billingManager,
-          adsManager = com.example.di.AppServiceLocator.adsManager,
-          onDismiss = { viewModel.setVipDialogVisible(false) },
-          hostActivity = registryOwner as? android.app.Activity
-        )
+        // A Dialog window re-provides LocalContext/LocalConfiguration from its own view, dropping the
+        // in-app locale override, so re-apply it or stringResource() follows the device language.
+        androidx.compose.runtime.CompositionLocalProvider(*compositionLocals) {
+          com.example.ui.theme.AppDensity {
+            PaywallScreen(
+              billingManager = com.example.di.AppServiceLocator.billingManager,
+              adsManager = com.example.di.AppServiceLocator.adsManager,
+              onDismiss = { viewModel.setVipDialogVisible(false) },
+              hostActivity = registryOwner as? android.app.Activity
+            )
+          }
+        }
       }
     }
   }

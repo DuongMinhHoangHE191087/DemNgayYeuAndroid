@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -187,26 +188,14 @@ fun PairingScreen(
         },
         title = {
           Text(
-            text = if (isEnglish) "1-1 Couple Pairing (Set Love)" else "Ghép Đôi 1-1 (Set Love)",
+            text = if (isEnglish) "Pairing" else "Ghép đôi",
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp
           )
         },
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.surface
-        ),
-        actions = {
-          IconButton(
-            onClick = { shareCoupleLink(currentUser.coupleCode) },
-            modifier = Modifier.padding(end = 4.dp).testTag("topbar_share_couple_code_button")
-          ) {
-            Icon(
-              imageVector = Icons.Default.Share,
-              contentDescription = if (isEnglish) "Share couple code" else "Chia sẻ mã ghép đôi",
-              tint = Color(0xFFE91E63)
-            )
-          }
-        }
+        )
       )
     }
   ) { innerPadding ->
@@ -244,7 +233,7 @@ fun PairingScreen(
                   modifier = Modifier.size(24.dp)
                 )
                 Text(
-                  text = "Lời Mời Set Love Đang Chờ Duyệt!",
+                  text = if (isEnglish) "Pairing invite" else "Lời mời ghép đôi",
                   fontWeight = FontWeight.Bold,
                   fontSize = 17.sp,
                   color = Color(0xFFD81B60)
@@ -284,12 +273,11 @@ fun PairingScreen(
                     color = Color(0xFFFFEBEE),
                     modifier = Modifier.padding(top = 2.dp)
                   ) {
-                    Text(
-                      text = "Hồ sơ đối tác • Chỉ đọc ✓",
-                      fontSize = 11.sp,
-                      fontWeight = FontWeight.SemiBold,
-                      color = Color(0xFFC2185B),
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    Icon(
+                      imageVector = Icons.Filled.Lock,
+                      contentDescription = if (isEnglish) "Partner profile, read only" else "Hồ sơ đối tác, chỉ đọc",
+                      tint = Color(0xFFC2185B),
+                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp).size(14.dp)
                     )
                   }
                 }
@@ -315,19 +303,19 @@ fun PairingScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                   ) {
-                    Text(text = "Ngày bắt đầu yêu thống nhất:", fontSize = 13.sp, color = Color.DarkGray)
+                    Icon(Icons.Default.CalendarMonth, contentDescription = if (isEnglish) "Start date" else "Ngày bắt đầu", tint = Color(0xFFC2185B), modifier = Modifier.size(18.dp))
                     Text(text = incomingDateText, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFC2185B))
                   }
                   Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                   ) {
-                    Text(text = "Số ngày yêu tính tự động:", fontSize = 13.sp, color = Color.DarkGray)
-                    Text(text = "$incomingDays ngày bên nhau 💕", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD81B60))
+                    Icon(Icons.Default.Favorite, contentDescription = if (isEnglish) "Days together" else "Ngày bên nhau", tint = Color(0xFFD81B60), modifier = Modifier.size(18.dp))
+                    Text(text = if (isEnglish) "$incomingDays days" else "$incomingDays ngày", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD81B60))
                   }
                   if (invite.loveNote.isNotBlank()) {
                     Text(
-                      text = """ + invite.loveNote + """,
+                      text = "“${invite.loveNote}”",
                       fontSize = 12.sp,
                       fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                       color = Color(0xFF4A148C)
@@ -359,7 +347,7 @@ fun PairingScreen(
                 ) {
                   Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
                   Spacer(modifier = Modifier.width(4.dp))
-                  Text("Đồng ý Set Love ❤️", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                  Text(if (isEnglish) "Accept" else "Đồng ý", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
               }
             }
@@ -383,7 +371,7 @@ fun PairingScreen(
               verticalAlignment = Alignment.CenterVertically
             ) {
               Text(
-                text = "MÃ CỦA BẠN",
+                text = if (isEnglish) "YOUR CODE" else "MÃ CỦA BẠN",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF880E4F)
@@ -442,7 +430,7 @@ fun PairingScreen(
                 ) {
                   Icon(
                     imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "Copy code",
+                    contentDescription = if (isEnglish) "Copy code" else "Sao chép mã",
                     tint = Color(0xFFD81B60),
                     modifier = Modifier.size(20.dp)
                   )
@@ -457,7 +445,7 @@ fun PairingScreen(
                 ) {
                   Icon(
                     imageVector = Icons.Default.Link,
-                    contentDescription = "Copy link",
+                    contentDescription = if (isEnglish) "Copy link" else "Sao chép liên kết",
                     tint = Color(0xFF0288D1),
                     modifier = Modifier.size(20.dp)
                   )
@@ -469,7 +457,7 @@ fun PairingScreen(
                 ) {
                   Icon(
                     imageVector = Icons.Default.Share,
-                    contentDescription = "Share code/link",
+                    contentDescription = if (isEnglish) "Share code/link" else "Chia sẻ mã/liên kết",
                     tint = Color(0xFFD81B60),
                     modifier = Modifier.size(20.dp)
                   )
@@ -510,12 +498,11 @@ fun PairingScreen(
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0xFFE8F5E9)
                   ) {
-                    Text(
-                      text = "ĐÃ KẾT ĐÔI 1-1 ✓",
-                      fontSize = 11.sp,
-                      fontWeight = FontWeight.Bold,
-                      color = Color(0xFF2E7D32),
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                    Icon(
+                      imageVector = Icons.Filled.Check,
+                      contentDescription = if (isEnglish) "Coupled 1-1" else "Đã kết đôi 1-1",
+                      tint = Color(0xFF2E7D32),
+                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp).size(16.dp)
                     )
                   }
                 }
@@ -584,14 +571,7 @@ fun PairingScreen(
                       verticalAlignment = Alignment.CenterVertically
                     ) {
                       Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE91E63), modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                          text = "Thời Gian Đồng Hành:",
-                          fontSize = 13.sp,
-                          fontWeight = FontWeight.SemiBold,
-                          color = Color(0xFF880E4F)
-                        )
+                        Icon(Icons.Default.Favorite, contentDescription = if (isEnglish) "Time together" else "Thời gian đồng hành", tint = Color(0xFFE91E63), modifier = Modifier.size(18.dp))
                       }
                       Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -608,7 +588,7 @@ fun PairingScreen(
                     }
 
                     Text(
-                      text = "$loveDays ngày bên nhau • Bắt đầu: $anniversaryDate 💕",
+                      text = (if (isEnglish) "$loveDays days" else "$loveDays ngày") + " • $anniversaryDate 💕",
                       fontSize = 15.sp,
                       fontWeight = FontWeight.ExtraBold,
                       color = Color(0xFFD81B60)
@@ -624,14 +604,6 @@ fun PairingScreen(
                   modifier = Modifier.fillMaxWidth()
                 ) {
                   Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                      text = "TƯƠNG TÁC ĐỒNG HÀNH TRỰC TIẾP",
-                      fontSize = 11.5.sp,
-                      fontWeight = FontWeight.Bold,
-                      color = Color(0xFF880E4F),
-                      letterSpacing = 0.5.sp
-                    )
-
                     Row(
                       modifier = Modifier.fillMaxWidth(),
                       horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -648,7 +620,7 @@ fun PairingScreen(
                       ) {
                         Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Gửi nhịp tim", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Nhịp tim", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                       }
 
                       // Mở tab Kỷ Niệm (album ảnh và video)
@@ -660,9 +632,9 @@ fun PairingScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1.1f).height(44.dp)
                       ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color(0xFF00897B))
+                        Icon(Icons.Default.AutoAwesome, contentDescription = if (isEnglish) "Memories" else "Kỷ niệm", modifier = Modifier.size(15.dp), tint = Color(0xFF00897B))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Kỷ niệm (${memories.size})", fontSize = 12.sp)
+                        Text("${memories.size}", fontSize = 12.sp)
                       }
                     }
                   }
@@ -682,7 +654,7 @@ fun PairingScreen(
                   ) {
                     Icon(Icons.Default.HeartBroken, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Hủy Set Love", fontSize = 13.sp)
+                    Text(if (isEnglish) "End Set Love" else "Hủy Set Love", fontSize = 13.sp)
                   }
                 } else {
                   Surface(
@@ -692,7 +664,11 @@ fun PairingScreen(
                   ) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                       Text(
-                        text = if (byMe) "⏳ Đang chờ người ấy xác nhận hủy Set Love" else "Người ấy muốn hủy Set Love. Bạn đồng ý?",
+                        text = if (byMe) {
+                          if (isEnglish) "⏳ Waiting for confirmation…" else "⏳ Đang chờ người ấy xác nhận…"
+                        } else {
+                          if (isEnglish) "Your partner wants to end Set Love. Agree?" else "Người ấy muốn hủy Set Love. Bạn đồng ý?"
+                        },
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         color = Color(0xFFB71C1C)
@@ -717,8 +693,10 @@ fun PairingScreen(
                 if (confirmBreakup) {
                   AlertDialog(
                     onDismissRequest = { confirmBreakup = false },
+                    shape = RoundedCornerShape(28.dp),
+                    containerColor = Color.White,
                     title = { Text("Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold) },
-                    text = { Text("Người ấy sẽ nhận thông báo. Khi đồng ý, hai bạn trở về trạng thái Độc thân và kỷ niệm chung bị khóa.") },
+                    text = { Text("Nếu người ấy đồng ý, hai bạn trở về Độc thân và kỷ niệm chung bị khóa.") },
                     confirmButton = {
                       Button(onClick = { confirmBreakup = false; viewModel.requestBreakup() }, colors = dangerColors) { Text("Gửi yêu cầu") }
                     },
@@ -752,7 +730,7 @@ fun PairingScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                  text = "Đang chờ đối phương xác nhận lời mời Set Love...",
+                  text = if (isEnglish) "Waiting for reply…" else "Đang chờ phản hồi…",
                   fontWeight = FontWeight.Bold,
                   fontSize = 15.sp,
                   textAlign = TextAlign.Center,
@@ -763,30 +741,25 @@ fun PairingScreen(
                   val outDays = ProfileUtils.calculateLoveDays(outInv.proposedStartDate)
                   Spacer(modifier = Modifier.height(6.dp))
                   Text(
-                    text = "Gửi tới: " + outInv.targetCoupleCode + " • Ngày yêu đề xuất: " + outInv.proposedStartDateText + " (" + outDays + " ngày)",
+                    text = outInv.targetCoupleCode + " • " + outInv.proposedStartDateText + " (" + outDays + (if (isEnglish) " days)" else " ngày)"),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.DarkGray
                   )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                  text = "Khi người ấy mở ứng dụng và bấm Đồng ý, hai bạn sẽ ngay lập tức được kết đôi 1-1!",
-                  fontSize = 12.sp,
-                  color = Color.DarkGray,
-                  textAlign = TextAlign.Center
-                )
-
                 Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedButton(
                   onClick = { viewModel.cancelSentInvite() },
                   shape = RoundedCornerShape(12.dp),
-                  modifier = Modifier.testTag("cancel_sent_invite_button")
+                  modifier = Modifier.height(48.dp).testTag("cancel_sent_invite_button")
                 ) {
-                  Text("Hủy lời mời đã gửi")
+                  Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = if (isEnglish) "Cancel invite" else "Hủy lời mời",
+                    modifier = Modifier.size(18.dp)
+                  )
                 }
               }
             }
@@ -804,7 +777,7 @@ fun PairingScreen(
             ) {
               Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                  text = "Tìm người ấy",
+                  text = if (isEnglish) "Find partner" else "Tìm người ấy",
                   fontWeight = FontWeight.Bold,
                   fontSize = 16.sp,
                   color = Color(0xFF880E4F)
@@ -868,12 +841,11 @@ fun PairingScreen(
                           shape = RoundedCornerShape(8.dp),
                           color = Color(0xFFE91E63)
                         ) {
-                          Text(
-                            text = if (isEnglish) "FOUND PARTNER • READ ONLY" else "ĐÃ TÌM THẤY ĐỐI TÁC • CHỈ ĐỌC",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                          Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = if (isEnglish) "Partner found, read only" else "Đã tìm thấy đối tác, chỉ đọc",
+                            tint = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp).size(16.dp)
                           )
                         }
 
@@ -930,34 +902,13 @@ fun PairingScreen(
                         )
                       }
 
-                      Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.fillMaxWidth()
-                      ) {
-                        Text(
-                          text = if (isEnglish) "🔒 Partner profile is read-only here." else "🔒 Hồ sơ người ấy là chỉ đọc, không thể chỉnh sửa tại đây.",
-                          fontSize = 12.sp,
-                          color = Color(0xFF757575),
-                          modifier = Modifier.padding(8.dp)
-                        )
-                      }
-
                       HorizontalDivider(color = Color(0xFFFFCDD2))
 
-                      // THIẾT LẬP KỶ NIỆM YÊU (THỐNG NHẤT TỪ NGƯỜI TẠO)
-                      Text(
-                        text = if (isEnglish) "Set Love Start Date:" else "Thiết Lập Ngày Bắt Đầu Yêu:",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color(0xFF880E4F)
-                      )
-
-                      // Date Picker chọn ngày bắt đầu yêu
+                      // Date Picker chọn ngày bắt đầu yêu (thống nhất từ người tạo)
                       InLoveDatePickerField(
                         value = proposedStartDateText,
                         onValueChange = { proposedStartDateText = it },
-                        label = if (isEnglish) "Love start date (dd/MM/yyyy) *" else "Ngày bắt đầu yêu (dd/MM/yyyy) *",
+                        label = if (isEnglish) "Start date *" else "Ngày bắt đầu yêu *",
                         placeholder = "dd/MM/yyyy",
                         dialogTitle = if (isEnglish) "Select love start date" else "Chọn ngày bắt đầu yêu",
                         quickPresets = DatePickerPresets.relationshipStartDatePresets(),
@@ -983,7 +934,7 @@ fun PairingScreen(
                           )
                           Spacer(modifier = Modifier.width(8.dp))
                           Text(
-                            text = if (isEnglish) "✨ Calculated until today: $calculatedDaysFromProposed days together 💕" else "✨ Tính đến hôm nay: $calculatedDaysFromProposed ngày yêu nhau 💕",
+                            text = if (isEnglish) "$calculatedDaysFromProposed days" else "$calculatedDaysFromProposed ngày",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFD81B60)
@@ -995,7 +946,7 @@ fun PairingScreen(
                       OutlinedTextField(
                         value = loveNoteInput,
                         onValueChange = { loveNoteInput = it },
-                        label = { Text(if (isEnglish) "Message to partner (optional)" else "Lời nhắn gửi người ấy (tùy chọn)") },
+                        label = { Text(if (isEnglish) "Message" else "Lời nhắn") },
                         maxLines = 2,
                         shape = RoundedCornerShape(14.dp),
                         colors = pairingTextFieldColors(),
@@ -1022,7 +973,7 @@ fun PairingScreen(
                         Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                          text = if (isEnglish) "Send Set Love Invite to ${target.effectiveDisplayName} ❤️" else "Gửi Lời Mời Set Love Cho " + target.effectiveDisplayName + " ❤️",
+                          text = if (isEnglish) "Send invite" else "Gửi lời mời",
                           fontWeight = FontWeight.Bold,
                           fontSize = 15.sp
                         )
@@ -1046,7 +997,7 @@ fun PairingScreen(
           Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
               Text(
-                text = "Sở thích",
+                text = if (isEnglish) "Interests" else "Sở thích",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
               )
@@ -1093,7 +1044,7 @@ fun PairingScreen(
               ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                   Text(
-                    text = "✨ Sở thích chung của hai bạn: ${mutualInterests.joinToString(", ")}",
+                    text = "✨ ${mutualInterests.joinToString(", ")}",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     color = Color(0xFF6A1B9A)
@@ -1115,6 +1066,9 @@ fun PairingScreen(
       currentUser = currentUser,
       presetAvatars = dynamicPresetAvatars,
       isEnglish = isEnglish,
+      canEditPhoto = currentUser.uid.isNotBlank(),
+      onPhotoPicked = { viewModel.saveLocalAvatar(it, false) },
+      onPhotoDiscarded = { viewModel.deleteUnsavedAvatar(it) },
       onDismiss = { viewModel.closeEditProfileDialog() },
       onSave = { name, birthDate, avatarUrl, gender, bio ->
         viewModel.updateMyProfile(name, birthDate, avatarUrl, gender, bio)

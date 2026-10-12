@@ -1,0 +1,17 @@
+# real capture 2026-10-04 Task T0c; sha256(raw)=42b02da47725a173; cmd: adb -s 65c9b673 shell dumpsys battery
+Current Battery Service state:
+  AC powered: true
+  USB powered: false
+  Wireless powered: false
+  Dock powered: false
+  Max charging current: 1750000
+  Max charging voltage: 5000000
+  Charge counter: 3201000
+  status: 5
+  health: 2
+  present: true
+  level: 100
+  scale: 100
+  voltage: 4371
+  temperature: 371
+  technology: Li-poly

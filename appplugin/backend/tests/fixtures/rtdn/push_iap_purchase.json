@@ -1,0 +1,26 @@
+{
+  "sequenceId": 1,
+  "eventName": "iap_purchase",
+  "ts": 1790737140000,
+  "schema_version": 2,
+  "event_id": "00000000-0000-4000-8000-180000001301",
+  "package_name": "test.sdk.zd",
+  "consent_tier": "GRANTED",
+  "eventData": {
+    "product_id": "pro_sub",
+    "order_id": "GPA.fixture-1",
+    "price_micros": 4990000,
+    "currency_code": "USD",
+    "quantity": 1,
+    "channel": "GOOGLE_PLAY",
+    "is_subscription": 1,
+    "purchase_token": "rtdn-fixture-sub-token",
+    "phase": "base"
+  },
+  "userProperty": {
+    "user_id": "u_rtdn",
+    "country": "US",
+    "app_name": "demo",
+    "platform": "android"
+  }
+}

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monetization Brain — North Star</title>
+<style>
+/* Không CDN, không font ngoài: dashboard phải mở được cả khi máy không ra Internet,
+   và phải chạy sau firewall của studio. Một trang ops mà phụ thuộc mạng ngoài là
+   trang sẽ trắng đúng lúc cần nó nhất. */
+:root{
+  --bg:#f6f7f9; --card:#fff; --ink:#14171a; --muted:#5b6570; --line:#e3e6ea;
+  --good:#0f7b4f; --warn:#8a5a00; --warn-bg:#fff6e0; --warn-line:#e8c16a; --accent:#2c5cc5;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1216; --card:#171b21; --ink:#e8ecf1; --muted:#98a3b0; --line:#252b33;
+    --good:#4ade80; --warn:#f0c15c; --warn-bg:#2a2213; --warn-line:#6b5520; --accent:#7aa2f7;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--ink);
+     font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+input,button{font:inherit;padding:7px 11px;border:1px solid var(--line);border-radius:7px;
+             background:var(--card);color:var(--ink)}
+button{cursor:pointer;border-color:var(--accent);color:var(--accent);font-weight:600}
+button:hover{background:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+         margin:0 0 10px;font-weight:600}
+.big{font-size:30px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.note{color:var(--muted);font-size:12.5px;margin-top:8px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;
+     border-bottom:1px solid var(--line);font-size:13.5px}
+.row:last-child{border-bottom:0}
+.row b{font-variant-numeric:tabular-nums;font-weight:600}
+.banner{border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--warn);
+        border-radius:9px;padding:11px 13px;font-size:13.5px;margin-top:10px}
+.banner b{display:block;margin-bottom:3px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:600;
+      border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--warn)}
+.pill.ok{border-color:var(--good);background:transparent;color:var(--good)}
+.err{border:1px solid #d64545;background:#fff0f0;color:#a12626;padding:12px;border-radius:9px}
+@media (prefers-color-scheme:dark){.err{background:#2a1414;border-color:#7a2e2e;color:#ffb3b3}}
+.scroll{overflow-x:auto}
+footer{margin-top:22px;color:var(--muted);font-size:12.5px;max-width:70ch}
+</style>
+</head>
+<body>
+<h1>Monetization Brain — North Star</h1>
+<div class="sub">Bốn chỉ số của doc 26 mục C. Hiển thị cùng lúc, không có cách nào ẩn bớt.</div>
+
+<div class="controls">
+  <label>Từ <input type="date" id="from"></label>
+  <label>Đến <input type="date" id="to"></label>
+  <button id="reload">Tải lại</button>
+  <span class="sub" id="status" style="margin:0"></span>
+</div>
+
+<div id="err"></div>
+<div class="grid" id="grid"></div>
+
+<footer id="foot"></footer>
+
+<script>
+// Bốn thẻ North Star được render từ MỘT mảng cố định. Doc 26 mục C: không được xem riêng
+// ARPDAU/Revenue mà ẩn ComfortIndex — vì đó chính là cách một đội vô tình tối ưu ba chỉ số
+// đầu bằng cách hy sinh chỉ số thứ tư. Vì vậy không có bộ lọc, không có nút ẩn, không có
+// tab. Muốn giấu một thẻ thì phải sửa file này và vượt qua một unit test.
+const NORTH_STAR = ["arpdau", "revenue", "subscription", "comfort"];
+
+const usd = n => "$" + Number(n ?? 0).toLocaleString("en-US",
+  {minimumFractionDigits: 2, maximumFractionDigits: 4});
+const esc = s => String(s ?? "").replace(/[<>&"]/g, c =>
+  ({"<":"&lt;", ">":"&gt;", "&":"&amp;", '"':"&quot;"}[c]));
+
+function rows(obj, fmt = String) {
+  const keys = Object.keys(obj || {});
+  if (!keys.length) return '<div class="note">(chưa có dữ liệu)</div>';
+  return keys.map(k => `<div class="row"><span>${esc(k)}</span><b>${esc(fmt(obj[k]))}</b></div>`).join("");
+}
+
+const RENDER = {
+  arpdau: d => `
+    <h2>1 · ARPDAU</h2>
+    <div class="big">${usd(d.arpdau.value_usd)}</div>
+    <div class="note">DAU trung bình ${d.arpdau.avg_dau} · ${d.arpdau.days_covered} ngày ·
+      gồm ${d.arpdau.includes.join(" + ")}</div>
+    <div class="note">Mẫu số là DAU <b>trung bình theo ngày</b>, không phải user duy nhất toàn kỳ.</div>`,
+
+  revenue: d => {
+    const u = d.revenue.unconverted;
+    const hasU = u.event_count > 0;
+    return `
+    <h2>2 · Doanh thu theo kênh</h2>
+    <div class="big">${usd(d.revenue.total_usd)}</div>
+    <div class="scroll">${rows(d.revenue.by_channel_usd, usd)}</div>
+    <div class="note">IAP ${usd(d.revenue.iap_usd)} · IAA ${usd(d.revenue.iaa_usd)}</div>
+    ${hasU ? `<div class="banner"><b>${u.event_count} giao dịch chưa quy đổi được</b>
+      Không có tỉ giá cho: ${Object.keys(u.by_currency).map(esc).join(", ")}.
+      Số tiền này <b>không</b> nằm trong tổng ở trên — nạp <code>BRAIN_FX_RATES</code> để đưa vào.
+      Bỏ qua chúng sẽ làm ARPDAU thấp giả tạo đúng ở những thị trường đó.</div>` : ""}`;
+  },
+
+  subscription: d => `
+    <h2>3 · Subscription</h2>
+    <div class="big">${d.subscription.purchase_events}</div>
+    <div class="note">${d.subscription.distinct_users} người dùng riêng biệt</div>
+    <div class="banner"><b>Đây là số lượt MUA trong kỳ</b>
+      Không phải số subscription đang active — SDK chưa theo dõi expiry/renewal.</div>`,
+
+  comfort: d => {
+    const c = d.comfort;
+    return `
+    <h2>4 · Player Comfort &amp; Willingness-to-Pay</h2>
+    <div class="big">${Number(c.value).toFixed(2)}
+      <span class="pill ${c.trustworthy ? "ok" : ""}">độ phủ ${(c.coverage*100).toFixed(0)}%</span></div>
+    <div class="note">${c.samples} mẫu</div>
+    ${c.warning ? `<div class="banner"><b>Chưa đủ tin cậy — không dùng để ra quyết định kinh doanh</b>
+      Thiếu: ${c.components_missing.map(esc).join(", ")}.
+      Một chỉ số độ phủ ${(c.coverage*100).toFixed(0)}% mà trình bày như con số chắc chắn còn nguy
+      hiểm hơn không có chỉ số nào — nó tạo cảm giác đã đo được thứ chưa đo được.</div>` : ""}`;
+  },
+};
+
+function renderHoldout(d) {
+  const c = d.holdout_comparison;
+  const t = c.treatment, h = c.holdout, u = c.unassigned;
+  const pct = v => v === null || v === undefined ? "—" : (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+  return `<div class="card" style="grid-column:1/-1">
+    <h2>Brain có tạo ra giá trị không — treatment vs holdout</h2>
+    <div class="note" style="margin:0 0 10px">Mọi con số ARPDAU tăng đều có thể do mùa vụ, do
+      bản cập nhật game, do chiến dịch UA. Chỉ nhóm đối chứng chạy <b>song song</b> mới cho
+      so sánh sạch.</div>
+    ${c.warning ? `<div class="banner"><b>Chưa kết luận được</b>${esc(c.warning)}</div>` : ""}
+    <div class="scroll"><table style="width:100%;border-collapse:collapse;font-size:13.5px">
+      <tr style="color:var(--muted);text-align:left">
+        <th style="padding:6px 0">nhóm</th><th>người</th><th>doanh thu/người</th><th>quảng cáo/người</th>
+      </tr>
+      <tr class="row"><td style="padding:6px 0">treatment</td><td><b>${t.users}</b></td>
+        <td><b>${usd(t.revenue_per_user)}</b></td><td><b>${t.ads_per_user}</b></td></tr>
+      <tr class="row"><td style="padding:6px 0">holdout (đối chứng)</td><td><b>${h.users}</b></td>
+        <td><b>${usd(h.revenue_per_user)}</b></td><td><b>${h.ads_per_user}</b></td></tr>
+      <tr class="row"><td style="padding:6px 0;color:var(--muted)">chưa phân nhóm</td>
+        <td>${u.users}</td><td>${usd(u.revenue_per_user)}</td><td>${u.ads_per_user}</td></tr>
+    </table></div>
+    ${c.lift ? `<div class="note" style="margin-top:10px">
+      <b>Chênh lệch doanh thu/người: ${pct(c.lift.revenue_per_user_pct)}</b> ·
+      quảng cáo/người ${c.lift.ads_per_user_delta > 0 ? "+" : ""}${c.lift.ads_per_user_delta}
+      <br>Đọc hai con số CÙNG NHAU: doanh thu tăng mà số quảng cáo mỗi người cũng tăng vọt thì
+      đó không phải brain thông minh hơn, chỉ là hung hăng hơn.</div>` : ""}
+    ${c.conflicting_users > 0 ? `<div class="banner"><b>${c.conflicting_users} người bị phân nhóm
+      mâu thuẫn</b>Phân nhóm phía SDK là tất định theo hash nên điều này không được phép xảy ra —
+      nhiều khả năng muối băm (holdout_salt) bị đổi giữa chừng. Họ đã bị loại khỏi cả hai nhóm.</div>` : ""}
+    <div class="note" style="margin-top:8px">${esc(c.note)} · ngưỡng ${c.min_users_per_group} người/nhóm</div>
+  </div>`;
+}
+
+function renderPolicy(d) {
+  const p = d.policy_context;
+  return `<div class="card" style="grid-column:1/-1">
+    <h2>Bối cảnh chính sách — KHÔNG phải North Star</h2>
+    <div class="note" style="margin:0 0 10px">Guardrail nổ nhiều nghĩa là chính sách bên dưới
+      đang muốn hung hăng và bị chặn lại. Đó là tín hiệu về sức khoẻ <b>chính sách</b>, không
+      phải về trải nghiệm người chơi (họ đã được bảo vệ) — nên nó nằm riêng, không gộp vào
+      ComfortIndex.</div>
+    <div class="row"><span>Số quyết định</span><b>${p.decisions}</b></div>
+    <div class="row"><span>Thuộc nhóm holdout</span><b>${p.holdout_decisions}
+      (${(p.holdout_share*100).toFixed(1)}%)</b></div>
+    <div class="scroll">${rows(p.guardrail_hits)}</div>
+  </div>`;
+}
+
+async function load() {
+  const q = new URLSearchParams();
+  const f = document.getElementById("from").value;
+  const t = document.getElementById("to").value;
+  if (f) q.set("date_from", f);
+  if (t) q.set("date_to", t);
+  document.getElementById("status").textContent = "đang tải…";
+  document.getElementById("err").innerHTML = "";
+  try {
+    const res = await fetch("metrics/northstar?" + q.toString());
+    if (!res.ok) throw new Error("HTTP " + res.status +
+      (res.status === 401 ? " — thiếu hoặc sai X-API-KEY" : ""));
+    const d = await res.json();
+    document.getElementById("grid").innerHTML =
+      NORTH_STAR.map(k => `<div class="card">${RENDER[k](d)}</div>`).join("")
+      + renderHoldout(d) + renderPolicy(d);
+    document.getElementById("foot").textContent =
+      "Quy đổi tiền tệ thực hiện ở lớp phân tích (BRAIN_FX_RATES), không ở lớp ingestion: " +
+      "dữ liệu thô giữ nguyên price_micros + currency_code của store, nên sửa được tỉ giá sai " +
+      "mà không phải đụng vào bản ghi gốc.";
+    document.getElementById("status").textContent = "cập nhật " + new Date().toLocaleTimeString();
+  } catch (e) {
+    // Hiện lỗi thật thay vì để trang trắng hoặc hiện số 0 — số 0 trông giống một kết quả.
+    document.getElementById("err").innerHTML =
+      `<div class="err"><b>Không tải được chỉ số:</b> ${esc(e.message)}</div>`;
+    document.getElementById("grid").innerHTML = "";
+    document.getElementById("status").textContent = "";
+  }
+}
+document.getElementById("reload").addEventListener("click", load);
+load();
+</script>
+</body>
+</html>

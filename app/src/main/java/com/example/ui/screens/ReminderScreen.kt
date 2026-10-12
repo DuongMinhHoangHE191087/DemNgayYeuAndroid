@@ -116,6 +116,7 @@ fun ReminderScreen(
       title = if (isEnglish) "Delete Date Reminder?" else "Xóa lời nhắc hẹn hò?",
       message = if (isEnglish) "Are you sure you want to delete this reminder? Related reminders and alarms will be cancelled." else "Bạn có chắc chắn muốn xóa lời nhắc này không? Lời nhắc và báo thức liên quan sẽ bị hủy bỏ hoàn toàn.",
       itemName = reminder.title,
+      isEnglish = isEnglish,
       onConfirm = {
         viewModel.deleteCustomReminder(reminder.id)
         reminderToDelete = null

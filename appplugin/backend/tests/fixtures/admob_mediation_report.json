@@ -1,0 +1,285 @@
+[
+  {
+    "header": {
+      "dateRange": {
+        "startDate": {
+          "year": 2026,
+          "month": 9,
+          "day": 29
+        },
+        "endDate": {
+          "year": 2026,
+          "month": 9,
+          "day": 30
+        }
+      },
+      "localizationSettings": {
+        "currencyCode": "USD",
+        "languageCode": "en-US"
+      }
+    }
+  },
+  {
+    "row": {
+      "dimensionValues": {
+        "DATE": {
+          "value": "20260930"
+        },
+        "APP": {
+          "value": "ca-app-pub-0000000000000000~0000000000",
+          "displayLabel": "Demo App"
+        },
+        "FORMAT": {
+          "value": "INTERSTITIAL"
+        },
+        "COUNTRY": {
+          "value": "US"
+        },
+        "AD_SOURCE": {
+          "value": "5450213213286189855",
+          "displayLabel": "AdMob Network"
+        }
+      },
+      "metricValues": {
+        "AD_REQUESTS": {
+          "integerValue": "1000"
+        },
+        "MATCHED_REQUESTS": {
+          "integerValue": "800"
+        },
+        "MATCH_RATE": {
+          "doubleValue": 0.8
+        },
+        "IMPRESSIONS": {
+          "integerValue": "600"
+        },
+        "ESTIMATED_EARNINGS": {
+          "microsValue": "12000000"
+        },
+        "OBSERVED_ECPM": {
+          "microsValue": "20000000"
+        }
+      }
+    }
+  },
+  {
+    "row": {
+      "dimensionValues": {
+        "DATE": {
+          "value": "20260930"
+        },
+        "APP": {
+          "value": "ca-app-pub-0000000000000000~0000000000",
+          "displayLabel": "Demo App"
+        },
+        "FORMAT": {
+          "value": "INTERSTITIAL"
+        },
+        "COUNTRY": {
+          "value": "DE"
+        },
+        "AD_SOURCE": {
+          "value": "5450213213286189855",
+          "displayLabel": "AdMob Network"
+        }
+      },
+      "metricValues": {
+        "AD_REQUESTS": {
+          "integerValue": "500"
+        },
+        "MATCHED_REQUESTS": {
+          "integerValue": "300"
+        },
+        "MATCH_RATE": {
+          "doubleValue": 0.6
+        },
+        "IMPRESSIONS": {
+          "integerValue": "200"
+        },
+        "ESTIMATED_EARNINGS": {
+          "microsValue": "3000000"
+        },
+        "OBSERVED_ECPM": {
+          "microsValue": "15000000"
+        }
+      }
+    }
+  },
+  {
+    "row": {
+      "dimensionValues": {
+        "DATE": {
+          "value": "20260930"
+        },
+        "APP": {
+          "value": "ca-app-pub-0000000000000000~0000000000",
+          "displayLabel": "Demo App"
+        },
+        "FORMAT": {
+          "value": "INTERSTITIAL"
+        },
+        "COUNTRY": {
+          "value": "VN"
+        },
+        "AD_SOURCE": {
+          "value": "5450213213286189855",
+          "displayLabel": "AdMob Network"
+        }
+      },
+      "metricValues": {
+        "AD_REQUESTS": {
+          "integerValue": "400"
+        },
+        "MATCHED_REQUESTS": {
+          "integerValue": "380"
+        },
+        "MATCH_RATE": {
+          "doubleValue": 0.95
+        },
+        "IMPRESSIONS": {
+          "integerValue": "300"
+        },
+        "ESTIMATED_EARNINGS": {
+          "microsValue": "300000"
+        },
+        "OBSERVED_ECPM": {
+          "microsValue": "1000000"
+        }
+      }
+    }
+  },
+  {
+    "row": {
+      "dimensionValues": {
+        "DATE": {
+          "value": "20260930"
+        },
+        "APP": {
+          "value": "ca-app-pub-0000000000000000~0000000000",
+          "displayLabel": "Demo App"
+        },
+        "FORMAT": {
+          "value": "BANNER"
+        },
+        "COUNTRY": {
+          "value": "US"
+        },
+        "AD_SOURCE": {
+          "value": "10568273599589928883",
+          "displayLabel": "Meta Audience Network"
+        }
+      },
+      "metricValues": {
+        "AD_REQUESTS": {
+          "integerValue": "2000"
+        },
+        "MATCHED_REQUESTS": {
+          "integerValue": "1000"
+        },
+        "MATCH_RATE": {
+          "doubleValue": 0.5
+        },
+        "IMPRESSIONS": {
+          "integerValue": "900"
+        },
+        "ESTIMATED_EARNINGS": {
+          "microsValue": "900000"
+        },
+        "OBSERVED_ECPM": {
+          "microsValue": "1000000"
+        }
+      }
+    }
+  },
+  {
+    "row": {
+      "dimensionValues": {
+        "DATE": {
+          "value": "20260930"
+        },
+        "APP": {
+          "value": "ca-app-pub-0000000000000000~0000000000",
+          "displayLabel": "Demo App"
+        },
+        "FORMAT": {
+          "value": "REWARDED"
+        },
+        "COUNTRY": {
+          "value": "BR"
+        },
+        "AD_SOURCE": {
+          "value": "5450213213286189855",
+          "displayLabel": "AdMob Network"
+        }
+      },
+      "metricValues": {
+        "AD_REQUESTS": {
+          "integerValue": "100"
+        },
+        "MATCHED_REQUESTS": {
+          "integerValue": "50"
+        },
+        "MATCH_RATE": {
+          "doubleValue": 0.5
+        },
+        "IMPRESSIONS": {
+          "integerValue": "40"
+        },
+        "ESTIMATED_EARNINGS": {
+          "microsValue": "400000"
+        },
+        "OBSERVED_ECPM": {
+          "microsValue": "10000000"
+        }
+      }
+    }
+  },
+  {
+    "row": {
+      "dimensionValues": {
+        "DATE": {
+          "value": "20260929"
+        },
+        "APP": {
+          "value": "ca-app-pub-0000000000000000~0000000000",
+          "displayLabel": "Demo App"
+        },
+        "FORMAT": {
+          "value": "INTERSTITIAL"
+        },
+        "COUNTRY": {
+          "value": "US"
+        },
+        "AD_SOURCE": {
+          "value": "10568273599589928883",
+          "displayLabel": "Meta Audience Network"
+        }
+      },
+      "metricValues": {
+        "AD_REQUESTS": {
+          "integerValue": "200"
+        },
+        "MATCHED_REQUESTS": {
+          "integerValue": "100"
+        },
+        "MATCH_RATE": {
+          "doubleValue": 0.5
+        },
+        "IMPRESSIONS": {
+          "integerValue": "80"
+        },
+        "ESTIMATED_EARNINGS": {
+          "microsValue": "1600000"
+        },
+        "OBSERVED_ECPM": {
+          "microsValue": "20000000"
+        }
+      }
+    }
+  },
+  {
+    "footer": {
+      "matchingRowCount": "6"
+    }
+  }
+]

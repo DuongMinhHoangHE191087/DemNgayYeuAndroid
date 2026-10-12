@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rounded translucent-dark card grouping headline/body/CTA, matching the
+     ShopeeFood-reference bottom card. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/appplugin_ad_card_bg" />
+    <corners android:radius="20dp" />
+</shape>

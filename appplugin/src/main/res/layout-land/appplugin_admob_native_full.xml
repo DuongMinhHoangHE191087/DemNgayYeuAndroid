@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A <merge>: AdsMobNtFullView inflates this with Dialog.setContentView, whose content
+     parent is already a match_parent FrameLayout, so these children land there directly. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+    <com.google.android.gms.ads.nativead.NativeAdView
+        android:id="@+id/native_ad_view"
+        android:scrollbars="none"
+        android:background="@android:color/black"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@android:color/black"
+            android:minHeight="50dp"
+            android:orientation="vertical"
+            android:scrollbars="none">
+            <com.google.android.gms.ads.nativead.MediaView
+                android:id="@+id/ad_media"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <!--
+            <ImageView
+                android:id="@+id/ad_app_icon"
+                android:layout_width="@dimen/appplugin_icon_layout_width"
+                android:layout_height="@dimen/appplugin_icon_layout_height"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="@dimen/appplugin_icon_layout_margin_end"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/app_name"
+                android:background="@drawable/appplugin_bg_circle"
+                android:outlineProvider="background"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <Button
+                android:id="@+id/ad_call_to_action"
+                android:layout_width="@dimen/appplugin_cta_button_width"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="40dp"
+                android:minHeight="40dp"
+                android:gravity="center"
+                android:textSize="@dimen/appplugin_cta_button_text_size"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/appplugin_bg_bound"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+            <TextView
+                android:id="@+id/ad_headline"
+                android:layout_width="@dimen/appplugin_body_width"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textSize="@dimen/appplugin_headline_text_size"
+                android:textStyle="bold"
+                android:textColor="#FFFFEE"
+                app:layout_constraintTop_toTopOf="@id/ad_call_to_action"
+                app:layout_constraintEnd_toStartOf="@id/ad_call_to_action"/>
+            <TextView
+                android:id="@+id/ad_badge"
+                style="@style/appplugin_AppTheme.AdAttribution"
+                android:layout_marginEnd="10dp"
+                app:layout_constraintTop_toTopOf="@id/ad_headline"
+                app:layout_constraintEnd_toStartOf="@id/ad_headline"/>
+            <TextView
+                android:id="@+id/ad_body"
+                android:layout_width="@dimen/appplugin_body_width"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:textSize="@dimen/appplugin_body_text_size"
+                android:textColor="#FFFFEE"
+                app:layout_constraintStart_toStartOf="@id/ad_headline"
+                app:layout_constraintTop_toBottomOf="@id/ad_headline"/>
+                -->
+            <TextView
+                android:id="@+id/ad_badge"
+                style="@style/appplugin_AppTheme.AdAttribution"
+                android:layout_marginLeft="3dp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/ad_headline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:ellipsize="end"
+                android:text="shjd adkhf asdfh adkjhf akjdf"
+                android:singleLine="true"
+                android:textColor="#FFFFEE"
+                android:textSize="@dimen/appplugin_headline_text_size"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/ad_badge" />
+
+            <ImageView
+                android:id="@+id/ad_app_icon"
+                android:layout_width="@dimen/appplugin_icon_layout_width"
+                android:layout_height="@dimen/appplugin_icon_layout_height"
+                android:layout_marginStart="@dimen/appplugin_icon_layout_margin_end"
+                android:layout_marginTop="40dp"
+                android:adjustViewBounds="true"
+                android:background="@drawable/appplugin_bg_circle"
+                android:outlineProvider="background"
+                android:visibility="invisible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/ad_call_to_action"
+                android:layout_width="200dp"
+                android:layout_height="40dp"
+                android:layout_marginBottom="25dp"
+                android:layout_marginRight="25dp"
+                android:background="@drawable/appplugin_bg_bound"
+                android:gravity="center"
+                android:text="INSTALL"
+                android:textColor="#FFFFFF"
+                android:textSize="@dimen/appplugin_cta_button_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+            <TextView
+                android:id="@+id/ad_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:padding="5dp"
+                android:textStyle="bold"
+                android:textColor="#ffffff"
+                android:background="#66232323"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="@id/ad_call_to_action"
+                app:layout_constraintStart_toStartOf="@id/ad_call_to_action"
+                app:layout_constraintBottom_toTopOf="@id/ad_call_to_action"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.gms.ads.nativead.NativeAdView>
+
+    <RelativeLayout
+        android:id="@+id/po_parent_btclose"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="10dp"
+        android:layout_gravity="end"
+        android:gravity="center"
+        android:layout_marginStart="20dp">
+
+        <TextView
+            android:id="@+id/tv_count"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/appplugin_bgc_cir_gray"
+            android:gravity="center"
+            tools:text="3"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:id="@+id/ad_imgclose"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/appplugin_bgbt_close"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/ad_close"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerInParent="true"
+            android:background="@color/appplugin_transparent"
+            android:gravity="center"
+            android:visibility="invisible" />
+    </RelativeLayout>
+</merge>

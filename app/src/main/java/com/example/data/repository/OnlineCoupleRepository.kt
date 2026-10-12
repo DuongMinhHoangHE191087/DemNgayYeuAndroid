@@ -229,7 +229,7 @@ class OnlineCoupleRepository(
       birthDate = birthDate.trim(),
       age = calculatedAge,
       zodiac = calculatedZodiac,
-      avatarUrl = avatarUrl.trim().ifEmpty { me.avatarUrl },
+      avatarUrl = avatarUrl.trim(),
       gender = gender,
       bio = bio.trim(),
       isProfileSetup = isSetup
@@ -368,7 +368,7 @@ class OnlineCoupleRepository(
       inviteId = "inv_${now}_${me.uid.take(6)}",
       senderUid = me.uid,
       senderName = me.effectiveDisplayName,
-      senderAvatar = me.avatarUrl,
+      senderAvatar = ProfileUtils.shareableAvatar(me.avatarUrl),
       senderCoupleCode = me.coupleCode,
       senderBirthDate = me.birthDate,
       senderAge = me.age,

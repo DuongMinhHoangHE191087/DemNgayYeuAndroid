@@ -1,0 +1,389 @@
+public final class com.app.plugin.crm.CrmBridge {
+  public static final com.app.plugin.crm.CrmBridge INSTANCE;
+  public final com.app.plugin.crm.CrmBridge$ApplyResult apply(java.lang.String);
+  public final java.lang.String activeVersion();
+  public final synchronized boolean register(com.app.plugin.crm.CrmBridge$CrmSink);
+  public final synchronized void unregister(java.lang.String);
+  public final synchronized java.lang.String emit(com.app.plugin.crm.CrmBridge$EngagementSignal);
+  public final void emitSegmentChange(java.lang.String, java.lang.String, java.lang.String, boolean);
+  public final void emitFirstPurchase(java.lang.String, double, boolean);
+  public final synchronized void clear();
+}
+public final class com.app.plugin.crm.CrmBridge$ApplyResult {
+  public com.app.plugin.crm.CrmBridge$ApplyResult(boolean, java.lang.String);
+  public final boolean getApplied();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final com.app.plugin.crm.CrmBridge$ApplyResult copy(boolean, java.lang.String);
+  public static com.app.plugin.crm.CrmBridge$ApplyResult copy$default(com.app.plugin.crm.CrmBridge$ApplyResult, boolean, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.crm.CrmBridge$BridgeConfig {
+  public com.app.plugin.crm.CrmBridge$BridgeConfig(java.lang.String, boolean, java.util.Set<java.lang.String>);
+  public final java.lang.String getVersion();
+  public final boolean getEnabled();
+  public final java.util.Set<java.lang.String> getSinks();
+  public final java.lang.String component1();
+  public final boolean component2();
+  public final java.util.Set<java.lang.String> component3();
+  public final com.app.plugin.crm.CrmBridge$BridgeConfig copy(java.lang.String, boolean, java.util.Set<java.lang.String>);
+  public static com.app.plugin.crm.CrmBridge$BridgeConfig copy$default(com.app.plugin.crm.CrmBridge$BridgeConfig, java.lang.String, boolean, java.util.Set, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public interface com.app.plugin.crm.CrmBridge$CrmSink {
+  public abstract java.lang.String getSinkId();
+  public abstract boolean deliver(com.app.plugin.crm.CrmBridge$EngagementSignal);
+}
+public final class com.app.plugin.crm.CrmBridge$EngagementSignal {
+  public com.app.plugin.crm.CrmBridge$EngagementSignal(com.app.plugin.crm.CrmBridge$SignalKind, java.lang.String, java.lang.String, boolean, long);
+  public com.app.plugin.crm.CrmBridge$EngagementSignal(com.app.plugin.crm.CrmBridge$SignalKind, java.lang.String, java.lang.String, boolean, long, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final com.app.plugin.crm.CrmBridge$SignalKind getKind();
+  public final java.lang.String getPlayerId();
+  public final java.lang.String getDetail();
+  public final boolean isHoldout();
+  public final long getAtMs();
+  public final com.app.plugin.crm.CrmBridge$SignalKind component1();
+  public final java.lang.String component2();
+  public final java.lang.String component3();
+  public final boolean component4();
+  public final long component5();
+  public final com.app.plugin.crm.CrmBridge$EngagementSignal copy(com.app.plugin.crm.CrmBridge$SignalKind, java.lang.String, java.lang.String, boolean, long);
+  public static com.app.plugin.crm.CrmBridge$EngagementSignal copy$default(com.app.plugin.crm.CrmBridge$EngagementSignal, com.app.plugin.crm.CrmBridge$SignalKind, java.lang.String, java.lang.String, boolean, long, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.crm.CrmBridge$SignalKind extends java.lang.Enum<com.app.plugin.crm.CrmBridge$SignalKind> {
+  public static final com.app.plugin.crm.CrmBridge$SignalKind SEGMENT_CHANGE;
+  public static final com.app.plugin.crm.CrmBridge$SignalKind FIRST_PURCHASE;
+  public static com.app.plugin.crm.CrmBridge$SignalKind[] values();
+  public static com.app.plugin.crm.CrmBridge$SignalKind valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<com.app.plugin.crm.CrmBridge$SignalKind> getEntries();
+}
+public final class com.app.plugin.game.GameModule {
+  public static final com.app.plugin.game.GameModule INSTANCE;
+  public final void install();
+}
+final class com.app.plugin.game.GameModule$CrmSignals implements com.app.plugin.brain.BrainSignalListener {
+  public static final com.app.plugin.game.GameModule$CrmSignals INSTANCE;
+  public void onFirstPurchase(java.lang.String, double, boolean);
+  public void onSegmentChange(java.lang.String, java.lang.String, java.lang.String, boolean);
+}
+public final class com.app.plugin.iap.BattlePass {
+  public static final com.app.plugin.iap.BattlePass INSTANCE;
+  public final kotlin.jvm.functions.Function0<java.lang.Long> getClock$appplugin_game();
+  public final void setClock$appplugin_game(kotlin.jvm.functions.Function0<java.lang.Long>);
+  public final com.app.plugin.iap.BattlePass$ApplyResult apply(java.lang.String);
+  public final java.lang.String activeVersion();
+  public final synchronized long addXp(long, long);
+  public static long addXp$default(com.app.plugin.iap.BattlePass, long, long, int, java.lang.Object);
+  public final long xpTotal();
+  public final int currentTier();
+  public final boolean isPremiumActive();
+  public final synchronized com.app.plugin.iap.BattlePass$ClaimResult claim(int, com.app.plugin.iap.BattlePass$Track, long);
+  public static com.app.plugin.iap.BattlePass$ClaimResult claim$default(com.app.plugin.iap.BattlePass, int, com.app.plugin.iap.BattlePass$Track, long, int, java.lang.Object);
+  public final java.util.List<kotlin.Pair<java.lang.Integer, com.app.plugin.iap.BattlePass$Track>> claimable(long);
+  public static java.util.List claimable$default(com.app.plugin.iap.BattlePass, long, int, java.lang.Object);
+  public final com.app.plugin.iap.BattlePass$SeasonPhase phase(long);
+  public static com.app.plugin.iap.BattlePass$SeasonPhase phase$default(com.app.plugin.iap.BattlePass, long, int, java.lang.Object);
+  public final synchronized void clear();
+}
+public final class com.app.plugin.iap.BattlePass$ApplyResult {
+  public com.app.plugin.iap.BattlePass$ApplyResult(boolean, java.lang.String);
+  public final boolean getApplied();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final com.app.plugin.iap.BattlePass$ApplyResult copy(boolean, java.lang.String);
+  public static com.app.plugin.iap.BattlePass$ApplyResult copy$default(com.app.plugin.iap.BattlePass$ApplyResult, boolean, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.BattlePass$ClaimResult {
+  public com.app.plugin.iap.BattlePass$ClaimResult(boolean, java.util.List<com.app.plugin.iap.BattlePass$Reward>, java.lang.String);
+  public final boolean getClaimed();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Reward> getRewards();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Reward> component2();
+  public final java.lang.String component3();
+  public final com.app.plugin.iap.BattlePass$ClaimResult copy(boolean, java.util.List<com.app.plugin.iap.BattlePass$Reward>, java.lang.String);
+  public static com.app.plugin.iap.BattlePass$ClaimResult copy$default(com.app.plugin.iap.BattlePass$ClaimResult, boolean, java.util.List, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.BattlePass$Reward {
+  public com.app.plugin.iap.BattlePass$Reward(java.lang.String, java.lang.String, long);
+  public final java.lang.String getId();
+  public final java.lang.String getType();
+  public final long getAmount();
+  public final java.lang.String component1();
+  public final java.lang.String component2();
+  public final long component3();
+  public final com.app.plugin.iap.BattlePass$Reward copy(java.lang.String, java.lang.String, long);
+  public static com.app.plugin.iap.BattlePass$Reward copy$default(com.app.plugin.iap.BattlePass$Reward, java.lang.String, java.lang.String, long, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.BattlePass$SeasonConfig {
+  public com.app.plugin.iap.BattlePass$SeasonConfig(java.lang.String, java.lang.String, long, long, java.lang.String, java.util.List<com.app.plugin.iap.BattlePass$Tier>, long, boolean, double, double);
+  public final java.lang.String getVersion();
+  public final java.lang.String getSeasonId();
+  public final long getStartMs();
+  public final long getEndMs();
+  public final java.lang.String getPremiumProductId();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Tier> getTiers();
+  public final long getXpCap();
+  public final boolean getCatchUpEnabled();
+  public final double getCatchUpStartFraction();
+  public final double getCatchUpMultiplier();
+  public final java.lang.String component1();
+  public final java.lang.String component2();
+  public final long component3();
+  public final long component4();
+  public final java.lang.String component5();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Tier> component6();
+  public final long component7();
+  public final boolean component8();
+  public final double component9();
+  public final double component10();
+  public final com.app.plugin.iap.BattlePass$SeasonConfig copy(java.lang.String, java.lang.String, long, long, java.lang.String, java.util.List<com.app.plugin.iap.BattlePass$Tier>, long, boolean, double, double);
+  public static com.app.plugin.iap.BattlePass$SeasonConfig copy$default(com.app.plugin.iap.BattlePass$SeasonConfig, java.lang.String, java.lang.String, long, long, java.lang.String, java.util.List, long, boolean, double, double, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.BattlePass$SeasonPhase extends java.lang.Enum<com.app.plugin.iap.BattlePass$SeasonPhase> {
+  public static final com.app.plugin.iap.BattlePass$SeasonPhase NOT_STARTED;
+  public static final com.app.plugin.iap.BattlePass$SeasonPhase ACTIVE;
+  public static final com.app.plugin.iap.BattlePass$SeasonPhase ENDED;
+  public static final com.app.plugin.iap.BattlePass$SeasonPhase NO_SEASON;
+  public static com.app.plugin.iap.BattlePass$SeasonPhase[] values();
+  public static com.app.plugin.iap.BattlePass$SeasonPhase valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<com.app.plugin.iap.BattlePass$SeasonPhase> getEntries();
+}
+public final class com.app.plugin.iap.BattlePass$Tier {
+  public com.app.plugin.iap.BattlePass$Tier(int, long, java.util.List<com.app.plugin.iap.BattlePass$Reward>, java.util.List<com.app.plugin.iap.BattlePass$Reward>);
+  public final int getTier();
+  public final long getXpRequired();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Reward> getFree();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Reward> getPremium();
+  public final int component1();
+  public final long component2();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Reward> component3();
+  public final java.util.List<com.app.plugin.iap.BattlePass$Reward> component4();
+  public final com.app.plugin.iap.BattlePass$Tier copy(int, long, java.util.List<com.app.plugin.iap.BattlePass$Reward>, java.util.List<com.app.plugin.iap.BattlePass$Reward>);
+  public static com.app.plugin.iap.BattlePass$Tier copy$default(com.app.plugin.iap.BattlePass$Tier, int, long, java.util.List, java.util.List, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.BattlePass$Track extends java.lang.Enum<com.app.plugin.iap.BattlePass$Track> {
+  public static final com.app.plugin.iap.BattlePass$Track FREE;
+  public static final com.app.plugin.iap.BattlePass$Track PREMIUM;
+  public static com.app.plugin.iap.BattlePass$Track[] values();
+  public static com.app.plugin.iap.BattlePass$Track valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<com.app.plugin.iap.BattlePass$Track> getEntries();
+}
+public final class com.app.plugin.iap.PurchaseRouter {
+  public static final com.app.plugin.iap.PurchaseRouter INSTANCE;
+  public final kotlin.jvm.functions.Function0<java.lang.String> getCountryProvider$appplugin_game();
+  public final void setCountryProvider$appplugin_game(kotlin.jvm.functions.Function0<java.lang.String>);
+  public final kotlin.jvm.functions.Function0<java.lang.String> getUserIdProvider$appplugin_game();
+  public final void setUserIdProvider$appplugin_game(kotlin.jvm.functions.Function0<java.lang.String>);
+  public final java.lang.String activeVersion();
+  public final void clear();
+  public final com.app.plugin.iap.PurchaseRouter$ApplyResult apply(java.lang.String);
+  public final com.app.plugin.iap.PurchaseChannel route(java.lang.String);
+  public final boolean purchase(android.app.Activity, java.lang.String, kotlin.jvm.functions.Function1<? super com.app.plugin.iap.IapResult, kotlin.Unit>);
+  public static boolean purchase$default(com.app.plugin.iap.PurchaseRouter, android.app.Activity, java.lang.String, kotlin.jvm.functions.Function1, int, java.lang.Object);
+  public final java.lang.String checkoutUrlFor(java.lang.String);
+  public final boolean grantFromServer(java.lang.String, java.lang.String, long, java.lang.String, int, boolean);
+  public static boolean grantFromServer$default(com.app.plugin.iap.PurchaseRouter, java.lang.String, java.lang.String, long, java.lang.String, int, boolean, int, java.lang.Object);
+}
+public final class com.app.plugin.iap.PurchaseRouter$ApplyResult {
+  public com.app.plugin.iap.PurchaseRouter$ApplyResult(boolean, java.lang.String);
+  public final boolean getApplied();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final com.app.plugin.iap.PurchaseRouter$ApplyResult copy(boolean, java.lang.String);
+  public static com.app.plugin.iap.PurchaseRouter$ApplyResult copy$default(com.app.plugin.iap.PurchaseRouter$ApplyResult, boolean, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.PurchaseRouter$Rule {
+  public com.app.plugin.iap.PurchaseRouter$Rule(java.lang.String, com.app.plugin.iap.PurchaseChannel);
+  public final java.lang.String getProductId();
+  public final com.app.plugin.iap.PurchaseChannel getChannel();
+  public final java.lang.String component1();
+  public final com.app.plugin.iap.PurchaseChannel component2();
+  public final com.app.plugin.iap.PurchaseRouter$Rule copy(java.lang.String, com.app.plugin.iap.PurchaseChannel);
+  public static com.app.plugin.iap.PurchaseRouter$Rule copy$default(com.app.plugin.iap.PurchaseRouter$Rule, java.lang.String, com.app.plugin.iap.PurchaseChannel, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.PurchaseRouter$WebShopConfig {
+  public com.app.plugin.iap.PurchaseRouter$WebShopConfig(boolean, java.lang.String, java.util.Set<java.lang.String>, boolean);
+  public final boolean getEnabled();
+  public final java.lang.String getUrlTemplate();
+  public final java.util.Set<java.lang.String> getEligibleCountries();
+  public final boolean getUrlOk();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final java.util.Set<java.lang.String> component3();
+  public final boolean component4();
+  public final com.app.plugin.iap.PurchaseRouter$WebShopConfig copy(boolean, java.lang.String, java.util.Set<java.lang.String>, boolean);
+  public static com.app.plugin.iap.PurchaseRouter$WebShopConfig copy$default(com.app.plugin.iap.PurchaseRouter$WebShopConfig, boolean, java.lang.String, java.util.Set, boolean, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.PurchaseRouter$WhenMappings {
+  public static final int[] $EnumSwitchMapping$0;
+}
+public final class com.app.plugin.iap.RecurringGrants {
+  public static final com.app.plugin.iap.RecurringGrants INSTANCE;
+  public final kotlin.jvm.functions.Function0<java.lang.Long> getClock$appplugin_game();
+  public final void setClock$appplugin_game(kotlin.jvm.functions.Function0<java.lang.Long>);
+  public final com.app.plugin.iap.RecurringGrants$ApplyResult apply(java.lang.String);
+  public final java.lang.String activeVersion();
+  public final java.util.List<com.app.plugin.iap.RecurringGrants$Due> dueGrants(long);
+  public static java.util.List dueGrants$default(com.app.plugin.iap.RecurringGrants, long, int, java.lang.Object);
+  public final synchronized com.app.plugin.iap.RecurringGrants$ClaimResult claim(java.lang.String, java.lang.String, long);
+  public static com.app.plugin.iap.RecurringGrants$ClaimResult claim$default(com.app.plugin.iap.RecurringGrants, java.lang.String, java.lang.String, long, int, java.lang.Object);
+  public final synchronized void clear();
+}
+public final class com.app.plugin.iap.RecurringGrants$ApplyResult {
+  public com.app.plugin.iap.RecurringGrants$ApplyResult(boolean, java.lang.String);
+  public final boolean getApplied();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final com.app.plugin.iap.RecurringGrants$ApplyResult copy(boolean, java.lang.String);
+  public static com.app.plugin.iap.RecurringGrants$ApplyResult copy$default(com.app.plugin.iap.RecurringGrants$ApplyResult, boolean, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.RecurringGrants$ClaimResult {
+  public com.app.plugin.iap.RecurringGrants$ClaimResult(boolean, java.lang.String, long, java.lang.String);
+  public final boolean getClaimed();
+  public final java.lang.String getRewardType();
+  public final long getRewardAmount();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final long component3();
+  public final java.lang.String component4();
+  public final com.app.plugin.iap.RecurringGrants$ClaimResult copy(boolean, java.lang.String, long, java.lang.String);
+  public static com.app.plugin.iap.RecurringGrants$ClaimResult copy$default(com.app.plugin.iap.RecurringGrants$ClaimResult, boolean, java.lang.String, long, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.RecurringGrants$Due {
+  public com.app.plugin.iap.RecurringGrants$Due(com.app.plugin.iap.RecurringGrants$Grant);
+  public final com.app.plugin.iap.RecurringGrants$Grant getGrant();
+  public final com.app.plugin.iap.RecurringGrants$Grant component1();
+  public final com.app.plugin.iap.RecurringGrants$Due copy(com.app.plugin.iap.RecurringGrants$Grant);
+  public static com.app.plugin.iap.RecurringGrants$Due copy$default(com.app.plugin.iap.RecurringGrants$Due, com.app.plugin.iap.RecurringGrants$Grant, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.iap.RecurringGrants$Grant {
+  public com.app.plugin.iap.RecurringGrants$Grant(java.lang.String, long, java.lang.String, long);
+  public final java.lang.String getProductId();
+  public final long getPeriodHours();
+  public final java.lang.String getRewardType();
+  public final long getRewardAmount();
+  public final java.lang.String component1();
+  public final long component2();
+  public final java.lang.String component3();
+  public final long component4();
+  public final com.app.plugin.iap.RecurringGrants$Grant copy(java.lang.String, long, java.lang.String, long);
+  public static com.app.plugin.iap.RecurringGrants$Grant copy$default(com.app.plugin.iap.RecurringGrants$Grant, java.lang.String, long, java.lang.String, long, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.offerwall.OfferwallManager {
+  public static final com.app.plugin.offerwall.OfferwallManager INSTANCE;
+  public final com.app.plugin.offerwall.OfferwallManager$ApplyResult apply(java.lang.String);
+  public final java.lang.String activeVersion();
+  public final synchronized boolean register(com.app.plugin.offerwall.OfferwallManager$OfferwallProvider);
+  public final synchronized void unregister(java.lang.String);
+  public final synchronized java.util.List<com.app.plugin.offerwall.OfferwallManager$OfferwallProvider> availableProviders();
+  public final synchronized com.app.plugin.offerwall.OfferwallManager$ShowResult show(java.lang.String, kotlin.jvm.functions.Function0<kotlin.Unit>);
+  public static com.app.plugin.offerwall.OfferwallManager$ShowResult show$default(com.app.plugin.offerwall.OfferwallManager, java.lang.String, kotlin.jvm.functions.Function0, int, java.lang.Object);
+  public final synchronized com.app.plugin.offerwall.OfferwallManager$CompletionResult reportCompletion(java.lang.String, long, java.lang.String);
+  public final synchronized void clear();
+}
+public final class com.app.plugin.offerwall.OfferwallManager$ApplyResult {
+  public com.app.plugin.offerwall.OfferwallManager$ApplyResult(boolean, java.lang.String);
+  public final boolean getApplied();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final com.app.plugin.offerwall.OfferwallManager$ApplyResult copy(boolean, java.lang.String);
+  public static com.app.plugin.offerwall.OfferwallManager$ApplyResult copy$default(com.app.plugin.offerwall.OfferwallManager$ApplyResult, boolean, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.offerwall.OfferwallManager$CompletionResult {
+  public com.app.plugin.offerwall.OfferwallManager$CompletionResult(boolean, long, java.lang.String);
+  public final boolean getAccepted();
+  public final long getCurrencyEarned();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final long component2();
+  public final java.lang.String component3();
+  public final com.app.plugin.offerwall.OfferwallManager$CompletionResult copy(boolean, long, java.lang.String);
+  public static com.app.plugin.offerwall.OfferwallManager$CompletionResult copy$default(com.app.plugin.offerwall.OfferwallManager$CompletionResult, boolean, long, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public final class com.app.plugin.offerwall.OfferwallManager$OfferwallConfig {
+  public com.app.plugin.offerwall.OfferwallManager$OfferwallConfig(java.lang.String, boolean, java.util.Set<java.lang.String>);
+  public final java.lang.String getVersion();
+  public final boolean getEnabled();
+  public final java.util.Set<java.lang.String> getProviders();
+  public final java.lang.String component1();
+  public final boolean component2();
+  public final java.util.Set<java.lang.String> component3();
+  public final com.app.plugin.offerwall.OfferwallManager$OfferwallConfig copy(java.lang.String, boolean, java.util.Set<java.lang.String>);
+  public static com.app.plugin.offerwall.OfferwallManager$OfferwallConfig copy$default(com.app.plugin.offerwall.OfferwallManager$OfferwallConfig, java.lang.String, boolean, java.util.Set, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+public interface com.app.plugin.offerwall.OfferwallManager$OfferwallProvider {
+  public abstract java.lang.String getProviderId();
+  public abstract boolean isAvailable();
+  public abstract void show(kotlin.jvm.functions.Function0<kotlin.Unit>);
+}
+public final class com.app.plugin.offerwall.OfferwallManager$ShowResult {
+  public com.app.plugin.offerwall.OfferwallManager$ShowResult(boolean, java.lang.String);
+  public final boolean getShown();
+  public final java.lang.String getReport();
+  public final boolean component1();
+  public final java.lang.String component2();
+  public final com.app.plugin.offerwall.OfferwallManager$ShowResult copy(boolean, java.lang.String);
+  public static com.app.plugin.offerwall.OfferwallManager$ShowResult copy$default(com.app.plugin.offerwall.OfferwallManager$ShowResult, boolean, java.lang.String, int, java.lang.Object);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}

@@ -1,0 +1,73 @@
+{
+  "version": "policy_2026_08_24_reference",
+  "enabled": true,
+
+  "guardrails": {
+    "max_interstitial_per_session": 4,
+    "min_minutes_between_interstitial": 5,
+    "max_ads_24h": 30,
+    "churn_risk_threshold": 0.7
+  },
+
+  "iap": {
+    "max_offers_per_session": 2,
+    "min_minutes_between_offers": 15,
+    "max_purchases_per_session_before_break": 2,
+    "frustration_streak_threshold": 4
+  },
+
+  "gameplay": {
+    "max_assists_per_session": 4
+  },
+
+  "progression": {
+    "min_level_for_interstitial": 10,
+    "min_level_for_interstitial_after_loss": 22,
+    "min_minutes_after_rewarded": 2,
+    "skip_first_interstitials_on_reopen": 1,
+    "max_iap_offers_24h": 2
+  },
+
+  "click_fraud": {
+    "max_clicks_per_window": 6,
+    "window_seconds": 300,
+    "lockout_seconds": 1800
+  },
+
+  "experiment": {
+    "holdout_fraction": 0.05,
+    "holdout_salt": "brain_holdout_v1",
+    "exploration_floor": 0.03,
+    "rollout_fraction": 0.1
+  },
+
+  "reward": {
+    "weight_immediate_value": 0.3,
+    "weight_continuation": 0.7
+  },
+
+  "scenarios": {
+    "PROTECT_AND_CONVERT": { "interstitial_cap": 2 },
+    "AD_FORWARD":          { "interstitial_cap": 6 },
+    "RETENTION_FIRST":     { "interstitial_cap": 1 },
+    "BALANCED_HYBRID":     { "interstitial_cap": 3 }
+  },
+
+  "likelihood_profiles": {
+    "HIGH_SKILL_LOW_TOLERANCE":  {"fail_rate":0.15,"rewarded_accept":0.20,"payer_propensity":0.70,"churn_tendency":0.20},
+    "HIGH_SKILL_HIGH_TOLERANCE": {"fail_rate":0.15,"rewarded_accept":0.75,"payer_propensity":0.20,"churn_tendency":0.25},
+    "LOW_SKILL_HIGH_CHURN_RISK": {"fail_rate":0.60,"rewarded_accept":0.45,"payer_propensity":0.15,"churn_tendency":0.80},
+    "CASUAL_STEADY":             {"fail_rate":0.35,"rewarded_accept":0.50,"payer_propensity":0.35,"churn_tendency":0.35}
+  },
+
+  "fx_rates": {
+    "EUR": 1.08,
+    "GBP": 1.27,
+    "JPY": 0.0064,
+    "VND": 0.000039
+  },
+
+  "remove_ads_products": ["premium_monthly", "premium_yearly", "no_ads_forever"],
+
+  "min_confidence": 0.4
+}

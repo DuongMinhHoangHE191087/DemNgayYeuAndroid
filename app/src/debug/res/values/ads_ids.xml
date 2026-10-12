@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug only: Google sample ad units read by appplugin via getIdentifier. Real ad IDs are added
+     later by the owner (release source set), never here. -->
+<resources>
+    <string name="flagTest" translatable="false">1</string>
+    <string name="admob_banner" translatable="false">bn_default,ca-app-pub-3940256099942544/6300978111#bn_collapsible,ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_rect" translatable="false">rect_default,ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_full" translatable="false">full_default,ca-app-pub-3940256099942544/1033173712</string>
+    <string name="admob_openad" translatable="false">full_splash,ca-app-pub-3940256099942544/9257395921#full_resume,ca-app-pub-3940256099942544/9257395921</string>
+    <string-array name="ads_collapsible_placements">
+        <item>bn_collapsible</item>
+    </string-array>
+</resources>

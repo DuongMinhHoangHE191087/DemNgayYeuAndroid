@@ -113,7 +113,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   private val _selectedTab = MutableStateFlow(0) // Default to Love Screen matching image.png!
   val selectedTab: StateFlow<Int> = _selectedTab.asStateFlow()
 
-  private val _calendarFilter = MutableStateFlow("Tất cả (4)")
+  private val _calendarFilter = MutableStateFlow("ALL")
   val calendarFilter: StateFlow<String> = _calendarFilter.asStateFlow()
 
   private val _giftCategory = MutableStateFlow("Tất cả")
@@ -319,7 +319,18 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       destFile.toURI().toString()
     } catch (e: Exception) {
       android.util.Log.e("InLoveViewModel", "Error saving local avatar: ${e.message}")
-      uri.toString()
+      ""
+    }
+  }
+
+  /** Deletes a copy from [saveLocalAvatar] that the user did not save. */
+  fun deleteUnsavedAvatar(url: String) {
+    viewModelScope.launch {
+      kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        com.example.ui.util.ProfileUtils.staleLocalAvatar(
+          url, "", java.io.File(getApplication<Application>().filesDir, "avatars")
+        )?.delete()
+      }
     }
   }
 
@@ -709,6 +720,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _toastMessage.value = null
   }
 
+  private fun tr(vi: String, en: String) = if (_appLanguage.value == AppLanguage.VI) vi else en
+
   /** "Cà phê, du lịch" -> {"cà phê", "du lịch"}; rỗng/null -> tập rỗng. */
   private fun parseLikes(csv: String?): Set<String> =
     csv.orEmpty().split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
@@ -730,18 +743,27 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     }
   }
 
+  fun renameChecklist(item: ChecklistItemEntity, text: String) {
+    if (text.isBlank()) return
+    viewModelScope.launch {
+      repository.renameChecklistItem(item, text.trim())
+    }
+  }
+
   fun addChecklist(text: String) {
     if (text.isBlank()) return
     viewModelScope.launch {
       repository.addChecklistItem(text.trim())
-      showToast("Đã thêm vào checklist chuẩn bị!")
+      showToast(tr("Đã thêm vào checklist chuẩn bị!", "Added to your checklist!"))
     }
   }
 
   fun toggleGiftFavorite(item: GiftIdeaEntity) {
     viewModelScope.launch {
       repository.toggleGiftFavorite(item)
-      showToast(if (!item.isFavorited) "Đã lưu ý tưởng quà tặng này!" else "Đã bỏ lưu ý tưởng")
+      // The detail dialog holds a snapshot; keep it in sync so its label and next toggle are correct.
+      if (_selectedGiftDetail.value?.id == item.id) _selectedGiftDetail.value = item.copy(isFavorited = !item.isFavorited)
+      showToast(if (!item.isFavorited) tr("Đã lưu ý tưởng quà tặng này!", "Gift idea saved!") else tr("Đã bỏ lưu ý tưởng", "Gift idea removed"))
     }
   }
 
@@ -750,20 +772,20 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       repository.toggleCadence(item)
       // A cadence toggle changes which advance and day-of alarms stay armed, so reschedule now.
       com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(getApplication(), dao)
-      showToast(if (!item.isEnabled) "Đã bật: ${item.label}" else "Đã tắt: ${item.label}")
+      showToast(if (!item.isEnabled) tr("Đã bật: ${item.label}", "On: ${item.label}") else tr("Đã tắt: ${item.label}", "Off: ${item.label}"))
     }
   }
 
   fun addCustomReminder(title: String, dateText: String, note: String) {
     if (title.isBlank()) {
-      showToast("Vui lòng nhập tên lời nhắc nhé!")
+      showToast(tr("Vui lòng nhập tên lời nhắc nhé!", "Please enter a reminder name"))
       return
     }
     viewModelScope.launch {
       repository.addCustomReminder(title, dateText, note)
       _showAddReminderDialog.value = false
       triggerFloatingHearts()
-      showToast("Đã thêm thành công lời nhắc hẹn hò mới!")
+      showToast(tr("Đã thêm thành công lời nhắc hẹn hò mới!", "Reminder added!"))
     }
   }
 
@@ -795,13 +817,13 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       )
       if (success) {
         repository.setCustomReminderAlarm(id, triggerAtMillis, formatted)
-        val exactWarning = if (com.example.alarm.AlarmNotificationScheduler.exactAlarmsGranted(context)) "" else " Quyền báo thức chính xác đang tắt, báo thức có thể trễ."
-        showToast("⏰ Đã hẹn giờ báo thức lúc $formatted!$exactWarning")
+        val exactWarning = if (com.example.alarm.AlarmNotificationScheduler.exactAlarmsGranted(context)) "" else tr(" Quyền báo thức chính xác đang tắt, báo thức có thể trễ.", " Exact alarms are off, so the alarm may be late.")
+        showToast(tr("⏰ Đã hẹn giờ báo thức lúc $formatted!", "⏰ Alarm set for $formatted!") + exactWarning)
         triggerFloatingHearts()
       } else {
         // A new row is dropped; an existing row must not keep a time that nothing will ring.
         if (existing == null) repository.deleteCustomReminder(id) else repository.setCustomReminderAlarm(id, null, "")
-        showToast("Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.")
+        showToast(tr("Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.", "Couldn't set the alarm. Check system permissions."))
       }
       _showSetAlarmDialog.value = false
     }
@@ -819,7 +841,10 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
         message = message,
         triggerAtMillis = now + 1000L
       )
-      showToast(if (success) "⏰ Báo thức thử sẽ kêu sau 1 giây!" else "Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.")
+      showToast(
+        if (success) tr("⏰ Báo thức thử sẽ kêu sau 1 giây!", "⏰ Test alarm rings in 1 second!")
+        else tr("Không thể đặt lịch báo thức. Vui lòng kiểm tra quyền hệ thống.", "Couldn't set the alarm. Check system permissions.")
+      )
       _showSetAlarmDialog.value = false
     }
   }
@@ -835,14 +860,14 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   ) {
     val context = getApplication<Application>()
     com.example.alarm.AlarmNotificationScheduler.triggerInstantTest(context, title, message)
-    showToast("🔔 Đã phát thử chuông thông báo kỷ niệm!")
+    showToast(tr("🔔 Đã phát thử chuông thông báo kỷ niệm!", "🔔 Test notification sent!"))
   }
 
   fun deleteCustomReminder(id: Long) {
     viewModelScope.launch {
       cancelReminderAlarm(id)
       repository.deleteCustomReminder(id)
-      showToast("Đã xóa lời nhắc hẹn thành công.")
+      showToast(tr("Đã xóa lời nhắc hẹn thành công.", "Reminder deleted."))
     }
   }
 
@@ -851,14 +876,14 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       val context = getApplication<Application>()
       com.example.alarm.AlarmNotificationScheduler.cancelMilestoneNotification(context, id)
       repository.deleteMilestone(id)
-      showToast("Đã xóa ngày kỷ niệm khỏi lịch.")
+      showToast(tr("Đã xóa ngày kỷ niệm khỏi lịch.", "Milestone deleted."))
     }
   }
 
   fun deleteChecklistItem(id: Long) {
     viewModelScope.launch {
       repository.deleteChecklistItem(id)
-      showToast("Đã xóa công việc chuẩn bị quà.")
+      showToast(tr("Đã xóa công việc chuẩn bị quà.", "Checklist item deleted."))
     }
   }
 
@@ -873,7 +898,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     isImportant: Boolean
   ) {
     if (title.isBlank()) {
-      showToast("Vui lòng nhập tiêu đề kỷ niệm!")
+      showToast(tr("Vui lòng nhập tiêu đề kỷ niệm!", "Please enter a title"))
       return
     }
     val defaultFallback = presetPhotos.value.firstOrNull() ?: ""
@@ -896,7 +921,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       com.example.alarm.AlarmNotificationScheduler.scheduleMilestoneNotification(context, ms.copy(id = newId))
       _showAddMilestoneDialog.value = false
       triggerFloatingHearts()
-      showToast("Đã thêm kỷ niệm mới & hẹn giờ thông báo! 🔔")
+      showToast(tr("Đã thêm kỷ niệm mới & hẹn giờ thông báo! 🔔", "Milestone added & notification set! 🔔"))
     }
   }
 
@@ -908,17 +933,17 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       repository.toggleMilestoneNotification(item)
       if (willBeEnabled) {
         com.example.alarm.AlarmNotificationScheduler.scheduleMilestoneNotification(context, updated)
-        showToast("🔔 Đã bật thông báo cho cột mốc '${item.title}'")
+        showToast(tr("🔔 Đã bật thông báo cho cột mốc '${item.title}'", "🔔 Notifications on for '${item.title}'"))
       } else {
         com.example.alarm.AlarmNotificationScheduler.cancelMilestoneNotification(context, item.id)
-        showToast("🔕 Đã tắt thông báo cho '${item.title}'")
+        showToast(tr("🔕 Đã tắt thông báo cho '${item.title}'", "🔕 Notifications off for '${item.title}'"))
       }
     }
   }
 
   fun markAllNotificationsRead() {
     _isAllNotificationsRead.value = true
-    showToast("Đã đánh dấu đã đọc tất cả thông báo!")
+    showToast(tr("Đã đánh dấu đã đọc tất cả thông báo!", "All notifications marked as read"))
   }
 
   fun toggleSweetNoteLike() {
@@ -926,7 +951,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     _sweetNoteLiked.value = newState
     if (newState) {
       triggerFloatingHearts()
-      showToast("Đã gửi phản hồi tim ngọt ngào ❤️!")
+      showToast(tr("Đã gửi phản hồi tim ngọt ngào ❤️!", "Sent a sweet heart back ❤️"))
     }
   }
 
@@ -997,7 +1022,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
 
       _showEditCoupleDialog.value = false
       triggerFloatingHearts()
-      showToast("Đã lưu hồ sơ 2 bạn vào cơ sở dữ liệu Room thành công! ❤️")
+      showToast(tr("Đã lưu hồ sơ 2 bạn vào cơ sở dữ liệu Room thành công! ❤️", "Your couple profile was saved! ❤️"))
     }
   }
 
@@ -1114,9 +1139,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun restorePurchases(onComplete: ((Boolean) -> Unit)? = null) {
     com.example.di.AppServiceLocator.billingManager.queryExistingPurchases { success ->
       if (success) {
-        showToast("✅ Đã khôi phục thành công gói VIP!")
+        showToast(tr("✅ Đã khôi phục thành công gói VIP!", "✅ VIP restored!"))
       } else {
-        showToast("Không tìm thấy giao dịch VIP nào cho tài khoản này.")
+        showToast(tr("Không tìm thấy giao dịch VIP nào cho tài khoản này.", "No VIP purchase found for this account."))
       }
       onComplete?.invoke(success)
     }
@@ -1137,16 +1162,17 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       val partner = partnerOnlineUser.value
       val partnerName = partner?.effectiveDisplayName ?: girlName.value
       val interests = mutualInterests.value + parseLikes(coupleProfile.value?.likesCsv)
-      showToast("✨ Đang thêm gợi ý quà theo sở thích chung...")
+      showToast(tr("✨ Đang thêm gợi ý quà theo sở thích chung...", "✨ Adding gift ideas…"))
       val result = repository.generateAiGiftSuggestions(
         partnerName = partnerName,
         mutualInterests = interests,
         occasion = occasion
       )
       if (result.isSuccess) {
-        showToast("✨ Đã thêm ${result.getOrNull()?.size ?: 0} gợi ý quà tặng theo sở thích!")
+        val n = result.getOrNull()?.size ?: 0
+        showToast(tr("✨ Đã thêm $n gợi ý quà tặng theo sở thích!", "✨ Added $n gift idea${if (n == 1) "" else "s"}!"))
       } else {
-        showToast("Chưa thêm được gợi ý mới. Bạn vẫn có thể xem toàn bộ danh mục quà tặng.")
+        showToast(tr("Chưa thêm được gợi ý mới. Bạn vẫn có thể xem toàn bộ danh mục quà tặng.", "Couldn't add new ideas. You can still browse the full catalog."))
       }
     }
   }
@@ -1523,7 +1549,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     reminderDaysBefore: Int = 3
   ) {
     if (title.isBlank()) {
-      showToast("Vui lòng nhập tên ngày kỷ niệm!")
+      showToast(tr("Vui lòng nhập tên ngày kỷ niệm!", "Please enter a name"))
       return
     }
     viewModelScope.launch {
@@ -1553,8 +1579,8 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       _showAddAnniversaryDialog.value = false
       triggerFloatingHearts()
       showToast(
-        if (notificationEnabled) "Đã lưu ngày kỷ niệm & kích hoạt thông báo tự động! 🔔"
-        else "Đã lưu ngày kỷ niệm! 💕"
+        if (notificationEnabled) tr("Đã lưu ngày kỷ niệm & kích hoạt thông báo tự động! 🔔", "Saved & notification set! 🔔")
+        else tr("Đã lưu ngày kỷ niệm! 💕", "Saved! 💕")
       )
     }
   }
@@ -1569,7 +1595,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       } else {
         com.example.alarm.AlarmNotificationScheduler.cancelAnniversaryNotification(context, item.id)
       }
-      showToast("Đã cập nhật ngày kỷ niệm!")
+      showToast(tr("Đã cập nhật ngày kỷ niệm!", "Updated!"))
     }
   }
 
@@ -1578,7 +1604,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       val context = getApplication<Application>()
       com.example.alarm.AlarmNotificationScheduler.cancelAnniversaryNotification(context, id)
       repository.deleteAnniversaryDate(id)
-      showToast("Đã xóa ngày kỷ niệm khỏi thiết bị.")
+      showToast(tr("Đã xóa ngày kỷ niệm khỏi thiết bị.", "Date deleted."))
     }
   }
 
@@ -1591,10 +1617,13 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       if (willBeEnabled) {
         val disabledCadence = com.example.alarm.AlarmNotificationScheduler.disabledCadenceKeys(dao)
         val scheduled = com.example.alarm.AlarmNotificationScheduler.scheduleAnniversaryNotification(context, updated, disabledCadence)
-        showToast(if (scheduled) "🔔 Đã bật thông báo kỷ niệm '${item.title}'" else "Đã bật thông báo '${item.title}'")
+        showToast(
+          if (scheduled) tr("🔔 Đã bật thông báo kỷ niệm '${item.title}'", "🔔 Notifications on for '${item.title}'")
+          else tr("Đã bật thông báo '${item.title}'", "Notifications on for '${item.title}'")
+        )
       } else {
         com.example.alarm.AlarmNotificationScheduler.cancelAnniversaryNotification(context, item.id)
-        showToast("🔕 Đã tắt thông báo kỷ niệm '${item.title}'")
+        showToast(tr("🔕 Đã tắt thông báo kỷ niệm '${item.title}'", "🔕 Notifications off for '${item.title}'"))
       }
     }
   }
@@ -1616,7 +1645,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       } else {
         com.example.alarm.AlarmNotificationScheduler.triggerInstantTest(context)
       }
-      showToast("🔔 Đã gửi thông báo kỷ niệm thử nghiệm lên thanh trạng thái!")
+      showToast(tr("🔔 Đã gửi thông báo kỷ niệm thử nghiệm lên thanh trạng thái!", "🔔 Test notification sent!"))
     }
   }
 
@@ -1624,7 +1653,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     val context = getApplication<Application>()
     viewModelScope.launch {
       val count = com.example.alarm.AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context, dao)
-      showToast("⏰ Đã quét & kích hoạt lại $count thông báo kỷ niệm từ cơ sở dữ liệu!")
+      showToast(tr("⏰ Đã quét & kích hoạt lại $count thông báo kỷ niệm từ cơ sở dữ liệu!", "⏰ Re-scheduled $count notifications"))
     }
   }
 
@@ -1644,7 +1673,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       startDateMillis = startMillis,
       startDateText = startDateText
     )
-    showToast("🔔 Đã đồng bộ & kích hoạt $count thông báo cột mốc từ Firestore!")
+    showToast(tr("🔔 Đã đồng bộ & kích hoạt $count thông báo cột mốc từ Firestore!", "🔔 Synced & scheduled $count milestone notifications"))
   }
 
   /**
@@ -1654,9 +1683,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     viewModelScope.launch {
       val success = repository.syncAllCloudPresets()
       if (success) {
-        showToast("✨ Đã làm giàu & đồng bộ dữ liệu mới nhất từ Cloud Firestore!")
+        showToast(tr("✨ Đã làm giàu & đồng bộ dữ liệu mới nhất từ Cloud Firestore!", "✨ Synced the latest data from the cloud"))
       } else {
-        showToast("⚠️ Không thể kết nối Cloud Firestore, đang dùng dữ liệu lưu trữ.")
+        showToast(tr("⚠️ Không thể kết nối Cloud Firestore, đang dùng dữ liệu lưu trữ.", "⚠️ Cloud unavailable, using saved data"))
       }
     }
   }
@@ -1669,7 +1698,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       partnerName = partnerName,
       sampleMilestoneTitle = sample
     )
-    showToast("🔔 Đã kích hoạt thông báo cột mốc thử nghiệm lên thanh trạng thái!")
+    showToast(tr("🔔 Đã kích hoạt thông báo cột mốc thử nghiệm lên thanh trạng thái!", "🔔 Test notification sent!"))
   }
 
   // Room Persistence for Gift Reminders
@@ -1682,7 +1711,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     notes: String = ""
   ) {
     if (title.isBlank()) {
-      showToast("Vui lòng nhập món quà cần nhắc nhở!")
+      showToast(tr("Vui lòng nhập món quà cần nhắc nhở!", "Please enter a gift"))
       return
     }
     viewModelScope.launch {
@@ -1696,21 +1725,21 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       )
       _showAddGiftReminderDialog.value = false
       triggerFloatingHearts()
-      showToast("Đã lưu lời nhắc quà tặng vào cơ sở dữ liệu Room!")
+      showToast(tr("Đã lưu lời nhắc quà tặng vào cơ sở dữ liệu Room!", "Gift reminder saved!"))
     }
   }
 
   fun updateGiftReminder(item: GiftReminderEntity) {
     viewModelScope.launch {
       repository.updateGiftReminder(item)
-      showToast("Đã cập nhật lời nhắc quà tặng!")
+      showToast(tr("Đã cập nhật lời nhắc quà tặng!", "Gift reminder updated!"))
     }
   }
 
   fun toggleGiftReminderCompleted(item: GiftReminderEntity) {
     viewModelScope.launch {
       repository.toggleGiftReminderCompleted(item)
-      val msg = if (!item.isCompleted) "🎁 Tuyệt vời! Đã hoàn thành chuẩn bị món quà!" else "Đã chuyển về danh sách chuẩn bị quà."
+      val msg = if (!item.isCompleted) tr("🎁 Tuyệt vời! Đã hoàn thành chuẩn bị món quà!", "🎁 Gift ready!") else tr("Đã chuyển về danh sách chuẩn bị quà.", "Moved back to your to-do list")
       showToast(msg)
     }
   }
@@ -1718,7 +1747,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun deleteGiftReminder(id: Long) {
     viewModelScope.launch {
       repository.deleteGiftReminder(id)
-      showToast("Đã xóa lời nhắc quà tặng.")
+      showToast(tr("Đã xóa lời nhắc quà tặng.", "Gift reminder deleted."))
     }
   }
 
@@ -1742,7 +1771,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun performSearch() {
     val query = _searchQuery.value.trim()
     if (query.isBlank()) {
-      showToast("Vui lòng nhập mã ghép đôi, tên hoặc email!")
+      showToast(tr("Vui lòng nhập mã ghép đôi, tên hoặc email!", "Enter a pairing code, name or email."))
       return
     }
     viewModelScope.launch {
@@ -1751,9 +1780,9 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
       _searchedUser.value = user
       _isSearching.value = false
       if (user == null) {
-        showToast("Không tìm thấy người dùng với thông tin: $query")
+        showToast(tr("Không tìm thấy người dùng với thông tin: $query", "No user found for: $query"))
       } else {
-        showToast("Đã tìm thấy thông tin của ${user.effectiveDisplayName}!")
+        showToast(tr("Đã tìm thấy thông tin của ${user.effectiveDisplayName}!", "Found ${user.effectiveDisplayName}!"))
       }
     }
   }
@@ -1799,9 +1828,16 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     bio: String
   ) {
     viewModelScope.launch {
+      val oldAvatar = currentOnlineUser.value.avatarUrl
       val (success, message) = onlineRepo.updateMyProfile(name, birthDate, avatarUrl, gender, bio)
       showToast(message)
       if (success) {
+        // the replaced or removed photo would otherwise stay in filesDir/avatars forever
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+          com.example.ui.util.ProfileUtils.staleLocalAvatar(
+            oldAvatar, avatarUrl.trim(), java.io.File(getApplication<Application>().filesDir, "avatars")
+          )?.delete()
+        }
         _showEditProfileDialog.value = false
         triggerFloatingHearts()
       }
@@ -1815,7 +1851,7 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     loveNote: String = ""
   ) {
     if (targetCodeOrLink.isBlank()) {
-      showToast("Vui lòng nhập mã ghép đôi hoặc dán link đối phương!")
+      showToast(tr("Vui lòng nhập mã ghép đôi hoặc dán link đối phương!", "Enter your partner's pairing code or paste their link."))
       return
     }
     viewModelScope.launch {
@@ -1888,19 +1924,19 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   fun toggleInterest(interestKey: String) {
     viewModelScope.launch {
       onlineRepo.toggleInterest(interestKey)
-      showToast("Đã cập nhật sở thích cá nhân")
+      showToast(tr("Đã cập nhật sở thích cá nhân", "Interests updated"))
     }
   }
 
   fun switchDemoUser() {
     onlineRepo.switchDemoUser()
-    showToast("Đã chuyển đổi tài khoản thử nghiệm 1-1")
+    showToast(tr("Đã chuyển đổi tài khoản thử nghiệm 1-1", "Switched test account"))
   }
 
   fun logout() {
     viewModelScope.launch {
       authRepo.logout()
-      showToast("Đã đăng xuất an toàn")
+      showToast(tr("Đã đăng xuất an toàn", "Signed out"))
     }
   }
 
@@ -1908,10 +1944,10 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
     viewModelScope.launch {
       val result = authRepo.deleteCurrentAccount()
       if (result.isSuccess) {
-        showToast("Đã xóa toàn bộ tài khoản và dữ liệu thành công")
+        showToast(tr("Đã xóa toàn bộ tài khoản và dữ liệu thành công", "Account and data deleted"))
         onComplete?.invoke()
       } else {
-        showToast("Không thể xóa tài khoản: ${result.exceptionOrNull()?.message ?: "Lỗi không xác định"}")
+        showToast(tr("Không thể xóa tài khoản: ${result.exceptionOrNull()?.message ?: "Lỗi không xác định"}", "Couldn't delete account: ${result.exceptionOrNull()?.message ?: "unknown error"}"))
       }
     }
   }

@@ -1,0 +1,20 @@
+// 2.1.0 SC1-2 (I1): dấu vết dựng `appplugin/<phiên bản>/<sha>` sinh thành Kotlin nguồn `internal object BuildSha` (không qua BuildConfig → dump API gốc không đổi).
+// Groovy như publish.gradle (lint AGP 9.2.1 sập khi quét .gradle.kts phụ). Đầu vào task = chuỗi đã giải (configuration cache an toàn).
+abstract class WriteBuildSha extends DefaultTask {
+    @Input abstract Property<String> getId()
+    @OutputDirectory abstract DirectoryProperty getOutDir()
+
+    @TaskAction void write() {
+        def dir = new File(outDir.get().asFile, 'com/app/plugin'); dir.mkdirs()
+        new File(dir, 'BuildSha.kt').text = "package com.app.plugin\n\ninternal object BuildSha {\n    const val ID: String = \"${id.get()}\"\n}\n"
+    }
+}
+
+def buildShaId = rootProject.ext['gitShortSha'].map { "appplugin/${rootProject.ext['sdkVersion']}/$it".toString() }
+androidComponents.onVariants(androidComponents.selector().all()) { v ->
+    def task = tasks.register("generate${v.name.capitalize()}BuildSha", WriteBuildSha) {
+        it.id.set(buildShaId)
+        it.outDir.set(layout.buildDirectory.dir("generated/appplugin-build-sha/${v.name}"))
+    }
+    v.sources.kotlin.addGeneratedSourceDirectory(task, { it.outDir })
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/native_ad_lo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:scrollbars="none"/>
+
+    <RelativeLayout
+        android:id="@+id/po_parent_btclose"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="40dp"
+        android:layout_gravity="end"
+        android:gravity="center"
+        android:layout_marginEnd="10dp">
+
+        <TextView
+            android:id="@+id/tv_count"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/appplugin_bgc_cir_gray"
+            android:gravity="center"
+            android:text="3"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:id="@+id/ad_imgclose"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/appplugin_bgbt_close"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/ad_close"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerInParent="true"
+            android:background="@color/appplugin_transparent"
+            android:gravity="center"
+            android:visibility="invisible" />
+    </RelativeLayout>
+</FrameLayout>

@@ -53,6 +53,16 @@ class DatePickerTest {
   }
 
   @Test
+  fun testDaysUntil_todayFutureAndPastAndGarbage() {
+    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val today = java.time.LocalDate.now()
+    assertEquals(0, DatePickerUtils.daysUntil(today.format(fmt)))
+    assertEquals(1, DatePickerUtils.daysUntil(today.plusDays(1).format(fmt)))
+    assertEquals(-1, DatePickerUtils.daysUntil(today.minusDays(1).format(fmt)))
+    assertEquals(null, DatePickerUtils.daysUntil("14 Tháng 2"))
+  }
+
+  @Test
   fun testLoveDaysCalculationWithPickedDate() {
     val days = ProfileUtils.calculateLoveDays("18/12/2022")
     assertTrue("Love days from 2022 should be greater than 365", days > 365)

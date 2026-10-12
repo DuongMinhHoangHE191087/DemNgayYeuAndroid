@@ -69,3 +69,6 @@ val VipGoldBorder = Color(0xFFFFD54F)
 val VipGoldText = Color(0xFFB78103)
 val UpsellBorderPink = Color(0xFFF48FB1)
 
+// Calendar screen accent
+val CalendarAccent: Color = PrimaryContainer
+

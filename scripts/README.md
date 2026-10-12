@@ -45,24 +45,16 @@ npm run seed
 
 ## 🛠️ Bộ Script Tiện Ích Thao Tác Nhanh (Windows Batch Scripts)
 
-Thư mục `scripts/` cung cấp sẵn 3 công cụ batch script giúp lập trình viên và QA kiểm thử ứng dụng nhanh chóng, trực quan:
+Script batch Android nằm ở thư mục gốc dự án, không còn trong `scripts/`:
+- `run_emulator.bat`: mở máy ảo `medium_phone` có GUI, build và cài APK.
+- `install_debug.bat`: build, cài đặt APK debug và mở app.
+- `stop_and_cleanup_emulator.bat`: tắt máy ảo và dọn dẹp.
 
-### 1. `launch_emulator.bat` (Mở máy ảo có GUI tương tác)
-- **Công dụng**: Khởi chạy máy ảo Android `medium_phone` hiển thị đầy đủ cửa sổ điện thoại nổi trên màn hình Windows.
-- **Cách dùng**: Nhấp đúp chuột vào file `scripts\launch_emulator.bat` hoặc gõ trong terminal:
-  ```cmd
-  scripts\launch_emulator.bat
-  ```
-- Cho phép người dùng chạm, vuốt, gõ văn bản và thao tác trực tiếp trên màn hình máy ảo.
-
-### 2. `monitor_app.bat` (Giám sát Debug, Chống Crash & Rò Rỉ Bộ Nhớ Thời Gian Thực)
+### 1. `monitor_app.bat` (Giám sát Debug, Chống Crash & Rò Rỉ Bộ Nhớ Thời Gian Thực)
 - **Công dụng**: Theo dõi trực tiếp dòng dữ liệu Logcat với bộ lọc chuyên sâu:
   - `Ads`: Vòng đời quảng cáo Banner, Interstitial (Interval Capping 60s), App Open Ads.
   - `BillingManager`: Kết nối Google Play Billing v7, truy vấn gói, trạng thái VIP StateFlow.
   - `AndroidRuntime` & `FATAL`: Bắt lập tức mọi lỗi Crash (Uncaught Exceptions), ANR, OutOfMemory.
 - **Cách dùng**: Nhấp đúp chuột vào file `scripts\monitor_app.bat` để mở cửa sổ console debug song song khi đang test app.
 
-### 3. `run_app.bat` (Đóng gói & Cài đặt APK Một Bước)
-- **Công dụng**: Tự động gọi `./gradlew assembleDebug`, đợi máy ảo kết nối, cài đặt file APK mới nhất và mở app `InLove` lên màn hình.
-- **Cách dùng**: Nhấp đúp chuột vào file `scripts\run_app.bat`.
 

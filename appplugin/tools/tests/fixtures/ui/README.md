@@ -1,0 +1,3 @@
+2.1.0 Task 0c — fixture cho `ui_find` (tools/lib/ui_find.sh).
+- `samsung-shade.xml`, `samsung-shade-focus.txt`: dump THẬT của Samsung SM-A256E (R5CX10P9EKZ, Android 16/One UI, 1080x2340) chụp 2026-10-03 khi cửa sổ focus là `NotificationShade` (máy khoá màn hình bằng PIN, keyguard) — focus không phải demo, mọi node thuộc `com.android.systemui`, không có chữ của demo.
+- `demo-list-{1,2,3}.xml`: 3 khung danh sách demo ở 1080x2340, dựng lại từ bố cục của `MainActivity` (mỗi khung cuộn thêm 30 % chiều cao = 702 px, như `mg_scroll`) vì máy khoá PIN nên không chụp được dump thật của demo. THAY bằng dump thật (cùng tên, cùng khung) khi máy mở khoá. Chữ chỉ có ở khung 3: `Load Rect`, `Show Rect`, `Hide Rect`.

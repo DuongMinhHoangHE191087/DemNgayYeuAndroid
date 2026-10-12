@@ -1,0 +1,16 @@
+# real capture 2026-10-04 Task T0c; sha256(raw)=421abd0fd67d7c84; cmd: pmset -g
+System-wide power settings:
+Currently in use:
+ standby              1
+ Sleep On Power Button 1
+ hibernatefile        /var/vm/sleepimage
+ powernap             1
+ networkoversleep     0
+ disksleep            10
+ sleep                10 (sleep prevented by powerd, Electron, Claude)
+ hibernatemode        3
+ ttyskeepawake        1
+ displaysleep         0
+ tcpkeepalive         1
+ lowpowermode         0
+ womp                 1

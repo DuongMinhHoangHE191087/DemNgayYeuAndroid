@@ -5,7 +5,7 @@
     <!-- Navigation Tabs -->
     <string name="nav_home">Trang Chủ</string>
     <string name="nav_memories">Kỷ Niệm</string>
-    <string name="nav_calendar">Lịch &amp; Hẹn</string>
+    <string name="nav_calendar">Lịch</string>
     <string name="nav_gifts">Gợi Ý Quà</string>
     <string name="nav_reminders">Nhắc Hẹn</string>
     <string name="nav_settings">Cài Đặt</string>

@@ -368,19 +368,12 @@ fun UserGuideDialog(
               )
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Column {
-              Text(
-                text = strings.guideTitle,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF26071B)
-              )
-              Text(
-                text = strings.guideSubtitle,
-                fontSize = 11.sp,
-                color = Color(0xFF6B2B50)
-              )
-            }
+            Text(
+              text = strings.guideTitle,
+              fontSize = 16.sp,
+              fontWeight = FontWeight.ExtraBold,
+              color = Color(0xFF26071B)
+            )
           }
 
           IconButton(
@@ -453,13 +446,13 @@ fun UserGuideDialog(
               points = if (language == AppLanguage.VI) listOf(
                 "Đếm chính xác từng ngày từ ngày bắt đầu yêu thương của hai bạn.",
                 "Chạm vào nút Trái Tim ở giữa để kích hoạt hiệu ứng Mưa Tim bay lãng mạn.",
-                "Chạm vào ảnh đại diện hoặc nút 'Đồng Hành' để cập nhật tên, ngày sinh, tuổi, cung hoàng đạo của cả 2.",
-                "Toàn bộ hồ sơ được lưu trữ vĩnh viễn và an toàn trong Room SQLite Database."
+                "Chạm vào ảnh đại diện để cập nhật tên, ngày sinh, tuổi, cung hoàng đạo của cả 2.",
+                "Mọi thay đổi trong hồ sơ được lưu tự động."
               ) else listOf(
                 "Accurately counts every single day from your anniversary start date.",
                 "Tap the beating heart in the center to trigger floating romantic hearts animation.",
-                "Tap partner avatars or the 'Partner' tool button to update names, birthdays, zodiacs, and avatars.",
-                "All profile changes are safely saved locally into Room SQLite Database."
+                "Tap a partner avatar to update names, birthdays, zodiacs, and avatars.",
+                "Profile changes are saved automatically."
               )
             )
             1 -> GuideContentSection(
@@ -501,9 +494,9 @@ fun UserGuideDialog(
             3 -> GuideContentSection(
               title = if (language == AppLanguage.VI) "4. Lịch Kỷ Niệm & Cột Mốc" else "4. Anniversary Calendar & Milestones",
               desc = if (language == AppLanguage.VI)
-                "Ghi nhớ các dịp đặc biệt để luôn chuẩn bị trước chu đáo:"
+                "Không bỏ lỡ ngày quan trọng:"
               else
-                "Never miss any special moments with smart milestone tracking:",
+                "Never miss a special day:",
               points = if (language == AppLanguage.VI) listOf(
                 "Xem đếm ngược số ngày đến cột mốc tiếp theo (100 ngày, 500 ngày, 1000 ngày, 1 năm...).",
                 "Thêm mốc kỷ niệm tùy chỉnh mới với ảnh minh họa, tiêu đề và ngày hẹn.",
@@ -524,32 +517,32 @@ fun UserGuideDialog(
                 "Curated romantic gift ideas and essential date preparation checklist:",
               points = if (language == AppLanguage.VI) listOf(
                 "Danh mục phong phú: Hoa tươi & Thiệp, Trang sức cặp đôi, Bữa tối lãng mạn, Quà công nghệ.",
-                "Nhấn vào biểu tượng Trái Tim trên từng món để lưu vào danh sách Yêu Thích.",
+                "Nhấn ♥ để lưu món yêu thích.",
                 "Xem chi tiết địa điểm gợi ý và bí quyết chuẩn bị bất ngờ cho đối phương.",
                 "Danh sách chuẩn bị (Checklist): Đánh dấu đồ đã chuẩn bị hoặc thêm đầu việc mới."
               ) else listOf(
                 "Diverse categories: Flowers & Cards, Couple Jewelry, Candlelight Dinners, Tech Gifts.",
-                "Tap the heart icon on any gift card to add it to your Wishlist.",
+                "Tap ♥ to save a gift.",
                 "View venue recommendations, budgeting, and romantic tips for each surprise.",
                 "Interactive Checklist: Check off prepared items and add custom date to-dos."
               )
             )
             5 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "6. Trung Tâm Nhắc Hẹn Thông Minh" else "6. Smart Date Reminders",
+              title = if (language == AppLanguage.VI) "6. Nhắc Hẹn & Thông Báo" else "6. Reminders & Notifications",
               desc = if (language == AppLanguage.VI)
-                "Đảm bảo bạn luôn nhớ những ngày hẹn hò ngọt ngào:"
+                "Không bỏ lỡ những ngày đặc biệt:"
               else
-                "Stay on top of romantic dates and weekly love routines:",
+                "Never miss a special day:",
               points = if (language == AppLanguage.VI) listOf(
-                "Kích hoạt chu kỳ nhắc định kỳ: Hẹn hò cuối tuần, Kỷ niệm mỗi tháng, Ngày sinh nhật.",
-                "Tạo lời nhắc tùy chỉnh nhanh chóng: Nhập tên buổi hẹn, thời gian và ghi chú.",
-                "Gửi nhanh thông điệp yêu thương hoặc mở quà tặng phù hợp trực tiếp từ lời nhắc.",
-                "Đồng bộ với hệ thống thông báo trên điện thoại Android."
+                "Bật chuông khi thêm sự kiện hoặc cột mốc trong Lịch để được nhắc đúng ngày.",
+                "Đặt báo thức cho từng món quà để kịp chuẩn bị.",
+                "Thông báo có nút 'Mở InLove' và 'Nhắc lại sau 1h'.",
+                "Chạm biểu tượng chuông ở góc trên để xem tất cả thông báo."
               ) else listOf(
-                "Enable automated love cadences: Weekend date nights, Monthly anniversaries, Birthdays.",
-                "Quickly add custom date reminders with title, scheduled date, and romantic notes.",
-                "Quick actions to send love messages or open relevant gift suggestions.",
-                "Seamlessly synchronizes with Android device notification system."
+                "Turn on the bell when you add a calendar event or milestone to be reminded on the day.",
+                "Set an alarm on any gift idea to get it in time.",
+                "Notifications have 'Open InLove' and 'Snooze 1h' buttons.",
+                "Tap the bell at the top to see all your notifications."
               )
             )
             6 -> GuideContentSection(
@@ -559,13 +552,11 @@ fun UserGuideDialog(
               else
                 "Personalize your experience and safeguard couple memories:",
               points = if (language == AppLanguage.VI) listOf(
-                "Đổi hình nền mộng mơ: Hoa anh đào, Hoàng hôn lãng mạn, Đêm sao hoặc dán URL ảnh đôi — được lưu lại cho lần mở app sau.",
-                "Chụp ảnh / Lưu giữ kỷ niệm với ghi chú cảm xúc vào Kho Kỷ Niệm.",
+                "Đổi hình nền: chọn mẫu có sẵn hoặc tải ảnh đôi từ máy — được lưu lại cho lần mở app sau.",
                 "Chuyển đổi ngôn ngữ Tiếng Việt 🇻🇳 và English 🇬🇧 bất kỳ lúc nào.",
                 "Khóa ứng dụng bằng mã PIN 4 số riêng tư (app hiện chưa hỗ trợ vân tay/FaceID)."
               ) else listOf(
-                "Change dreamy wallpapers: Cherry Blossom, Sunset, Starry Night, or a custom photo URL — remembered across app restarts.",
-                "Capture and record romantic photo memories with captions into the Memories Album.",
+                "Change the wallpaper: pick a preset or upload your own couple photo — remembered across app restarts.",
                 "Switch languages between Tiếng Việt 🇻🇳 and English 🇬🇧 at any time.",
                 "Lock the app with a private 4-digit PIN (fingerprint/Face unlock isn't supported yet)."
               )
@@ -811,19 +802,12 @@ fun WallpaperPickerDialog(
               )
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Column {
-              Text(
-                text = strings.wallpaperTitle,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF26071B)
-              )
-              Text(
-                text = strings.wallpaperSubtitle,
-                fontSize = 11.sp,
-                color = Color(0xFF6B2B50)
-              )
-            }
+            Text(
+              text = strings.wallpaperTitle,
+              fontSize = 16.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF26071B)
+            )
           }
 
           IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
@@ -855,7 +839,7 @@ fun WallpaperPickerDialog(
           )
           Spacer(modifier = Modifier.width(8.dp))
           Text(
-            text = if (language == AppLanguage.VI) "🖼️ Tải ảnh từ thư viện máy" else "🖼️ Choose Photo from Device",
+            text = if (language == AppLanguage.VI) "Tải ảnh từ thư viện máy" else "Choose Photo from Device",
             fontWeight = FontWeight.Bold,
             fontSize = 13.5.sp,
             color = Color.White
@@ -972,7 +956,7 @@ private fun WallpaperCardItem(
 ) {
   Surface(
     shape = RoundedCornerShape(16.dp),
-    color = Color.White,
+    color = Color(0xFFFFE9F0),
     shadowElevation = if (isSelected) 4.dp else 1.dp,
     modifier = modifier
       .height(84.dp)
@@ -994,7 +978,12 @@ private fun WallpaperCardItem(
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .background(Color.Black.copy(alpha = 0.35f))
+          .background(
+            Brush.verticalGradient(
+              0.45f to Color.Transparent,
+              1f to Color.Black.copy(alpha = 0.55f)
+            )
+          )
       )
       Text(
         text = if (language == AppLanguage.VI) preset.titleVi else preset.titleEn,

@@ -197,4 +197,28 @@ class AuthRepositoryTest {
     assertTrue("Mở khóa bằng mã PIN đúng phải thành công", correctPinResult is UnlockResult.Success)
     assertTrue("Trạng thái phải trở lại Authenticated", authRepo.authState.value is AuthState.Authenticated)
   }
+
+  @Test
+  fun login_keepsEditedOnlineAvatar_whenAccountPhotoIsSet() = runBlocking {
+    val email = "avatar_keep@inlove.app"
+    val password = "SecurePassword@123"
+    authRepo.register("Tester", email, password, password)
+    authRepo.login(email, password, rememberMe = false)
+    val uid = (authRepo.authState.value as AuthState.Authenticated).account.uid
+
+    // The user picked a local photo, then the account gets a provider photo
+    val online = checkNotNull(db.inLoveDao().getOnlineUserByUidSync(uid))
+    db.inLoveDao().updateOnlineUser(online.copy(avatarUrl = "file:/custom.jpg"))
+    val account = checkNotNull(db.inLoveDao().getUserAccountByEmail(email))
+    db.inLoveDao().updateUserAccount(account.copy(avatarUrl = "https://provider.example/photo.jpg"))
+
+    authRepo.logout()
+    authRepo.login(email, password, rememberMe = false)
+
+    assertEquals(
+      "Ảnh đã chọn không được bị ghi đè bằng ảnh tài khoản khi đăng nhập lại",
+      "file:/custom.jpg",
+      db.inLoveDao().getOnlineUserByUidSync(uid)?.avatarUrl
+    )
+  }
 }

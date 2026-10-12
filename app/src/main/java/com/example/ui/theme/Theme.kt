@@ -12,6 +12,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import kotlin.math.ceil
 
 private val LightColorScheme = lightColorScheme(
   primary = Primary,
@@ -66,11 +68,11 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val AppShapes = Shapes(
-  extraSmall = RoundedCornerShape(8.dp),
-  small = RoundedCornerShape(12.dp),
-  medium = RoundedCornerShape(16.dp),
-  large = RoundedCornerShape(24.dp),
-  extraLarge = RoundedCornerShape(32.dp)
+  extraSmall = RoundedCornerShape(10.dp),
+  small = RoundedCornerShape(14.dp),
+  medium = RoundedCornerShape(20.dp),
+  large = RoundedCornerShape(28.dp),
+  extraLarge = RoundedCornerShape(36.dp)
 )
 
 @Composable
@@ -82,11 +84,7 @@ fun MyApplicationTheme(
   // Always prioritize a crisp, vibrant, romantic Light Mode UI
   val colorScheme = LightColorScheme
 
-  // Shrinks every dp/sp uniformly so more content fits on a phone screen; system font scale is kept.
-  val base = LocalDensity.current
-  CompositionLocalProvider(
-    LocalDensity provides Density(base.density * UI_SCALE, base.fontScale)
-  ) {
+  AppDensity {
     MaterialTheme(
       colorScheme = colorScheme,
       typography = Typography,
@@ -96,5 +94,21 @@ fun MyApplicationTheme(
   }
 }
 
+/**
+ * Shrinks every dp/sp uniformly so more content fits on a phone screen; system font scale is kept.
+ * A Dialog window resets LocalDensity, so full-screen dialogs must wrap their content in this too.
+ */
+@Composable
+fun AppDensity(content: @Composable () -> Unit) {
+  val base = LocalDensity.current
+  CompositionLocalProvider(
+    LocalDensity provides Density(base.density * UI_SCALE, base.fontScale),
+    content = content
+  )
+}
+
 /** Global UI scale. 1f = stock sizes; lower = denser. Tune here only. */
 private const val UI_SCALE = 0.85f
+
+/** Min tap box in layout dp: renders at >= 48dp after AppDensity. */
+val MinTouchBox: Dp = ceil(48f / UI_SCALE).dp

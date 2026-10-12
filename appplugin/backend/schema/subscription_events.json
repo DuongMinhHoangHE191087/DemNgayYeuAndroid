@@ -1,0 +1,19 @@
+[
+  {"name": "dedup_key", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "message_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "received_ts_ms", "type": "INT64", "mode": "REQUIRED"},
+  {"name": "received_date", "type": "DATE", "mode": "REQUIRED"},
+  {"name": "event_ms", "type": "INT64", "mode": "NULLABLE"},
+  {"name": "package_name", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "kind", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "notification_type", "type": "INT64", "mode": "NULLABLE"},
+  {"name": "state", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "purchase_token", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "order_id", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "product_id", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "user_id", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "app_id", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "price_micros", "type": "INT64", "mode": "NULLABLE"},
+  {"name": "currency_code", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "raw_notification", "type": "STRING", "mode": "NULLABLE"}
+]

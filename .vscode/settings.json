@@ -1,4 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "java.import.gradle.enabled": false
+    "java.import.gradle.enabled": false,
+    "java.import.gradle.annotationProcessing.enabled": false
 }

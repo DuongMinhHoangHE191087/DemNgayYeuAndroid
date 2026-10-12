@@ -1,0 +1,61 @@
+# Allowlist của tools/device_gate.sh: dòng logcat của app khớp một regex ở đây KHÔNG bị đếm là dấu hiệu R8 hỏng.
+# Cú pháp:
+# - Chỉ dòng có `#` ở cột 0 là chú thích. Có khoảng trắng trước `#` thì dòng đó là regex. Dòng trống bỏ qua.
+# - Mỗi dòng còn lại là một ERE (grep -E), phải hợp lệ trên cả grep BSD (macOS) lẫn GNU (runner Linux).
+#   ( ) [ ] { } * + ? | ^ $ \ có nghĩa riêng: muốn khớp đúng chữ thì thêm \ phía trước (vd `\(`); `.` khớp mọi ký tự.
+# - Regex không được khớp dòng rỗng (vd `foo|`, `.*`, `x*`): nó sẽ loại mọi dòng.
+# Sai một trong các điều trên thì cổng FAIL ngay, trước mọi lệnh adb. Kiểm không cần máy:
+# bash tools/tests/device_gate_allowlist_test.sh
+# Chỉ thêm khi có bằng chứng bản debug (không R8) in cùng dòng, HOẶC lớp vắng trong input (bằng chứng
+# từ AAR: lớp không có trong input nên không phải R8 strip) + lib tự bắt lỗi đó — ghi đường dẫn log/AAR.
+# KHÔNG allowlist dòng chỉ mang từ khoá R8 (ClassNotFound/NoSuchMethod/NoClassDef/FATAL) mà không phải lỗi nạp lớp
+# (vd cảnh báo "Long monitor contention" của ART có frame ClassNotFoundException.<init>): đó là triệu chứng của lỗi
+# khác — tìm gốc (1.6.1: ClassValue, sửa ở G2; 1.6.2 Task 3 gỡ dòng đó). Mỗi dòng phải còn khớp log của vòng đo gần
+# nhất hoặc ghi rõ API/máy nó xuất hiện; hết khớp cả vòng thì gỡ ở bản kế.
+# Dòng ghi `không định kỳ` chỉ gỡ khi ≥ 3 lượt liên tiếp trên đúng API/máy đã ghi không còn khớp.
+# Play services 20.24 trên image google_apis API 26: providerinstaller module không có. Bản debug in y hệt:
+# DOC/testing/task7-api26-debug-control.log (2026-09-24).
+# Image API 28 in cùng dòng, bản debug cũng vậy: DOC/testing/task7-api28-debug-control.log (2026-09-24).
+ProviderInstaller: Failed to report request stats: java\.lang\.NoSuchMethodException: (com\.google\.android\.gms\.common\.security\.ProviderInstallerImpl\.)?reportRequestStats2
+# AppsFlyer LVL (1.6.1 Task 3, review controller): `unzip -l af-android-sdk-6.16.2.aar/classes.jar |
+# grep -i lvl` không ra gì — com.appsflyer.lvl.* là module LVL tuỳ chọn của AppsFlyer, một artifact
+# riêng, bản build này không khai báo nên lớp đó chưa từng có trong input (không phải R8 strip). AppsFlyer
+# tự dò module này lúc init (`AFf1lSDK$2`) và tự bắt lỗi (ART log "Rejecting re-init on previously-failed
+# class" mức I, không crash). Khớp cả hai dạng logcat: JVM descriptor `Lcom/appsflyer/lvl/AppsFlyerLVL...;`
+# và dạng chấm `com.appsflyer.lvl.AppsFlyerLVL...` trong ClassNotFoundException. Bằng chứng:
+# DOC/testing/t161-t3-gate-red-api28.log (emulator-5580, AVD api28, 2026-09-28).
+# Neo lớp chủ AFf1lSDK$2 và đúng lớp thiếu AppsFlyerLVL$resultListener (1.6.3 Task 3, review cuối 1.6.2 M3): 106/106 dòng Rejecting trong DOC/testing (API 26/28, 2026-09-28..29) cùng dạng; lớp chủ khác (kể cả com.app.plugin.*) hay lớp thiếu khác vẫn bị đếm.
+Rejecting re-init on previously-failed class java\.lang\.Class<com\.appsflyer\.internal\.AFf1lSDK\$2>: java\.lang\.NoClassDefFoundError: Failed resolution of: Lcom/appsflyer/lvl/AppsFlyerLVL\$resultListener;
+Caused by: java\.lang\.ClassNotFoundException: Didn't find class "com\.appsflyer\.lvl\.AppsFlyerLVL\$resultListener" on path
+# AppsFlyer Xiaomi GetApps referrer (1.6.1 G1): `unzip -l af-android-sdk-6.16.2.aar/classes.jar | grep -ic
+# miui` = 0, `./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -i miui` rỗng và
+# mapping release chỉ nhắc com.miui trong chữ ký tham số — lớp chưa từng có trong input (không phải R8
+# strip). `AFj1sSDK$2` của AppsFlyer (giữ nguyên tên, không bị gộp) implements
+# `com.miui.referrer.api.GetAppsReferrerStateListener`; ART API 26 xác minh AFj1sSDK và log "Rejecting
+# re-init on previously-failed class" mức I, không crash. AppsFlyer tự bắt: javap -c AFj1sSDK
+# (`getCurrencyIso4217Code`) dò `Class.forName("com.miui.referrer.api.GetAppsReferrerClient")` trong try/catch
+# ClassNotFoundException + Throwable, chỉ dùng $2 khi lớp có. Khớp dạng descriptor `/` và dạng chấm `.`.
+# Bằng chứng: DOC/testing/t161-r-emu26-gate.log (emulator-5580, AVD api26, 2026-09-28).
+# Không định kỳ: chỉ API 26 (vắng trên API 28/37); gỡ theo luật ≥ 3 lượt sạch ở đầu tệp.
+# Neo lớp chủ `AFj1sSDK$2` (1.6.2 Task 3, G1-m1): lớp khác thiếu listener MIUI vẫn bị đếm; dòng `Caused by` không
+# mang tên lớp chủ nên neo nguyên dạng ART.
+Rejecting re-init on previously-failed class java\.lang\.Class<com\.appsflyer\.internal\.AFj1sSDK\$2>: java\.lang\.NoClassDefFoundError: Failed resolution of: Lcom/miui/referrer/api/GetAppsReferrerStateListener;
+Caused by: java\.lang\.ClassNotFoundException: Didn't find class "com\.miui\.referrer\.api\.GetAppsReferrerStateListener" on path
+# AppsFlyer dò SDK Samsung cloud game (1.6.2 G3, 2026-09-29): chỉ API 26 (emulator-5580, AVD api26), 3 cặp sau
+# monkey + 3 cặp sau cold start 2; API 37/28/Redmi 0. Lớp chưa từng có trong input (không phải R8 strip):
+# `unzip -l af-android-sdk-6.16.2.aar/classes.jar | grep -ic samsung` = 0,
+# `./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -ic samsung` = 0, mapping release
+# `grep -ic samsung` = 0. `AFe1hSDK$AFa1vSDK` của AppsFlyer implements
+# `com.samsung.android.game.cloudgame.dev.sdk.CloudDevCallback`, giữ nguyên tên (mapping `AFe1hSDK$AFa1vSDK ->
+# AFe1hSDK$AFa1vSDK`, đúng 1 dòng ánh xạ vào nó — không lớp nào bị gộp vào; AAR proguard.txt `-keep,allowshrinking,
+# allowobfuscation class com.appsflyer.internal.AFe1hSDK$AFa1vSDK`). AppsFlyer tự bắt: javap -c -p AFe1hSDK —
+# `component1()` dò `Class.forName("com.samsung.android.game.cloudgame.dev.sdk.CloudDevSdk")` trong try/catch
+# Throwable ("CloudDevSdk not found"); `getMediationNetwork(int)` (SDK_INT >= 23) chỉ `new AFe1hSDK$AFa1vSDK` khi
+# component1() đúng và `CloudDevSdk.isCloudEnvironment` đúng, trong vùng try/catch Throwable. ART API 26 xác minh
+# AFe1hSDK và log "Rejecting re-init on previously-failed class" mức I, không crash. Neo lớp chủ `AFe1hSDK$AFa1vSDK`
+# như MIUI; dòng `Caused by` không mang lớp chủ nên neo tên lớp + ` on path` (lớp anh em/tiền tố vẫn bị đếm).
+# Bằng chứng: DOC/testing/t162-r-emu26-gate.log, device-gate-app-emulator-5580-20260929-152838-{post,cold2}.log
+# (APK b2824c54…); javap/AAR: .superpowers/sdd/v162/g3-report.md. Không định kỳ: lượt G3 cùng APK/AVD
+# (DOC/testing/t162-g3-emu26-gate.log, 2026-09-29 15:49) không in dòng này (0 dòng cloudgame).
+Rejecting re-init on previously-failed class java\.lang\.Class<com\.appsflyer\.internal\.AFe1hSDK\$AFa1vSDK>: java\.lang\.NoClassDefFoundError: Failed resolution of: Lcom/samsung/android/game/cloudgame/dev/sdk/CloudDevCallback;
+Caused by: java\.lang\.ClassNotFoundException: Didn't find class "com\.samsung\.android\.game\.cloudgame\.dev\.sdk\.CloudDevCallback" on path

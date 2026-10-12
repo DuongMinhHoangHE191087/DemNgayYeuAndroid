@@ -1,0 +1,68 @@
+# CI runs Scripts/verify.sh and nothing else, on purpose.
+#
+# The definition of done for this package lives in that script — iOS builds of all four targets,
+# the macOS test suite, the simulator-only UMP tests, and warnings-as-errors over this package's
+# own sources. Re-listing those steps here would create a second definition that drifts from the
+# first, and the drift would show up as CI passing something a local run rejects (or worse, the
+# other way round). One script, run in both places.
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # A new push to the same branch makes the in-flight run obsolete. Firebase resolution alone is
+  # minutes of runner time; don't spend it on a commit nobody is waiting for.
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # macOS is not a preference: xcodebuild, the iOS SDK and the simulator only exist here, and
+    # a Linux runner would silently skip everything that actually guards this package.
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versions
+        # Deliberately NOT pinned to an /Applications/Xcode_<version>.app path. Which Xcodes exist
+        # on a runner image changes without warning, and a pin to one that has been removed fails
+        # the job instantly with an error about a missing directory — a worse failure mode than
+        # tracking the image default, because it tells you nothing about this package.
+        #
+        # The version is printed instead, so when concurrency checking starts diagnosing something
+        # it did not diagnose last week, the log says which toolchain changed. Pin this once the
+        # toolchain actually needs to be held still; guessing a path is not the same as pinning.
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Cache SwiftPM source checkouts
+        # ═══ SOURCE CHECKOUTS ONLY — NEVER BUILD ARTIFACTS ═══
+        #
+        # Firebase pulls a large transitive graph and resolving it dominates the run, so caching
+        # is worth having. Caching the whole `.build` directory is NOT: SwiftPM is incremental, and
+        # a restored artifact cache makes it skip recompiling a file whose diagnostics nobody has
+        # seen yet. That was observed on this package — with a stale `.build`, `swift build`
+        # reported ZERO warnings for a target that had just had strict concurrency turned on, and
+        # only a `swift package clean` showed the real count.
+        #
+        # Since verify.sh fails on warnings, an artifact cache would not merely be stale, it would
+        # quietly disarm the gate: green CI, unbuilt warnings. Checkouts are inputs and safe to
+        # reuse; object files are the output being verified and must be produced by this run.
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/checkouts
+            .build/repositories
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-checkouts-${{ runner.os }}-${{ hashFiles('Package.swift') }}
+          restore-keys: spm-checkouts-${{ runner.os }}-
+
+      - name: Verify
+        run: ./Scripts/verify.sh

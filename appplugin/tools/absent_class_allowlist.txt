@@ -1,0 +1,62 @@
+# Kiểu được tham chiếu nhưng KHÔNG có trong classes*.dex của APK `utility` (1.8.0 Task 3, D16). Mỗi dòng: kiểu đầy đủ dạng chấm + `# chủ: <lý do>`.
+# Danh sách đo trên APK utility 1.7.0 (dexdump -d -n, 2 lượt cùng shasum), đã rà: chủ = applovin (mediation game-only, flavor utility không kèm) |
+# optional (SDK tuỳ chọn nhánh reflection/OEM hoặc lớp tuỳ chọn của okhttp/appsflyer) | platform (lớp có sẵn trong Android nhưng không mang tiền tố android./java.).
+# Giới hạn: kiểu chỉ xuất hiện trong annotation không được quét (dexdump không `-a`). Chỉ variant utility FAIL; game chỉ in info (D23).
+# `absent-class sdk=0` = không có kiểu vắng nào NGOÀI danh sách này. Thêm dòng ở đây là quyết định có rà soát, không phải sửa cho cổng xanh.
+com.applovin.mediation.MaxAd  # chủ: applovin
+com.applovin.mediation.MaxAdFormat  # chủ: applovin
+com.applovin.mediation.MaxAdListener  # chủ: applovin
+com.applovin.mediation.MaxAdRevenueListener  # chủ: applovin
+com.applovin.mediation.MaxAdViewAdListener  # chủ: applovin
+com.applovin.mediation.MaxRewardedAdListener  # chủ: applovin
+com.applovin.mediation.ads.MaxAdView  # chủ: applovin
+com.applovin.mediation.ads.MaxAppOpenAd  # chủ: applovin
+com.applovin.mediation.ads.MaxInterstitialAd  # chủ: applovin
+com.applovin.mediation.ads.MaxRewardedAd  # chủ: applovin
+com.applovin.mediation.nativeAds.MaxNativeAdListener  # chủ: applovin
+com.applovin.mediation.nativeAds.MaxNativeAdLoader  # chủ: applovin
+com.applovin.mediation.nativeAds.MaxNativeAdView  # chủ: applovin
+com.applovin.mediation.nativeAds.MaxNativeAdViewBinder  # chủ: applovin
+com.applovin.mediation.nativeAds.MaxNativeAdViewBinder$Builder  # chủ: applovin
+com.applovin.sdk.AppLovinPrivacySettings  # chủ: applovin
+com.applovin.sdk.AppLovinSdk  # chủ: applovin
+com.applovin.sdk.AppLovinSdk$SdkInitializationListener  # chủ: applovin
+com.applovin.sdk.AppLovinSdkInitializationConfiguration  # chủ: applovin
+com.applovin.sdk.AppLovinSdkInitializationConfiguration$Builder  # chủ: applovin
+com.applovin.sdk.AppLovinSdkUtils  # chủ: applovin
+com.applovin.sdk.AppLovinSdkUtils$Size  # chủ: applovin
+com.amazon.privacypass.PrivacyPass  # chủ: optional: Amazon PrivacyPass, chỉ ads-mobile-sdk 1.5.0 (Next-Gen) tham chiếu (cs0 trong dex nextgen), không có trong classpath (consumer-rules -dontwarn com.amazon.privacypass.**)
+com.amazon.privacypass.VerificationContext  # chủ: optional: như PrivacyPass
+com.amazon.privacypass.callback.AttestAPICallback  # chủ: optional: như PrivacyPass
+com.appsflyer.lvl.AppsFlyerLVL  # chủ: optional
+com.appsflyer.lvl.AppsFlyerLVL$resultListener  # chủ: optional
+com.appsflyer.oaid.OaidClient  # chủ: optional
+com.appsflyer.oaid.OaidClient$Info  # chủ: optional
+com.facebook.FacebookSdk  # chủ: optional
+com.facebook.appevents.AppEventsLogger  # chủ: optional
+com.facebook.appevents.AppEventsLogger$Companion  # chủ: optional
+com.huawei.appgallery.serviceverifykit.api.ServiceVerifyKit$PkgVerifyBuilder  # chủ: optional
+com.miui.referrer.api.GetAppsReferrerClient  # chủ: optional
+com.miui.referrer.api.GetAppsReferrerClient$Builder  # chủ: optional
+com.miui.referrer.api.GetAppsReferrerClient$Companion  # chủ: optional
+com.miui.referrer.api.GetAppsReferrerDetails  # chủ: optional
+com.miui.referrer.api.GetAppsReferrerStateListener  # chủ: optional
+com.samsung.android.game.cloudgame.dev.sdk.CloudDevCallback  # chủ: optional
+com.samsung.android.game.cloudgame.dev.sdk.CloudDevSdk  # chủ: optional
+libcore.io.Memory  # chủ: platform
+org.bouncycastle.jsse.BCSSLParameters  # chủ: optional
+org.bouncycastle.jsse.BCSSLSocket  # chủ: optional
+org.bouncycastle.jsse.provider.BouncyCastleJsseProvider  # chủ: optional
+org.conscrypt.Conscrypt  # chủ: optional
+org.conscrypt.Conscrypt$Version  # chủ: optional
+org.conscrypt.ConscryptHostnameVerifier  # chủ: optional
+org.json.JSONArray  # chủ: platform
+org.json.JSONException  # chủ: platform
+org.json.JSONObject  # chủ: platform
+org.json.JSONTokener  # chủ: platform: org.json.JSONTokener có sẵn trong Android; do Cronet đóng gói trong ads-mobile-sdk (org.chromium.net.telemetry.ExperimentalOptions) tham chiếu, không phải mã appplugin
+org.apache.http.conn.ConnectTimeoutException  # chủ: optional (Pangle SDK tham chiếu stack Apache HTTP cũ; chỉ APK có đối tác pangle, 2.1.0 D17)
+org.openjsse.net.ssl.OpenJSSE  # chủ: optional
+org.xmlpull.v1.XmlPullParser  # chủ: platform
+org.xmlpull.v1.XmlPullParserException  # chủ: platform
+org.xmlpull.v1.XmlPullParserFactory  # chủ: platform
+sun.misc.Unsafe  # chủ: platform

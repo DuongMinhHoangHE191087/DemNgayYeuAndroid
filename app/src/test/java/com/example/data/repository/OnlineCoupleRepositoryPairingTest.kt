@@ -149,6 +149,25 @@ class OnlineCoupleRepositoryPairingTest {
   }
 
   @Test
+  fun updateMyProfile_blankAvatar_clears() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
+    val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+    val repo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
+    db.inLoveDao().insertOnlineUser(
+      com.example.data.model.OnlineUserEntity(uid = "uid_a", coupleCode = "A", isCurrentUser = true, avatarUrl = "file:/x.jpg")
+    )
+    scope.coroutineContext.job.children.forEach { it.join() } // let the init refreshState finish so it cannot overwrite the current user
+    repo.setCurrentUserId("uid_a")
+
+    repo.updateMyProfile("An", "15/10/2004", "", "MALE", "")
+
+    assert(db.inLoveDao().getOnlineUserByUidSync("uid_a")?.avatarUrl == "") { "a blank avatar must clear the stored one" }
+    scope.coroutineContext.job.cancelAndJoin()
+    db.close()
+  }
+
+  @Test
   fun publishCoupleCode_withoutFirestore_returnsFailure() = runBlocking {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()

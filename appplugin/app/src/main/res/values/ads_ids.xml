@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="flagTest">1</string>
+    <string name="admob_test_device">E687202FA9CA2A6F0D8D49B4D5E03DFD,EABF5CD0D45A24FA2BB760EAC4ACF535,96C821A19476B26E18920A40FD45B505,0E96196BC4A2D0ACDA075EE06539E0D6</string>
+
+    <!-- AdMob Test IDs formatted for AdsHelper -->
+    <!-- Format: placement,id1;id2... -->
+    <!-- bn_collapsible (1.9.0 Task 10): cùng unit test banner; khai ở ads_collapsible_placements nên request đầu mang collapsible=bottom -->
+    <string name="admob_banner">bn_default,ca-app-pub-3940256099942544/6300978111#bn_collapsible,ca-app-pub-3940256099942544/6300978111</string>
+    <!-- Rect (MREC 300x250): unit test banner của AdMob phục vụ cả cỡ MREC -->
+    <string name="admob_rect">rect_default,ca-app-pub-3940256099942544/6300978111</string>
+    <string name="admob_full">full_default,ca-app-pub-3940256099942544/1033173712</string>
+    <string name="admob_gift">gift_default,ca-app-pub-3940256099942544/5224354917</string>
+    <string name="admob_native">nt_default,ca-app-pub-3940256099942544/2247696110</string>
+    <string name="admob_ntcl">cl_default,ca-app-pub-3940256099942544/2247696110</string>
+    <string name="admob_ntfull">full_default,ca-app-pub-3940256099942544/2247696110#full_2_default,ca-app-pub-3940256099942544/2247696110</string>
+    <string name="admob_openad">full_splash,ca-app-pub-3940256099942544/9257395921#full_resume,ca-app-pub-3940256099942544/9257395921</string>
+    <!-- Rewarded interstitial (1.9.0 Task 10): unit test của Google; placement rwi_ -->
+    <string name="admob_rwi">rwi_default,ca-app-pub-3940256099942544/5354046379</string>
+    <string-array name="ads_collapsible_placements">
+        <item>bn_collapsible</item>
+    </string-array>
+</resources>

@@ -1,0 +1,21 @@
+# Real excerpt: emulator-5570 Pixel_8_Pro API 37 (gesture nav), wm size 1344x2992, 2026-10-06 13:38 +07, demo utility apk240 in front; 'dumpsys activity top' InsetsSource lines (E-emu, scratchpad/fixtures/emu37-insets.txt).
+InsetsSource id=8a400000 type=statusBars frame=[0,0][1344,151] visible=true flags= sideHint=TOP
+InsetsSource id=8a400005 type=mandatorySystemGestures frame=[0,0][1344,187] visible=true flags= sideHint=TOP
+InsetsSource id=8a400006 type=tappableElement frame=[0,0][1344,151] visible=true flags= sideHint=TOP
+InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags=INVALID sideHint=NONE
+InsetsSource id=27 type=displayCutout frame=[0,0][1344,151] visible=true flags= sideHint=TOP
+InsetsSource id=42e60001 type=navigationBars frame=[0,2920][1344,2992] visible=true flags=SUPPRESS_SCRIM|ANIMATE_RESIZING sideHint=BOTTOM
+InsetsSource id=42e60004 type=systemGestures frame=[0,0][90,2992] visible=true flags= sideHint=LEFT
+InsetsSource id=42e60005 type=mandatorySystemGestures frame=[0,2896][1344,2992] visible=true flags= sideHint=BOTTOM
+InsetsSource id=42e60006 type=tappableElement frame=[0,0][0,0] visible=true flags= sideHint=NONE
+InsetsSource id=42e60024 type=systemGestures frame=[1254,0][1344,2992] visible=true flags= sideHint=RIGHT
+InsetsSource id=8a400000 type=statusBars frame=[0,0][1344,151] visible=false flags= sideHint=TOP
+InsetsSource id=8a400005 type=mandatorySystemGestures frame=[0,0][1344,187] visible=true flags= sideHint=TOP
+InsetsSource id=8a400006 type=tappableElement frame=[0,0][1344,151] visible=true flags= sideHint=TOP
+InsetsSource id=3 type=ime frame=[0,0][0,0] visible=false flags=INVALID sideHint=NONE
+InsetsSource id=27 type=displayCutout frame=[0,0][1344,151] visible=true flags= sideHint=TOP
+InsetsSource id=42e60001 type=navigationBars frame=[0,2920][1344,2992] visible=true flags=SUPPRESS_SCRIM|ANIMATE_RESIZING sideHint=BOTTOM
+InsetsSource id=42e60004 type=systemGestures frame=[0,0][90,2992] visible=true flags= sideHint=LEFT
+InsetsSource id=42e60005 type=mandatorySystemGestures frame=[0,2896][1344,2992] visible=true flags= sideHint=BOTTOM
+InsetsSource id=42e60006 type=tappableElement frame=[0,0][0,0] visible=true flags= sideHint=NONE
+InsetsSource id=42e60024 type=systemGestures frame=[1254,0][1344,2992] visible=true flags= sideHint=RIGHT

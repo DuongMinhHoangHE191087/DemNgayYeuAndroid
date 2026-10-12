@@ -52,7 +52,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
@@ -68,9 +67,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.ui.components.AnniversaryMemoriesWidget
 import com.example.ui.components.LoveDaysCalculatorWidget
 import com.example.ui.components.MilestoneBadgeDashboardCard
-import com.example.ui.components.NotificationBellButton
-import com.example.ui.components.rememberHasUnreadNotifications
-import com.example.ui.components.ProfileAvatarButton
+import com.example.ui.components.pressClickable
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
 import androidx.compose.material3.Button
@@ -335,7 +333,6 @@ fun LoveHomeScreen(
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
       // Top Quick Action Bar: Symmetrical, cohesive, soft pastel glassmorphic card
-      // +4dp so the avatar's right edge matches InLoveTopBar's 16dp gutter on the other tabs.
       Row(
         modifier = Modifier.padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -389,11 +386,6 @@ fun LoveHomeScreen(
           )
         }
       }
-      NotificationBellButton(
-        hasUnread = rememberHasUnreadNotifications(viewModel),
-        onClick = { viewModel.setShowNotifications(true) }
-      )
-      ProfileAvatarButton(onClick = { viewModel.openEditProfileDialog() })
       }
       Spacer(modifier = Modifier.height(8.dp))
 
@@ -1550,9 +1542,9 @@ fun HomeQuickActionButton(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
     modifier = modifier
-      .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+      .defaultMinSize(minWidth = MinTouchBox, minHeight = MinTouchBox)
       .clip(RoundedCornerShape(14.dp))
-      .clickable { onClick() }
+      .pressClickable(onClick = onClick)
       .padding(horizontal = 2.dp, vertical = 4.dp)
       .testTag(testTag)
   ) {

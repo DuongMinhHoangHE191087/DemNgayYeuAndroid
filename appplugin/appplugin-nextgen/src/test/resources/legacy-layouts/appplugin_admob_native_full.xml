@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A <merge>: AdsMobNtFullView inflates this with Dialog.setContentView, whose content
+     parent is already a match_parent FrameLayout, so these children land there directly. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <com.google.android.gms.ads.nativead.NativeAdView
+        android:id="@+id/native_ad_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:scrollbars="none">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@android:color/black"
+            android:minHeight="50dp"
+            android:orientation="vertical"
+            android:scrollbars="none">
+
+            <com.google.android.gms.ads.nativead.MediaView
+                android:id="@+id/ad_media"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/ad_badge"
+                style="@style/appplugin_AppTheme.AdAttribution"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="24dp"
+                android:importantForAccessibility="no"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <!-- Bottom info card: a real ViewGroup (not a ConstraintLayout Barrier) so its
+                 background always wraps its children exactly, including after the headline
+                 or body text is swapped in for the real ad's (variable-length) copy at
+                 runtime - a Barrier sized against dynamically-set TextViews doesn't reliably
+                 re-measure when that text changes post-layout, which would overflow the
+                 headline above the card's top edge. No standalone top-left logo chip either:
+                 the reference ad's video creative already carries its own branding baked in,
+                 so ad_app_icon lives only here, beside the headline, as part of the card. -->
+            <LinearLayout
+                android:id="@+id/ad_card_bg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/appplugin_bg_card_ad_bottom"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="14dp"
+                app:layout_constraintBottom_toTopOf="@id/ad_badge"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <!-- Not a compound drawable: the icon must be its own view so it can be
+                     registered as NativeAdView.iconView and receive the ad's icon asset. -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:id="@+id/ad_app_icon"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="12dp"
+                        android:adjustViewBounds="true"
+                        android:background="@drawable/appplugin_bg_circle"
+                        android:importantForAccessibility="no"
+                        android:outlineProvider="background"
+                        android:padding="2dp"
+                        android:visibility="invisible" />
+
+                    <TextView
+                        android:id="@+id/ad_headline"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:fontFamily="@font/appplugin_inter_semi_bold"
+                        android:gravity="start"
+                        android:maxLines="2"
+                        android:tag="NativeAd.headline"
+                        android:textColor="@color/appplugin_white"
+                        android:textSize="17sp"
+                        tools:text="ShopeeFood - Food Delivery" />
+
+                </LinearLayout>
+
+                <!-- Portrait only: the landscape layout keeps its body view commented out, and
+                     AdsMobNtFullView treats a missing ad_body as optional. -->
+                <TextView
+                    android:id="@+id/ad_body"
+                    tools:ignore="InconsistentLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/appplugin_inter_regular"
+                    android:gravity="start"
+                    android:maxLines="1"
+                    android:tag="NativeAd.body"
+                    android:textColor="@color/appplugin_ad_body_text"
+                    android:textSize="14sp"
+                    tools:text="Lần Đầu Đặt Món Chốt Đơn 0Đ. Nhập Voucher NEWOD giảm 30K." />
+
+                <TextView
+                    android:id="@+id/ad_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="6dp"
+                    android:padding="5dp"
+                    android:textStyle="bold"
+                    android:textColor="@color/appplugin_white"
+                    android:background="@color/appplugin_ad_overlay_bg"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/ad_call_to_action"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/appplugin_bg_button_cta_full_blue"
+                    android:fontFamily="@font/appplugin_inter_extra_bold"
+                    android:gravity="center"
+                    android:paddingVertical="4dp"
+                    android:tag="NativeAd.action"
+                    android:textColor="@color/appplugin_white"
+                    android:textSize="15sp"
+                    android:letterSpacing="0.02"
+                    android:textAllCaps="false"
+                    tools:text="Đặt ngay" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.gms.ads.nativead.NativeAdView>
+
+    <RelativeLayout
+        android:id="@+id/po_parent_btclose"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="40dp"
+        android:layout_gravity="end"
+        android:gravity="center"
+        android:layout_marginEnd="10dp">
+
+        <TextView
+            android:id="@+id/tv_count"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/appplugin_bgc_cir_gray"
+            android:gravity="center"
+            tools:text="3"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:id="@+id/ad_imgclose"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerInParent="true"
+            android:importantForAccessibility="no"
+            android:src="@drawable/appplugin_bg_skip_button"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/ad_close"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerInParent="true"
+            android:background="@color/appplugin_transparent"
+            android:gravity="center"
+            android:visibility="invisible" />
+    </RelativeLayout>
+
+</merge>

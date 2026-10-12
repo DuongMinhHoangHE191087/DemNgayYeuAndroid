@@ -39,23 +39,31 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.layout
+import com.example.ui.theme.MinTouchBox
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -72,15 +80,26 @@ import com.example.ui.theme.SurfaceContainerHighest
 const val COUPLE_AVATAR_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuA7FGhAVlT3aua6tzpkBgh-_XXVsY-hCGooIPxOJ0acYyvZV9FZpASsMTgGO0vBFJLrLojRgwwnQEjfWAniwj2FAiKNpUjSRFNIQgmOhVN8fFSYwpOqLF8hAnWk3UM0dWxSVT1FwaK9ovXMP7Jwi-gjfRbUm2ISX1qyUY6bpBKBZnBYk7YIorizTPWI5c6w9XUdTTsMLFWT3c5ns8lYQooC0eEvt6S5zJNNobW_pn1PTJOb0K2REgdfTQ"
 
+/**
+ * Collapsing top bar: the compact row (compact title, bell, avatar) is always visible; the large title and
+ * the notification strip collapse away as the content scrolls (exit-until-collapsed).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InLoveTopBar(
+internal fun InLoveTopBar(
   title: String,
+  avatarUrl: String,
+  latest: NotificationItem?,
+  isEnglish: Boolean,
+  scrollBehavior: TopAppBarScrollBehavior,
   hasUnread: Boolean = false,
   onBellClick: () -> Unit = {},
   onProfileClick: () -> Unit = {},
+  onSeeAll: () -> Unit = {},
   includeStatusBarPadding: Boolean = true
 ) {
-  val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+  val state = scrollBehavior.state
+  val barShape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
   Box(
     modifier = Modifier
       .fillMaxWidth()
@@ -88,87 +107,156 @@ fun InLoveTopBar(
       .clip(barShape)
       .background(Brush.verticalGradient(listOf(Color.White, Color(0xFFFFF3F7))))
   ) {
-    Row(
+    Column(
       modifier = Modifier
         .fillMaxWidth()
         .then(if (includeStatusBarPadding) Modifier.statusBarsPadding() else Modifier)
-        .padding(horizontal = 16.dp, vertical = 6.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween
     ) {
       Row(
-        modifier = Modifier.weight(1f),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
       ) {
-        Icon(
-          imageVector = Icons.Filled.Favorite,
-          contentDescription = null,
-          tint = Primary,
-          modifier = Modifier.size(18.dp)
-        )
         Text(
           text = title,
           color = OnSurface,
-          fontSize = 18.sp,
+          fontSize = 17.sp,
           fontWeight = FontWeight.Bold,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis
+          modifier = Modifier.weight(1f).graphicsLayer { alpha = state.collapsedFraction }
+        )
+        NotificationBellButton(
+          hasUnread = hasUnread,
+          contentDescription = if (isEnglish) "Notifications" else "Thông báo",
+          onClick = onBellClick
+        )
+        ProfileAvatarButton(
+          avatarUrl = avatarUrl,
+          contentDescription = if (isEnglish) "Your profile" else "Hồ sơ của bạn",
+          onClick = onProfileClick
         )
       }
 
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+      Column(
+        modifier = Modifier
+          .clipToBounds()
+          .layout { m, c ->
+            val p = m.measure(c.copy(minHeight = 0))
+            if (state.heightOffsetLimit != -p.height.toFloat()) state.heightOffsetLimit = -p.height.toFloat()
+            val h = (p.height + state.heightOffset).roundToInt().coerceAtLeast(0)
+            layout(p.width, h) { p.place(0, h - p.height) }
+          }
+          .padding(start = 16.dp, end = 16.dp, bottom = 14.dp)
       ) {
-        NotificationBellButton(hasUnread = hasUnread, onClick = onBellClick)
-        ProfileAvatarButton(onClick = onProfileClick)
+        Text(
+          text = title,
+          color = OnSurface,
+          fontSize = 30.sp,
+          fontWeight = FontWeight.Bold,
+          maxLines = 1,
+          modifier = Modifier.testTag("topbar_large_title")
+        )
+        if (latest != null) {
+          Spacer(Modifier.height(8.dp))
+          NotificationStrip(latest, isEnglish, onSeeAll)
+        }
       }
     }
   }
 }
 
-/** Glass bell with an unread dot; replaces the old heart button. */
 @Composable
-fun NotificationBellButton(hasUnread: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-  Box(
-    contentAlignment = Alignment.Center,
-    modifier = modifier
-      .size(36.dp)
-      .clip(CircleShape)
-      .background(PrimaryFixed.copy(alpha = 0.55f))
-      .clickable { onClick() }
-      .testTag("topbar_bell_button")
+private fun NotificationStrip(item: NotificationItem, isEnglish: Boolean, onSeeAll: () -> Unit) {
+  val stripSource = remember { MutableInteractionSource() }
+  val seeAllSource = remember { MutableInteractionSource() }
+  Surface(
+    onClick = onSeeAll,
+    interactionSource = stripSource,
+    shape = MaterialTheme.shapes.large,
+    color = PrimaryFixed,
+    modifier = Modifier.fillMaxWidth().pressScale(stripSource).testTag("topbar_notification_strip")
   ) {
-    Icon(
-      imageVector = if (hasUnread) Icons.Filled.Notifications else Icons.Outlined.Notifications,
-      contentDescription = "Notifications",
-      tint = Primary,
-      modifier = Modifier.size(20.dp)
-    )
-    AnimatedVisibility(visible = hasUnread, modifier = Modifier.align(Alignment.TopEnd).padding(7.dp)) {
-      Box(Modifier.size(8.dp).clip(CircleShape).background(Primary).border(1.5.dp, Color.White, CircleShape))
+    Row(
+      modifier = Modifier.padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+      Text(item.emoji, fontSize = 22.sp)
+      Column(Modifier.weight(1f)) {
+        Text(item.title, color = OnSurface, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        Text(
+          item.whenText,
+          color = if (item.urgent) Primary else OnSurfaceVariant,
+          fontSize = 12.sp
+        )
+      }
+      TextButton(
+        onClick = onSeeAll,
+        interactionSource = seeAllSource,
+        modifier = Modifier.pressScale(seeAllSource).testTag("topbar_see_all")
+      ) {
+        Text(if (isEnglish) "See all" else "Xem tất cả", color = Primary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+      }
     }
   }
 }
 
-/** Single profile entry point, shared by the top bar and Home so the top-right corner is identical on every tab. */
+/** Glass bell with an unread dot; the tappable box is [MinTouchBox] so it renders >= 48dp. */
 @Composable
-fun ProfileAvatarButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun NotificationBellButton(
+  hasUnread: Boolean,
+  contentDescription: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier
+) {
   Box(
+    contentAlignment = Alignment.Center,
     modifier = modifier
-      .size(36.dp)
-      .shadow(4.dp, CircleShape)
+      .size(MinTouchBox)
       .clip(CircleShape)
-      .border(1.5.dp, Primary.copy(alpha = 0.6f), CircleShape)
-      .clickable { onClick() }
+      .pressClickable(onClick = onClick)
+      .testTag("topbar_bell_button")
+  ) {
+    Box(
+      contentAlignment = Alignment.Center,
+      modifier = Modifier.size(36.dp).clip(CircleShape).background(PrimaryFixed.copy(alpha = 0.55f))
+    ) {
+      Icon(
+        imageVector = if (hasUnread) Icons.Filled.Notifications else Icons.Outlined.Notifications,
+        contentDescription = contentDescription,
+        tint = Primary,
+        modifier = Modifier.size(20.dp)
+      )
+      AnimatedVisibility(visible = hasUnread, modifier = Modifier.align(Alignment.TopEnd).padding(7.dp)) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(Primary).border(1.5.dp, Color.White, CircleShape))
+      }
+    }
+  }
+}
+
+/** Single profile entry point of the top bar; a blank [avatarUrl] shows the default couple image. */
+@Composable
+fun ProfileAvatarButton(
+  avatarUrl: String,
+  contentDescription: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  Box(
+    contentAlignment = Alignment.Center,
+    modifier = modifier
+      .size(MinTouchBox)
+      .clip(CircleShape)
+      .pressClickable(onClick = onClick)
       .testTag("topbar_profile_avatar")
   ) {
     AsyncImage(
-      model = COUPLE_AVATAR_URL,
-      contentDescription = "Profile",
+      model = avatarUrl.ifBlank { COUPLE_AVATAR_URL },
+      contentDescription = contentDescription,
       contentScale = ContentScale.Crop,
-      modifier = Modifier.size(36.dp)
+      modifier = Modifier
+        .size(36.dp)
+        .shadow(4.dp, CircleShape)
+        .clip(CircleShape)
+        .border(1.5.dp, Primary.copy(alpha = 0.6f), CircleShape)
     )
   }
 }
@@ -200,7 +288,7 @@ fun InLoveBottomNav(
     modifier = Modifier
       .fillMaxWidth()
       .navigationBarsPadding()
-      .padding(horizontal = 10.dp, vertical = 4.dp),
+      .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 14.dp),
     contentAlignment = Alignment.Center
   ) {
     Surface(
@@ -236,7 +324,7 @@ fun InLoveBottomNav(
               .padding(horizontal = 3.dp)
               .clip(RoundedCornerShape(22.dp))
               .background(pill)
-              .clickable { onTabSelected(index) }
+              .pressClickable(onClick = { onTabSelected(index) })
               .padding(vertical = 9.dp)
               .testTag(tab.tag),
             contentAlignment = Alignment.Center

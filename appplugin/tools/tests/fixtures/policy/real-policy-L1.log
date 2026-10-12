@@ -1,0 +1,3 @@
+10-05 13:41:55.932  9360  9416 I AppPlugin: policy: off (com.app.plugin.INTEGRITY_CLOUD_PROJECT)
+10-05 13:41:56.107  9360  9416 I AppPlugin: BrainPolicy: đã nạp 'policy_harness_230', 4 scenario cap, 4 profile
+10-05 13:41:56.107  9360  9416 I AppPlugin: policy: applied version=policy_harness_230 source=app

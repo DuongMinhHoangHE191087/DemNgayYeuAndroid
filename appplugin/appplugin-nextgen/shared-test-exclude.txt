@@ -1,0 +1,60 @@
+# 2.4.0 NG0 (Hợp đồng A, D11/D13-240): test chung (../src/test/java, đường dẫn tương đối) KHÔNG chép sang appplugin-nextgen.
+# Mỗi dòng: <đường dẫn> # <lý do>. Thêm dòng chỉ kèm lý do (vd. superclass adapter vắng). SharedSrc đọc phần trước '#'.
+com/app/plugin/MinSdkContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/Q7CensusTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b; đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/SdkFileSizeGateTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/SpiOptInTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/AdsFullscreenExpiryTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/AdsHelperSizeGateTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/CollapsibleBannerTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/CountryTierParityTest.kt  # đọc backend/sql/seed/country_tier.csv theo cwd (cwd = appplugin-nextgen/; thấy ở full NG0)
+com/app/plugin/ads/LateBannerLoadCallbackTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/LateLoadCallbackTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/MainPostCensusTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/MainPostTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/MaxBridgeTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/NtFullHostDestroyTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/NtFullPreparedViewOrderTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/NtFullPreparedViewReleaseTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/NtFullTurnPlacementTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/RectGetAdForShowSquatTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/ShowTurnPlacementTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b; đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/TurnCallbackPlacementTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/WaterfallSyncShowFailTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/adsmob/AdNetworkMapperTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/adsmob/AdsMobMyEarlyReleaseTest.kt  # 2.4.3 FASTSTART-C Legacy-only (Next-Gen ném khi load trước init, không có cờ); đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/adsmob/AdsMobMyInitCallbackTest.kt  # 2.4.4 INITCB Legacy-only: đọc nguồn gốc AdsMobMy (MobileAds Legacy) theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có); bản nextgen ở nextgen/NgInitFrontTest
+com/app/plugin/ads/adsmob/AdsMobPlIntersExpiryTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/adsmob/AdsMobPlOpenExpiryTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/adsmob/GmaLoadContextPlacementTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/adsmob/NativeMediaViewCastTest.kt  # 2.5.0 PLMM: GMA Legacy (NativeAdView/MediaView Legacy); đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có); bản nextgen ở nextgen/NgMediaViewNullTest
+com/app/plugin/ads/adsmob/NativeRatioRequestTest.kt  # 2.4.4 ASPECT: GMA Legacy (AdLoader/NativeAdOptions/MediaAspectRatio); bản nextgen ở nextgen/NgNativeRatioTest + NgNativeTest NN1
+com/app/plugin/ads/core/BiddingAdMobPathTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/ads/core/RewardedInterstitialControllerTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b; đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/ads/core/ShowPathReasonContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/app/AppPluginBaseInitMsContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/app/AppPluginBaseStartupTimingContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/app/PrefsFirstLoadTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/appsflyer/AppsflyerHelperConsentTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/brain/DecisionLoggerAttachTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/consent/FcmConsentTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/firbase/PaidEventTest.kt  # GMA Legacy (com.google.android.gms.ads): bản nextgen viết ở NG1–NG5b
+com/app/plugin/game/GameSeamRootTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/iap/BillingPortContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/iap/EntitlementIntegrityTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/iap/IapHarnessTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/iap/IapHelperReadyTest.kt  # phụ thuộc thứ tự: test trước để lại IapHelper.setProducts (static); ở gốc IapHarnessTest (bị loại ở đây vì đọc "src/") xoá trước nó; chạy riêng PASS
+com/app/plugin/iap/SubscriptionMessagingTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/EventNameContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/IapEventContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/LogEventControlTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/LogEventInitOrderContractTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/LogEventServerHelperTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/LogEventServerQueueTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/ServerSignalsTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/logevent/SessionTrackerTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/segment/SegmentHooksTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/until/KeepXmlTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/until/OptionalAdaptersCompileOnlyTest.kt  # đọc build.gradle.kts + app/build.gradle.kts của gốc theo cwd (cwd = appplugin-nextgen/)
+com/app/plugin/until/PrefsWarmupTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)
+com/app/plugin/until/ResourcePrefixTest.kt  # đọc nguồn gốc theo đường dẫn tương đối "src/…" (cwd = appplugin-nextgen/ không có)

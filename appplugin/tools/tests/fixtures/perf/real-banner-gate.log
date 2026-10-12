@@ -1,0 +1,55 @@
+# fixture THẬT 2.2.0 PERF2: sha apk=f168c8357c832445cdb627e9499e2e3dcf85b9ebd7bb6ae9c7e646728f842730 (utility 2.1.0 đóng băng), api=37 emulator-5570, 2026-10-04
+# lệnh: tools/perf_gate.sh --serial emulator-5570 --apk scratchpad/apk210/utility/utility.apk --mapping scratchpad/apk210/utility/mapping.txt --sink-port 8591 --sink-dir <d> --runs 5 --out perf.jsonl (log = DOC/testing/t220-perf2-smoke.log)
+precheck docker=0 sink=up
+precheck env net=1 lock=0 batt=100 host=awake
+perf log: /Users/dungdm/appplugin/scratchpad/perf2-out/perf.log; apk=/Users/dungdm/appplugin/scratchpad/apk210/utility/utility.apk sha256=f168c8357c832445cdb627e9499e2e3dcf85b9ebd7bb6ae9c7e646728f842730 mapping sha256=33e3a73ba290237757ff4fda8640f8776ed0c3ecf19df0e012feb0e771776333 api=37 model=sdk_gphone16k_arm64 serial=emulator-5570 runs=5
+Performing Streamed Install
+Success
+lượt mồi (không tính) xong
+run 1: TotalTime: 1314 WaitTime: 1368 
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode run1: violations=0 (no StrictMode line; retrace not needed)
+  {"run":1,"total_ms":1314,"wait_ms":1368,"oncreate_ms":24,"initplugin":{"manager":9,"meta":0,"helper_gate":3,"logevent":1,"total":13},"prefs_waited_ms":0,"prefs_timeouts":0,"by_sdk":0}
+run 2: TotalTime: 1217 WaitTime: 1230 
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode run2: violations=0 (no StrictMode line; retrace not needed)
+  {"run":2,"total_ms":1217,"wait_ms":1230,"oncreate_ms":26,"initplugin":{"manager":4,"meta":0,"helper_gate":6,"logevent":16,"total":26},"prefs_waited_ms":0,"prefs_timeouts":0,"by_sdk":0}
+run 3: TotalTime: 1092 WaitTime: 1095 
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode run3: violations=0 (no StrictMode line; retrace not needed)
+  {"run":3,"total_ms":1092,"wait_ms":1095,"oncreate_ms":49,"initplugin":{"manager":6,"meta":0,"helper_gate":39,"logevent":3,"total":48},"prefs_waited_ms":0,"prefs_timeouts":0,"by_sdk":0}
+run 4: TotalTime: 1149 WaitTime: 1162 
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode run4: violations=0 (no StrictMode line; retrace not needed)
+  {"run":4,"total_ms":1149,"wait_ms":1162,"oncreate_ms":167,"initplugin":{"manager":2,"meta":0,"helper_gate":67,"logevent":2,"total":71},"prefs_waited_ms":0,"prefs_timeouts":0,"by_sdk":0}
+run 5: TotalTime: 1096 WaitTime: 1112 
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode run5: violations=0 (no StrictMode line; retrace not needed)
+  {"run":5,"total_ms":1096,"wait_ms":1112,"oncreate_ms":73,"initplugin":{"manager":5,"meta":0,"helper_gate":38,"logevent":17,"total":60},"prefs_waited_ms":0,"prefs_timeouts":0,"by_sdk":0}
+meminfo settle: pss_kb=166821 java_kb=37744 native_kb=25760
+  màn hình 1344x2992 (wm size)
+screen size=1344x2992 density=480
+  tap 'Show Interstitial' try=1 xy=672 2625: 'showInterstitial call show' tới app
+  show_full 'Show Interstitial': onAdLoaded pl=full_default mới sau 0s; JSONL ad_fill 10 -> 11
+  tap 'Show Interstitial' try=1 xy=672 2625: 'showInterstitial call show' tới app
+  show_full 'Show Interstitial': shown (ad focus)
+  show_full 'Show Interstitial': về MainActivity (clear_top_single)
+  tap 'Show Rewarded' try=1 xy=672 2332: 'showRewarded call show' tới app
+  show_full 'Show Rewarded': onAdLoaded pl=gift_default mới sau 0s; JSONL ad_fill 11 -> 13
+  tap 'Show Rewarded' try=1 xy=672 2332: 'showRewarded call show' tới app
+  show_full 'Show Rewarded': shown (ad focus)
+  show_full 'Show Rewarded': về MainActivity (clear_top_single)
+  tap 'Show Rewarded Interstitial' try=1 xy=672 45: 'showRwi call show' tới app
+  show_full 'Show Rewarded Interstitial': hiện ngay ở lần chạm 1 (đã nạp sẵn)
+  show_full 'Show Rewarded Interstitial': shown (ad focus)
+  show_full 'Show Rewarded Interstitial': về MainActivity (clear_top_single)
+meminfo after_show: pss_kb=187809 java_kb=42640 native_kb=29648
+  tap 'Show Banner Only' try=1 xy=672 294: 'showBanner call show' tới app
+pm clear test.sdk.zd: Success
+run first_run: TotalTime: 1616 WaitTime: 1619 
+strictmode frames com.app.plugin=0 (raw, before retrace; demo=0)
+strictmode runfirst_run: violations=0 (no StrictMode line; retrace not needed)
+  {"run":0,"total_ms":1616,"wait_ms":1619,"oncreate_ms":326,"initplugin":{"manager":5,"meta":0,"helper_gate":189,"logevent":2,"total":196},"prefs_waited_ms":0,"prefs_timeouts":0,"by_sdk":0}
+FATAL=0 am_anr=0 native=0 (need 0/0/0)
+sink jsonl lines=139 (/Users/dungdm/appplugin/scratchpad/perf2-sink/events.jsonl)
+RESULT: PASS

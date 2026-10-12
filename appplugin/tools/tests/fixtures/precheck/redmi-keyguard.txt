@@ -1,0 +1,3 @@
+# real capture 2026-10-04 Task T0c; sha256(raw)=141d9976222dcb99; cmd: adb -s 65c9b673 shell dumpsys window | grep -E 'mDreamingLockscreen|isKeyguardShowing|mShowingLockscreen'
+    mShowingDream=false mDreamingLockscreen=false
+    isKeyguardShowing=false

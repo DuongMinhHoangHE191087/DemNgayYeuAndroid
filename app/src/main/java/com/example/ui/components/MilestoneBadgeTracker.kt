@@ -687,7 +687,7 @@ fun MilestoneBadgeShowcaseDialog(
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically
         ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
+          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
             IconButton(
               onClick = onDismiss,
               modifier = Modifier
@@ -702,21 +702,27 @@ fun MilestoneBadgeShowcaseDialog(
               )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
               Text(
                 text = if (appLanguage == AppLanguage.VI) "Hành Trình Cột Mốc" else "Milestone Roadmap",
-                fontSize = 20.sp,
+                fontSize = 17.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF26071B)
+                color = Color(0xFF26071B),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
               )
               Text(
-                text = if (appLanguage == AppLanguage.VI) "$boyName ❤️ $girlName • $loveDays Ngày Yêu" else "$boyName & $girlName • $loveDays Days",
+                text = if (appLanguage == AppLanguage.VI) "$boyName ❤️ $girlName • $loveDays Ngày Yêu" else "$boyName & $girlName • $loveDays ${if (loveDays == 1) "Day" else "Days"}",
                 fontSize = 12.sp,
                 color = Primary,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
               )
             }
           }
+
+          Spacer(modifier = Modifier.width(8.dp))
 
           // Toggle View Mode (Timeline vs Grid)
           Row(
@@ -807,7 +813,29 @@ fun MilestoneBadgeShowcaseDialog(
         Spacer(modifier = Modifier.height(14.dp))
 
         // Content Area: Timeline or Grid
-        if (viewMode == "TIMELINE") {
+        if (filteredBadges.isEmpty()) {
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(bottom = 96.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Icon(
+              imageVector = if (selectedFilter == "UNLOCKED") Icons.Filled.Lock else Icons.Filled.CheckCircle,
+              contentDescription = null,
+              tint = Color(0xFFFFB3D1),
+              modifier = Modifier.size(56.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+              text = if (appLanguage == AppLanguage.VI) "Chưa có huy hiệu nào" else "Nothing here yet",
+              fontSize = 14.sp,
+              fontWeight = FontWeight.SemiBold,
+              color = Color(0xFF9E7A8C)
+            )
+          }
+        } else if (viewMode == "TIMELINE") {
           LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(14.dp)

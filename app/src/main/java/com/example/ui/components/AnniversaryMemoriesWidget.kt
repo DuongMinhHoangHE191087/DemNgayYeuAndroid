@@ -70,6 +70,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -466,9 +467,11 @@ fun AnniversaryMemoriesWidget(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
+        val viewAllSource = remember { MutableInteractionSource() }
         TextButton(
           onClick = onNavigateToFullAlbum,
-          modifier = Modifier.testTag("btn_view_full_memories")
+          interactionSource = viewAllSource,
+          modifier = Modifier.pressScale(viewAllSource).testTag("btn_view_full_memories")
         ) {
           Icon(
             imageVector = Icons.Filled.PhotoAlbum,

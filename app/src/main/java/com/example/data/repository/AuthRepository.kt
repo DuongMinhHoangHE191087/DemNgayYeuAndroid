@@ -1130,12 +1130,13 @@ class AuthRepository(
       )
       dao.insertOnlineUser(newOnlineUser)
     } else {
+      // ponytail: account photo seeds new rows only, so a picked avatar survives sign-in.
+      // Ceiling: a row created with a blank photo never gets one later. Upgrade: a user-picked flag.
       dao.updateOnlineUser(
         existingOnlineUser.copy(
           displayName = account.displayName,
           email = account.email,
           coupleCode = account.coupleCode,
-          avatarUrl = account.avatarUrl.ifEmpty { existingOnlineUser.avatarUrl },
           isCurrentUser = true,
           role = account.role,
           subscriptionTier = account.subscriptionTier,

@@ -1,0 +1,563 @@
+[
+  {
+    "name": "event_name",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "brain_decision | brain_feedback | iap_purchase | brain_comfort | paywall_impression | paywall_holdout_skip | web_checkout_opened | (khac)"
+  },
+  {
+    "name": "sequence_id",
+    "type": "INT64"
+  },
+  {
+    "name": "client_ts_ms",
+    "type": "INT64",
+    "mode": "REQUIRED",
+    "description": "Dong ho CLIENT. Ngay bao cao = ngay UTC+7 cua cot nay. KHONG dung gio nhan."
+  },
+  {
+    "name": "client_ts_date",
+    "type": "DATE",
+    "mode": "REQUIRED",
+    "description": "Sinh tu client_ts_ms o UTC. Cot thuong (khong phan vung tu 1.7.0 F2-be)."
+  },
+  {
+    "name": "received_ts_ms",
+    "type": "INT64",
+    "description": "Gio server nhan. Chi de do do tre cua hang doi."
+  },
+  {
+    "name": "is_known_event",
+    "type": "BOOL"
+  },
+  {
+    "name": "dedup_key",
+    "type": "STRING",
+    "description": "NULL khi event khong co khoa on dinh"
+  },
+  {
+    "name": "user_id",
+    "type": "STRING"
+  },
+  {
+    "name": "session_id",
+    "type": "STRING"
+  },
+  {
+    "name": "app_name",
+    "type": "STRING"
+  },
+  {
+    "name": "app_version",
+    "type": "STRING"
+  },
+  {
+    "name": "country",
+    "type": "STRING"
+  },
+  {
+    "name": "platform",
+    "type": "STRING"
+  },
+  {
+    "name": "install_day",
+    "type": "INT64"
+  },
+  {
+    "name": "retention_day",
+    "type": "INT64"
+  },
+  {
+    "name": "local_hour",
+    "type": "INT64"
+  },
+  {
+    "name": "ab_test",
+    "type": "INT64"
+  },
+  {
+    "name": "decision_id",
+    "type": "STRING"
+  },
+  {
+    "name": "decision_point",
+    "type": "STRING"
+  },
+  {
+    "name": "chosen_action_id",
+    "type": "STRING"
+  },
+  {
+    "name": "chosen_action_mode",
+    "type": "STRING"
+  },
+  {
+    "name": "chosen_action_probability",
+    "type": "FLOAT64",
+    "description": "PROPENSITY - khong bao gio tai tao duoc. Bat buoc cho OPE."
+  },
+  {
+    "name": "eligible_actions",
+    "type": "STRING",
+    "description": "Tap ung vien SAU guardrail, giu nguyen thu tu. Khong tai tao duoc."
+  },
+  {
+    "name": "guardrails_applied",
+    "type": "STRING"
+  },
+  {
+    "name": "segment",
+    "type": "STRING"
+  },
+  {
+    "name": "segment_confidence",
+    "type": "FLOAT64"
+  },
+  {
+    "name": "scenario",
+    "type": "STRING"
+  },
+  {
+    "name": "is_holdout",
+    "type": "INT64"
+  },
+  {
+    "name": "policy_version",
+    "type": "STRING"
+  },
+  {
+    "name": "outcome_event",
+    "type": "STRING"
+  },
+  {
+    "name": "outcome_timestamp_ms",
+    "type": "INT64"
+  },
+  {
+    "name": "reward_value",
+    "type": "FLOAT64",
+    "description": "Reward RewardModel chot tren may - dau vao bat buoc cua OPE (IPS/DR). NULL = thieu, khong phai 0."
+  },
+  {
+    "name": "product_id",
+    "type": "STRING"
+  },
+  {
+    "name": "order_id",
+    "type": "STRING"
+  },
+  {
+    "name": "price_micros",
+    "type": "INT64",
+    "description": "NGUYEN BAN cua store. Quy doi USD la viec cua lop phan tich."
+  },
+  {
+    "name": "currency_code",
+    "type": "STRING"
+  },
+  {
+    "name": "quantity",
+    "type": "INT64"
+  },
+  {
+    "name": "channel",
+    "type": "STRING"
+  },
+  {
+    "name": "is_subscription",
+    "type": "INT64"
+  },
+  {
+    "name": "purchase_token",
+    "type": "STRING"
+  },
+  {
+    "name": "ad_format",
+    "type": "STRING"
+  },
+  {
+    "name": "ad_platform",
+    "type": "STRING"
+  },
+  {
+    "name": "ad_network",
+    "type": "STRING"
+  },
+  {
+    "name": "placement",
+    "type": "STRING"
+  },
+  {
+    "name": "ad_revenue",
+    "type": "FLOAT64",
+    "description": "So thuc, KHONG phai micros - khac IAP"
+  },
+  {
+    "name": "comfort_value",
+    "type": "FLOAT64"
+  },
+  {
+    "name": "comfort_coverage",
+    "type": "FLOAT64",
+    "description": "PHAI doc truoc comfort_value. Hien la 0.4."
+  },
+  {
+    "name": "components_missing",
+    "type": "STRING"
+  },
+  {
+    "name": "policy_aggressiveness",
+    "type": "STRING"
+  },
+  {
+    "name": "variant_id",
+    "type": "STRING",
+    "description": "Bien the paywall da hien (paywall_impression)"
+  },
+  {
+    "name": "counterfactual_variant_id",
+    "type": "STRING",
+    "description": "Bien the LE RA da hien neu khong thuoc nhom doi chung (paywall_holdout_skip)"
+  },
+  {
+    "name": "product_count",
+    "type": "INT64"
+  },
+  {
+    "name": "paywall_version",
+    "type": "STRING"
+  },
+  {
+    "name": "routing_version",
+    "type": "STRING",
+    "description": "Ban cau hinh routing da dan nguoi dung ra web shop (web_checkout_opened)"
+  },
+  {
+    "name": "from_state",
+    "type": "STRING",
+    "description": "Vong doi subscription: trang thai truoc/sau chuyen doi va ban cau hinh (subscription_state)"
+  },
+  {
+    "name": "to_state",
+    "type": "STRING",
+    "description": "Vong doi subscription: trang thai truoc/sau chuyen doi va ban cau hinh (subscription_state)"
+  },
+  {
+    "name": "lifecycle_version",
+    "type": "STRING",
+    "description": "Ban cau hinh vong doi subscription da phan loai trang thai (subscription_state)"
+  },
+  {
+    "name": "season_id",
+    "type": "STRING",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "from_tier",
+    "type": "INT64",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "to_tier",
+    "type": "INT64",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "tier",
+    "type": "INT64",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "track",
+    "type": "STRING",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "reward_count",
+    "type": "INT64",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "is_premium",
+    "type": "INT64",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "battle_pass_version",
+    "type": "STRING",
+    "description": "Battle pass (battle_pass_tier / battle_pass_claim)"
+  },
+  {
+    "name": "reward_type",
+    "type": "STRING",
+    "description": "Cau noi VIP - virtual currency (recurring_grant_claim)"
+  },
+  {
+    "name": "reward_amount",
+    "type": "INT64",
+    "description": "Cau noi VIP - virtual currency (recurring_grant_claim)"
+  },
+  {
+    "name": "period_hours",
+    "type": "INT64",
+    "description": "Cau noi VIP - virtual currency (recurring_grant_claim)"
+  },
+  {
+    "name": "recurring_grants_version",
+    "type": "STRING",
+    "description": "Cau noi VIP - virtual currency (recurring_grant_claim)"
+  },
+  {
+    "name": "provider_id",
+    "type": "STRING",
+    "description": "Offerwall - lop adapter da vendor (offerwall_impression / offerwall_completed)"
+  },
+  {
+    "name": "currency_earned",
+    "type": "INT64",
+    "description": "Offerwall - so currency vendor xac nhan (offerwall_completed)"
+  },
+  {
+    "name": "transaction_id",
+    "type": "STRING",
+    "description": "Offerwall - id giao dich vendor, khoa chong trung (offerwall_completed)"
+  },
+  {
+    "name": "offerwall_version",
+    "type": "STRING",
+    "description": "Offerwall - phien ban cau hinh (offerwall_impression / offerwall_completed)"
+  },
+  {
+    "name": "experiment_id",
+    "type": "STRING",
+    "description": "Exposure - dinh danh thi nghiem (experiment_exposure)"
+  },
+  {
+    "name": "holdout_bucket",
+    "type": "INT64",
+    "description": "Exposure - bucket bam FNV-1a trong [0, 10000) de doi chieu membership (experiment_exposure)"
+  },
+  {
+    "name": "in_rollout",
+    "type": "INT64",
+    "description": "Exposure - 1 neu player nam trong nhom rollout cua thi nghiem (experiment_exposure)"
+  },
+  {
+    "name": "salt_version",
+    "type": "STRING",
+    "description": "Exposure - muoi bam tai thoi diem phoi nhiem, doi muoi = chu ky do moi (experiment_exposure)"
+  },
+  {
+    "name": "raw_event_data",
+    "type": "JSON",
+    "description": "Chi dung cho event chua biet schema"
+  },
+  {
+    "name": "event_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 envelope: UUID v4 sinh luc dung event; dedup_key = ev:<event_id>"
+  },
+  {
+    "name": "schema_version",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 envelope: 2 cho SDK 1.7.0; NULL = v1"
+  },
+  {
+    "name": "sdk_version",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 envelope: BuildConfig.SDK_VERSION"
+  },
+  {
+    "name": "package_name",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 envelope: client tu khai - KHONG dung de xac dinh app"
+  },
+  {
+    "name": "app_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Server gan tu khoa API (BRAIN_API_KEYS); dev = 'dev'"
+  },
+  {
+    "name": "consent_tier",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 envelope: ConsentState.tier() luc dung event"
+  },
+  {
+    "name": "request_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 ad_request/ad_fill/ad_no_fill: UUID mot lan load"
+  },
+  {
+    "name": "imp_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 ad_show/ad_revenue: khoa doi soat mot impression"
+  },
+  {
+    "name": "mediation",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2: admob | max | meta_direct"
+  },
+  {
+    "name": "ad_source",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2: mang thang (AppUtil.extractAdNetwork)"
+  },
+  {
+    "name": "ad_unit",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2: ad unit id"
+  },
+  {
+    "name": "value_micros",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 ad_revenue: micros cua currency - KHONG phai USD"
+  },
+  {
+    "name": "precision_type",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 ad_revenue: GMA AdValue.PrecisionType 0-3; -1 khong co"
+  },
+  {
+    "name": "currency",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 ad_revenue: ma tien te cua value_micros"
+  },
+  {
+    "name": "error_code",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 ad_no_fill: ma mang dang chuoi, hoac 'timeout'"
+  },
+  {
+    "name": "latency_ms",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 ad_fill/ad_no_fill/consent_choice; -1 = khong co moc bat dau"
+  },
+  {
+    "name": "reason",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 ad_no_fill/ad_show_fail: chuoi loi"
+  },
+  {
+    "name": "ready",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 ad_show_attempt: 1 neu placement da load luc goi"
+  },
+  {
+    "name": "is_action",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 ad_show_fail"
+  },
+  {
+    "name": "gdpr_applies",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 consent: 1/0/-1"
+  },
+  {
+    "name": "gpp_sections",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 consent_choice: sid noi bang '_'"
+  },
+  {
+    "name": "form_kind",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 consent: initial | privacy_options"
+  },
+  {
+    "name": "duration_ms",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 session_end"
+  },
+  {
+    "name": "ads_shown_json",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "v2 session_end: chuoi JSON {format: n}"
+  },
+  {
+    "name": "screens",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 session_end: so Activity start"
+  },
+  {
+    "name": "fg_index",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "v2 session_end: lan foreground thu may trong process"
+  },
+  {
+    "name": "sample_rate",
+    "type": "FLOAT64",
+    "mode": "NULLABLE",
+    "description": "logevent_control: ti le lay mau; view nhan 1/sample_rate"
+  },
+  {
+    "name": "received_date",
+    "type": "DATE",
+    "mode": "REQUIRED",
+    "description": "Ngay UTC cua received_ts_ms. Cot phan vung (han giu 2/400 ngay): hang toi muon khong roi vao phan vung da het han."
+  },
+  {
+    "name": "phase",
+    "type": "STRING",
+    "description": "iap_purchase v2 (1.8.0): trial | intro | base | inapp; price_micros la so THUC THU cua pha (trial = 0)"
+  },
+  {
+    "name": "offer_tag",
+    "type": "STRING",
+    "description": "iap_purchase v2: offer tag cua Play (rong khi khong co)"
+  },
+  {
+    "name": "paywall_session_id",
+    "type": "STRING",
+    "description": "iap_purchase / iap_result / paywall_* v2: phien paywall, khoa cua v_paywall_funnel (rong ngoai paywall)"
+  },
+  {
+    "name": "outcome",
+    "type": "STRING",
+    "description": "iap_result: success | cancel | pending | failed | already_owned | ack_failed"
+  },
+  {
+    "name": "response_code",
+    "type": "INT64",
+    "description": "iap_result: BillingResponseCode cua Play"
+  },
+  {
+    "name": "schema_version_cfg",
+    "type": "INT64",
+    "description": "paywall_impression v2: schema_version cua cau hinh paywall"
+  },
+  {
+    "name": "source",
+    "type": "STRING",
+    "description": "subscription_state v2: client | server (nhan tu signals, D9)"
+  },
+  {
+    "name": "slot",
+    "type": "STRING",
+    "description": "ad_request/ad_fill/ad_no_fill: khoa slot mang cua request (originPl, 1.8.0 T15); cot tu 1.9.0 T9, truoc do chi trong raw_event_data"
+  }
+]

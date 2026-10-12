@@ -1,0 +1,36 @@
+# Stack cục bộ tương đương production (1.7.0 T10): API backend + bigquery-emulator. KHÔNG bao giờ chạm GCP:
+# project emulator `local-test`, credential ẩn danh; app.config từ chối BRAIN_BQ_ENDPOINT với project khác.
+#
+# Quy tắc Docker của dự án (plan 1.7.0, plan-lint #24): chỉ chạy dưới khoá `docker` (loại trừ cổng thiết bị),
+# bắt đầu bằng `docker compose down -v`, kết thúc bằng `docker compose down -v` + `docker desktop stop`,
+# rồi `pgrep -f Docker.app | wc -l` = 0.
+#
+#   docker compose -f backend/docker-compose.yml up -d --build
+#   (cd backend && python -m app.bq_setup --project local-test --endpoint http://127.0.0.1:19050)
+#   backend/.venv/bin/python tools/stack_load.py --merge-runs 2 <jsonl>...
+#   tools/report_daily.sh --date YYYY-MM-DD
+#
+# Cổng chỉ mở trên 127.0.0.1. Khoá mặc định là khoá dev cục bộ, không phải bí mật; đặt BRAIN_API_KEYS để đổi.
+name: brain-local
+services:
+  bq:
+    # ghcr.io/goccy/bigquery-emulator v0.8.1 (a531d3d), arm64 + amd64 — ghim digest (plan-inputs §d).
+    image: ghcr.io/goccy/bigquery-emulator@sha256:f4e428d265a93dc5ce36c294e1c584c7c9b384117d47ab8ddbb63d8d50b7f393
+    command: ["--project=local-test", "--dataset=monetization_brain", "--database=/data/bq.db"]
+    ports:
+      - "127.0.0.1:19050:9050"
+    volumes:
+      - bqdata:/data
+  brain-api:
+    build: .
+    environment:
+      BRAIN_SINK: bigquery
+      BRAIN_BQ_PROJECT: local-test
+      BRAIN_BQ_ENDPOINT: http://bq:9050
+      BRAIN_API_KEYS: ${BRAIN_API_KEYS:-demo:local-dev-key}
+    ports:
+      - "127.0.0.1:8089:8080"
+    depends_on:
+      - bq
+volumes:
+  bqdata:

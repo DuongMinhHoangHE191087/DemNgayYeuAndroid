@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Same circle treatment as bgbt_close.xml, reused for the skip-style icon shown once
+     the reveal countdown finishes on the native-full ad. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <stroke android:width="1dp" android:color="#585858" />
+            <solid android:color="#bb393939" />
+        </shape>
+    </item>
+    <item
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp"
+        android:top="6dp"
+        android:drawable="@drawable/appplugin_ic_ad_skip" />
+</layer-list>

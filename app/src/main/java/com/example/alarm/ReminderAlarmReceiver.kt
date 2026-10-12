@@ -17,6 +17,8 @@ import com.example.data.db.AccountDataVault
 import com.example.data.db.AppDatabase
 import com.example.data.db.InLoveDao
 import com.example.data.seed.HolidayDates
+import com.example.ui.util.AppLanguage
+import com.example.ui.util.LocaleManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,8 +60,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
       }
 
       ACTION_SNOOZE -> {
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Nhắc nhở tình yêu ❤️"
-        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "Đã đến thời gian kỷ niệm đặc biệt của hai bạn!"
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: tr(context, "Nhắc nhở tình yêu ❤️", "Love reminder ❤️")
+        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: tr(context, "Đã đến thời gian kỷ niệm đặc biệt của hai bạn!", "A special moment for the two of you has arrived!")
         val reminderId = intent.getLongExtra(EXTRA_REMINDER_ID, System.currentTimeMillis())
         val snoozeMillis = System.currentTimeMillis() + 60 * 60 * 1000L // 1 hour later
         AlarmNotificationScheduler.scheduleAlarm(
@@ -75,8 +77,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
       }
 
       ACTION_ANNIVERSARY_ALARM, ACTION_REMINDER_ALARM -> {
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Nhắc nhở tình yêu ❤️"
-        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "Đã đến thời gian kỷ niệm đặc biệt của hai bạn!"
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: tr(context, "Nhắc nhở tình yêu ❤️", "Love reminder ❤️")
+        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: tr(context, "Đã đến thời gian kỷ niệm đặc biệt của hai bạn!", "A special moment for the two of you has arrived!")
         val reminderId = intent.getLongExtra(EXTRA_REMINDER_ID, System.currentTimeMillis())
         val targetTab = intent.getStringExtra(EXTRA_TARGET_TAB) ?: "calendar"
         val channelId = intent.getStringExtra(EXTRA_CHANNEL_ID) ?: CHANNEL_ANNIVERSARIES_ID
@@ -92,8 +94,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
       }
 
       else -> {
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: "Nhắc nhở tình yêu ❤️"
-        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "Đã đến thời gian kỷ niệm đặc biệt của hai bạn!"
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: tr(context, "Nhắc nhở tình yêu ❤️", "Love reminder ❤️")
+        val message = intent.getStringExtra(EXTRA_MESSAGE) ?: tr(context, "Đã đến thời gian kỷ niệm đặc biệt của hai bạn!", "A special moment for the two of you has arrived!")
         val reminderId = intent.getLongExtra(EXTRA_REMINDER_ID, System.currentTimeMillis())
         showNotification(context, title, message, reminderId.toInt())
       }
@@ -142,9 +144,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     const val ACTION_SNOOZE = "com.example.inlove.ACTION_SNOOZE"
 
     const val CHANNEL_ANNIVERSARIES_ID = "love_anniversaries_channel"
-    const val CHANNEL_ANNIVERSARIES_NAME = "Kỷ niệm & Ngày đặc biệt ❤️"
     const val CHANNEL_REMINDERS_ID = "love_reminders_channel"
-    const val CHANNEL_REMINDERS_NAME = "InLove Reminders & Alarms"
 
     const val EXTRA_TITLE = "extra_reminder_title"
     const val EXTRA_MESSAGE = "extra_reminder_message"
@@ -153,6 +153,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     const val EXTRA_CHANNEL_ID = "extra_channel_id"
     // Account token that scheduled the alarm (AccountDataVault.currentToken); other accounts' alarms are dropped.
     const val EXTRA_OWNER = "extra_owner_token"
+
+    /** The receiver has no Compose state, so it reads the language the app saved. */
+    private fun tr(context: Context, vi: String, en: String) =
+      if (LocaleManager.getInitialLanguage(context) == AppLanguage.EN) en else vi
 
     fun showNotification(
       context: Context,
@@ -168,10 +172,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val anniversaryChannel = NotificationChannel(
           CHANNEL_ANNIVERSARIES_ID,
-          CHANNEL_ANNIVERSARIES_NAME,
+          tr(context, "Kỷ niệm & Ngày đặc biệt ❤️", "Anniversaries & Special Days ❤️"),
           NotificationManager.IMPORTANCE_HIGH
         ).apply {
-          description = "Thông báo nhắc nhở ngày kỷ niệm tình yêu và các cột mốc đặc biệt"
+          description = tr(context, "Thông báo nhắc nhở ngày kỷ niệm tình yêu và các cột mốc đặc biệt", "Reminders for love anniversaries and special milestones")
           enableLights(true)
           lightColor = Color.rgb(255, 64, 129) // Pink accent
           enableVibration(true)
@@ -181,10 +185,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
         val remindersChannel = NotificationChannel(
           CHANNEL_REMINDERS_ID,
-          CHANNEL_REMINDERS_NAME,
+          tr(context, "Nhắc hẹn & Báo thức", "Reminders & Alarms"),
           NotificationManager.IMPORTANCE_HIGH
         ).apply {
-          description = "Chuông báo thức hẹn hò và chuẩn bị quà tặng"
+          description = tr(context, "Chuông báo thức hẹn hò và chuẩn bị quà tặng", "Alarms for dates and gift preparation")
           enableLights(true)
           lightColor = Color.rgb(255, 138, 101)
           enableVibration(true)
@@ -224,7 +228,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
       val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
       val notification = NotificationCompat.Builder(context, channelId)
-        .setSmallIcon(R.mipmap.ic_launcher)
+        .setSmallIcon(R.drawable.ic_stat_heart)
         .setContentTitle(title)
         .setContentText(message)
         .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -237,12 +241,12 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         .setContentIntent(pendingIntent)
         .addAction(
           R.drawable.ic_launcher_foreground,
-          "Mở InLove ❤️",
+          tr(context, "Mở InLove ❤️", "Open InLove ❤️"),
           pendingIntent
         )
         .addAction(
           R.drawable.ic_launcher_foreground,
-          "Nhắc lại sau 1h ⏰",
+          tr(context, "Nhắc lại sau 1h ⏰", "Snooze 1h ⏰"),
           snoozePendingIntent
         )
         .build()

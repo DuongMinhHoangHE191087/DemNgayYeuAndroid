@@ -1,0 +1,21 @@
+# real capture 2026-10-04 Task T0c; sha256(raw)=09ee0159b11032bd; cmd: adb -s 65c9b673 shell dumpsys connectivity (22021211RC, Android 14; cắt ở dòng NetworkAgentInfo đầu, bỏ phần link-local/IP)
+NetworkProviders for:
+  8: UntrustedWifiNetworkFactory
+  10: OemPaidWifiNetworkFactory
+  3: VpnNetworkProvider:0
+  11: MultiInternetWifiNetworkFactory
+  1: EthernetNetworkFactory
+  2: VcnNetworkProvider
+  4: PhoneSwitcherNetworkRequstListener
+  6: TelephonyNetworkFactory[1]
+  5: TelephonyNetworkFactory[0]
+  7: WifiNetworkFactory
+  9: RestrictedWifiNetworkFactory
+
+Active default network: 164
+
+Current network preferences: 
+  Default requests:
+
+Current Networks:
+  NetworkAgentInfo{network{164}  handle{707780333581}  ni{WIFI CONNECTED extra: } created=2026-10-03T14:12:41.251Z Score(Policies : TRANSPORT_PRIMARY&EVER_EVALUATED&IS_UNMETERED&EVER_USER_SELECTED&EVER_VALIDATED&IS_VALIDATED ; KeepConnected : 0)

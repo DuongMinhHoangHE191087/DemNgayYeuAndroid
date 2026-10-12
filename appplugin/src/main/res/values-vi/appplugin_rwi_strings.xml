@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.9.0 Task 2 (D33): màn intro rewarded interstitial, tiếng Việt (chữ hợp đồng §C). -->
+<resources>
+    <string name="appplugin_rwi_title">Xem quảng cáo để nhận thưởng</string>
+    <string name="appplugin_rwi_countdown">Quảng cáo bắt đầu sau %1$d giây</string>
+    <string name="appplugin_rwi_skip">Bỏ qua</string>
+</resources>

@@ -1,0 +1,3 @@
+# real capture 2026-10-04 Task T0c; sha256(raw)=26bc22c9b019e1e5; cmd: pmset -g batt
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=37290083)	100%; charged; 0:00 remaining present: true

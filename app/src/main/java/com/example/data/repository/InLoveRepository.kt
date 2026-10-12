@@ -297,6 +297,10 @@ class InLoveRepository(private val dao: InLoveDao, private val appContext: andro
     dao.updateChecklistItem(item.copy(isCompleted = !item.isCompleted))
   }
 
+  suspend fun renameChecklistItem(item: ChecklistItemEntity, text: String) {
+    dao.updateChecklistItem(item.copy(text = text))
+  }
+
   suspend fun addChecklistItem(text: String, icon: String = "check") {
     dao.insertChecklistItem(ChecklistItemEntity(text = text, iconName = icon, isCompleted = false))
   }

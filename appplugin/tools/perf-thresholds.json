@@ -1,0 +1,268 @@
+{
+ "schema_version": 1,
+ "provisional": true,
+ "note": "PERF-B 2.1.0, APK 2.0.0 đóng băng (apk200/utility.apk), 2026-10-03, x1,2 trung vị/p90. Redmi: cold n=5 đo OFFLINE -> oncreate_ms, initplugin_total_ms, total_ms, prefs_waited_ms, by_sdk, first_by_sdk là hard cuối cùng. Redmi fill_ms.*, show_ms.interstitial: từ A/B ghép cặp online 2026-10-03 (2.0.0 P1+P3 gộp, n=10 cold, interstitial n=14, rewarded_interstitial n=15, opened n=4), theo D24: fill_ms hard med/p90 = round(x1,5 trung vị/p90 gộp) vì phụ thuộc mạng (chênh giữa các lượt tới 32 %); show_ms.interstitial med = max(round(x1,2), 200) = 200; fill_rate min 0,95 và fill_per_request min 0,90 giữ nguyên hard. 2.2.0 PERF2: perf_gate có chặng banner; fill_ms.banner kind info (chưa có số) ở redmi và emu37/33/28/26, hard chỉ sau PERF2-AB (D24, sàn D22/contract 17); PERF2-AB 2026-10-04 (Redmi, A/B 2.1.0 vs 2.2.0, n=10 cold mỗi bản): chỉ quan sát 4 lần fill banner (2 mỗi bản, trung vị gộp 3555 ms) < sàn 10 nên fill_ms.banner GIỮ info (R-PERF2 m1), initplugin_total_ms hard giữ 20 (trung vị 2.2.0 = 2.1.0 = 13,5 ms, không vượt cộng nhiễu); Samsung giữ hàng hard TẠM. Samsung vắng máy: khối giữ TẠM, first_by_sdk max 1. Emulator emu37/33/28/26: n=5 cold + first-run từ E-emu 2.0.0, x1,2, kind info, first_by_sdk max 1. PSS chưa có ngưỡng số. provisional=true vì Samsung chưa đo. Sàn nhiễu D22: chỉ số có trung vị PERF-B < 20 ms thì hard med = max(x1,2 trung vị, 20) và p90 = max(x1,2 p90, 40); chỉ số >= 20 ms (gồm total_ms) giữ x1,2.",
+ "devices": {
+  "redmi": {
+   "oncreate_ms": {
+    "med": 20,
+    "p90": 40,
+    "kind": "hard"
+   },
+   "initplugin_total_ms": {
+    "med": 20,
+    "kind": "hard"
+   },
+   "total_ms": {
+    "med": 437,
+    "p90": 543,
+    "kind": "hard"
+   },
+   "fill_ms.opened": {
+    "med": 2851,
+    "p90": 2879,
+    "kind": "hard"
+   },
+   "fill_ms.interstitial": {
+    "med": 3632,
+    "p90": 5111,
+    "kind": "hard"
+   },
+   "fill_ms.rewarded_interstitial": {
+    "med": 2832,
+    "p90": 3327,
+    "kind": "hard"
+   },
+   "fill_ms.banner": {"kind": "info"},
+   "fill_rate": {
+    "min": 0.95,
+    "kind": "hard"
+   },
+   "fill_per_request": {
+    "min": 0.9,
+    "kind": "hard"
+   },
+   "show_ms.interstitial": {
+    "med": 200,
+    "kind": "hard"
+   },
+   "prefs_waited_ms": {
+    "max": 0,
+    "kind": "hard"
+   },
+   "by_sdk": {
+    "max": 0,
+    "kind": "hard"
+   },
+   "first_by_sdk": {
+    "max": 1,
+    "kind": "hard"
+   }
+  },
+  "samsung": {
+   "oncreate_ms": {
+    "med": 30,
+    "p90": 40,
+    "kind": "hard"
+   },
+   "initplugin_total_ms": {
+    "med": 29,
+    "kind": "hard"
+   },
+   "total_ms": {
+    "med": 880,
+    "p90": 960,
+    "kind": "hard"
+   },
+   "fill_ms.opened": {
+    "med": 2320,
+    "p90": 3400,
+    "kind": "hard"
+   },
+   "fill_ms.interstitial": {
+    "med": 5790,
+    "p90": 7500,
+    "kind": "hard"
+   },
+   "fill_ms.rewarded_interstitial": {
+    "med": 2500,
+    "p90": 3650,
+    "kind": "hard"
+   },
+   "fill_ms.banner": {
+    "med": 3350,
+    "p90": 5540,
+    "kind": "hard",
+    "min_n": 10
+   },
+   "fill_rate": {
+    "min": 0.95,
+    "kind": "hard"
+   },
+   "fill_per_request": {
+    "min": 0.9,
+    "kind": "hard"
+   },
+   "show_ms.interstitial": {
+    "med": 210,
+    "kind": "hard"
+   },
+   "prefs_waited_ms": {
+    "max": 0,
+    "kind": "hard"
+   },
+   "by_sdk": {
+    "max": 0,
+    "kind": "hard"
+   },
+   "first_by_sdk": {
+    "max": 1,
+    "kind": "hard"
+   }
+  },
+  "emu37": {
+   "oncreate_ms": {
+    "med": 102,
+    "p90": 210,
+    "kind": "info"
+   },
+   "initplugin_total_ms": {
+    "med": 100,
+    "p90": 208,
+    "kind": "info"
+   },
+   "total_ms": {
+    "med": 1244,
+    "p90": 1393,
+    "kind": "info"
+   },
+   "fill_ms.banner": {"kind": "info"},
+   "prefs_waited_ms": {
+    "max": 0,
+    "kind": "info"
+   },
+   "by_sdk": {
+    "max": 0,
+    "kind": "info"
+   },
+   "first_by_sdk": {
+    "max": 1,
+    "kind": "info"
+   },
+   "pss_settle_kb": {
+    "kind": "info"
+   },
+   "pss_after_show_kb": {
+    "kind": "info"
+   }
+  },
+  "emu33": {
+   "oncreate_ms": {
+    "med": 46,
+    "p90": 78,
+    "kind": "info"
+   },
+   "initplugin_total_ms": {
+    "med": 41,
+    "p90": 71,
+    "kind": "info"
+   },
+   "total_ms": {
+    "med": 1037,
+    "p90": 1180,
+    "kind": "info"
+   },
+   "fill_ms.banner": {"kind": "info"},
+   "prefs_waited_ms": {
+    "max": 0,
+    "kind": "info"
+   },
+   "by_sdk": {
+    "max": 0,
+    "kind": "info"
+   },
+   "first_by_sdk": {
+    "max": 1,
+    "kind": "info"
+   },
+   "pss_settle_kb": {
+    "kind": "info"
+   },
+   "pss_after_show_kb": {
+    "kind": "info"
+   }
+  },
+  "emu28": {
+   "oncreate_ms": {
+    "med": 80,
+    "p90": 94,
+    "kind": "info"
+   },
+   "initplugin_total_ms": {
+    "med": 47,
+    "p90": 70,
+    "kind": "info"
+   },
+   "total_ms": {
+    "med": 863,
+    "p90": 1002,
+    "kind": "info"
+   },
+   "fill_ms.banner": {"kind": "info"},
+   "prefs_waited_ms": {
+    "max": 0,
+    "kind": "info"
+   },
+   "by_sdk": {
+    "max": 0,
+    "kind": "info"
+   },
+   "first_by_sdk": {
+    "max": 1,
+    "kind": "info"
+   },
+   "pss_settle_kb": {
+    "kind": "info"
+   },
+   "pss_after_show_kb": {
+    "kind": "info"
+   }
+  },
+  "emu26": {
+   "oncreate_ms": {
+    "med": 157,
+    "p90": 196,
+    "kind": "info"
+   },
+   "initplugin_total_ms": {
+    "med": 125,
+    "p90": 185,
+    "kind": "info"
+   },
+   "total_ms": {
+    "med": 788,
+    "p90": 929,
+    "kind": "info"
+   },
+   "fill_ms.banner": {"kind": "info"},
+   "prefs_waited_ms": {
+    "max": 0,
+    "kind": "info"
+   },
+   "by_sdk": {
+    "max": 0,
+    "kind": "info"
+   },
+   "first_by_sdk": {
+    "max": 1,
+    "kind": "info"
+   },
+   "pss_settle_kb": {
+    "kind": "info"
+   },
+   "pss_after_show_kb": {
+    "kind": "info"
+   }
+  }
+ }
+}

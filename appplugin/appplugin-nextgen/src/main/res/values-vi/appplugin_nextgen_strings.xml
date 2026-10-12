@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appplugin_ntfull_cd_play">Phát video</string>
+    <string name="appplugin_ntfull_cd_pause">Tạm dừng video</string>
+    <string name="appplugin_ntfull_cd_mute">Bật hoặc tắt tiếng video</string>
+</resources>

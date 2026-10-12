@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hiến pháp Điều 8.4: SDK đọc các resource này của app bằng tên (AppUtil.getResource*, tức
+  getIdentifier), nên shrinkResources của app không thấy tham chiếu và xoá chúng. Đo 2026-09-24:
+  8 ad unit → 0 trong resources.arsc khi app bật shrinkResources mà không có file này.
+  KeepXmlTest bắt mọi tên mới đọc bằng code phải có ở đây.
+
+  2.0.0 C3a (D4): SDK có `resourcePrefix = "appplugin_"`; mọi resource SDK khai đều mang tiền tố đó. Các tên trong
+  tools:keep bên dưới là khoá app-contract: APP khai, SDK đọc bằng tên, nên KHÔNG đổi tên và không mang tiền tố
+  (lint ResourceName không bị vi phạm vì SDK không khai chúng; xem lint.xml). ResourcePrefixTest RP2 khẳng định mọi tên
+  SDK đọc thuộc `appplugin_*` hoặc danh sách này.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/admob_*,@string/adfb_*,@string/admax_*,@string/ads_cf_*,@integer/ads_cf_*,@integer/ads_admob_firebase_linked,@string/flagTest,@string/admob_test_device,@string/fb_test_device,@string/max_test_device,@string/facebook_app_id,@string/af_app_id,@string/admax_devKey,@array/ads_*,@raw/appplugin_keep" />

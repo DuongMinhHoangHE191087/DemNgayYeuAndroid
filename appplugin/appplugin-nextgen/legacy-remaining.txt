@@ -1,0 +1,2 @@
+# 2.4.0 NG0 (Hợp đồng A): file nguồn nextgen (src/main/java + build/generated/appplugin-shared/java, đường dẫn tương đối gốc java)
+# còn `import com.google.android.gms.ads.` (Legacy). NgLegacyCensusTest so khớp; mỗi NG xoá dòng của nó; NG5b = rỗng.

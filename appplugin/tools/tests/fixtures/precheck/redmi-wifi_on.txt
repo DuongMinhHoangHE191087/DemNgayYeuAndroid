@@ -1,0 +1,2 @@
+# real capture 2026-10-04 Task T0c; sha256(raw)=4355a46b19d348dc; cmd: adb -s 65c9b673 shell settings get global wifi_on
+1

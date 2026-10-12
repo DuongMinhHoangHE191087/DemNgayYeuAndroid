@@ -1,0 +1,762 @@
+========== config_format_ad_id ==========
+{
+  "i": {
+    "v1": "ca-app-pub-3559750835852503/8301940428"
+  },
+  "ns": {
+    "v1": "ca-app-pub-3559750835852503/3590886832"
+  },
+  "nmf": {
+    "v1": "ca-app-pub-3559750835852503/9532289282"
+  },
+  "nfi": {
+    "v1": "ca-app-pub-3559750835852503/8308861045"
+  },
+  "nsb": {
+    "v1": "ca-app-pub-3559750835852503/4140931306"
+  },
+  "b": {
+    "v1": "ca-app-pub-3559750835852503/5807639021"
+  },
+  "bc": {
+    "v1": "ca-app-pub-3559750835852503/5807639021"
+  },
+  "pip": {
+    "v1": "ca-app-pub-3559750835852503/9956364767"
+  },
+  "o": {
+    "v1": "ca-app-pub-3559750835852503/7394400472"
+  }
+}
+
+========== ad_places_app_open ==========
+[
+  {
+    "name": "open_app_first",
+    "ad_id_v1": "ca-app-pub-3559750835852503/1020563810",
+    "ad_type": "app_open",
+    "app_open_delay_before_show_millis": 200
+  },
+  {
+    "name": "open_app_other",
+    "ad_id_v1": "ca-app-pub-3559750835852503/1020563810",
+    "ad_type": "app_open",
+    "app_open_delay_before_show_millis": 200
+  },
+  {
+    "name": "open_app",
+    "ad_id_v1": "ca-app-pub-3559750835852503/1020563810",
+    "ad_type": "app_open",
+    "app_open_delay_before_show_millis": 200
+  },
+  {
+    "name": "reopen_app",
+    "ad_type": "app_open",
+    "app_open_delay_before_show_millis": 500
+  }
+]
+
+========== ad_places_banner ==========
+[
+  {
+    "name": "splash_bottom",
+    "level": "0",
+    "ad_type": "banner",
+    "level_for_subs": "0|2",
+    "is_enable": false
+  },
+  {
+    "name": "main_bottom",
+    "level": "1",
+    "level_for_subs": "0|2",
+    "ad_type": "banner",
+    "is_enable": false
+  },
+  {
+    "name": "recycler_bin_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner"
+  },
+  {
+    "name": "view_pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "is_enable_for_subs": false,
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "image_to_pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "merge_pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "split_pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "scan2pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "create_pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "pdf_to_image_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "converter_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "edit_pdf_bottom",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  },
+  {
+    "name": "pip_home",
+    "ad_type": "pip",
+    "pip_ad_position": "bottom_right"
+  },
+  {
+    "name": "extract_text_bottom",
+    "level": "3",
+    "level_for_subs": "2|4",
+    "ad_type": "banner",
+    "banner_collapsible_position": "bottom",
+    "banner_collapsible_is_show_only_once": true,
+    "banner_collapsible_delay_before_show_millis": 100
+  }
+]
+
+========== ad_places_fullscreen ==========
+[
+  {
+    "name": "open_first",
+    "ad_type": "interstitial",
+    "is_auto_load_after_dismiss": false,
+    "is_ignore_interval": true,
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "open_other",
+    "ad_type": "interstitial",
+    "is_auto_load_after_dismiss": false,
+    "is_ignore_interval": true,
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "open",
+    "ad_type": "interstitial",
+    "is_auto_load_after_dismiss": false,
+    "is_ignore_interval": true,
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "open_view_pdf_from_iap",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "open_item_tool_from_iap",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "open_scan2pdf_export_from_iap",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_view_pdf",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_merge",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_merge_success",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_split",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_split_success",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_image_to_pdf",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_convert_success",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_pdf_to_image_success",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "pdf_to_image_success_open_file",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_create_pdf",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "convert_success_open_file",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "action_back_from_restore_recycler_bin",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_converter",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "converter_success_open_file",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_scanner",
+    "ad_type": "interstitial",
+    "is_enable_ogn": false,
+    "native_full_after_inter_name": "native_after_inter"
+  },
+  {
+    "name": "back_in_ocr",
+    "ad_type": "interstitial",
+    "native_full_after_inter_name": "native_after_inter"
+  }
+]
+
+========== ad_places_native ==========
+[
+  {
+    "name": "open_native_first",
+    "level": "open_native",
+    "ad_id_v1": "ca-app-pub-3559750835852503/1288157121",
+    "ad_type": "native",
+    "native_template_type": "full",
+    "native_inter_enable": true,
+    "native_inter_media_margin_top": 0,
+    "native_inter_countdown_sec": 6,
+    "native_inter_delay_after_countdown_sec": 0,
+    "native_inter_countdown_style": "text_short",
+    "native_inter_ad_refresh_count": 1
+  },
+  {
+    "name": "open_native",
+    "level": "open_native",
+    "ad_id_v1": "ca-app-pub-3559750835852503/1288157121",
+    "ad_type": "native",
+    "native_template_type": "full",
+    "native_inter_enable": true,
+    "native_inter_media_margin_top": 0,
+    "native_inter_countdown_sec": 6,
+    "native_inter_delay_after_countdown_sec": 0,
+    "native_inter_countdown_style": "text_short",
+    "native_inter_ad_refresh_count": 1
+  },
+  {
+    "name": "open_native_other",
+    "level": "open_native",
+    "ad_id_v1": "ca-app-pub-3559750835852503/1288157121",
+    "ad_type": "native",
+    "native_template_type": "full",
+    "native_inter_enable": true,
+    "native_inter_media_margin_top": 0,
+    "native_inter_countdown_sec": 6,
+    "native_inter_delay_after_countdown_sec": 0,
+    "native_inter_countdown_style": "text_short",
+    "native_inter_ad_refresh_count": 1
+  },
+  {
+    "name": "native_after_inter",
+    "level": "native_after_inter",
+    "ad_type": "native",
+    "native_template_type": "full",
+    "native_inter_enable": true,
+    "native_inter_media_margin_top": 0,
+    "native_inter_countdown_sec": 6,
+    "native_inter_delay_after_countdown_sec": 0,
+    "native_inter_countdown_style": "text_short",
+    "native_inter_ad_refresh_count": 0,
+    "native_inter_icon_size": 40,
+    "is_enable_ogn": false
+  },
+  {
+    "name": "language_bottom",
+    "ad_id_v1": "ca-app-pub-3559750835852503/2197914112",
+    "level": "1",
+    "level_for_subs": "1|3",
+    "ad_type": "native",
+    "native_template_type": "small",
+    "is_can_reuse_ads": true,
+    "native_cta_text_size": 20,
+    "native_cta_min_height": 56
+  },
+  {
+    "name": "language_2_bottom",
+    "ad_id_v1": "ca-app-pub-3559750835852503/2197914112",
+    "level": "1.1",
+    "level_for_subs": "0|2",
+    "ad_type": "native",
+    "native_template_type": "small",
+    "is_can_reuse_ads": true,
+    "native_cta_text_size": 20,
+    "native_cta_min_height": 56
+  },
+  {
+    "name": "intro_bottom",
+    "ad_id_v1": "ca-app-pub-3559750835852503/2197914112",
+    "level": "2",
+    "level_for_subs": "1|3",
+    "ad_type": "native",
+    "native_template_type": "small",
+    "is_can_reuse_ads": true
+  },
+  {
+    "name": "home_recent_inline",
+    "level": "2",
+    "ad_type": "native",
+    "native_template_type": "small_cta_right",
+    "native_bg_color": "#EFF2FA",
+    "native_stroke_width": 0,
+    "native_bg_radius": 0,
+    "margin_top": 0,
+    "margin_bottom": 0,
+    "margin_left": 0,
+    "margin_right": 0,
+    "native_cta_stroke_color": "#29272C",
+    "native_cta_text_color": "#29272C",
+    "is_enable": false
+  },
+  {
+    "name": "inline_single_success",
+    "level": "medium",
+    "ad_type": "native",
+    "native_template_type": "medium_media_left",
+    "native_bg_color": "#EFF2FA",
+    "native_bg_radius": 12,
+    "margin_top": 16,
+    "margin_left": 16,
+    "margin_right": 16
+  },
+  {
+    "name": "home_item_inline",
+    "level": "3",
+    "ad_type": "native",
+    "native_template_type": "small_icon_left",
+    "margin_top": 0,
+    "margin_bottom": 0,
+    "margin_left": 0,
+    "margin_right": 0,
+    "native_stroke_width": 0,
+    "is_enable_ogn": false
+  },
+  {
+    "name": "tools_inline",
+    "level": "2",
+    "ad_type": "native",
+    "native_template_type": "small",
+    "margin_top": 16,
+    "margin_bottom": 8,
+    "margin_left": 16,
+    "margin_right": 16,
+    "native_bg_radius": 12,
+    "native_stroke_width": 0,
+    "is_enable_ogn": false
+  },
+  {
+    "name": "setting_inline",
+    "level": "medium",
+    "ad_type": "native",
+    "native_template_type": "medium_media_left",
+    "margin_top": 16,
+    "margin_bottom": 0,
+    "margin_left": 0,
+    "margin_right": 0,
+    "native_bg_radius": 12,
+    "native_stroke_width": 0,
+    "is_enable_ogn": false
+  },
+  {
+    "name": "inline_multiple_success",
+    "level": "medium",
+    "ad_type": "native",
+    "native_template_type": "medium_media_left",
+    "native_bg_color": "#EFF2FA"
+  },
+  {
+    "name": "restore_success_file_bottom",
+    "level": "medium",
+    "level_for_subs": "0|2",
+    "ad_type": "native",
+    "native_template_type": "medium",
+    "native_bg_color": "#EFF2FA",
+    "native_stroke_width": 0
+  },
+  {
+    "name": "pdf_to_image_success_inline",
+    "level": "medium",
+    "ad_type": "native",
+    "native_template_type": "medium",
+    "native_bg_color": "#EFF2FA",
+    "native_stroke_width": 0
+  },
+  {
+    "name": "squeeze_view_pdf",
+    "level": "squeeze",
+    "ad_type": "squeeze_back"
+  },
+  {
+    "name": "squeeze_tool_all",
+    "level": "squeeze",
+    "ad_type": "squeeze_back"
+  },
+  {
+    "name": "viewer_last_page",
+    "level": "medium",
+    "ad_type": "native",
+    "native_template_type": "medium",
+    "is_enable_ogn": false,
+    "margin_top": 16,
+    "margin_bottom": 16,
+    "margin_left": 0,
+    "margin_right": 0
+  }
+]
+
+========== config_screen_app_shortcut ==========
+{
+  "is_enable_app_shortcut": true,
+  "is_enable_app_shortcut_uninstall": true,
+  "is_enable_open_app_ads_from_uninstall_shortcut": true,
+  "is_enable_open_app_ads_from_shortcut": true
+}
+
+========== config_screen_splash ==========
+{
+  "progress_time": 30,
+  "progress_time_min_to_next_screen_when_ads_failed": 3,
+  "progress_time_min_to_show_ad_when_language_is_next_screen": 6,
+  "progress_time_min_to_show_ad": 3,
+  "progress_per_cycle": 10,
+  "time_display_banner_before_show_full_ad": 3000,
+  "ad_type_first_open": "app_open",
+  "ad_type": "app_open",
+  "is_always_show_intro_and_language_screen": false
+}
+
+========== config_screen_language ==========
+{
+  "version_usage": 1,
+  "cta_style": "text_icon",
+  "item_background_style": "stroke",
+  "item_is_show_flag": false,
+  "item_is_show_secondary_language_name": false,
+  "is_auto_select_default_language": false,
+  "main_save_button_show_after_select_is_enable": true,
+  "main_save_button_show_after_select_delay": 1,
+  "secondary_save_button_is_enable": true,
+  "secondary_save_button_time_delay_for_show": 8,
+  "secondary_save_button_is_enable_v2": true,
+  "secondary_save_button_time_delay_for_show_v2": 8
+}
+
+========== config_screen_introduction ==========
+{
+  "is_enable": true,
+  "version_usage": 1,
+  "is_just_preload_ads_in_intro": true,
+  "is_highlight_button_next": false,
+  "is_only_show_native_ads_in_last_page": true,
+  "v2_ad_page_positions": [
+    1,
+    2
+  ],
+  "v2_ad_full_page_positions": [
+    2,
+    4
+  ],
+  "v3_ad_page_positions": [
+    3
+  ],
+  "v3_ad_full_page_positions": [
+    2,
+    4
+  ],
+  "v2_is_show_swipe_to_next": true,
+  "next_to_last_page_is_enable": false,
+  "next_to_last_page_time_delay_for_next": 7,
+  "is_enable_next_last_page_when_ad_click": false
+}
+
+========== config_iap_v2 ==========
+{
+  "is_enable": true,
+  "is_enable_ads_for_subscribers": true,
+  "is_native_convert_to_banner_for_subscribers": true,
+  "is_hide_navigation_bar_for_subscribers": false,
+  "is_show_on_start": true,
+  "is_show_in_first_open": true,
+  "is_show_before_request_permission": true,
+  "is_show_when_open_viewer": true,
+  "is_show_when_open_tool": true,
+  "time_delay_to_show_icon_close": 3000,
+  "sku": "solara.document.3days.20",
+  "sku_list": [
+    "solara.document.3days.30",
+    "solara.document.3days.25",
+    "solara.document.3days.20"
+  ],
+  "t2": {
+    "sku": "solara.document.3days.25"
+  },
+  "t1": {
+    "sku": "solara.document.3days.30"
+  }
+}
+
+========== config_ads_app_open ==========
+{
+  "is_wait_load_to_show": false,
+  "time_interval": 5,
+  "time_millis_delay_before_show": 200,
+  "max_retry_count": 3,
+  "delay_times_d": [
+    2
+  ],
+  "delay_times_s": [
+    2
+  ],
+  "time_disable_v3": 150,
+  "time_disable_v2": 75
+}
+
+========== config_ads_banner ==========
+{
+  "banner_refresh_enable": true,
+  "banner_refresh_default_rate_s": 30,
+  "banner_refresh_buffer_size": 1,
+  "banner_refresh_rates_s": {
+    "admob": 30,
+    "meta": 20,
+    "iron_source": 20,
+    "liftoff": 20,
+    "pangle": 20,
+    "bigo": 20,
+    "mintegral": 20,
+    "moloco": 20,
+    "unity": 20
+  },
+  "banner_enable_large_anchored": false,
+  "max_retry_count": -1,
+  "time_millis_delay_before_show": 0,
+  "banner_collapsible_time_interval": 60
+}
+
+========== config_ads_native ==========
+{
+  "max_retry_count": 3,
+  "delay_times_d": [
+    2
+  ],
+  "delay_times_s": [
+    2
+  ],
+  "time_disable_v3": 600,
+  "time_disable_v2": 300
+}
+
+========== config_ads_interstitial ==========
+{
+  "is_wait_load_to_show": false,
+  "max_show_per_session": 10,
+  "time_per_session": 600,
+  "time_interval": 35,
+  "time_interval_after_show_open_ad": 5,
+  "max_retry_count": 3,
+  "delay_times_d": [
+    3
+  ],
+  "delay_times_s": [
+    3
+  ],
+  "time_disable_v3": 300,
+  "time_disable_v2": 150
+}
+
+========== config_ads_pip ==========
+{
+  "max_show_per_session": 10,
+  "time_per_session": 600,
+  "time_interval": 30,
+  "max_retry_count": 3,
+  "delay_times_d": [
+    3
+  ],
+  "delay_times_s": [
+    3
+  ],
+  "time_disable_v3": 300,
+  "time_disable_v2": 150
+}
+
+========== config_ads_squeeze_back ==========
+{
+  "is_wait_load_to_show": true,
+  "max_show_per_session": 10,
+  "time_per_session": 600,
+  "time_interval": 30,
+  "max_retry_count": 3,
+  "is_auto_reshow_after_dismiss": true,
+  "delay_times_d": [
+    3
+  ],
+  "delay_times_s": [
+    3
+  ],
+  "time_disable_v3": 300,
+  "time_disable_v2": 150
+}
+
+========== config_countries_disable_ads ==========
+
+
+========== config_eu_consent ==========
+{
+  "debug_is_eea": true,
+  "debugListTestDeviceHashedId": []
+}
+
+========== config_prevent_ad_click ==========
+{
+  "max_ad_click_per_session": 6,
+  "time_per_session": 300,
+  "time_disable_ads_when_reached_max_ad_click": 1800
+}
+
+========== config_app ==========
+{
+  "is_hide_navigation_bar": true,
+  "is_show_splash_after_app_go_to_background": true,
+  "timer_in_second_show_splash_after_app_go_to_background": 3600,
+  "is_enable_abc": false,
+  "is_use_activity_for_viewer": false,
+  "is_viewer_banner_hidden_in_fullscreen": false
+}
+
+========== config_schedule_daily ==========
+{
+  "schema_version": 2,
+  "experiment_id": "retention_frequency_v1",
+  "variant_id": "twice_weekly",
+  "config_version": 1,
+  "is_enable": true,
+  "schedule": {
+    "first_delay_days": 2,
+    "delivery_hour": 20,
+    "delivery_minute": 30,
+    "interval_days": 3
+  },
+  "frequency_cap": {
+    "max_notifications": 2,
+    "window_days": 7
+  },
+  "engagement_rules": {
+    "suppress_if_active_within_hours": 48,
+    "cooldown_after_click_hours": 72,
+    "backoff_after_ignored_count": 3,
+    "backoff_interval_days": 7,
+    "stop_after_ignored_count": 6
+  },
+  "content": {
+    "scenario_ids": [
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ]
+  }
+}
+
+========== config_country_tier ==========
+{}
+
+

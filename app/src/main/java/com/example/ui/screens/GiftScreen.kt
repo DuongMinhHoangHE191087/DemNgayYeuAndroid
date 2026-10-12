@@ -33,8 +33,16 @@ import androidx.compose.material.icons.filled.AlarmOn
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridView
@@ -46,6 +54,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DinnerDining
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.LocalFlorist
@@ -74,12 +83,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -146,6 +158,7 @@ fun GiftScreen(
   sharePreview?.let { text ->
     AlertDialog(
       onDismissRequest = { sharePreview = null },
+      containerColor = Color.White,
       title = { Text(if (isEnglish) "Share this suggestion?" else "Chia sẻ gợi ý này?", fontWeight = FontWeight.Bold) },
       text = { Text(text = text, fontSize = 14.sp) },
       confirmButton = {
@@ -175,6 +188,7 @@ fun GiftScreen(
       title = if (isEnglish) "Delete Gift Reminder?" else "Xóa lời nhắc quà tặng?",
       message = if (isEnglish) "Are you sure you want to delete reminder '${reminder.title}' from the database?" else "Bạn có chắc chắn muốn xóa lời nhắc '${reminder.title}' khỏi cơ sở dữ liệu không?",
       itemName = reminder.title,
+      isEnglish = isEnglish,
       onConfirm = {
         viewModel.deleteGiftReminder(reminder.id)
         reminderToDelete = null
@@ -190,6 +204,7 @@ fun GiftScreen(
       title = if (isEnglish) "Delete Checklist Item?" else "Xóa việc chuẩn bị quà?",
       message = if (isEnglish) "Are you sure you want to delete this item from the gift checklist?" else "Bạn có chắc chắn muốn xóa mục này khỏi checklist quà tặng không?",
       itemName = item.text,
+      isEnglish = isEnglish,
       onConfirm = {
         viewModel.deleteChecklistItem(item.id)
         giftItemToDelete = null
@@ -244,15 +259,6 @@ fun GiftScreen(
             color = OnSurface
           )
 
-          Spacer(modifier = Modifier.height(4.dp))
-
-          Text(
-            text = if (isEnglish) "1,000 days anniversary in 3 days 🎁" else "Kỷ niệm 1.000 ngày còn 3 ngày 🎁",
-            fontSize = 12.sp,
-            color = OnSurfaceVariant,
-            maxLines = 1
-          )
-
           Spacer(modifier = Modifier.height(8.dp))
 
           // Progress Row
@@ -261,22 +267,12 @@ fun GiftScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
           ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Timer,
-                contentDescription = null,
-                tint = Primary,
-                modifier = Modifier.size(15.dp)
-              )
-              Text(
-                text = if (isEnglish) "Progress" else "Tiến độ",
-                fontSize = 12.sp,
-                color = OnSurfaceVariant
-              )
-            }
+            Icon(
+              imageVector = Icons.Filled.Timer,
+              contentDescription = if (isEnglish) "Progress" else "Tiến độ",
+              tint = Primary,
+              modifier = Modifier.size(15.dp)
+            )
             Text(
               text = "${progressPercent.toInt()}%",
               fontSize = 12.sp,
@@ -462,16 +458,9 @@ fun GiftScreen(
               ) {
                 Icon(
                   imageVector = Icons.Filled.Star,
-                  contentDescription = null,
+                  contentDescription = if (isEnglish) "Celebration ideas" else "Gợi ý kỷ niệm",
                   tint = Color.White,
                   modifier = Modifier.size(13.dp)
-                )
-                Text(
-                  text = if (isEnglish) "CELEBRATION IDEAS" else "GỢI Ý KỶ NIỆM",
-                  fontSize = 10.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color.White,
-                  letterSpacing = 0.5.sp
                 )
               }
             }
@@ -484,15 +473,6 @@ fun GiftScreen(
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
-          )
-
-          Spacer(modifier = Modifier.height(4.dp))
-
-          Text(
-            text = if (isEnglish) "A few ideas for marking 1,000 days together: flowers, a shared dinner, and a note written by hand." else "Vài gợi ý để kỷ niệm 1.000 ngày bên nhau: hoa, bữa tối và một lời nhắn tự tay viết.",
-            fontSize = 12.sp,
-            color = Color.White.copy(alpha = 0.9f),
-            lineHeight = 17.sp
           )
 
           Spacer(modifier = Modifier.height(12.dp))
@@ -524,17 +504,9 @@ fun GiftScreen(
                 ) {
                   Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = name,
                     tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                  )
-                  Spacer(modifier = Modifier.height(4.dp))
-                  Text(
-                    text = name,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White,
-                    maxLines = 1
+                    modifier = Modifier.size(24.dp)
                   )
                 }
               }
@@ -557,7 +529,7 @@ fun GiftScreen(
               horizontalArrangement = Arrangement.Center
             ) {
               Text(
-                text = if (isEnglish) "View itinerary ideas" else "Xem gợi ý lịch trình",
+                text = if (isEnglish) "View plan" else "Xem lịch trình",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
@@ -600,7 +572,7 @@ fun GiftScreen(
           )
         }
         Text(
-          text = if (isEnglish) "${filteredIdeas.size} matched ideas" else "${filteredIdeas.size} gợi ý phù hợp",
+          text = "${filteredIdeas.size}",
           fontSize = 12.sp,
           color = OnSurfaceVariant
         )
@@ -619,6 +591,12 @@ fun GiftScreen(
 
     // 6. Interactive Checklist Section
     item {
+      // Collapsible: header tap toggles the list; expanded by default
+      var checklistExpanded by rememberSaveable { mutableStateOf(true) }
+      val checklistChevron by animateFloatAsState(
+        targetValue = if (checklistExpanded) 180f else 0f,
+        label = "checklist_section_chevron"
+      )
       Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
@@ -631,11 +609,14 @@ fun GiftScreen(
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
           Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable { checklistExpanded = !checklistExpanded },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
           ) {
             Row(
+              modifier = Modifier.weight(1f),
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -661,36 +642,49 @@ fun GiftScreen(
                   color = OnSurface
                 )
                 Text(
-                  text = if (isEnglish) "Completed $completedCount/$totalCount tasks" else "Đã hoàn thành $completedCount/$totalCount việc",
+                  text = "$completedCount/$totalCount",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
               }
             }
 
-            Text(
-              text = if (isEnglish) "+ Add task" else "+ Thêm việc",
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Bold,
-              color = Primary,
+            IconButton(
+              onClick = { viewModel.openAddChecklistDialog() },
+              modifier = Modifier.testTag("btn_add_checklist_task")
+            ) {
+              Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = if (isEnglish) "Add task" else "Thêm việc",
+                tint = Primary
+              )
+            }
+            Icon(
+              imageVector = Icons.Filled.ExpandMore,
+              contentDescription = if (isEnglish) "Expand" else "Mở rộng",
+              tint = OnSurfaceVariant,
               modifier = Modifier
-                .clickable { viewModel.openAddChecklistDialog() }
-                .padding(4.dp)
-                .testTag("btn_add_checklist_task")
+                .size(22.dp)
+                .rotate(checklistChevron)
             )
           }
 
-          Spacer(modifier = Modifier.height(12.dp))
-
-          // Task items
-          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            checklistItems.forEach { item ->
-              ChecklistRow(
-                item = item,
-                isEnglish = isEnglish,
-                onToggle = { viewModel.toggleChecklist(item) },
-                onDelete = { giftItemToDelete = item }
-              )
+          AnimatedVisibility(
+            visible = checklistExpanded,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+          ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+              Spacer(modifier = Modifier.height(4.dp))
+              checklistItems.forEach { item ->
+                ChecklistRow(
+                  item = item,
+                  isEnglish = isEnglish,
+                  onToggle = { viewModel.toggleChecklist(item) },
+                  onEdit = { text -> viewModel.renameChecklist(item, text) },
+                  onDelete = { giftItemToDelete = item }
+                )
+              }
             }
           }
         }
@@ -699,6 +693,12 @@ fun GiftScreen(
 
     // 6b. Room-Persisted Gift Reminders Section
     item {
+      // Collapsible: header tap toggles the list; expanded by default
+      var remindersExpanded by rememberSaveable { mutableStateOf(true) }
+      val remindersChevron by animateFloatAsState(
+        targetValue = if (remindersExpanded) 180f else 0f,
+        label = "gift_reminders_chevron"
+      )
       Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
@@ -711,11 +711,14 @@ fun GiftScreen(
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
           Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+              .fillMaxWidth()
+              .clickable { remindersExpanded = !remindersExpanded },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
           ) {
             Row(
+              modifier = Modifier.weight(1f),
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -742,60 +745,60 @@ fun GiftScreen(
                 )
                 val completedReminders = giftReminders.count { it.isCompleted }
                 Text(
-                  text = if (isEnglish) "Stored in Room: $completedReminders/${giftReminders.size} items ready" else "Lưu Room: $completedReminders/${giftReminders.size} món đã sẵn sàng",
+                  text = "$completedReminders/${giftReminders.size}",
                   fontSize = 11.sp,
                   color = OnSurfaceVariant
                 )
               }
             }
 
-            Surface(
-              shape = RoundedCornerShape(20.dp),
-              color = Primary.copy(alpha = 0.1f),
-              modifier = Modifier
-                .clickable { viewModel.openAddGiftReminderDialog() }
-                .padding(4.dp)
-                .testTag("btn_add_gift_reminder_header")
+            IconButton(
+              onClick = { viewModel.openAddGiftReminderDialog() },
+              modifier = Modifier.testTag("btn_add_gift_reminder_header")
             ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.Add,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(15.dp)
-                )
-                Text(
-                  text = if (isEnglish) "Add reminder" else "Thêm nhắc quà",
-                  fontSize = 12.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Primary
-                )
-              }
+              Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = if (isEnglish) "Add reminder" else "Thêm nhắc quà",
+                tint = Primary
+              )
             }
+            Icon(
+              imageVector = Icons.Filled.ExpandMore,
+              contentDescription = if (isEnglish) "Expand" else "Mở rộng",
+              tint = OnSurfaceVariant,
+              modifier = Modifier
+                .size(22.dp)
+                .rotate(remindersChevron)
+            )
           }
 
-          Spacer(modifier = Modifier.height(12.dp))
-
-          if (giftReminders.isEmpty()) {
-            Text(
-              text = if (isEnglish) "No gift reminders yet. Tap 'Add reminder' to schedule a thoughtful gift!" else "Chưa có lời nhắc quà tặng. Nhấn 'Thêm nhắc quà' để tạo lời nhắc chuẩn bị món quà ý nghĩa!",
-              fontSize = 12.sp,
-              color = OnSurfaceVariant,
-              modifier = Modifier.padding(vertical = 8.dp)
-            )
-          } else {
+          AnimatedVisibility(
+            visible = remindersExpanded,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+          ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              giftReminders.forEach { reminder ->
-                GiftReminderRow(
-                  item = reminder,
-                  isEnglish = isEnglish,
-                  onToggle = { viewModel.toggleGiftReminderCompleted(reminder) },
-                  onDelete = { reminderToDelete = reminder }
+              Spacer(modifier = Modifier.height(4.dp))
+              if (giftReminders.isEmpty()) {
+                Icon(
+                  imageVector = Icons.Filled.CardGiftcard,
+                  contentDescription = if (isEnglish) "No gift reminders" else "Chưa có lời nhắc",
+                  tint = OutlineVariant,
+                  modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(vertical = 8.dp)
+                    .size(32.dp)
                 )
+              } else {
+                giftReminders.forEach { reminder ->
+                  GiftReminderRow(
+                    item = reminder,
+                    isEnglish = isEnglish,
+                    onToggle = { viewModel.toggleGiftReminderCompleted(reminder) },
+                    onEdit = { updated -> viewModel.updateGiftReminder(updated) },
+                    onDelete = { reminderToDelete = reminder }
+                  )
+                }
               }
             }
           }
@@ -845,7 +848,7 @@ fun GiftScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = if (isEnglish) "Set gift reminder (In 2 hours)" else "Tạo nhắc nhở mua quà (Sau 2 tiếng)",
+              text = if (isEnglish) "Gift reminder" else "Nhắc mua quà",
               fontSize = 14.sp,
               fontWeight = FontWeight.Bold,
               color = Color.White
@@ -876,7 +879,7 @@ fun GiftScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = if (isEnglish) "My Wishlist Notebook" else "Sổ Tay Yêu Thích Của Tôi",
+              text = if (isEnglish) "Wishlist" else "Yêu thích",
               fontSize = 13.sp,
               fontWeight = FontWeight.SemiBold,
               color = OnSurface
@@ -936,13 +939,13 @@ fun WishlistNotebookDialog(
             Spacer(modifier = Modifier.width(8.dp))
             Column {
               Text(
-                text = if (isEnglish) "My Wishlist Notebook" else "Sổ Tay Yêu Thích Của Tôi",
+                text = if (isEnglish) "Wishlist" else "Yêu thích",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnSurface
               )
               Text(
-                text = if (isEnglish) "${favorites.size} saved ideas" else "${favorites.size} ý tưởng đã lưu",
+                text = "${favorites.size}",
                 fontSize = 11.sp,
                 color = OnSurfaceVariant
               )
@@ -969,17 +972,9 @@ fun WishlistNotebookDialog(
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-              text = if (isEnglish) "No favorites yet" else "Chưa có ý tưởng yêu thích nào",
+              text = if (isEnglish) "No favorites yet" else "Chưa có mục yêu thích",
               fontWeight = FontWeight.SemiBold,
               color = OnSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-              text = if (isEnglish) "Tap the heart on any gift idea to save it here." else "Nhấn vào biểu tượng trái tim trên món quà để lưu vào đây.",
-              fontSize = 12.sp,
-              color = OnSurfaceVariant,
-              textAlign = TextAlign.Center,
-              modifier = Modifier.padding(horizontal = 24.dp)
             )
           }
         } else {
@@ -1297,7 +1292,7 @@ private fun PartnerPreferencesEditor(
         .testTag("btn_toggle_partner_preferences")
     ) {
       Text(
-        text = if (isEnglish) "Partner likes, budget and holidays" else "Sở thích đối tác, ngân sách và dịp lễ",
+        text = if (isEnglish) "Likes & budget" else "Sở thích & ngân sách",
         fontSize = 12.5.sp,
         fontWeight = FontWeight.Bold,
         color = Color(0xFFC2185B)
@@ -1309,7 +1304,7 @@ private fun PartnerPreferencesEditor(
           value = likes,
           onValueChange = { likes = it.take(200) },
           label = { Text(if (isEnglish) "What your partner likes" else "Điều đối tác thích") },
-          placeholder = { Text(if (isEnglish) "e.g. coffee, travel, books (comma-separated)" else "VD: cà phê, du lịch, sách (cách nhau bằng dấu phẩy)") },
+          placeholder = { Text(if (isEnglish) "coffee, travel, books" else "cà phê, du lịch, sách") },
           singleLine = true,
           modifier = Modifier
             .fillMaxWidth()
@@ -1319,7 +1314,7 @@ private fun PartnerPreferencesEditor(
           value = budgetText,
           onValueChange = { budgetText = it.filter(Char::isDigit).take(12) },
           label = { Text(if (isEnglish) "Gift budget (VND)" else "Ngân sách quà (VND)") },
-          supportingText = { Text(if (isEnglish) "Leave empty or 0 for no limit" else "Để trống hoặc 0 nếu không giới hạn") },
+          supportingText = { Text(if (isEnglish) "0 = no limit" else "0 = không giới hạn") },
           singleLine = true,
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           modifier = Modifier
@@ -1327,7 +1322,7 @@ private fun PartnerPreferencesEditor(
             .testTag("partner_budget_field")
         )
         Text(
-          text = if (isEnglish) "Holiday region (independent of the app language)" else "Vùng dịp lễ (không phụ thuộc ngôn ngữ ứng dụng)",
+          text = if (isEnglish) "Holiday region" else "Vùng dịp lễ",
           fontSize = 12.sp,
           color = Color.Gray
         )
@@ -1361,7 +1356,7 @@ private fun PartnerPreferencesEditor(
         }
         if (!profileExists) {
           Text(
-            text = if (isEnglish) "Create your couple profile first (names and dates) to save these notes." else "Hãy tạo hồ sơ cặp đôi (tên và ngày) trước để lưu được các ghi chú này.",
+            text = if (isEnglish) "Create your couple profile first to save." else "Tạo hồ sơ cặp đôi trước để lưu.",
             fontSize = 11.sp,
             color = Color.Gray
           )
@@ -1410,6 +1405,7 @@ fun ChecklistRow(
   item: ChecklistItemEntity,
   isEnglish: Boolean = false,
   onToggle: () -> Unit,
+  onEdit: (String) -> Unit,
   onDelete: () -> Unit
 ) {
   val iconVector = when (item.iconName) {
@@ -1418,41 +1414,49 @@ fun ChecklistRow(
     "table_restaurant" -> Icons.Filled.TableRestaurant
     else -> Icons.Filled.Checklist
   }
+  // Tap the row to reveal edit / delete
+  var expanded by rememberSaveable(item.id) { mutableStateOf(false) }
+  var showEdit by remember { mutableStateOf(false) }
 
   Surface(
     shape = RoundedCornerShape(16.dp),
     color = Color.White.copy(alpha = 0.8f),
     modifier = Modifier
       .fillMaxWidth()
+      .clip(RoundedCornerShape(16.dp))
+      .clickable { expanded = !expanded }
       .testTag("checklist_item_${item.id}")
   ) {
-    Row(
-      modifier = Modifier.padding(12.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween
-    ) {
+    Column(modifier = Modifier.animateContentSize()) {
       Row(
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier
-          .weight(1f)
-          .clickable { onToggle() }
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
       ) {
-        // Check circle
+        // Check circle: the only toggle target now that a row tap expands
         Box(
           modifier = Modifier
-            .size(24.dp)
+            .size(48.dp)
             .clip(CircleShape)
-            .background(if (item.isCompleted) Primary else SurfaceContainerHighest),
+            .clickable { onToggle() }
+            .testTag("btn_toggle_checklist_${item.id}"),
           contentAlignment = Alignment.Center
         ) {
-          if (item.isCompleted) {
-            Icon(
-              imageVector = Icons.Filled.Check,
-              contentDescription = "Completed",
-              tint = Color.White,
-              modifier = Modifier.size(16.dp)
-            )
+          Box(
+            modifier = Modifier
+              .size(24.dp)
+              .clip(CircleShape)
+              .background(if (item.isCompleted) Primary else SurfaceContainerHighest),
+            contentAlignment = Alignment.Center
+          ) {
+            if (item.isCompleted) {
+              Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = if (isEnglish) "Completed" else "Hoàn thành",
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+              )
+            }
           }
         }
 
@@ -1460,36 +1464,45 @@ fun ChecklistRow(
           text = item.text,
           fontSize = 13.sp,
           color = if (item.isCompleted) OnSurface.copy(alpha = 0.5f) else OnSurface,
-          textDecoration = if (item.isCompleted) TextDecoration.LineThrough else null
+          textDecoration = if (item.isCompleted) TextDecoration.LineThrough else null,
+          modifier = Modifier.weight(1f)
         )
-      }
 
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-      ) {
         Icon(
           imageVector = iconVector,
           contentDescription = null,
           tint = OutlineVariant,
           modifier = Modifier.size(18.dp)
         )
+      }
 
-        IconButton(
-          onClick = onDelete,
-          modifier = Modifier
-            .size(48.dp)
-            .testTag("btn_delete_checklist_${item.id}")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Close,
-            contentDescription = if (isEnglish) "Delete task" else "Xóa việc",
-            tint = OutlineVariant,
-            modifier = Modifier.size(16.dp)
-          )
-        }
+      AnimatedVisibility(
+        visible = expanded,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut()
+      ) {
+        RowActions(
+          isEnglish = isEnglish,
+          onEdit = { showEdit = true },
+          onDelete = onDelete,
+          deleteTag = "btn_delete_checklist_${item.id}",
+          editTag = "btn_edit_checklist_${item.id}"
+        )
       }
     }
+  }
+
+  if (showEdit) {
+    EditFieldsDialog(
+      isEnglish = isEnglish,
+      labels = listOf(if (isEnglish) "Task" else "Việc"),
+      initial = listOf(item.text),
+      onDismiss = { showEdit = false },
+      onSave = { values ->
+        onEdit(values[0])
+        showEdit = false
+      }
+    )
   }
 }
 
@@ -1498,26 +1511,29 @@ fun GiftReminderRow(
   item: GiftReminderEntity,
   isEnglish: Boolean = false,
   onToggle: () -> Unit,
+  onEdit: (GiftReminderEntity) -> Unit,
   onDelete: () -> Unit
 ) {
+  // Tap the row to reveal edit / delete
+  var expanded by rememberSaveable(item.id) { mutableStateOf(false) }
+  var showEdit by remember { mutableStateOf(false) }
+
   Surface(
     shape = RoundedCornerShape(16.dp),
     color = if (item.isCompleted) SurfaceContainerHighest.copy(alpha = 0.4f) else SurfaceContainerLowest,
     modifier = Modifier
       .fillMaxWidth()
+      .clip(RoundedCornerShape(16.dp))
+      .clickable { expanded = !expanded }
       .testTag("gift_reminder_item_${item.id}")
   ) {
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 12.dp, vertical = 10.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
+    Column(modifier = Modifier.animateContentSize()) {
       Row(
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 12.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.weight(1f)
+        verticalAlignment = Alignment.CenterVertically
       ) {
         IconButton(
           onClick = onToggle,
@@ -1533,7 +1549,7 @@ fun GiftReminderRow(
           )
         }
 
-        Column {
+        Column(modifier = Modifier.weight(1f).padding(vertical = 6.dp)) {
           Text(
             text = item.title,
             fontSize = 14.sp,
@@ -1572,24 +1588,148 @@ fun GiftReminderRow(
               text = item.notes,
               fontSize = 11.sp,
               color = OnSurfaceVariant.copy(alpha = 0.8f),
-              maxLines = 1,
+              maxLines = if (expanded) 4 else 1,
               overflow = TextOverflow.Ellipsis
             )
           }
         }
       }
 
-      IconButton(
-        onClick = onDelete,
-        modifier = Modifier.size(48.dp)
+      AnimatedVisibility(
+        visible = expanded,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut()
       ) {
-        Icon(
-          imageVector = Icons.Filled.Close,
-          contentDescription = if (isEnglish) "Delete gift reminder" else "Xóa lời nhắc quà",
-          tint = OnSurfaceVariant.copy(alpha = 0.6f),
-          modifier = Modifier.size(18.dp)
+        RowActions(
+          isEnglish = isEnglish,
+          onEdit = { showEdit = true },
+          onDelete = onDelete,
+          deleteTag = "btn_delete_gift_reminder_${item.id}",
+          editTag = "btn_edit_gift_reminder_${item.id}"
         )
       }
     }
   }
+
+  if (showEdit) {
+    EditFieldsDialog(
+      isEnglish = isEnglish,
+      labels = listOf(
+        if (isEnglish) "Gift" else "Món quà",
+        if (isEnglish) "For" else "Tặng ai",
+        if (isEnglish) "Date" else "Ngày",
+        if (isEnglish) "Budget" else "Ngân sách",
+        if (isEnglish) "Notes" else "Ghi chú"
+      ),
+      initial = listOf(item.title, item.recipient, item.dueDateText, item.estimatedBudget, item.notes),
+      onDismiss = { showEdit = false },
+      onSave = { v ->
+        onEdit(
+          item.copy(
+            title = v[0].trim().ifBlank { item.title },
+            recipient = v[1].trim().ifBlank { item.recipient },
+            dueDateText = v[2].trim().ifBlank { item.dueDateText },
+            estimatedBudget = v[3].trim(),
+            notes = v[4].trim()
+          )
+        )
+        showEdit = false
+      }
+    )
+  }
+}
+
+/** Icon-only edit + delete strip revealed when a row is tapped. */
+@Composable
+private fun RowActions(
+  isEnglish: Boolean,
+  onEdit: () -> Unit,
+  onDelete: () -> Unit,
+  editTag: String,
+  deleteTag: String
+) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(start = 12.dp, end = 12.dp, bottom = 6.dp),
+    horizontalArrangement = Arrangement.End,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    IconButton(onClick = onEdit, modifier = Modifier.size(48.dp).testTag(editTag)) {
+      Icon(
+        imageVector = Icons.Filled.Edit,
+        contentDescription = if (isEnglish) "Edit" else "Sửa",
+        tint = Primary,
+        modifier = Modifier.size(20.dp)
+      )
+    }
+    IconButton(onClick = onDelete, modifier = Modifier.size(48.dp).testTag(deleteTag)) {
+      Icon(
+        imageVector = Icons.Filled.Delete,
+        contentDescription = if (isEnglish) "Delete" else "Xóa",
+        tint = OnSurfaceVariant,
+        modifier = Modifier.size(20.dp)
+      )
+    }
+  }
+}
+
+/** Small multi-field text editor dialog shared by checklist and gift-reminder rows. */
+@Composable
+private fun EditFieldsDialog(
+  isEnglish: Boolean,
+  labels: List<String>,
+  initial: List<String>,
+  onDismiss: () -> Unit,
+  onSave: (List<String>) -> Unit
+) {
+  val values = remember { mutableStateListOf(*initial.toTypedArray()) }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    shape = RoundedCornerShape(28.dp),
+    containerColor = Color.White,
+    title = {
+      Icon(
+        imageVector = Icons.Filled.Edit,
+        contentDescription = if (isEnglish) "Edit" else "Sửa",
+        tint = Primary
+      )
+    },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        labels.forEachIndexed { i, label ->
+          OutlinedTextField(
+            value = values[i],
+            onValueChange = { values[i] = it },
+            label = { Text(label) },
+            singleLine = i != labels.lastIndex || labels.size == 1,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+      }
+    },
+    confirmButton = {
+      IconButton(
+        onClick = { onSave(values.toList()) },
+        enabled = values.firstOrNull()?.isNotBlank() == true,
+        modifier = Modifier.testTag("btn_save_gift_edit")
+      ) {
+        Icon(
+          imageVector = Icons.Filled.Check,
+          contentDescription = if (isEnglish) "Save" else "Lưu",
+          tint = Primary
+        )
+      }
+    },
+    dismissButton = {
+      IconButton(onClick = onDismiss) {
+        Icon(
+          imageVector = Icons.Filled.Close,
+          contentDescription = if (isEnglish) "Cancel" else "Hủy",
+          tint = OnSurfaceVariant
+        )
+      }
+    }
+  )
 }

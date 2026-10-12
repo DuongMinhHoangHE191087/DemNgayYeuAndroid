@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2.4.0 NG5b (R-NG5a m2): mô tả truy cập của nút video riêng Full2 (appplugin_admob_native_full, nextgen). -->
+<resources>
+    <string name="appplugin_ntfull_cd_play">Play video</string>
+    <string name="appplugin_ntfull_cd_pause">Pause video</string>
+    <string name="appplugin_ntfull_cd_mute">Mute or unmute video</string>
+</resources>

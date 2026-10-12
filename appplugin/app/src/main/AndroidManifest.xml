@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:name=".DemoApplication"
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:theme="@style/appplugin_AppTheme">
+
+        <!-- Google's official sample AdMob App ID for testing only. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
+        <!-- 2.1.0 SA1: token giấy phép SDK (app/build.gradle.kts, -PlicenseToken). Thiếu/sai → không quảng cáo, không brain. -->
+        <meta-data
+            android:name="com.app.plugin.LICENSE"
+            android:value="${appPluginLicense}" />
+
+        <!-- AdMob and Firebase Analytics both declare this property; keep AdMob's. -->
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/appplugin_gma_ad_services_config"
+            tools:replace="android:resource" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Sân thử Monetization Brain: mô phỏng hành vi, xem segment + kịch bản trực tiếp. -->
+        <activity
+            android:name=".BrainPlaygroundActivity"
+            android:exported="false"
+            android:label="Brain Playground" />
+    </application>
+
+</manifest>

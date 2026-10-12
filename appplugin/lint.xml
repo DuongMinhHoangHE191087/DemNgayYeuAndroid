@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- Dependency versions are a tested set, raised on purpose in a release of their own
+         (see the GMA 25.4.0 note in build.gradle.kts): GMA and every mediation adapter move
+         together, never whenever a newer artifact appears on Maven. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+
+    <!-- The ad bitmaps were only ever drawn at one density. They live in drawable-mdpi, which
+         scales exactly as the old unqualified drawable/ folder did; higher-density copies need
+         new artwork, not a lint fix. -->
+    <issue id="IconMissingDensityFolder" severity="ignore" />
+
+    <!-- 2.0.0 C3a (D4): `resourcePrefix = "appplugin_"` + ResourceName là lỗi (build.gradle.kts). Khoá app-contract do APP khai
+         và SDK đọc bằng tên (getIdentifier): admob_*, adfb_*, admax_*, ads_cf_*, ads_admob_firebase_linked, flagTest,
+         *_test_device, facebook_app_id, af_app_id, admax_devKey, @array/ads_* (đúng danh sách tools:keep của
+         src/main/res/raw/appplugin_keep.xml). SDK không khai tên nào trong đó nên lint không có gì để bỏ qua; nếu một
+         ngày SDK khai thử một khoá như vậy (ví dụ trong app demo) thì phải thêm <ignore> cho đúng khoá đó, không tắt
+         ResourceName. ResourcePrefixTest RP2 giữ ranh giới này cho tên SDK đọc. -->
+</lint>

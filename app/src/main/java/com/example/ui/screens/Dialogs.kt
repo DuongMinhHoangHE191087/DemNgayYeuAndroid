@@ -81,6 +81,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import com.example.ui.components.pressClickable
+import com.example.ui.theme.AppDensity
+import com.example.ui.theme.MinTouchBox
 import androidx.compose.material.icons.filled.Search
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Switch
@@ -152,10 +164,11 @@ fun dialogTextFieldColors() = OutlinedTextFieldDefaults.colors(
 @Composable
 fun AddReminderDialog(
   onDismiss: () -> Unit,
-  onConfirm: (title: String, dateText: String, note: String) -> Unit
+  onConfirm: (title: String, dateText: String, note: String) -> Unit,
+  isEnglish: Boolean = false
 ) {
   var title by remember { mutableStateOf("") }
-  var dateText by remember { mutableStateOf("Thứ Bảy, 19:30") }
+  var dateText by remember { mutableStateOf(if (isEnglish) "Saturday, 7:30 PM" else "Thứ Bảy, 19:30") }
   var note by remember { mutableStateOf("") }
 
   AlertDialog(
@@ -171,7 +184,7 @@ fun AddReminderDialog(
           tint = Primary
         )
         Text(
-          text = "Tạo Lời Nhắc Hẹn",
+          text = if (isEnglish) "New Date Reminder" else "Tạo Lời Nhắc Hẹn",
           fontWeight = FontWeight.Bold,
           fontSize = 18.sp
         )
@@ -182,8 +195,8 @@ fun AddReminderDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Tên buổi hẹn / kỷ niệm") },
-          placeholder = { Text("Ví dụ: Hẹn ăn tối lãng mạn") },
+          label = { Text(if (isEnglish) "Date / event name" else "Tên buổi hẹn / kỷ niệm") },
+          placeholder = { Text(if (isEnglish) "e.g. Romantic dinner" else "Ví dụ: Hẹn ăn tối lãng mạn") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_reminder_title"),
@@ -193,8 +206,8 @@ fun AddReminderDialog(
         OutlinedTextField(
           value = dateText,
           onValueChange = { dateText = it },
-          label = { Text("Thời gian") },
-          placeholder = { Text("Ví dụ: Cuối tuần này, 19:00") },
+          label = { Text(if (isEnglish) "Time" else "Thời gian") },
+          placeholder = { Text(if (isEnglish) "e.g. This weekend, 7 PM" else "Ví dụ: Cuối tuần này, 19:00") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_reminder_date"),
@@ -204,8 +217,8 @@ fun AddReminderDialog(
         OutlinedTextField(
           value = note,
           onValueChange = { note = it },
-          label = { Text("Địa điểm / Ghi chú") },
-          placeholder = { Text("Ví dụ: Quán cafe quen, nhớ mang hoa") },
+          label = { Text(if (isEnglish) "Place / note" else "Địa điểm / Ghi chú") },
+          placeholder = { Text(if (isEnglish) "e.g. Our usual cafe, bring flowers" else "Ví dụ: Quán cafe quen, nhớ mang hoa") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_reminder_note"),
@@ -219,14 +232,16 @@ fun AddReminderDialog(
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         modifier = Modifier.testTag("btn_save_reminder")
       ) {
-        Text("Lưu lời nhắc", fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "Save" else "Lưu lời nhắc", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
       TextButton(onClick = onDismiss) {
-        Text("Hủy", color = OnSurfaceVariant)
+        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
       }
-    }
+    },
+    containerColor = Color.White,
+    shape = RoundedCornerShape(24.dp)
   )
 }
 
@@ -236,6 +251,7 @@ private const val DEFAULT_MILESTONE_IMAGE_URL =
 @Composable
 fun AddMilestoneDialog(
   presetPhotos: List<String> = emptyList(),
+  isEnglish: Boolean = false,
   onDismiss: () -> Unit,
   onConfirm: (
     title: String,
@@ -248,189 +264,243 @@ fun AddMilestoneDialog(
     isImportant: Boolean
   ) -> Unit
 ) {
-  var title by remember { mutableStateOf("") }
-  var dateText by remember { mutableStateOf("15 Tháng 11, 2026") }
-  var categoryTag by remember { mutableStateOf("Hẹn Hò") }
-  var isImportant by remember { mutableStateOf(false) }
-  var imageUrl by remember(presetPhotos) {
-    mutableStateOf(presetPhotos.firstOrNull() ?: DEFAULT_MILESTONE_IMAGE_URL)
+  val form = remember { MilestoneFormState(presetPhotos.firstOrNull() ?: DEFAULT_MILESTONE_IMAGE_URL) }
+  LaunchedEffect(presetPhotos) {
+    form.imageUrl = presetPhotos.firstOrNull() ?: DEFAULT_MILESTONE_IMAGE_URL
   }
 
+  // The dialog window resets LocalDensity, so every slot re-applies the app's 0.85 scale.
   AlertDialog(
     onDismissRequest = onDismiss,
     containerColor = Color.White,
-    shape = RoundedCornerShape(28.dp),
+    shape = MaterialTheme.shapes.extraLarge,
     title = {
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        Icon(
-          imageVector = Icons.Filled.CalendarMonth,
-          contentDescription = null,
-          tint = Primary
-        )
-        Text(
-          text = "Kỷ niệm mới",
-          fontWeight = FontWeight.Bold,
-          fontSize = 18.sp
-        )
-      }
-    },
-    text = {
-      Column(
-        modifier = Modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-      ) {
-        OutlinedTextField(
-          value = title,
-          onValueChange = { title = it },
-          label = { Text("Tiêu đề") },
-          modifier = Modifier.fillMaxWidth().testTag("input_milestone_title"),
-          singleLine = true,
-          shape = RoundedCornerShape(12.dp),
-          colors = inLoveFieldColors()
-        )
-
-        InLoveDatePickerField(
-          value = dateText,
-          onValueChange = { dateText = it },
-          label = "Ngày",
-          placeholder = "15/11/2026",
-          dialogTitle = "Chọn ngày",
-          quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
-          modifier = Modifier.fillMaxWidth(),
-          testTag = "input_milestone_date"
-        )
-
-        // Icon-only category picker; the selected name shows once below.
-        val categoryOptions = listOf(
-          "Hẹn Hò" to Icons.Filled.LocalCafe,
-          "Du Lịch" to Icons.Filled.Flight,
-          "Sinh Nhật" to Icons.Filled.Cake,
-          "Tình Yêu" to Icons.Filled.Favorite,
-          "Kỷ Niệm" to Icons.Filled.Star
-        )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          categoryOptions.forEach { (name, icon) ->
-            val isSelected = categoryTag == name
-            val bg by androidx.compose.animation.animateColorAsState(
-              if (isSelected) Primary else SurfaceContainerHigh, label = "cat_bg"
-            )
-            val scale by androidx.compose.animation.core.animateFloatAsState(
-              if (isSelected) 1.12f else 1f,
-              androidx.compose.animation.core.spring(androidx.compose.animation.core.Spring.DampingRatioMediumBouncy),
-              label = "cat_scale"
-            )
-            Box(
-              contentAlignment = Alignment.Center,
-              modifier = Modifier
-                .size(40.dp)
-                .graphicsLayer { scaleX = scale; scaleY = scale }
-                .clip(CircleShape)
-                .background(bg)
-                .clickable { categoryTag = name }
-            ) {
-              Icon(
-                imageVector = icon,
-                contentDescription = name,
-                tint = if (isSelected) Color.White else OnSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-              )
-            }
-          }
-        }
-        Text(
-          text = categoryTag,
-          fontSize = 12.sp,
-          fontWeight = FontWeight.Bold,
-          color = Primary,
-          textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-          modifier = Modifier.fillMaxWidth()
-        )
-
-        if (presetPhotos.isNotEmpty()) {
-          LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            items(presetPhotos) { url ->
-              Box(
-                modifier = Modifier
-                  .size(44.dp)
-                  .clip(RoundedCornerShape(8.dp))
-                  .border(
-                    width = if (imageUrl == url) 2.dp else 1.dp,
-                    color = if (imageUrl == url) Primary else Color(0xFFFFCDD2),
-                    shape = RoundedCornerShape(8.dp)
-                  )
-                  .clickable { imageUrl = url }
-              ) {
-                AsyncImage(
-                  model = url,
-                  contentDescription = null,
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier.fillMaxSize()
-                )
-              }
-            }
-          }
-        }
-
+      AppDensity {
         Row(
-          modifier = Modifier.fillMaxWidth(),
           verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.SpaceBetween
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-          Icon(Icons.Filled.Star, contentDescription = "Quan trọng", tint = if (isImportant) Primary else OnSurfaceVariant)
-          Switch(
-            checked = isImportant,
-            onCheckedChange = { isImportant = it },
-            colors = SwitchDefaults.colors(checkedTrackColor = Primary)
+          Icon(
+            imageVector = Icons.Filled.CalendarMonth,
+            contentDescription = null,
+            tint = Primary
+          )
+          Text(
+            text = if (isEnglish) "New milestone" else "Kỷ niệm mới",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
           )
         }
       }
     },
+    text = { AppDensity { AddMilestoneFormBody(form, presetPhotos, isEnglish) } },
     confirmButton = {
-      Button(
-        onClick = {
-          val parsedMillis = DatePickerUtils.parseDateToUtcMillis(dateText)
-          val days = parsedMillis?.let {
-            java.util.concurrent.TimeUnit.MILLISECONDS.toDays(it - System.currentTimeMillis()).toInt().coerceAtLeast(0)
-          } ?: 30
-          // Derived from the actual picked date, not a hardcoded "Chủ Nhật" that used to be
-          // wrong for every date except an actual Sunday.
-          val subtitle = DatePickerUtils.getVietnameseDayOfWeek(dateText) ?: "Kỷ Niệm"
-          onConfirm(
-            title,
-            dateText,
-            subtitle,
-            categoryTag,
-            "Cột mốc mới",
-            imageUrl,
-            days,
-            isImportant
-          )
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.testTag("btn_submit_milestone")
-      ) {
-        Text("Tạo", fontWeight = FontWeight.Bold)
+      AppDensity {
+        Button(
+          onClick = {
+            val days = DatePickerUtils.daysUntil(form.dateText) ?: 30
+            // Derived from the actual picked date, not a hardcoded "Chủ Nhật" that used to be
+            // wrong for every date except an actual Sunday.
+            val subtitle = DatePickerUtils.getVietnameseDayOfWeek(form.dateText) ?: "Kỷ Niệm"
+            onConfirm(
+              form.title,
+              form.dateText,
+              subtitle,
+              form.categoryTag,
+              "Cột mốc mới",
+              form.imageUrl,
+              days,
+              form.isImportant
+            )
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = Primary),
+          shape = RoundedCornerShape(14.dp),
+          modifier = Modifier.testTag("btn_submit_milestone")
+        ) {
+          Text(if (isEnglish) "Create" else "Tạo", fontWeight = FontWeight.Bold)
+        }
       }
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text("Hủy", color = OnSurfaceVariant)
+      AppDensity {
+        TextButton(onClick = onDismiss) {
+          Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
+        }
       }
     }
   )
 }
 
+@Stable
+internal class MilestoneFormState(initialImageUrl: String) {
+  var title by mutableStateOf("")
+  var dateText by mutableStateOf(
+    java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+  )
+  var categoryTag by mutableStateOf("Hẹn Hò")
+  var isImportant by mutableStateOf(false)
+  var imageUrl by mutableStateOf(initialImageUrl)
+}
+
+/** Example titles: (Vietnamese, English, stored Vietnamese category tag). */
+private val MilestoneExamples = listOf(
+  Triple("Lần đầu gặp", "First met", "Kỷ Niệm"),
+  Triple("Ngày tỏ tình", "Day we confessed", "Tình Yêu"),
+  Triple("Chuyến đi đầu tiên", "First trip", "Du Lịch"),
+  Triple("Sinh nhật người ấy", "Their birthday", "Sinh Nhật")
+)
+
+// Body is its own composable so it can be tested without a Dialog window (Robolectric never
+// goes idle with a text field inside one).
+@Composable
+internal fun AddMilestoneFormBody(
+  form: MilestoneFormState,
+  presetPhotos: List<String>,
+  isEnglish: Boolean
+) {
+  Column(
+    modifier = Modifier.verticalScroll(rememberScrollState()),
+    verticalArrangement = Arrangement.spacedBy(10.dp)
+  ) {
+    OutlinedTextField(
+      value = form.title,
+      onValueChange = { form.title = it },
+      label = { Text(if (isEnglish) "Title" else "Tiêu đề") },
+      modifier = Modifier.fillMaxWidth().testTag("input_milestone_title"),
+      singleLine = true,
+      shape = RoundedCornerShape(12.dp),
+      colors = inLoveFieldColors()
+    )
+
+    LazyRow(
+      horizontalArrangement = Arrangement.spacedBy(6.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      items(MilestoneExamples) { (vi, en, tag) ->
+        SuggestionChip(
+          onClick = {
+            form.title = if (isEnglish) en else vi
+            form.categoryTag = tag
+          },
+          label = { Text(if (isEnglish) en else vi, fontSize = 12.sp) }
+        )
+      }
+    }
+
+    InLoveDatePickerField(
+      value = form.dateText,
+      onValueChange = { form.dateText = it },
+      label = if (isEnglish) "Date" else "Ngày",
+      placeholder = "15/11/2026",
+      dialogTitle = if (isEnglish) "Pick a date" else "Chọn ngày",
+      quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
+      modifier = Modifier.fillMaxWidth(),
+      testTag = "input_milestone_date"
+    )
+
+    // Icon-only category picker. The Vietnamese name is the stored tag (matches seed data);
+    // only the contentDescription is localized.
+    val categoryOptions = listOf(
+      Triple("Hẹn Hò", "Date", Icons.Filled.LocalCafe),
+      Triple("Du Lịch", "Travel", Icons.Filled.Flight),
+      Triple("Sinh Nhật", "Birthday", Icons.Filled.Cake),
+      Triple("Tình Yêu", "Love", Icons.Filled.Favorite),
+      Triple("Kỷ Niệm", "Memory", Icons.Filled.Star)
+    )
+    Row(modifier = Modifier.fillMaxWidth()) {
+      categoryOptions.forEach { (name, nameEn, icon) ->
+        val isSelected = form.categoryTag == name
+        val bg by animateColorAsState(
+          if (isSelected) Primary else SurfaceContainerHigh, label = "cat_bg"
+        )
+        val scale by animateFloatAsState(
+          if (isSelected) 1.12f else 1f,
+          spring(Spring.DampingRatioMediumBouncy),
+          label = "cat_scale"
+        )
+        // Weighted cells keep the row inside the dialog width; each is at least MinTouchBox tall.
+        Box(
+          contentAlignment = Alignment.Center,
+          modifier = Modifier
+            .weight(1f)
+            .heightIn(min = MinTouchBox)
+            .clip(MaterialTheme.shapes.small)
+            .pressClickable(onClick = { form.categoryTag = name })
+        ) {
+          Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+              .size(40.dp)
+              .graphicsLayer { scaleX = scale; scaleY = scale }
+              .clip(CircleShape)
+              .background(bg)
+          ) {
+            Icon(
+              imageVector = icon,
+              contentDescription = if (isEnglish) nameEn else name,
+              tint = if (isSelected) Color.White else OnSurfaceVariant,
+              modifier = Modifier.size(20.dp)
+            )
+          }
+        }
+      }
+    }
+
+    if (presetPhotos.isNotEmpty()) {
+      LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        items(presetPhotos) { url ->
+          Box(
+            modifier = Modifier
+              .size(44.dp)
+              .clip(RoundedCornerShape(8.dp))
+              .border(
+                width = if (form.imageUrl == url) 2.dp else 1.dp,
+                color = if (form.imageUrl == url) Primary else Color(0xFFFFCDD2),
+                shape = RoundedCornerShape(8.dp)
+              )
+              .clickable { form.imageUrl = url }
+          ) {
+            AsyncImage(
+              model = url,
+              contentDescription = null,
+              contentScale = ContentScale.Crop,
+              modifier = Modifier.fillMaxSize()
+            )
+          }
+        }
+      }
+    }
+
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(Icons.Filled.Star, contentDescription = null, tint = if (form.isImportant) Primary else OnSurfaceVariant)
+        Text(
+          text = if (isEnglish) "Important" else "Quan trọng",
+          fontSize = 14.sp,
+          color = OnSurfaceVariant
+        )
+      }
+      Switch(
+        checked = form.isImportant,
+        onCheckedChange = { form.isImportant = it },
+        colors = SwitchDefaults.colors(checkedTrackColor = Primary)
+      )
+    }
+  }
+}
+
 @Composable
 fun AddChecklistDialog(
   onDismiss: () -> Unit,
-  onConfirm: (text: String) -> Unit
+  onConfirm: (text: String) -> Unit,
+  isEnglish: Boolean = false
 ) {
   var text by remember { mutableStateOf("") }
 
@@ -438,7 +508,7 @@ fun AddChecklistDialog(
     onDismissRequest = onDismiss,
     title = {
       Text(
-        text = "Thêm Việc Vào Checklist",
+        text = if (isEnglish) "Add Checklist Task" else "Thêm Việc Vào Checklist",
         fontWeight = FontWeight.Bold,
         fontSize = 18.sp
       )
@@ -447,8 +517,8 @@ fun AddChecklistDialog(
       OutlinedTextField(
         value = text,
         onValueChange = { text = it },
-        label = { Text("Tên công việc") },
-        placeholder = { Text("Ví dụ: Mua bó hoa hồng baby trắng") },
+        label = { Text(if (isEnglish) "Task" else "Tên công việc") },
+        placeholder = { Text(if (isEnglish) "e.g. Buy white baby roses" else "Ví dụ: Mua bó hoa hồng baby trắng") },
         modifier = Modifier
           .fillMaxWidth()
           .testTag("input_checklist_task"),
@@ -461,14 +531,16 @@ fun AddChecklistDialog(
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         modifier = Modifier.testTag("btn_save_checklist_task")
       ) {
-        Text("Thêm", fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "Add" else "Thêm", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
       TextButton(onClick = onDismiss) {
-        Text("Hủy", color = OnSurfaceVariant)
+        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
       }
-    }
+    },
+    containerColor = Color.White,
+    shape = RoundedCornerShape(24.dp)
   )
 }
 
@@ -1566,6 +1638,7 @@ fun DeleteConfirmationDialog(
   title: String,
   message: String,
   itemName: String? = null,
+  isEnglish: Boolean = false,
   onConfirm: () -> Unit,
   onDismiss: () -> Unit
 ) {
@@ -1651,7 +1724,7 @@ fun DeleteConfirmationDialog(
             modifier = Modifier.size(16.dp),
             tint = Color.White
           )
-          Text("Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold, color = Color.White)
+          Text(if (isEnglish) "Delete" else "Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold, color = Color.White)
         }
       }
     },
@@ -1660,7 +1733,7 @@ fun DeleteConfirmationDialog(
         onClick = onDismiss,
         modifier = Modifier.testTag("btn_cancel_delete")
       ) {
-        Text("Hủy bỏ", color = OnSurfaceVariant, fontWeight = FontWeight.Medium)
+        Text(if (isEnglish) "Cancel" else "Hủy bỏ", color = OnSurfaceVariant, fontWeight = FontWeight.Medium)
       }
     },
     containerColor = Color.White,
@@ -1676,13 +1749,19 @@ fun SetAlarmReminderDialog(
   reminderId: Long? = null,
   onDismiss: () -> Unit,
   onSchedule: (title: String, message: String, triggerMillis: Long, reminderId: Long?) -> Unit,
-  onTestNow: (title: String, message: String) -> Unit
+  onTestNow: (title: String, message: String) -> Unit,
+  isEnglish: Boolean = false
 ) {
   var title by remember {
-    mutableStateOf(initialTitle.ifBlank { "Kỷ niệm tình yêu ngọt ngào ❤️" })
+    mutableStateOf(initialTitle.ifBlank { if (isEnglish) "Sweet love anniversary ❤️" else "Kỷ niệm tình yêu ngọt ngào ❤️" })
   }
   var message by remember {
-    mutableStateOf(initialMessage.ifBlank { "Đã đến thời gian kỷ niệm đặc biệt! Hãy gửi lời yêu thương đến người ấy nhé 🌸" })
+    mutableStateOf(
+      initialMessage.ifBlank {
+        if (isEnglish) "A special day has arrived! Send some love to your partner 🌸"
+        else "Đã đến thời gian kỷ niệm đặc biệt! Hãy gửi lời yêu thương đến người ấy nhé 🌸"
+      }
+    )
   }
 
   // Selected preset index: 0 = 10 sec test, 1 = 9:00 AM, 2 = 19:30 PM, 3 = In 2 Hours, 4 = Custom
@@ -1732,13 +1811,13 @@ fun SetAlarmReminderDialog(
     title = {
       Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-          text = "Cài Đặt Báo Thức Kỷ Niệm",
+          text = if (isEnglish) "Set Reminder Alarm" else "Cài Đặt Báo Thức Kỷ Niệm",
           fontWeight = FontWeight.Bold,
           fontSize = 18.sp,
           color = Color(0xFF26071B)
         )
         Text(
-          text = "Nhận chuông và thông báo vào thời gian chính xác",
+          text = if (isEnglish) "Get a chime and notification right on time" else "Nhận chuông và thông báo vào thời gian chính xác",
           fontSize = 12.sp,
           color = OnSurfaceVariant
         )
@@ -1754,7 +1833,7 @@ fun SetAlarmReminderDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Tiêu đề báo thức") },
+          label = { Text(if (isEnglish) "Alarm title" else "Tiêu đề báo thức") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_alarm_title"),
@@ -1764,7 +1843,7 @@ fun SetAlarmReminderDialog(
         OutlinedTextField(
           value = message,
           onValueChange = { message = it },
-          label = { Text("Lời nhắn kèm thông báo") },
+          label = { Text(if (isEnglish) "Notification message" else "Lời nhắn kèm thông báo") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_alarm_message"),
@@ -1772,7 +1851,7 @@ fun SetAlarmReminderDialog(
         )
 
         Text(
-          text = "Chọn thời gian báo thức:",
+          text = if (isEnglish) "Choose alarm time:" else "Chọn thời gian báo thức:",
           fontWeight = FontWeight.Bold,
           fontSize = 13.sp,
           color = Color(0xFF26071B)
@@ -1780,9 +1859,15 @@ fun SetAlarmReminderDialog(
 
         // Presets Chips
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-          val presets = listOf(
-            "⏰ 9:00 AM (Sáng mai)" to 1,
-            "🌙 19:30 PM (Tối)" to 2,
+          val presets = if (isEnglish) listOf(
+            "⏰ 9:00 AM (Morning)" to 1,
+            "🌙 7:30 PM (Evening)" to 2,
+            "⏳ In 2 hours" to 3,
+            "⚡ In 10 seconds (Test)" to 0,
+            "⚙️ Custom time" to 4
+          ) else listOf(
+            "⏰ 9:00 (Sáng)" to 1,
+            "🌙 19:30 (Tối)" to 2,
             "⏳ Sau 2 tiếng" to 3,
             "⚡ Sau 10 giây (Thử chuông)" to 0,
             "⚙️ Tùy chọn giờ cụ thể" to 4
@@ -1838,7 +1923,7 @@ fun SetAlarmReminderDialog(
             ) {
               // Hours
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Giờ", fontSize = 11.sp, color = OnSurfaceVariant)
+                Text(if (isEnglish) "Hour" else "Giờ", fontSize = 11.sp, color = OnSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   IconButton(
                     onClick = { customHour = (customHour - 1 + 24) % 24 },
@@ -1866,7 +1951,7 @@ fun SetAlarmReminderDialog(
 
               // Minutes
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Phút", fontSize = 11.sp, color = OnSurfaceVariant)
+                Text(if (isEnglish) "Min" else "Phút", fontSize = 11.sp, color = OnSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   IconButton(
                     onClick = { customMinute = (customMinute - 5 + 60) % 60 },
@@ -1915,7 +2000,7 @@ fun SetAlarmReminderDialog(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-              text = "🔔 Thử chuông thông báo ngay",
+              text = if (isEnglish) "Test the alert now" else "Thử chuông thông báo ngay",
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = Primary
@@ -1944,7 +2029,7 @@ fun SetAlarmReminderDialog(
             modifier = Modifier.size(16.dp),
             tint = Color.White
           )
-          Text("Đặt Báo Thức", fontWeight = FontWeight.Bold, color = Color.White)
+          Text(if (isEnglish) "Set Alarm" else "Đặt Báo Thức", fontWeight = FontWeight.Bold, color = Color.White)
         }
       }
     },
@@ -1953,7 +2038,7 @@ fun SetAlarmReminderDialog(
         onClick = onDismiss,
         modifier = Modifier.testTag("btn_cancel_schedule_alarm")
       ) {
-        Text("Đóng", color = OnSurfaceVariant)
+        Text(if (isEnglish) "Close" else "Đóng", color = OnSurfaceVariant)
       }
     },
     containerColor = Color.White,
@@ -2348,12 +2433,15 @@ fun AddGiftReminderDialog(
     dueDateText: String,
     estimatedBudget: String,
     notes: String
-  ) -> Unit
+  ) -> Unit,
+  isEnglish: Boolean = false
 ) {
   var title by remember { mutableStateOf("") }
-  var recipient by remember { mutableStateOf("Người ấy") }
-  var occasion by remember { mutableStateOf("Kỷ niệm ngày yêu") }
-  var dueDateText by remember { mutableStateOf("11 Tháng 9, 2026") }
+  var recipient by remember { mutableStateOf(if (isEnglish) "My love" else "Người ấy") }
+  var occasion by remember { mutableStateOf(if (isEnglish) "Love anniversary" else "Kỷ niệm ngày yêu") }
+  var dueDateText by remember {
+    mutableStateOf(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+  }
   var estimatedBudget by remember { mutableStateOf("500.000đ") }
   var notes by remember { mutableStateOf("") }
 
@@ -2370,7 +2458,7 @@ fun AddGiftReminderDialog(
           tint = Primary
         )
         Text(
-          text = "Thêm Nhắc Nhở Quà Tặng",
+          text = if (isEnglish) "Add Gift Reminder" else "Thêm Nhắc Nhở Quà Tặng",
           fontWeight = FontWeight.Bold,
           fontSize = 18.sp,
           color = OnSurface
@@ -2385,8 +2473,8 @@ fun AddGiftReminderDialog(
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text("Món quà cần chuẩn bị *") },
-          placeholder = { Text("Ví dụ: Bó hoa hồng vĩnh cửu & Thiệp") },
+          label = { Text(if (isEnglish) "Gift to prepare *" else "Món quà cần chuẩn bị *") },
+          placeholder = { Text(if (isEnglish) "e.g. Eternal roses & card" else "Ví dụ: Bó hoa hồng vĩnh cửu & Thiệp") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_gift_reminder_title"),
@@ -2400,8 +2488,8 @@ fun AddGiftReminderDialog(
           OutlinedTextField(
             value = recipient,
             onValueChange = { recipient = it },
-            label = { Text("Tặng cho") },
-            placeholder = { Text("Người thương") },
+            label = { Text(if (isEnglish) "For" else "Tặng cho") },
+            placeholder = { Text(if (isEnglish) "My love" else "Người thương") },
             modifier = Modifier
               .weight(1f)
               .testTag("input_gift_reminder_recipient"),
@@ -2411,7 +2499,7 @@ fun AddGiftReminderDialog(
           OutlinedTextField(
             value = estimatedBudget,
             onValueChange = { estimatedBudget = it },
-            label = { Text("Dự chi") },
+            label = { Text(if (isEnglish) "Budget" else "Dự chi") },
             placeholder = { Text("500.000đ") },
             modifier = Modifier
               .weight(1f)
@@ -2423,8 +2511,8 @@ fun AddGiftReminderDialog(
         OutlinedTextField(
           value = occasion,
           onValueChange = { occasion = it },
-          label = { Text("Dịp kỷ niệm / Sự kiện") },
-          placeholder = { Text("Kỷ niệm 1.000 ngày") },
+          label = { Text(if (isEnglish) "Occasion" else "Dịp kỷ niệm / Sự kiện") },
+          placeholder = { Text(if (isEnglish) "1,000-day anniversary" else "Kỷ niệm 1.000 ngày") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_gift_reminder_occasion"),
@@ -2434,11 +2522,10 @@ fun AddGiftReminderDialog(
         InLoveDatePickerField(
           value = dueDateText,
           onValueChange = { dueDateText = it },
-          label = "Hạn hoàn thành chuẩn bị (dd/MM/yyyy)",
-          placeholder = "11/09/2026",
-          dialogTitle = "Chọn ngày hẹn tặng quà",
+          label = if (isEnglish) "Prepare by (dd/MM/yyyy)" else "Hạn hoàn thành chuẩn bị (dd/MM/yyyy)",
+          placeholder = "dd/MM/yyyy",
+          dialogTitle = if (isEnglish) "Pick gift date" else "Chọn ngày hẹn tặng quà",
           quickPresets = DatePickerPresets.upcomingAnniversaryPresets(),
-          helperText = DatePickerUtils.getFriendlyDateDescription(dueDateText),
           modifier = Modifier.fillMaxWidth(),
           testTag = "input_gift_reminder_date"
         )
@@ -2446,8 +2533,8 @@ fun AddGiftReminderDialog(
         OutlinedTextField(
           value = notes,
           onValueChange = { notes = it },
-          label = { Text("Ghi chú món quà") },
-          placeholder = { Text("Màu sắc, kích cỡ, địa chỉ cửa hàng...") },
+          label = { Text(if (isEnglish) "Gift notes" else "Ghi chú món quà") },
+          placeholder = { Text(if (isEnglish) "Color, size, shop address..." else "Màu sắc, kích cỡ, địa chỉ cửa hàng...") },
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_gift_reminder_notes"),
@@ -2463,12 +2550,12 @@ fun AddGiftReminderDialog(
         colors = ButtonDefaults.buttonColors(containerColor = Primary),
         modifier = Modifier.testTag("btn_save_gift_reminder")
       ) {
-        Text("Lưu Nhắc Nhở", fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "Save" else "Lưu Nhắc Nhở", fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
       TextButton(onClick = onDismiss) {
-        Text("Hủy", color = OnSurfaceVariant)
+        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
       }
     },
     containerColor = Color.White,

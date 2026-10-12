@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest==9.1.1
+httpx==0.28.1
+# Test sink BigQuery (client giả thay `bigquery.Client`, không gọi mạng) và stack emulator của
+# T10 cần gói này; cùng bản với Dockerfile.
+google-cloud-bigquery==3.45.2

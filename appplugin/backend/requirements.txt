@@ -1,0 +1,12 @@
+# Ghim đúng bản đã chạy bộ test 1.7.0 T9 (Python 3.12): nâng bản = chạy lại pytest, không trôi âm thầm.
+fastapi==0.142.1
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+
+# Chi can khi BRAIN_SINK=bigquery. Import duoc thuc hien luoi trong sinks/bigquery.py
+# nen backend van chay va test duoc khi khong cai goi nay.
+google-cloud-bigquery==3.45.2 ; extra == "bigquery"
+
+# Chi can khi xac thuc giao dich Play (BRAIN_PLAY_CREDENTIALS duoc dat, doc 45 muc E.1).
+# HttpPlayVerifier import luoi google-auth nen backend van chay va test duoc khi chua cai.
+google-auth==2.59.0 ; extra == "playverify"

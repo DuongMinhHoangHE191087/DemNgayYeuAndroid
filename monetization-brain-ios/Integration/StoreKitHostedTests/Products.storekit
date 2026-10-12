@@ -1,0 +1,76 @@
+{
+  "identifier": "A1B2C3D4-0000-4000-A000-000000000001",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "10000001",
+      "localizations": [
+        {
+          "description": "A small handful of gems.",
+          "displayName": "Gem Pack (Small)",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "test.gems.small",
+      "referenceName": "Gem Pack Small",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "10000002",
+      "localizations": [
+        {
+          "description": "Removes all interstitial advertising.",
+          "displayName": "Remove Ads",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "test.removeads",
+      "referenceName": "Remove Ads",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storeKitErrors": [],
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [
+    {
+      "id": "20000001",
+      "localizations": [],
+      "name": "VIP",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "9.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "30000001",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Monthly VIP membership.",
+              "displayName": "VIP Monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "test.vip.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "VIP Monthly",
+          "subscriptionGroupID": "20000001",
+          "type": "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 2,
+    "minor": 0
+  }
+}

@@ -255,7 +255,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 // xoá khỏi dòng này vì cả hai đều KHÔNG được gate theo VIP trong code thực tế
                 // (sync cloud là dead code chưa từng gọi; gợi ý quà mở cho mọi người dùng miễn
                 // phí) — Google Play Policy cấm quảng cáo sai sự thật về tính năng.
-                text = if (isVip) (if (isEnglish) "Completely ad-free • Smooth, uninterrupted experience" else "Tắt quảng cáo hoàn toàn • Trải nghiệm mượt mà không gián đoạn")
+                text = if (isVip) (if (isEnglish) "Ad-free" else "Không quảng cáo")
                        else (if (isEnglish) "No ads • 3-day free trial" else "Không quảng cáo • Dùng thử 3 ngày"),
                 fontSize = 12.sp,
                 color = OnSurfaceVariant
@@ -275,7 +275,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           modifier = Modifier
             .fillMaxWidth()
             .clickable {
-              uriHandler.openUri("https://play.google.com/store/account/subscriptions?package=com.aistudio.inlove.kmrv")
+              uriHandler.openUri(com.example.config.LegalLinks.MANAGE_SUBSCRIPTIONS)
             }
             .padding(horizontal = 4.dp, vertical = 6.dp),
           verticalAlignment = Alignment.CenterVertically,
@@ -283,7 +283,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         ) {
           Icon(
             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-            contentDescription = "Quản lý gói Google Play",
+            contentDescription = null,
             tint = Color(0xFF8A2E5B),
             modifier = Modifier.size(15.dp)
           )
@@ -384,8 +384,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
     // 6. Settings Group: Dữ Liệu & Bảo Mật Nâng Cao (Security & Privacy Center)
     item {
       Text(
-        text = if (isEnglish) "ACCOUNT & ADVANCED SECURITY" else "TÀI KHOẢN & BẢO MẬT NÂNG CAO",
-        fontSize = 13.sp,
+        text = if (isEnglish) "Account" else "Tài khoản",
+        fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
         color = Primary
       )
@@ -437,18 +437,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   color = Color(0xFF757575)
                 )
               }
-              Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = Color(0xFFE8F5E9)
-              ) {
-                Text(
-                  text = if (isEnglish) "Verified" else "Đã xác thực",
-                  fontSize = 9.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color(0xFF2E7D32),
-                  modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-              }
+              Icon(
+                imageVector = Icons.Filled.VerifiedUser,
+                contentDescription = if (isEnglish) "Verified" else "Đã xác thực",
+                tint = Color(0xFF2E7D32),
+                modifier = Modifier.size(20.dp)
+              )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -478,15 +472,6 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                     color = Color(0xFF880E4F)
                   )
                 }
-                Text(
-                  text = if (isEnglish)
-                    "Your data is stored privately on this device."
-                  else
-                    "Dữ liệu được lưu riêng tư trên máy.",
-                  fontSize = 12.sp,
-                  lineHeight = 17.sp,
-                  color = Color(0xFF424242)
-                )
                 Button(
                   onClick = { viewModel.openAuthScreen() },
                   shape = RoundedCornerShape(12.dp),
@@ -512,12 +497,17 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             title = if (isEnglish) "App Lock with 4-Digit PIN" else "Khóa ứng dụng bằng PIN",
             subtitle = if (isPinActive) {
               if (isEnglish) "4-digit passcode protection active" else "Đang bật mã PIN 4 số bảo vệ"
+            } else if (currentAccount == null) {
+              if (isEnglish) "Sign in to use PIN lock" else "Đăng nhập để dùng khóa PIN"
             } else {
               if (isEnglish) "Passcode protection disabled" else "Chưa bật bảo vệ PIN"
             },
             checked = isPinActive,
             onCheckedChange = { enabled ->
-              if (enabled && (currentAccount?.appPin.isNullOrEmpty())) {
+              // The PIN is stored on the account, so guests can't set one: send them to sign-in.
+              if (currentAccount == null) {
+                viewModel.openAuthScreen()
+              } else if (enabled && currentAccount.appPin.isEmpty()) {
                 showSetPinDialog = true
               } else {
                 viewModel.togglePinEnabled(enabled)
@@ -610,7 +600,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               )
               Spacer(modifier = Modifier.width(8.dp))
               Text(
-                text = if (isEnglish) "Sign Out (Switch to Guest Mode)" else "Đăng Xuất Tài Khoản (Về Chế Độ Khách)",
+                text = if (isEnglish) "Sign out" else "Đăng xuất",
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp
               )
@@ -634,7 +624,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               )
               Spacer(modifier = Modifier.width(8.dp))
               Text(
-                text = if (isEnglish) "Permanently Delete Account & Data" else "Xóa Vĩnh Viễn Tài Khoản & Dữ Liệu",
+                text = if (isEnglish) "Delete account" else "Xóa tài khoản",
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp
               )
@@ -683,7 +673,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         Text(if (isEnglish) "Sign out of account?" else "Đăng xuất tài khoản?", fontWeight = FontWeight.Bold)
       },
       text = {
-        Text(if (isEnglish) "You will need to sign in again with your email and password to access synced data." else "Bạn sẽ cần đăng nhập lại bằng email và mật khẩu để tiếp tục sử dụng InLove.")
+        Text(if (isEnglish) "You'll need to sign in again." else "Bạn sẽ cần đăng nhập lại.")
       },
       confirmButton = {
         Button(
@@ -722,8 +712,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(
-            if (isEnglish) "WARNING: All account information, love logs, and memories will be permanently deleted and cannot be recovered."
-            else "CẢNH BÁO: Toàn bộ thông tin tài khoản, mật khẩu, nhật ký tình yêu và ảnh kỷ niệm sẽ bị xóa vĩnh viễn không thể phục hồi.",
+            if (isEnglish) "All data will be permanently deleted."
+            else "Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.",
             fontSize = 13.sp
           )
           Text(

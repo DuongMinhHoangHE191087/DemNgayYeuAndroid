@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="appplugin_activity_horizontal_margin">16dp</dimen>
+    <dimen name="appplugin_activity_vertical_margin">16dp</dimen>
+    <dimen name="appplugin_mediaview_width">300dp</dimen>
+    <dimen name="appplugin_mediaview_height">300dp</dimen>
+    <dimen name="appplugin_icon_layout_width">64dp</dimen>
+    <dimen name="appplugin_icon_layout_height">64dp</dimen>
+    <dimen name="appplugin_icon_layout_margin_top">200dp</dimen>
+    <dimen name="appplugin_icon_layout_margin_end">8dp</dimen>
+    <dimen name="appplugin_ad_badge_margin_start">32dp</dimen>
+    <dimen name="appplugin_ad_badge_margin_bottom">150dp</dimen>
+    <dimen name="appplugin_headline_width">300dp</dimen>
+    <dimen name="appplugin_headline_margin_start">8dp</dimen>
+    <dimen name="appplugin_headline_text_size">16sp</dimen>
+    <dimen name="appplugin_body_width">300dp</dimen>
+    <dimen name="appplugin_body_text_size">12sp</dimen>
+    <dimen name="appplugin_cta_button_width">250dp</dimen>
+    <dimen name="appplugin_cta_button_margin_top">32dp</dimen>
+    <dimen name="appplugin_cta_button_text_size">16sp</dimen>
+</resources>

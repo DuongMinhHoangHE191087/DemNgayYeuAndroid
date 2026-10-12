@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Khoá giả cho cả debug và release: bản release là bản device_gate đo G2, chặng cold start 2
+    (1.6.1 Task 3) phải thấy af.init. Server AppsFlyer từ chối khoá, "appsflyer launch request
+    failed" là dự kiến. Hai app đang dùng đều có AppsFlyer, demo không có thì G2 mù (review Task 8a P1).
+-->
+<resources>
+    <string name="af_app_id" translatable="false">debugkeyXXXXXXXXXXXXXXXXXXXXXXX</string>
+</resources>

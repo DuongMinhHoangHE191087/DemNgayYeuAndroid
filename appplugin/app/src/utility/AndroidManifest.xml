@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Chỉ flavor `utility` của app demo (1.7.0 Task 8): bật DataBucket tới sink cục bộ trên máy Mac (`tools/local_sink.sh`,
+    cổng 8089). Máy hay emulator thấy sink qua `adb reverse tcp:8089 tcp:8089` (tools/device_gate.sh làm việc đó), nên
+    địa chỉ là 127.0.0.1 cho cả release lẫn debug. `TelemetryConsentGate` giữ `first_open`/`session_start` tới khi có
+    tầng consent. Cleartext chỉ cho 127.0.0.1 (`@xml/network_security_config_utility`). Khoá API khớp
+    `BRAIN_API_KEY` của local_sink.sh. Flavor `game` không có khoá này: DataBucket tắt.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:networkSecurityConfig="@xml/network_security_config_utility">
+        <meta-data
+            android:name="DATABUCKETS_BASE_URL"
+            android:value="http://127.0.0.1:8089/" />
+        <meta-data
+            android:name="DATABUCKETS_API_KEY"
+            android:value="demo-utility-key" />
+        <!-- Khoá 2 của harness billing G12 (1.8.0 Task 8, D8): chỉ demo `utility`; harness còn cần flagTest + extra
+             appplugin_iap_script (IapHarness). Flavor `game` và app tiêu thụ không có khoá này. -->
+        <meta-data
+            android:name="com.app.plugin.IAP_HARNESS"
+            android:value="true" />
+        <!-- Khoá 2 của harness brain (1.9.0 Task 5s, D28): chỉ demo `utility`; còn cần flagTest + extra brain_policy
+             (BrainPolicyHarness). Flavor `game` và app tiêu thụ không có khoá này. -->
+        <meta-data
+            android:name="com.app.plugin.BRAIN_HARNESS"
+            android:value="true" />
+        <!-- 2.3.0 SECBC: `/policy` của sink cục bộ cho harness `policy_fake_token` (SECBH, chế độ policy của device_gate). Không khai
+             INTEGRITY_CLOUD_PROJECT: đường sản phẩm tắt (`policy: off`), 0 lời gọi Play Integrity. -->
+        <meta-data
+            android:name="com.app.plugin.BRAIN_POLICY_URL"
+            android:value="http://127.0.0.1:8089/" />
+    </application>
+
+</manifest>

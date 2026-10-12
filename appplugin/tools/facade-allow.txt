@@ -1,0 +1,13 @@
+# Kiểu public MỚI có chủ đích mà api_facade_check.sh được phép nhận (2.2.0 D15-220). Mỗi dòng: <FQN lớp ngoài cùng>  <dấu task>  <lý do>.
+# Cột 1 = tên đầy đủ dạng chấm (khối lồng `Outer$Inner` xét theo `Outer`); chú thích bắt đầu bằng `#`. Kiểm in `new: <kiểu> (allow)`.
+# Thêm dòng ở đây là quyết định của chủ dự án (CEO), không phải sửa cho cổng xanh. SEG điền 10 dòng `com.app.plugin.segment.<Kiểu>`.
+com.app.plugin.segment.UserSegmentEngine  SEG  2.2.0 SEG (D15-220): engine segment chung IM ∪ SC, FQN như fork — app đọc segment/recordEvent/forceSegment
+com.app.plugin.segment.UserSegment  SEG  2.2.0 SEG (D15-220): enum segment trả về qua UserSegmentEngine.segment, app when trên nó
+com.app.plugin.segment.SegmentEvent  SEG  2.2.0 SEG (D15-220): tham số của UserSegmentEngine.recordEvent (event paywall/tính năng/mua của app)
+com.app.plugin.segment.RevenueTier  SEG  2.2.0 SEG (D15-220): kết quả RevenueTierEvaluator.evaluate (SC dùng)
+com.app.plugin.segment.RevenueTierEvaluator  SEG  2.2.0 SEG (D15-220): phân loại doanh thu SC gọi trực tiếp
+com.app.plugin.segment.RevenueTierConfig  SEG  2.2.0 SEG (D15-220): trả về qua UserSegmentEngine.revenueTierConfig, tham số evaluate
+com.app.plugin.segment.ScorerState  SEG  2.2.0 SEG (D15-220): trả về qua UserSegmentEngine.scorerSnapshot, tham số evaluate
+com.app.plugin.segment.SegmentCadenceConfig  SEG  2.2.0 SEG (D15-220): trả về qua UserSegmentEngine.cadenceConfig, tham số AdCadenceGate
+com.app.plugin.segment.AdCadenceGate  SEG  2.2.0 SEG (D15-220): cadence interstitial theo segment app gọi trực tiếp
+com.app.plugin.segment.EcpmBucket  SEG  2.2.0 SEG (D15-220): kiểu của ScorerState.ecpmBucket (public) và payload AD_IMPRESSION — internal không biên dịch

@@ -1,0 +1,32 @@
+# 2.4.0 NG0 (Hợp đồng A, P24): mọi file trong appplugin-nextgen/src/main/{java,res} (override hoặc file riêng nextgen)
+# và mọi test ở appplugin-nextgen/src/test/java trùng đường dẫn test chung phải có MỘT dòng ở đây:
+#   <đường dẫn tương đối thư mục module> # <lý do>
+# NgOverridesTest FAIL khi: file không có dòng, dòng không có file, override > bản legacy cùng tên + 40 dòng,
+# hoặc bất kỳ file nào trong appplugin-nextgen/ (trừ build/) > 800 dòng. NG0: 0 override. NG1: 3 override thật + 6 stub D14.
+src/main/java/com/app/plugin/ads/MainPost.kt # NG1: cửa main cho callback nền Next-Gen (Hợp đồng B "Luồng", luật 36); NG5b: bỏ decorator Legacy, thêm post (FIFO) cho chuỗi Full2
+src/main/java/com/app/plugin/ads/adsmob/AdsMobMy.kt # NG1: MobileAds Next-Gen trên appplugin-gma-init, hàng đợi giữ khi quá hạn, trần 16 (D4/D9-240); NG5b: bỏ cầu getAdnetName(ResponseInfo) Legacy
+src/main/java/com/app/plugin/ads/consent/AdRequestFactory.kt # NG1: builder Next-Gen request/banner/native + npa qua setGoogleExtrasBundle; NG5b: bỏ build() Legacy, native nhận VideoOptions/tỉ lệ media (R-NG4 m5)
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlNt.kt # NG4: native nt_ qua NativeAdLoader + NativeAdRequest/VideoOptions [S13], registerNativeAd trên main [S14]
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlNtCl.kt # NG4: native collapsible Next-Gen, gắn view qua AdsMobNtClView.bind
+src/main/java/com/app/plugin/ads/adsmob/AdsMobNtClView.kt # NG4: dialog NtCl Next-Gen + bind dùng chung với AdsMobPlNtCl
+src/main/java/com/app/plugin/ads/adsmob/AdsMobNtFullView.kt # NG5a: dialog Full2 Next-Gen, registerNativeAd trên main [S14], điều khiển video riêng khi isCustomControlsEnabled [S15], VideoLifecycleCallbacks qua MainPost.video [S16]
+src/main/java/com/app/plugin/ads/adsmob/AdsMobNtFullBinder.kt # NG5a: view Full2 đường get gắn asset vào NativeAdView Next-Gen (id Legacy), registerNativeAd trên main [S14]
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlNtFull.kt # NG5b: Full2 NativeAdLoader [S13] + callback qua MainPost; prepareChainedShow dựng qua MainPost.post (FIFO sau callback nền), host/chuỗi xét lại lúc dựng (R3)
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlInters.kt # NG3: InterstitialAd Next-Gen load(AdRequest, AdLoadCallback) + event callback qua MainPost [S17]
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlOpen.kt # NG3: AppOpenAd Next-Gen [S18], hết hạn 4 h giữ
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlrewarded.kt # NG3: RewardedAd Next-Gen + earned qua MainPost [S19]
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlRwi.kt # NG3: RewardedInterstitialAd Next-Gen [S20]
+src/main/java/com/app/plugin/firbase/PaidEvent.kt # NG3: onAdPaid Next-Gen precision enum→Int, adapter name, mã show-fail mediation [S24]-[S26]; NG5b: bỏ overload AdValue Legacy (banner/rect dùng entry Next-Gen)
+src/main/res/layout/appplugin_admob_native_cl.xml # NG4: lớp gốc nativead.NativeAdView/MediaView của Next-Gen [S14], cùng id với Legacy
+src/main/res/layout/appplugin_admob_native_layout_small.xml # NG4: lớp gốc nativead.NativeAdView/MediaView của Next-Gen [S14], cùng id với Legacy
+src/main/res/layout/appplugin_admob_native_layout_language_2.xml # NG4: lớp gốc nativead.NativeAdView/MediaView của Next-Gen [S14], cùng id với Legacy
+src/main/res/layout/appplugin_layout_native_full_pager.xml # NG4: lớp gốc nativead.NativeAdView/MediaView của Next-Gen [S14], cùng id với Legacy
+src/main/res/layout/appplugin_admob_native_full.xml # NG5a: lớp gốc nativead.NativeAdView/MediaView Next-Gen [S14], cùng id Legacy + khối điều khiển video riêng [S15]
+src/main/res/layout-land/appplugin_admob_native_full.xml # NG5a: lớp gốc nativead.NativeAdView/MediaView Next-Gen [S14], cùng id Legacy + khối điều khiển video riêng [S15]
+src/main/res/layout/appplugin_admob_native_layout_full.xml # NG5a: lớp gốc nativead.NativeAdView/MediaView Next-Gen [S14], cùng id với Legacy
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlBanner.kt # NG2: BannerAd.load + BannerAdRequest large anchored adaptive [S10][S11], refresh qua MainPost.bannerRefresh, onAdPaid → PaidEvent.admob Next-Gen (NG5b gộp helper)
+src/main/java/com/app/plugin/ads/adsmob/AdsMobPlRect.kt # NG2: rect Next-Gen AdSize.MEDIUM_RECTANGLE [S11], cùng seam load/huỷ với banner
+src/main/java/com/app/plugin/ads/CollapsibleBanner.kt # NG2: extras collapsible=bottom qua setGoogleExtrasBundle [S12] (AdRequestFactory.banner, cùng npa)
+src/main/res/values/appplugin_nextgen_strings.xml # NG5b (R-NG5a m2): mô tả truy cập nút video riêng Full2 (file riêng nextgen)
+src/main/res/values-vi/appplugin_nextgen_strings.xml # NG5b (R-NG5a m2): bản tiếng Việt của mô tả nút video Full2 (file riêng nextgen)
+src/main/java/com/app/plugin/ads/core/Full2Chain.kt # D26: guard double Full2 request on the Next-Gen dismiss order (loadFull2ForThisTurn bỏ nạp khi slot Full2 đang hiện; dismiss Full2 nạp lại)

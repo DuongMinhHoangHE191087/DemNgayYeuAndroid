@@ -1,0 +1,17 @@
+// 2.1.0 G1 (M32): cấu hình Android chung của module con (appplugin-game, appplugin-max) — cùng giá trị với module gốc.
+// Groovy, không phải .gradle.kts: lint AGP 9.2.1 (UastGradleVisitor) sập khi quét script Kotlin phụ ở thư mục gradle/ (như publish.gradle).
+// Module con apply sau khối plugins; namespace + publish.gradle vẫn khai ở từng module (tools/lib/module_check.sh Q4).
+android {
+    compileSdk = 36
+    defaultConfig {
+        minSdk = 24
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    // Như gốc: bytecode 1.8 để app còn target 1.8 inline được hàm của SDK.
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    testOptions { unitTests.returnDefaultValues = true }
+    publishing { singleVariant('release') }
+}

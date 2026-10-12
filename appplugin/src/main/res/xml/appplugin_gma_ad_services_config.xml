@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ad-services-config>
+    <!-- GMA 24+ no longer packages this merge resource. It used to arrive through
+         play-services-ads-lite 23.x, pulled in by older mediation adapters; the GMA 25.4
+         adapter set dropped that path. Host apps declare AD_SERVICES_CONFIG with
+         tools:replace pointing here, so the SDK has to ship it (Attribution and Topics). -->
+    <attribution allowAllToAccess="true" />
+    <topics allowAllToAccess="true" />
+</ad-services-config>

@@ -512,7 +512,7 @@ object LocalizedStrings {
   val vietnameseStatic = AppStrings(
     navHome = "Trang Chủ",
     navMemories = "Kỷ Niệm",
-    navCalendar = "Lịch & Hẹn",
+    navCalendar = "Lịch",
     navGifts = "Gợi Ý Quà",
     navReminders = "Nhắc Hẹn",
     navSettings = "Cài Đặt",

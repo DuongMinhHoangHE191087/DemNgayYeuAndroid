@@ -1,0 +1,368 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ABCDEF00000000000000000E /* HostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF00000000000000000A /* HostApp.swift */; };
+		ABCDEF00000000000000000F /* StoreKit2BackendIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF00000000000000000C /* StoreKit2BackendIntegrationTests.swift */; };
+		ABCDEF000000000000008801 /* SubscriptionLifecycleEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF000000000000008802 /* SubscriptionLifecycleEndToEndTests.swift */; };
+		ABCDEF000000000000000010 /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = ABCDEF00000000000000000D /* Products.storekit */; };
+		ABCDEF000000000000000023 /* MonetizationBrainStoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = ABCDEF000000000000000021 /* MonetizationBrainStoreKit */; };
+		ABCDEF000000000000000024 /* MonetizationBrainCore in Frameworks */ = {isa = PBXBuildFile; productRef = ABCDEF000000000000000022 /* MonetizationBrainCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		ABCDEF000000000000000026 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = ABCDEF000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = ABCDEF000000000000000006;
+			remoteInfo = HostApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		ABCDEF000000000000000008 /* HostApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HostApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABCDEF000000000000000009 /* StoreKitHostedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StoreKitHostedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABCDEF00000000000000000A /* HostApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostApp.swift; sourceTree = "<group>"; };
+		ABCDEF00000000000000000B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ABCDEF000000000000008802 /* SubscriptionLifecycleEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitHostedTests/SubscriptionLifecycleEndToEndTests.swift; sourceTree = "<group>"; };
+		ABCDEF00000000000000000C /* StoreKit2BackendIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StoreKit2BackendIntegrationTests.swift; path = StoreKitHostedTests/StoreKit2BackendIntegrationTests.swift; sourceTree = "<group>"; };
+		ABCDEF00000000000000000D /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = Products.storekit; path = StoreKitHostedTests/Products.storekit; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ABCDEF000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABCDEF000000000000000015 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCDEF000000000000000023 /* MonetizationBrainStoreKit in Frameworks */,
+				ABCDEF000000000000000024 /* MonetizationBrainCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		ABCDEF000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF000000000000000004 /* HostApp */,
+				ABCDEF000000000000000005 /* StoreKitHostedTests */,
+				ABCDEF000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ABCDEF000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF000000000000000008 /* HostApp.app */,
+				ABCDEF000000000000000009 /* StoreKitHostedTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ABCDEF000000000000000004 /* HostApp */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF00000000000000000A /* HostApp.swift */,
+				ABCDEF00000000000000000B /* Info.plist */,
+			);
+			path = HostApp;
+			sourceTree = "<group>";
+		};
+		ABCDEF000000000000000005 /* StoreKitHostedTests */ = {
+			isa = PBXGroup;
+			children = (
+				ABCDEF00000000000000000C /* StoreKit2BackendIntegrationTests.swift */,
+				ABCDEF000000000000008802 /* SubscriptionLifecycleEndToEndTests.swift */,
+				ABCDEF00000000000000000D /* Products.storekit */,
+			);
+			name = StoreKitHostedTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ABCDEF000000000000000006 /* HostApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABCDEF000000000000000018 /* Build configuration list for PBXNativeTarget "HostApp" */;
+			buildPhases = (
+				ABCDEF000000000000000011 /* Sources */,
+				ABCDEF000000000000000012 /* Frameworks */,
+				ABCDEF000000000000000013 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HostApp;
+			productName = HostApp;
+			productReference = ABCDEF000000000000000008 /* HostApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		ABCDEF000000000000000007 /* StoreKitHostedTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABCDEF000000000000000019 /* Build configuration list for PBXNativeTarget "StoreKitHostedTests" */;
+			buildPhases = (
+				ABCDEF000000000000000014 /* Sources */,
+				ABCDEF000000000000000015 /* Frameworks */,
+				ABCDEF000000000000000016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				ABCDEF000000000000000025 /* PBXTargetDependency */,
+			);
+			name = StoreKitHostedTests;
+			packageProductDependencies = (
+				ABCDEF000000000000000021 /* MonetizationBrainStoreKit */,
+				ABCDEF000000000000000022 /* MonetizationBrainCore */,
+			);
+			productName = StoreKitHostedTests;
+			productReference = ABCDEF000000000000000009 /* StoreKitHostedTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ABCDEF000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					ABCDEF000000000000000006 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					ABCDEF000000000000000007 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = ABCDEF000000000000000006;
+					};
+				};
+			};
+			buildConfigurationList = ABCDEF000000000000000017 /* Build configuration list for PBXProject "MonetizationBrainIntegration" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ABCDEF000000000000000002;
+			packageReferences = (
+				ABCDEF000000000000000020 /* XCLocalSwiftPackageReference ".." */,
+			);
+			productRefGroup = ABCDEF000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ABCDEF000000000000000006 /* HostApp */,
+				ABCDEF000000000000000007 /* StoreKitHostedTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ABCDEF000000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABCDEF000000000000000016 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCDEF000000000000000010 /* Products.storekit in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ABCDEF000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCDEF00000000000000000E /* HostApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABCDEF000000000000000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABCDEF00000000000000000F /* StoreKit2BackendIntegrationTests.swift in Sources */,
+				ABCDEF000000000000008801 /* SubscriptionLifecycleEndToEndTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		ABCDEF000000000000000025 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = ABCDEF000000000000000006 /* HostApp */;
+			targetProxy = ABCDEF000000000000000026 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		ABCDEF00000000000000001A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		ABCDEF00000000000000001B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		ABCDEF00000000000000001C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = HostApp/HostApp.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HostApp/Info.plist;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.monetizationbrain.testhost;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		ABCDEF00000000000000001D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = HostApp/HostApp.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HostApp/Info.plist;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.monetizationbrain.testhost;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		ABCDEF00000000000000001E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.monetizationbrain.testhost.storekittests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HostApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HostApp";
+			};
+			name = Debug;
+		};
+		ABCDEF00000000000000001F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.monetizationbrain.testhost.storekittests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HostApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HostApp";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		ABCDEF000000000000000017 /* Build configuration list for PBXProject "MonetizationBrainIntegration" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCDEF00000000000000001A /* Debug */,
+				ABCDEF00000000000000001B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ABCDEF000000000000000018 /* Build configuration list for PBXNativeTarget "HostApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCDEF00000000000000001C /* Debug */,
+				ABCDEF00000000000000001D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ABCDEF000000000000000019 /* Build configuration list for PBXNativeTarget "StoreKitHostedTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCDEF00000000000000001E /* Debug */,
+				ABCDEF00000000000000001F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		ABCDEF000000000000000020 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		ABCDEF000000000000000021 /* MonetizationBrainStoreKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MonetizationBrainStoreKit;
+		};
+		ABCDEF000000000000000022 /* MonetizationBrainCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MonetizationBrainCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = ABCDEF000000000000000001 /* Project object */;
+}

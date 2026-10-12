@@ -1,0 +1,26 @@
+{
+  "tokenPayloadExternal": {
+    "requestDetails": {
+      "requestPackageName": "com.evil.app",
+      "timestampMillis": "__NOW_MS__",
+      "nonce": "__NONCE__"
+    },
+    "appIntegrity": {
+      "appRecognitionVerdict": "PLAY_RECOGNIZED",
+      "packageName": "com.evil.app",
+      "certificateSha256Digest": [
+        "__CERT__"
+      ],
+      "versionCode": "42"
+    },
+    "deviceIntegrity": {
+      "deviceRecognitionVerdict": [
+        "MEETS_DEVICE_INTEGRITY",
+        "MEETS_BASIC_INTEGRITY"
+      ]
+    },
+    "accountDetails": {
+      "appLicensingVerdict": "LICENSED"
+    }
+  }
+}

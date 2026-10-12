@@ -6,8 +6,11 @@ import java.util.Calendar
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,22 +38,26 @@ import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.filled.Verified
@@ -77,10 +84,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -98,6 +107,9 @@ import com.example.data.model.MilestoneEntity
 import com.example.ui.components.DatePickerUtils
 import com.example.ui.components.MilestoneBadgeDashboardCard
 import com.example.ui.components.MilestoneTimelineCard
+import com.example.ui.components.pressClickable
+import com.example.ui.theme.CalendarAccent
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.OnPrimaryFixed
 import com.example.ui.theme.OnPrimaryFixedVariant
 import com.example.ui.theme.OnSurface
@@ -143,6 +155,12 @@ private fun matchesCalendarDay(dateText: String, day: Int, month: Int): Boolean 
     }
   }
   return false
+}
+
+/** Stored daysRemaining/isPast are snapshots from creation time; recompute from the date when it parses. */
+private fun MilestoneEntity.withLiveDays(): MilestoneEntity {
+  val days = DatePickerUtils.daysUntil(dateText) ?: return this
+  return copy(daysRemaining = days, isPast = days < 0)
 }
 
 private fun computeMonthMatrix(calendar: Calendar): List<List<Calendar>> {
@@ -247,7 +265,6 @@ fun CalendarScreen(
 ) {
   val milestones by viewModel.milestones.collectAsState()
   val anniversaryDates by viewModel.anniversaryDates.collectAsState()
-  val upcomingMilestones by viewModel.upcomingMilestones.collectAsState()
   val currentFilter by viewModel.calendarFilter.collectAsState()
   val loveBadges by viewModel.loveBadges.collectAsState()
   val loveDays by viewModel.loveDays.collectAsState()
@@ -281,6 +298,7 @@ fun CalendarScreen(
       title = if (isEnglish) "Delete Anniversary?" else "Xóa ngày kỷ niệm?",
       message = if (isEnglish) "Are you sure you want to delete anniversary '${ann.title}' from the database?" else "Bạn có chắc chắn muốn xóa ngày kỷ niệm '${ann.title}' khỏi cơ sở dữ liệu không?",
       itemName = ann.title,
+      isEnglish = isEnglish,
       onConfirm = {
         viewModel.deleteAnniversaryDate(ann.id)
         anniversaryToDelete = null
@@ -296,6 +314,7 @@ fun CalendarScreen(
       title = if (isEnglish) "Delete Milestone?" else "Xóa ngày kỷ niệm?",
       message = if (isEnglish) "Are you sure you want to delete this milestone from the calendar? All reminders and saved data will be completely removed." else "Bạn có chắc chắn muốn xóa ngày kỷ niệm này khỏi lịch không? Lời nhắc và dữ liệu đã lưu sẽ bị xóa hoàn toàn khỏi thiết bị.",
       itemName = milestone.title,
+      isEnglish = isEnglish,
       onConfirm = {
         viewModel.deleteMilestone(milestone.id)
         milestoneToDelete = null
@@ -306,11 +325,16 @@ fun CalendarScreen(
     )
   }
 
-  val filteredMilestones = remember(milestones, currentFilter) {
+  val liveMilestones = remember(milestones) { milestones.map { it.withLiveDays() } }
+  val filteredMilestones = remember(liveMilestones, currentFilter) {
+    val thisYear = java.time.LocalDate.now().year
     when (currentFilter) {
-      "Sắp tới (3)", "Upcoming (3)" -> milestones.filter { !it.isPast }
-      "Đã qua (1)", "Past (1)" -> milestones.filter { it.isPast }
-      else -> milestones
+      "UPCOMING" -> liveMilestones.filter { !it.isPast }
+      "PAST" -> liveMilestones.filter { it.isPast }
+      "YEAR" -> liveMilestones.filter { ms ->
+        DatePickerUtils.daysUntil(ms.dateText)?.let { java.time.LocalDate.now().plusDays(it.toLong()).year == thisYear } == true
+      }
+      else -> liveMilestones
     }
   }
 
@@ -357,54 +381,100 @@ fun CalendarScreen(
             )
           }
 
-          Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = SurfaceContainer.copy(alpha = 0.8f),
-            shadowElevation = 1.dp
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-            ) {
-              IconButton(
-                onClick = {
-                  if (activeViewMode == CalendarViewMode.MONTH) {
-                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
-                    activeCalendar = nextCal
-                  } else {
-                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, -1) }
-                    activeCalendar = nextCal
-                  }
-                  calendarNavTick++
-                },
-                modifier = Modifier.size(40.dp).testTag("btn_calendar_prev")
+            // Add menu sits in the header so it never covers the list
+            var menuOpen by remember { mutableStateOf(false) }
+            Box {
+              Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                  .size(MinTouchBox)
+                  .clip(CircleShape)
+                  .pressClickable(onClick = { menuOpen = true })
+                  .testTag("btn_fab_add_anniversary")
               ) {
-                Icon(
-                  imageVector = Icons.Filled.ChevronLeft,
-                  contentDescription = if (isEnglish) "Previous" else "Trước",
-                  tint = OnSurfaceVariant,
-                  modifier = Modifier.size(18.dp)
+                Surface(
+                  shape = CircleShape,
+                  shadowElevation = 2.dp,
+                  color = CalendarAccent,
+                  modifier = Modifier.size(40.dp)
+                ) {
+                  Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                      imageVector = Icons.Filled.Add,
+                      contentDescription = if (isEnglish) "Add" else "Thêm",
+                      tint = Color.White,
+                      modifier = Modifier.size(22.dp)
+                    )
+                  }
+                }
+              }
+              DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                  text = { Text(if (isEnglish) "Anniversary date" else "Ngày kỷ niệm") },
+                  leadingIcon = { Icon(Icons.Filled.Favorite, contentDescription = null, tint = Primary) },
+                  onClick = { menuOpen = false; viewModel.openAddAnniversaryDialog() }
+                )
+                DropdownMenuItem(
+                  text = { Text(if (isEnglish) "Milestone" else "Cột mốc") },
+                  leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null, tint = Primary) },
+                  onClick = { menuOpen = false; viewModel.openAddMilestoneDialog() }
                 )
               }
-              IconButton(
-                onClick = {
-                  if (activeViewMode == CalendarViewMode.MONTH) {
-                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
-                    activeCalendar = nextCal
-                  } else {
-                    val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, 1) }
-                    activeCalendar = nextCal
-                  }
-                  calendarNavTick++
-                },
-                modifier = Modifier.size(40.dp).testTag("btn_calendar_next")
+            }
+
+            Surface(
+              shape = RoundedCornerShape(20.dp),
+              color = SurfaceContainer.copy(alpha = 0.8f),
+              shadowElevation = 1.dp
+            ) {
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
               ) {
-                Icon(
-                  imageVector = Icons.Filled.ChevronRight,
-                  contentDescription = if (isEnglish) "Next" else "Sau",
-                  tint = OnSurfaceVariant,
-                  modifier = Modifier.size(18.dp)
-                )
+                IconButton(
+                  onClick = {
+                    if (activeViewMode == CalendarViewMode.MONTH) {
+                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
+                      activeCalendar = nextCal
+                    } else {
+                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, -1) }
+                      activeCalendar = nextCal
+                    }
+                    calendarNavTick++
+                  },
+                  modifier = Modifier.size(MinTouchBox).testTag("btn_calendar_prev")
+                ) {
+                  Icon(
+                    imageVector = Icons.Filled.ChevronLeft,
+                    contentDescription = if (isEnglish) "Previous" else "Trước",
+                    tint = OnSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                  )
+                }
+                IconButton(
+                  onClick = {
+                    if (activeViewMode == CalendarViewMode.MONTH) {
+                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
+                      activeCalendar = nextCal
+                    } else {
+                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, 1) }
+                      activeCalendar = nextCal
+                    }
+                    calendarNavTick++
+                  },
+                  modifier = Modifier.size(MinTouchBox).testTag("btn_calendar_next")
+                ) {
+                  Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = if (isEnglish) "Next" else "Sau",
+                    tint = OnSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                  )
+                }
               }
             }
           }
@@ -413,23 +483,15 @@ fun CalendarScreen(
 
       // 2. Filter Pills Row
       item {
-        val filterOptions = if (isEnglish) {
-          listOf(
-            Pair("All (4)", Icons.Filled.AutoAwesome),
-            Pair("Badges (12)", Icons.Filled.EmojiEvents),
-            Pair("Upcoming (3)", Icons.Filled.HourglassTop),
-            Pair("Past (1)", Icons.Filled.HistoryEdu),
-            Pair("Year 2026", Icons.Filled.Favorite)
-          )
-        } else {
-          listOf(
-            Pair("Tất cả (4)", Icons.Filled.AutoAwesome),
-            Pair("Huy Hiệu (12)", Icons.Filled.EmojiEvents),
-            Pair("Sắp tới (3)", Icons.Filled.HourglassTop),
-            Pair("Đã qua (1)", Icons.Filled.HistoryEdu),
-            Pair("Năm 2026", Icons.Filled.Favorite)
-          )
-        }
+        // Language-independent keys are the state; labels (with live counts) are display only.
+        val year = java.time.LocalDate.now().year
+        val filterOptions = listOf(
+          Triple("ALL", (if (isEnglish) "All" else "Tất cả") + " (${liveMilestones.size})", Icons.Filled.AutoAwesome),
+          Triple("BADGES", (if (isEnglish) "Badges" else "Huy Hiệu") + " (${loveBadges.size})", Icons.Filled.EmojiEvents),
+          Triple("UPCOMING", (if (isEnglish) "Upcoming" else "Sắp tới") + " (${liveMilestones.count { !it.isPast }})", Icons.Filled.HourglassTop),
+          Triple("PAST", (if (isEnglish) "Past" else "Đã qua") + " (${liveMilestones.count { it.isPast }})", Icons.Filled.HistoryEdu),
+          Triple("YEAR", (if (isEnglish) "Year $year" else "Năm $year"), Icons.Filled.Favorite)
+        )
 
         Row(
           modifier = Modifier
@@ -437,26 +499,25 @@ fun CalendarScreen(
             .horizontalScroll(rememberScrollState()),
           horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-          filterOptions.forEach { (filterName, icon) ->
-            val isSelected = currentFilter == filterName ||
-              (filterName == "All (4)" && currentFilter == "Tất cả (4)") // VM default is Vietnamese
+          filterOptions.forEach { (filterKey, filterName, icon) ->
+            val isSelected = currentFilter == filterKey
             Surface(
               shape = RoundedCornerShape(24.dp),
               color = if (isSelected) Color.Transparent else SurfaceContainerLowest.copy(alpha = 0.85f),
-              shadowElevation = if (isSelected) 4.dp else 1.dp,
+              shadowElevation = if (isSelected) 0.dp else 1.dp,
               modifier = Modifier
                 .clip(RoundedCornerShape(24.dp))
                 .then(
                   if (isSelected) {
                     Modifier.background(
                       Brush.horizontalGradient(
-                        listOf(Primary, PrimaryContainer)
+                        listOf(Primary, CalendarAccent)
                       )
                     )
                   } else Modifier
                 )
-                .clickable { viewModel.setCalendarFilter(filterName) }
-                .testTag("filter_pill_$filterName")
+                .pressClickable(onClick = { viewModel.setCalendarFilter(filterKey) })
+                .testTag("filter_pill_$filterKey")
             ) {
               Row(
                 modifier = Modifier
@@ -757,18 +818,14 @@ fun CalendarScreen(
         }
       }
 
-      // Local Notification Scheduler for Love Milestones from Firestore
-      item {
-        FirestoreMilestonesSchedulerCard(
-          upcomingMilestones = upcomingMilestones,
-          isEnglish = isEnglish,
-          onTestNotification = { viewModel.triggerTestMilestoneNotification() },
-          onSyncFirestore = { viewModel.syncUpcomingMilestonesFromFirestore() }
+      // Dedicated Room-Persisted Anniversary Dates Section (keyed: expand state must survive filter changes)
+      item(key = "anniversaries") {
+        // Collapsible: header tap toggles the list; expanded by default
+        var anniversaryExpanded by rememberSaveable { mutableStateOf(true) }
+        val anniversaryChevron by animateFloatAsState(
+          targetValue = if (anniversaryExpanded) 180f else 0f,
+          label = "anniversary_section_chevron"
         )
-      }
-
-      // Dedicated Room-Persisted Anniversary Dates Section
-      item {
         Card(
           shape = RoundedCornerShape(24.dp),
           colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
@@ -779,7 +836,9 @@ fun CalendarScreen(
         ) {
           Column(modifier = Modifier.padding(16.dp)) {
             Row(
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier
+                .fillMaxWidth()
+                .clickable { anniversaryExpanded = !anniversaryExpanded },
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically
             ) {
@@ -816,26 +875,48 @@ fun CalendarScreen(
                 }
               }
 
+              Icon(
+                imageVector = Icons.Filled.ExpandMore,
+                contentDescription = if (isEnglish) "Expand" else "Mở rộng",
+                tint = OnSurfaceVariant,
+                modifier = Modifier
+                  .size(22.dp)
+                  .rotate(anniversaryChevron)
+              )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            AnimatedVisibility(
+              visible = anniversaryExpanded,
+              enter = expandVertically() + fadeIn(),
+              exit = shrinkVertically() + fadeOut()
+            ) {
+              Column {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            if (anniversaryDates.isEmpty()) {
-              Text(
-                text = if (isEnglish) "Tap + to add your first date" else "Nhấn + để thêm ngày đầu tiên",
-                fontSize = 12.sp,
-                color = OnSurfaceVariant,
-                modifier = Modifier.padding(vertical = 8.dp)
-              )
-            } else {
-              Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                anniversaryDates.forEach { ann ->
-                  AnniversaryDateRow(
-                    item = ann,
-                    isEnglish = isEnglish,
-                    onToggleNotification = { viewModel.toggleAnniversaryNotification(ann) },
-                    onDelete = { anniversaryToDelete = ann }
+                if (anniversaryDates.isEmpty()) {
+                  Text(
+                    text = if (isEnglish) "Tap + to add your first date" else "Nhấn + để thêm ngày đầu tiên",
+                    fontSize = 12.sp,
+                    color = OnSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp)
                   )
+                } else {
+                  // Soonest first; dates already passed go last, unparseable ones at the very end
+                  val ordered = remember(anniversaryDates) {
+                    anniversaryDates.sortedBy { a ->
+                      DatePickerUtils.daysUntil(a.dateText)?.let { if (it < 0) it + 100_000 else it } ?: Int.MAX_VALUE
+                    }
+                  }
+                  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ordered.forEach { ann ->
+                      AnniversaryDateRow(
+                        item = ann,
+                        isEnglish = isEnglish,
+                        onToggleNotification = { viewModel.toggleAnniversaryNotification(ann) },
+                        onDelete = { anniversaryToDelete = ann }
+                      )
+                    }
+                  }
                 }
               }
             }
@@ -844,7 +925,7 @@ fun CalendarScreen(
       }
 
       // 4. Milestone Cards or Heart Badge Cards Stream
-      if (currentFilter == "Huy Hiệu (12)" || currentFilter == "Badges (12)") {
+      if (currentFilter == "BADGES") {
         item {
           MilestoneBadgeDashboardCard(
             viewModel = viewModel,
@@ -881,48 +962,7 @@ fun CalendarScreen(
         }
       }
 
-      // room so the floating + never covers the last card
-      item { Spacer(modifier = Modifier.height(72.dp)) }
-    }
-
-    // 6. One "+" FAB; the menu picks what to create (reminder on/off is in the anniversary dialog)
-    Box(
-      modifier = Modifier
-        .align(Alignment.BottomEnd)
-        .padding(end = 16.dp, bottom = 85.dp)
-    ) {
-      var menuOpen by remember { mutableStateOf(false) }
-      Surface(
-        shape = CircleShape,
-        shadowElevation = 8.dp,
-        color = Color(0xFFFF2D75),
-        modifier = Modifier
-          .size(52.dp)
-          .clip(CircleShape)
-          .clickable { menuOpen = true }
-          .testTag("btn_fab_add_anniversary")
-      ) {
-        Box(contentAlignment = Alignment.Center) {
-          Icon(
-            imageVector = Icons.Filled.Add,
-            contentDescription = if (isEnglish) "Add" else "Thêm",
-            tint = Color.White,
-            modifier = Modifier.size(26.dp)
-          )
-        }
-      }
-      DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-        DropdownMenuItem(
-          text = { Text(if (isEnglish) "Anniversary date" else "Ngày kỷ niệm") },
-          leadingIcon = { Icon(Icons.Filled.Favorite, contentDescription = null, tint = Primary) },
-          onClick = { menuOpen = false; viewModel.openAddAnniversaryDialog() }
-        )
-        DropdownMenuItem(
-          text = { Text(if (isEnglish) "Milestone" else "Cột mốc") },
-          leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null, tint = Primary) },
-          onClick = { menuOpen = false; viewModel.openAddMilestoneDialog() }
-        )
-      }
+      item { Spacer(modifier = Modifier.height(24.dp)) }
     }
   }
 }
@@ -934,91 +974,120 @@ fun AnniversaryDateRow(
   onToggleNotification: () -> Unit,
   onDelete: () -> Unit
 ) {
+  // Tap the row to reveal the notification toggle and delete
+  var expanded by remember { mutableStateOf(false) }
+  val chevronRotation by animateFloatAsState(
+    targetValue = if (expanded) 180f else 0f,
+    label = "anniversary_chevron"
+  )
   Surface(
+    onClick = { expanded = !expanded },
     shape = RoundedCornerShape(16.dp),
     color = SurfaceContainerLowest,
     modifier = Modifier
       .fillMaxWidth()
       .testTag("anniversary_item_${item.id}")
   ) {
-    Row(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 12.dp, vertical = 10.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
+    Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
       Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.weight(1f)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
       ) {
-        Box(
-          modifier = Modifier
-            .size(38.dp)
-            .clip(CircleShape)
-            .background(PrimaryFixed.copy(alpha = 0.5f)),
-          contentAlignment = Alignment.Center
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
+          modifier = Modifier.weight(1f)
         ) {
-          Icon(
-            imageVector = Icons.Filled.CalendarToday,
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(18.dp)
-          )
+          Box(
+            modifier = Modifier
+              .size(38.dp)
+              .clip(CircleShape)
+              .background(PrimaryFixed.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Filled.CalendarToday,
+              contentDescription = null,
+              tint = Primary,
+              modifier = Modifier.size(18.dp)
+            )
+          }
+          Column(modifier = Modifier.weight(1f)) {
+            Text(
+              text = item.title,
+              fontSize = 13.5.sp,
+              fontWeight = FontWeight.Bold,
+              color = OnSurface,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis
+            )
+            Text(
+              text = buildString {
+                append(item.dateText)
+                append(if (item.notificationEnabled) " · 🔔" else " · 🔕")
+                if (item.notificationEnabled && item.reminderDaysBefore > 0) {
+                  append(if (isEnglish) " ${item.reminderDaysBefore}d before" else " trước ${item.reminderDaysBefore} ngày")
+                }
+              },
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              fontSize = 11.sp,
+              color = if (item.notificationEnabled) Primary.copy(alpha = 0.85f) else OnSurfaceVariant.copy(alpha = 0.5f),
+              fontWeight = if (item.notificationEnabled) FontWeight.Medium else FontWeight.Normal
+            )
+          }
         }
-        Column(modifier = Modifier.weight(1f)) {
-          Text(
-            text = item.title,
-            fontSize = 13.5.sp,
-            fontWeight = FontWeight.Bold,
-            color = OnSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
-          Text(
-            text = buildString {
-              append(item.dateText)
-              append(if (item.notificationEnabled) " · 🔔" else " · 🔕")
-              if (item.notificationEnabled && item.reminderDaysBefore > 0) {
-                append(if (isEnglish) " ${item.reminderDaysBefore}d before" else " trước ${item.reminderDaysBefore} ngày")
-              }
-            },
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 11.sp,
-            color = if (item.notificationEnabled) Primary.copy(alpha = 0.85f) else OnSurfaceVariant.copy(alpha = 0.5f),
-            fontWeight = if (item.notificationEnabled) FontWeight.Medium else FontWeight.Normal
-          )
-        }
+
+        Icon(
+          imageVector = Icons.Filled.ExpandMore,
+          contentDescription = if (isEnglish) "Expand" else "Mở rộng",
+          tint = OnSurfaceVariant,
+          modifier = Modifier
+            .size(20.dp)
+            .rotate(chevronRotation)
+        )
       }
 
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(0.dp)
+      AnimatedVisibility(
+        visible = expanded,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut()
       ) {
-        IconButton(
-          onClick = onToggleNotification,
-          modifier = Modifier.size(44.dp)
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+          horizontalArrangement = Arrangement.End,
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          Icon(
-            imageVector = if (item.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
-            contentDescription = if (isEnglish) "Anniversary notification" else "Thông báo kỷ niệm",
-            tint = if (item.notificationEnabled) Primary else OnSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier.size(18.dp)
-          )
-        }
+          IconButton(
+            onClick = onToggleNotification,
+            modifier = Modifier
+              .size(MinTouchBox)
+              .testTag("btn_anniversary_notify_${item.id}")
+          ) {
+            Icon(
+              imageVector = if (item.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
+              contentDescription = if (isEnglish) "Anniversary notification" else "Thông báo kỷ niệm",
+              tint = if (item.notificationEnabled) Primary else OnSurfaceVariant.copy(alpha = 0.6f),
+              modifier = Modifier.size(18.dp)
+            )
+          }
 
-        IconButton(
-          onClick = onDelete,
-          modifier = Modifier.size(44.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Delete,
-            contentDescription = if (isEnglish) "Delete anniversary" else "Xóa ngày kỷ niệm",
-            tint = OnSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier.size(18.dp)
-          )
+          IconButton(
+            onClick = onDelete,
+            modifier = Modifier
+              .size(MinTouchBox)
+              .testTag("btn_anniversary_delete_${item.id}")
+          ) {
+            Icon(
+              imageVector = Icons.Filled.Delete,
+              contentDescription = if (isEnglish) "Delete anniversary" else "Xóa ngày kỷ niệm",
+              tint = OnSurfaceVariant.copy(alpha = 0.6f),
+              modifier = Modifier.size(18.dp)
+            )
+          }
         }
       }
     }
@@ -1036,7 +1105,10 @@ fun MilestoneCard(
   onDelete: () -> Unit,
   onSetAlarm: () -> Unit
 ) {
+  // Tap the card to reveal notification, alarm, edit and delete
+  var expanded by remember { mutableStateOf(false) }
   Card(
+    onClick = { expanded = !expanded },
     shape = RoundedCornerShape(24.dp),
     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -1072,6 +1144,11 @@ fun MilestoneCard(
               val tagIcon = when {
                 milestone.isImportant -> Icons.Filled.Stars
                 milestone.categoryTag.contains("Sinh Nhật", ignoreCase = true) -> Icons.Filled.Cake
+                // Same icons as the AddMilestoneDialog category picker.
+                milestone.categoryTag == "Hẹn Hò" -> Icons.Filled.LocalCafe
+                milestone.categoryTag == "Du Lịch" -> Icons.Filled.Flight
+                milestone.categoryTag == "Tình Yêu" -> Icons.Filled.Favorite
+                milestone.categoryTag == "Kỷ Niệm" -> Icons.Filled.Star
                 milestone.isPast -> Icons.Filled.FlightTakeoff
                 else -> Icons.Filled.VolunteerActivism
               }
@@ -1090,17 +1167,20 @@ fun MilestoneCard(
             }
           }
 
-          // Secondary Tag
-          Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = SurfaceContainer
-          ) {
-            Text(
-              text = milestone.secondaryTag,
-              fontSize = 11.sp,
-              color = OnSurfaceVariant,
-              modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+          // Secondary Tag. "Cột mốc mới" is only the placeholder AddMilestoneDialog writes; the
+          // "Custom" chip below already says the same thing, so skip it.
+          if (milestone.secondaryTag.isNotBlank() && milestone.secondaryTag != "Cột mốc mới") {
+            Surface(
+              shape = RoundedCornerShape(20.dp),
+              color = SurfaceContainer
+            ) {
+              Text(
+                text = milestone.secondaryTag,
+                fontSize = 11.sp,
+                color = OnSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+              )
+            }
           }
 
           if (milestone.isUserCreated) {
@@ -1147,66 +1227,19 @@ fun MilestoneCard(
           }
         }
 
-        // Action Icons Row: Alarm + Notification + Delete
-        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-        Row(
-          horizontalArrangement = Arrangement.spacedBy(2.dp),
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          // Set Alarm button
-          IconButton(
-            onClick = onSetAlarm,
-            modifier = Modifier
-              .size(34.dp)
-              .clip(CircleShape)
-              .background(SurfaceContainer)
-              .testTag("btn_alarm_milestone_${milestone.id}")
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Alarm,
-              contentDescription = if (isEnglish) "Set milestone alarm" else "Cài báo thức kỷ niệm",
-              tint = Primary,
-              modifier = Modifier.size(17.dp)
-            )
-          }
-
-          // Notification Toggle
-          if (!milestone.isPast) {
-            IconButton(
-              onClick = onNotificationToggle,
-              modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(SurfaceContainer)
-                .testTag("btn_notif_milestone_${milestone.id}")
-            ) {
-              Icon(
-                imageVector = if (milestone.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
-                contentDescription = "Notification",
-                tint = if (milestone.notificationEnabled) Primary else OnSurfaceVariant,
-                modifier = Modifier.size(17.dp)
-              )
-            }
-          }
-
-          // Delete milestone button
-          IconButton(
-            onClick = onDelete,
-            modifier = Modifier
-              .size(34.dp)
-              .clip(CircleShape)
-              .background(SurfaceContainer)
-              .testTag("btn_delete_milestone_${milestone.id}")
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Close,
-              contentDescription = if (isEnglish) "Delete milestone" else "Xóa kỷ niệm",
-              tint = OnSurfaceVariant,
-              modifier = Modifier.size(17.dp)
-            )
-          }
-        }
-        }
+        // Chevron: shows that the card expands; the actions live in the expanded area below
+        val chevronRotation by animateFloatAsState(
+          targetValue = if (expanded) 180f else 0f,
+          label = "milestone_chevron"
+        )
+        Icon(
+          imageVector = Icons.Filled.ExpandMore,
+          contentDescription = if (isEnglish) "Expand" else "Mở rộng",
+          tint = OnSurfaceVariant,
+          modifier = Modifier
+            .size(22.dp)
+            .rotate(chevronRotation)
+        )
       }
 
       Spacer(modifier = Modifier.height(8.dp))
@@ -1222,6 +1255,7 @@ fun MilestoneCard(
           modifier = Modifier
             .size(48.dp)
             .clip(RoundedCornerShape(12.dp))
+            .background(PrimaryFixed.copy(alpha = 0.4f)) // visible placeholder while offline / loading
         ) {
           AsyncImage(
             model = milestone.imageUrl,
@@ -1247,11 +1281,7 @@ fun MilestoneCard(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
           ) {
             Icon(
-              imageVector = when {
-                milestone.categoryTag.contains("Sinh Nhật") -> Icons.Filled.Cake
-                milestone.isPast -> Icons.Filled.PhotoLibrary
-                else -> Icons.Filled.CalendarToday
-              },
+              imageVector = if (milestone.isPast) Icons.Filled.PhotoLibrary else Icons.Filled.CalendarToday,
               contentDescription = null,
               tint = Primary,
               modifier = Modifier.size(13.dp)
@@ -1290,47 +1320,14 @@ fun MilestoneCard(
               )
             }
           }
-        } else {
-          // Countdown pill
-          Box(
-            modifier = Modifier
-              .clip(RoundedCornerShape(16.dp))
-              .then(
-                if (milestone.isImportant) {
-                  Modifier
-                    .shadow(4.dp, RoundedCornerShape(16.dp))
-                    .background(
-                      Brush.verticalGradient(
-                        listOf(RoseGradientStart, RoseGradientMid)
-                      )
-                    )
-                } else {
-                  Modifier.background(SurfaceContainerHigh)
-                }
-              )
-              .padding(horizontal = 10.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-          ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-              Text(
-                text = "${milestone.daysRemaining}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = if (milestone.isImportant) Color.White else Primary,
-                lineHeight = 22.sp
-              )
-              Text(
-                text = if (isEnglish) "days" else "ngày",
-                fontSize = 9.sp,
-                color = if (milestone.isImportant) Color.White.copy(alpha = 0.9f) else OnSurfaceVariant
-              )
-            }
-          }
         }
       }
 
       // Progress bar if present (e.g. 1000 days)
       if (milestone.progressPercent != null) {
+        // Seed rows store a 0..1 fraction, the card expects 0..100; normalize so "0.1%" can't show.
+        val pct = (if (milestone.progressPercent <= 1f) milestone.progressPercent * 100f else milestone.progressPercent)
+          .coerceIn(0f, 100f)
         Spacer(modifier = Modifier.height(8.dp))
         Row(
           modifier = Modifier.fillMaxWidth(),
@@ -1338,7 +1335,7 @@ fun MilestoneCard(
           horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
           LinearProgressIndicator(
-            progress = { milestone.progressPercent / 100f },
+            progress = { pct / 100f },
             modifier = Modifier
               .weight(1f)
               .height(6.dp)
@@ -1348,7 +1345,7 @@ fun MilestoneCard(
             strokeCap = StrokeCap.Round
           )
           Text(
-            text = "${milestone.progressPercent}%",
+            text = "${pct.toInt()}%",
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             color = Primary
@@ -1363,119 +1360,10 @@ fun MilestoneCard(
       // seed rows and would silently break once those are deleted or a real milestone gets a
       // new id. categoryTag is the actual semantic field (also user-editable in
       // AddMilestoneDialog) and matches the seed data's own "Cột Mốc"/"Kỷ Niệm" tags exactly.
+      // Gift ideas on every card. Past custom dates show the album instead.
+      // Edit and delete live in the expanded area below.
       when {
-        milestone.categoryTag == "Cột Mốc" -> {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = PrimaryFixed.copy(alpha = 0.7f),
-              modifier = Modifier
-                .weight(1f)
-                .clickable { onGiftClick() }
-            ) {
-              Row(
-                modifier = Modifier.padding(vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.CardGiftcard,
-                  contentDescription = null,
-                  tint = OnPrimaryFixedVariant,
-                  modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                  text = if (isEnglish) "Gift ideas" else "Gợi ý quà",
-                  fontSize = 12.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = OnPrimaryFixedVariant
-                )
-              }
-            }
-
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = SurfaceContainerHighest.copy(alpha = 0.7f),
-              modifier = Modifier.clickable { onEditClick() }
-            ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.EditCalendar,
-                  contentDescription = null,
-                  tint = OnSurfaceVariant,
-                  modifier = Modifier.size(15.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                  text = if (isEnglish) "Edit" else "Chỉnh sửa",
-                  fontSize = 12.sp,
-                  fontWeight = FontWeight.Medium,
-                  color = OnSurfaceVariant
-                )
-              }
-            }
-          }
-        }
-        milestone.categoryTag == "Kỷ Niệm" -> {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = SurfaceContainerHighest.copy(alpha = 0.8f),
-              modifier = Modifier
-                .weight(1f)
-                .clickable { onGiftClick() }
-            ) {
-              Row(
-                modifier = Modifier.padding(vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.CardGiftcard,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                  text = if (isEnglish) "Gift ideas" else "Gợi ý quà",
-                  fontSize = 12.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = OnSurface
-                )
-              }
-            }
-
-            Surface(
-              shape = CircleShape,
-              color = SurfaceContainerHighest.copy(alpha = 0.8f),
-              modifier = Modifier
-                .size(36.dp)
-                .clickable { onEditClick() }
-            ) {
-              Box(contentAlignment = Alignment.Center) {
-                Icon(
-                  imageVector = Icons.Filled.MoreHoriz,
-                  contentDescription = "More",
-                  tint = OnSurfaceVariant,
-                  modifier = Modifier.size(18.dp)
-                )
-              }
-            }
-          }
-        }
-        milestone.isPast -> {
+        milestone.isPast && milestone.categoryTag != "Cột Mốc" && milestone.categoryTag != "Kỷ Niệm" -> {
           Surface(
             shape = RoundedCornerShape(50.dp),
             color = SurfaceContainerLow,
@@ -1510,7 +1398,7 @@ fun MilestoneCard(
             color = PrimaryFixed.copy(alpha = 0.7f),
             modifier = Modifier
               .fillMaxWidth()
-              .clickable { onEditClick() }
+              .clickable { onGiftClick() }
           ) {
             Row(
               modifier = Modifier.padding(vertical = 7.dp),
@@ -1518,14 +1406,14 @@ fun MilestoneCard(
               horizontalArrangement = Arrangement.Center
             ) {
               Icon(
-                imageVector = Icons.Filled.EditCalendar,
+                imageVector = Icons.Filled.CardGiftcard,
                 contentDescription = null,
                 tint = OnPrimaryFixedVariant,
                 modifier = Modifier.size(16.dp)
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (isEnglish) "Plan a date" else "Lên kế hoạch",
+                text = if (isEnglish) "Gift ideas" else "Gợi ý quà",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = OnPrimaryFixedVariant
@@ -1534,176 +1422,104 @@ fun MilestoneCard(
           }
         }
       }
-    }
-  }
-}
 
-@Composable
-fun FirestoreMilestonesSchedulerCard(
-  upcomingMilestones: List<com.example.alarm.LoveMilestoneInfo>,
-  isEnglish: Boolean = false,
-  onTestNotification: () -> Unit,
-  onSyncFirestore: () -> Unit
-) {
-  Card(
-    shape = RoundedCornerShape(24.dp),
-    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
-    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-    modifier = Modifier
-      .fillMaxWidth()
-      .border(
-        width = 1.dp,
-        brush = Brush.horizontalGradient(listOf(Primary.copy(alpha = 0.4f), Secondary.copy(alpha = 0.4f))),
-        shape = RoundedCornerShape(24.dp)
-      )
-      .testTag("firestore_milestones_scheduler_card")
-  ) {
-    Column(modifier = Modifier.padding(16.dp)) {
-      // Header
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+      // Expanded area: tap the card to show the bell (notify + alarm), edit and delete
+      AnimatedVisibility(
+        visible = expanded,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut()
       ) {
+        var menuOpen by remember { mutableStateOf(false) }
         Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          Box(
-            modifier = Modifier
-              .size(40.dp)
-              .clip(CircleShape)
-              .background(Brush.linearGradient(listOf(Primary, Secondary))),
-            contentAlignment = Alignment.Center
-          ) {
-            Icon(
-              imageVector = Icons.Filled.NotificationsActive,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(22.dp)
-            )
-          }
-          Column {
-            Text(
-              text = if (isEnglish) "Love Milestones Schedule" else "Lịch Báo Cột Mốc Tình Yêu",
-              fontWeight = FontWeight.Bold,
-              fontSize = 15.sp,
-              color = OnSurface
-            )
-          }
-        }
-      }
-
-      Spacer(modifier = Modifier.height(12.dp))
-
-
-      // List of upcoming milestones
-      if (upcomingMilestones.isEmpty()) {
-        Box(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp),
-          contentAlignment = Alignment.Center
+            .padding(top = 10.dp),
+          horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          Text(
-            text = if (isEnglish) "Syncing upcoming milestones from anniversary... 💕" else "Đang đồng bộ các cột mốc tiếp theo từ ngày yêu Firestore... 💕",
-            fontSize = 12.sp,
-            color = OnSurfaceVariant
-          )
-        }
-      } else {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          upcomingMilestones.take(4).forEach { ms ->
-            Surface(
-              shape = RoundedCornerShape(14.dp),
-              color = SurfaceContainerLowest,
-              border = BorderStroke(0.5.dp, Primary.copy(alpha = 0.2f)),
-              modifier = Modifier.fillMaxWidth()
+          // One bell: its menu holds the notification toggle and the custom alarm
+          Box {
+            val bellOn = !milestone.isPast && milestone.notificationEnabled
+            IconButton(
+              onClick = { menuOpen = true },
+              modifier = Modifier
+                .size(MinTouchBox)
+                .clip(CircleShape)
+                .background(SurfaceContainer)
+                .testTag("btn_bell_milestone_${milestone.id}")
             ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Row(
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.spacedBy(10.dp),
-                  modifier = Modifier.weight(1f)
-                ) {
-                  Text(text = ms.emoji, fontSize = 20.sp)
-                  Column {
-                    Text(
-                      text = ms.title,
-                      fontSize = 13.sp,
-                      fontWeight = FontWeight.Bold,
-                      color = OnSurface
+              Icon(
+                imageVector = if (bellOn) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
+                contentDescription = if (isEnglish) "Reminders" else "Nhắc nhở",
+                tint = if (bellOn) Primary else OnSurfaceVariant,
+                modifier = Modifier.size(17.dp)
+              )
+            }
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+              if (!milestone.isPast) {
+                DropdownMenuItem(
+                  modifier = Modifier.testTag("menu_notif_milestone_${milestone.id}"),
+                  text = { Text(if (isEnglish) "Notify" else "Thông báo") },
+                  leadingIcon = {
+                    Icon(
+                      imageVector = if (milestone.notificationEnabled) Icons.Filled.NotificationsActive else Icons.Outlined.Notifications,
+                      contentDescription = null
                     )
-                    Text(
-                      text = ms.formattedDate,
-                      fontSize = 11.sp,
-                      color = OnSurfaceVariant
-                    )
+                  },
+                  trailingIcon = {
+                    if (milestone.notificationEnabled) {
+                      Icon(imageVector = Icons.Filled.Check, contentDescription = null, tint = Primary)
+                    }
+                  },
+                  onClick = {
+                    menuOpen = false
+                    onNotificationToggle()
                   }
-                }
-
-                Surface(
-                  shape = RoundedCornerShape(12.dp),
-                  color = if (ms.daysRemaining <= 7) Primary.copy(alpha = 0.15f) else SurfaceContainerHigh
-                ) {
-                  Text(
-                    text = if (ms.daysRemaining == 0) (if (isEnglish) "Today! 🎉" else "Hôm nay! 🎉") else (if (isEnglish) "${ms.daysRemaining} days left" else "Còn ${ms.daysRemaining} ngày"),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (ms.daysRemaining <= 7) Primary else OnSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                  )
-                }
+                )
               }
+              DropdownMenuItem(
+                modifier = Modifier.testTag("menu_alarm_milestone_${milestone.id}"),
+                text = { Text(if (isEnglish) "Alarm" else "Báo thức") },
+                leadingIcon = { Icon(imageVector = Icons.Filled.Alarm, contentDescription = null) },
+                onClick = {
+                  menuOpen = false
+                  onSetAlarm()
+                }
+              )
             }
           }
-        }
-      }
 
-      Spacer(modifier = Modifier.height(14.dp))
+          IconButton(
+            onClick = onEditClick,
+            modifier = Modifier
+              .size(MinTouchBox)
+              .clip(CircleShape)
+              .background(SurfaceContainer)
+              .testTag("btn_edit_milestone_${milestone.id}")
+          ) {
+            Icon(
+              imageVector = Icons.Filled.Edit,
+              contentDescription = if (isEnglish) "Edit milestone" else "Chỉnh sửa",
+              tint = OnSurfaceVariant,
+              modifier = Modifier.size(17.dp)
+            )
+          }
 
-      // Action Buttons
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        Button(
-          onClick = onTestNotification,
-          shape = RoundedCornerShape(16.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
-          modifier = Modifier
-            .weight(1f)
-            .testTag("test_milestone_notification_button")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.NotificationsActive,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(text = if (isEnglish) "Test Alert" else "Thử Chuông Báo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        }
-
-        OutlinedButton(
-          onClick = onSyncFirestore,
-          shape = RoundedCornerShape(16.dp),
-          border = BorderStroke(1.dp, Primary.copy(alpha = 0.5f)),
-          modifier = Modifier
-            .weight(1f)
-            .testTag("resync_firestore_milestones_button")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Alarm,
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(16.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(text = if (isEnglish) "Sync Firestore" else "Đồng Bộ Firestore", fontSize = 12.sp, color = Primary, fontWeight = FontWeight.SemiBold)
+          IconButton(
+            onClick = onDelete,
+            modifier = Modifier
+              .size(MinTouchBox)
+              .clip(CircleShape)
+              .background(SurfaceContainer)
+              .testTag("btn_delete_milestone_${milestone.id}")
+          ) {
+            Icon(
+              imageVector = Icons.Filled.Close,
+              contentDescription = if (isEnglish) "Delete milestone" else "Xóa kỷ niệm",
+              tint = OnSurfaceVariant,
+              modifier = Modifier.size(17.dp)
+            )
+          }
         }
       }
     }

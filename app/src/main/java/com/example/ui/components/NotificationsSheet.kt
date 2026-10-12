@@ -32,9 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.alarm.LoveMilestoneInfo
+import com.example.data.model.CustomReminderEntity
+import com.example.ui.theme.AppDensity
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.Primary
@@ -42,7 +44,41 @@ import com.example.ui.theme.PrimaryFixed
 import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
 
-private data class NotificationItem(val emoji: String, val title: String, val whenText: String, val urgent: Boolean)
+internal data class NotificationItem(val emoji: String, val title: String, val whenText: String, val urgent: Boolean)
+
+internal fun buildNotificationItems(
+  milestones: List<LoveMilestoneInfo>,
+  reminders: List<CustomReminderEntity>,
+  isEnglish: Boolean
+): List<NotificationItem> {
+  val fromMilestones = milestones.map {
+    val whenText = when (it.daysRemaining) {
+      0 -> if (isEnglish) "Today" else "Hôm nay"
+      1 -> if (isEnglish) "Tomorrow" else "Ngày mai"
+      else -> if (isEnglish) "${it.daysRemaining}d · ${it.formattedDate}" else "${it.daysRemaining} ngày · ${it.formattedDate}"
+    }
+    NotificationItem(it.emoji, it.title, whenText, it.daysRemaining <= 3)
+  }
+  val fromReminders = reminders.map {
+    NotificationItem("⏰", it.title, it.alarmTimeFormatted.ifBlank { it.dateText }, false)
+  }
+  return fromMilestones + fromReminders
+}
+
+internal fun topNotification(items: List<NotificationItem>): NotificationItem? =
+  items.firstOrNull { it.urgent } ?: items.firstOrNull()
+
+/** The most important unread notification, or null when nothing is pending / all read. */
+@Composable
+internal fun rememberTopNotification(viewModel: InLoveViewModel): NotificationItem? {
+  val milestones by viewModel.upcomingMilestones.collectAsState()
+  val reminders by viewModel.customReminders.collectAsState()
+  val isAllRead by viewModel.isAllNotificationsRead.collectAsState()
+  val isEnglish = viewModel.appLanguage.collectAsState().value == AppLanguage.EN
+  return remember(milestones, reminders, isAllRead, isEnglish) {
+    if (isAllRead) null else topNotification(buildNotificationItems(milestones, reminders, isEnglish))
+  }
+}
 
 /** True when there is something to announce and the user has not yet marked it all read. */
 @Composable
@@ -62,26 +98,14 @@ fun NotificationsSheet(viewModel: InLoveViewModel, onDismiss: () -> Unit) {
   val isAllRead by viewModel.isAllNotificationsRead.collectAsState()
   val isEnglish = viewModel.appLanguage.collectAsState().value == AppLanguage.EN
 
-  val items = remember(milestones, reminders, isEnglish) {
-    val fromMilestones = milestones.map {
-      val whenText = when (it.daysRemaining) {
-        0 -> if (isEnglish) "Today" else "Hôm nay"
-        1 -> if (isEnglish) "Tomorrow" else "Ngày mai"
-        else -> if (isEnglish) "${it.daysRemaining}d · ${it.formattedDate}" else "${it.daysRemaining} ngày · ${it.formattedDate}"
-      }
-      NotificationItem(it.emoji, it.title, whenText, it.daysRemaining <= 3)
-    }
-    val fromReminders = reminders.map {
-      NotificationItem("⏰", it.title, it.alarmTimeFormatted.ifBlank { it.dateText }, false)
-    }
-    fromMilestones + fromReminders
-  }
+  val items = remember(milestones, reminders, isEnglish) { buildNotificationItems(milestones, reminders, isEnglish) }
 
   ModalBottomSheet(
     onDismissRequest = onDismiss,
     shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     containerColor = Color.White
   ) {
+    AppDensity {
     Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp).testTag("notifications_sheet")) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
@@ -132,13 +156,14 @@ fun NotificationsSheet(viewModel: InLoveViewModel, onDismiss: () -> Unit) {
             ) {
               Text(n.emoji, fontSize = 22.sp)
               Column(Modifier.weight(1f)) {
-                Text(n.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(n.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
                 Text(n.whenText, fontSize = 12.sp, color = if (n.urgent) Primary else OnSurfaceVariant)
               }
             }
           }
         }
       }
+    }
     }
   }
 }

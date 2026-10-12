@@ -1,0 +1,5 @@
+package com.app.plugin;
+public class Main implements MissingIface {
+  Missing held;
+  public int run() { Missing.Inner[] a = new Missing.Inner[0]; return a.length + Missing.f() + new Defined().g() + Integer.parseInt("1"); }
+}

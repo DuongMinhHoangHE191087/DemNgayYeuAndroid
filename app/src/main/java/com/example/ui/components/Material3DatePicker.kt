@@ -88,6 +88,13 @@ object DatePickerUtils {
     return null
   }
 
+  /** Whole calendar days from today to the date (negative = past), or null if unparseable. */
+  fun daysUntil(dateStr: String): Int? {
+    val millis = parseDateToUtcMillis(dateStr) ?: return null
+    val target = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneOffset.UTC).toLocalDate()
+    return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), target).toInt()
+  }
+
   /** Vietnamese day-of-week name for a "dd/MM/yyyy"-ish date string, or null if unparseable. */
   fun getVietnameseDayOfWeek(dateStr: String): String? {
     val millis = parseDateToUtcMillis(dateStr) ?: return null

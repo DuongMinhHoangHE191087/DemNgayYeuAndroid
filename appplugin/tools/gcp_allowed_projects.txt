@@ -1,0 +1,3 @@
+# Project duoc phep (moi dong mot id). gcp_guard.sh chi nhan dong nam trong danh sach cung cua script,
+# nen file nay chi co the THU HEP, khong bao gio mo rong.
+test-d-56f09

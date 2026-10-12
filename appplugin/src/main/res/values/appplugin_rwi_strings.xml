@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.9.0 Task 2 (D33): màn intro rewarded interstitial (RwiIntroDialog), mặc định tiếng Anh; tiếng Việt ở values-vi/. App ghi đè được theo tên. -->
+<resources>
+    <string name="appplugin_rwi_title">Watch an ad to earn a reward</string>
+    <string name="appplugin_rwi_countdown">Ad starts in %1$d s</string>
+    <string name="appplugin_rwi_skip">Skip</string>
+</resources>

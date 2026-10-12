@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appplugin_default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <string name="appplugin_ad_attribution" translatable="false">Ad</string>
+    <!-- Meta's native-ad disclosure label; kept in English as it always has been. -->
+    <string name="appplugin_ad_sponsored" translatable="false">Sponsored</string>
+    <!-- Never displayed: the price view is INVISIBLE until the ad supplies a price, but
+         its measured width still places the store label beside it. -->
+    <string name="appplugin_ad_price_placeholder" translatable="false">Free</string>
+    <!-- Seconds left before a full-screen native ad's close button appears. -->
+    <string name="appplugin_ad_close_countdown" translatable="false">%1$d</string>
+</resources>

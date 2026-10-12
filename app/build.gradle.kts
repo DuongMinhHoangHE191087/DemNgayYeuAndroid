@@ -39,6 +39,10 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+    // appplugin license token (ALP1.<payload>.<sig>) for this applicationId + signing cert. Pass via
+    // -PAPPPLUGIN_LICENSE or ~/.gradle/gradle.properties, never commit it. Empty = SDK reports INVALID (missing), no crash.
+    manifestPlaceholders["appPluginLicense"] = (findProperty("APPPLUGIN_LICENSE") as String?) ?: ""
+
     // Owner-controlled HTTPS site hosting /privacy, /terms and /delete-account (see docs/release/PLAY_RELEASE_CHECKLIST.md)
     buildConfigField("String", "LEGAL_BASE_URL", "\"${getEnv("LEGAL_BASE_URL", "https://inloveapp.com")}\"")
   }
@@ -195,7 +199,7 @@ dependencies {
   implementation(libs.firebase.firestore)
   // Crashlytics runtime
   implementation(libs.firebase.crashlytics)
-  // Callable Cloud Functions: upload ký số và URL phát Cloudinary (docs/architecture/MEDIA_CLOUDINARY.md)
+  // Callable Cloud Functions: upload ký số và URL phát Cloudinary (docs/release/SECRETS_AND_CONFIG.md)
   implementation(libs.firebase.functions)
 
   // Firebase Auth and Google Sign-In via Credential Manager:

@@ -1,0 +1,11 @@
+{
+  "message": {
+    "attributes": {},
+    "data": "eyJ2ZXJzaW9uIjoiMS4wIiwicGFja2FnZU5hbWUiOiJ0ZXN0LnNkay56ZCIsImV2ZW50VGltZU1pbGxpcyI6IjE3OTA3Mzc4NjAwMDAiLCJzdWJzY3JpcHRpb25Ob3RpZmljYXRpb24iOnsidmVyc2lvbiI6IjEuMCIsIm5vdGlmaWNhdGlvblR5cGUiOjIwLCJwdXJjaGFzZVRva2VuIjoicnRkbi1maXh0dXJlLXN1Yi10b2tlbiJ9fQ==",
+    "messageId": "rtdn-fx-20",
+    "message_id": "rtdn-fx-20",
+    "publishTime": "2026-09-30T03:11:00.000Z",
+    "publish_time": "2026-09-30T03:11:00.000Z"
+  },
+  "subscription": "projects/local-test/subscriptions/rtdn-push"
+}

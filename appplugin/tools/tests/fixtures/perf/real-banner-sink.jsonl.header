@@ -1,0 +1,1 @@
+# sink fixture real-banner-sink.jsonl: lọc (session_start, ad_request, ad_fill, ad_no_fill, ad_show_attempt, ad_show) từ events.jsonl của cùng lần chạy; sha apk=f168c8357c832445cdb627e9499e2e3dcf85b9ebd7bb6ae9c7e646728f842730; lệnh: xem dòng 1-2 của real-banner-gate.log

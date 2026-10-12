@@ -341,7 +341,7 @@ private fun MemoryCardItem(
       .clickable { onClick() }
       .testTag("memory_card_${memory.id}")
   ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFFE9F0))) {
       // Photo / Video Thumbnail
       AsyncImage(
         model = photoModel,
@@ -1148,12 +1148,24 @@ private fun EditMemoryDialog(
             onClick = { privacyLevel = "COUPLE_ONLY" },
             // Đã riêng tư thì không chuyển lại chia sẻ: ảnh có thể đã từng nằm trên đám mây.
             enabled = memory.privacyLevel != PRIVACY_PRIVATE,
-            label = { Text(if (isEnglish) "💑 Couple Only" else "💑 Chỉ 2 người", fontSize = 11.5.sp) }
+            label = {
+              Icon(
+                Icons.Filled.Favorite,
+                contentDescription = if (isEnglish) "Couple only" else "Chỉ 2 người",
+                modifier = Modifier.size(18.dp)
+              )
+            }
           )
           FilterChip(
             selected = privacyLevel == "PRIVATE",
             onClick = { privacyLevel = "PRIVATE" },
-            label = { Text(if (isEnglish) "🔒 Just Me" else "🔒 Chỉ mình tôi", fontSize = 11.5.sp) }
+            label = {
+              Icon(
+                Icons.Filled.Lock,
+                contentDescription = if (isEnglish) "Just me" else "Chỉ mình tôi",
+                modifier = Modifier.size(18.dp)
+              )
+            }
           )
         }
 
@@ -1237,7 +1249,7 @@ private fun MemoryDetailDialog(
             .height(260.dp)
             .clip(RoundedCornerShape(20.dp))
             .border(1.dp, Color(0xFFFFE0E9), RoundedCornerShape(20.dp))
-            .background(Color.Black)
+            .background(if (isVideo) Color.Black else Color(0xFFFFE9F0))
         ) {
           if (isVideo) {
             // key() rebuilds the player when the resolved URL changes, so it never plays a stale source.
@@ -1398,7 +1410,7 @@ private fun MemoryDetailDialog(
                   isVideo -> "Video ${memory.durationSeconds}s"
                   hasCloud -> if (currentLanguage == AppLanguage.EN) "Cloud photo" else "Ảnh đám mây"
                   else -> if (currentLanguage == AppLanguage.EN) "On device" else "Lưu trên máy"
-                },
+                } + if (memory.fileSizeFormatted.isBlank()) "" else " · ${memory.fileSizeFormatted}",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (hasCloud) Color(0xFF004D40) else Color(0xFFE65100)
@@ -1427,90 +1439,34 @@ private fun MemoryDetailDialog(
           }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Storage card: a memory with no publicId was never uploaded, so it reads as on-device only.
-        Surface(
-          shape = RoundedCornerShape(16.dp),
-          color = if (hasCloud) Color(0xFFF1F8E9) else Color(0xFFFFF3E0),
-          border = androidx.compose.foundation.BorderStroke(
-            1.dp, if (hasCloud) Color(0xFFC5E1A5) else Color(0xFFFFB74D)
-          ),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Column(modifier = Modifier.padding(14.dp)) {
+        // Storage (cloud/device + size) already shows in the badge row; the author sees Edit/Delete, so only a partner needs a role notice.
+        if (!isAuthor) {
+          Spacer(modifier = Modifier.height(14.dp))
+          Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = Color(0xFFFFF3E0),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.SpaceBetween,
-              modifier = Modifier.fillMaxWidth()
+              modifier = Modifier.padding(12.dp)
             ) {
-              Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                  imageVector = if (hasCloud) Icons.Default.CloudDone else Icons.Default.PhoneAndroid,
-                  contentDescription = null,
-                  tint = if (hasCloud) Color(0xFF33691E) else Color(0xFFE65100),
-                  modifier = Modifier.size(17.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                  text = if (hasCloud) {
-                    if (currentLanguage == AppLanguage.EN) "Secure Cloud Storage" else "Lưu Trữ Đám Mây An Toàn"
-                  } else {
-                    if (currentLanguage == AppLanguage.EN) "On-device only" else "Chỉ lưu trên máy"
-                  },
-                  fontSize = 13.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = if (hasCloud) Color(0xFF33691E) else Color(0xFFE65100)
-                )
-              }
-            }
-
-            if (memory.fileSizeFormatted.isNotBlank()) {
-              Spacer(modifier = Modifier.height(4.dp))
+              Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = null,
+                tint = Color(0xFFE65100),
+                modifier = Modifier.size(18.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
               Text(
-                text = if (currentLanguage == AppLanguage.EN) "File size: ${memory.fileSizeFormatted}" else "Dung lượng: ${memory.fileSizeFormatted}",
-                fontSize = 11.5.sp,
-                color = Color(0xFF558B2F)
+                text = if (currentLanguage == AppLanguage.EN) "Creator: ${memory.authorName.ifBlank { "Partner" }} • View and favorite permissions."
+                else "Tác giả: ${memory.authorName.ifBlank { "Người ấy" }} • Bạn có quyền xem và thả tim yêu thích.",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFFBF360C)
               )
             }
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Permissions & Role Notice
-        Surface(
-          shape = RoundedCornerShape(14.dp),
-          color = if (isAuthor) Color(0xFFEDE7F6) else Color(0xFFFFF3E0),
-          border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isAuthor) Color(0xFFB39DDB) else Color(0xFFFFCC80)
-          ),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(12.dp)
-          ) {
-            Icon(
-              imageVector = if (isAuthor) Icons.Default.Person else Icons.Default.Lock,
-              contentDescription = null,
-              tint = if (isAuthor) Color(0xFF512DA8) else Color(0xFFE65100),
-              modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (isAuthor) {
-                if (currentLanguage == AppLanguage.EN) "You are the creator of this memory • Full edit and delete permissions."
-                else "Bạn là tác giả của kỷ niệm này • Có toàn quyền chỉnh sửa và xóa."
-              } else {
-                if (currentLanguage == AppLanguage.EN) "Creator: ${memory.authorName.ifBlank { "Partner" }} • View and favorite permissions."
-                else "Tác giả: ${memory.authorName.ifBlank { "Người ấy" }} • Bạn có quyền xem và thả tim yêu thích."
-              },
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Medium,
-              color = if (isAuthor) Color(0xFF311B92) else Color(0xFFBF360C)
-            )
           }
         }
 
@@ -1543,44 +1499,48 @@ private fun MemoryDetailDialog(
             }
           }
         } else {
+          // Equal-weight, single-line buttons: natural widths overflowed and wrapped "Got It" onto two lines.
+          val buttonPadding = PaddingValues(horizontal = 8.dp)
           Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
           ) {
+            // Partner view: only the Got It button.
             if (isAuthor) {
-              Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                  onClick = { showDeleteConfirm = true },
-                  shape = RoundedCornerShape(14.dp),
-                  colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F))
-                ) {
-                  Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(15.dp))
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text(if (currentLanguage == AppLanguage.EN) "Delete" else "Xóa")
-                }
-
-                Button(
-                  onClick = onEdit,
-                  shape = RoundedCornerShape(14.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA))
-                ) {
-                  Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text(if (currentLanguage == AppLanguage.EN) "Edit" else "Sửa")
-                }
+              OutlinedButton(
+                onClick = { showDeleteConfirm = true },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                contentPadding = buttonPadding,
+                modifier = Modifier.weight(1f)
+              ) {
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (currentLanguage == AppLanguage.EN) "Delete" else "Xóa", maxLines = 1)
               }
-            } else {
-              // Partner view: only Got It button
-              Spacer(modifier = Modifier.width(1.dp))
+
+              Button(
+                onClick = onEdit,
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA)),
+                contentPadding = buttonPadding,
+                modifier = Modifier.weight(1f)
+              ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (currentLanguage == AppLanguage.EN) "Edit" else "Sửa", maxLines = 1)
+              }
             }
 
             Button(
               onClick = onDismiss,
               shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75))
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
+              contentPadding = buttonPadding,
+              modifier = Modifier.weight(1f)
             ) {
-              Text(if (currentLanguage == AppLanguage.EN) "Got It" else strings.btnGotIt)
+              Text(if (currentLanguage == AppLanguage.EN) "Got It" else strings.btnGotIt, maxLines = 1)
             }
           }
         }
