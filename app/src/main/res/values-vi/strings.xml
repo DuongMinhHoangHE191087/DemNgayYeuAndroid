@@ -23,23 +23,23 @@
     <string name="next_milestone_header">GỢI Ý KỶ NIỆM TIẾP THEO</string>
     <string name="days_remaining_format">Còn %1$d ngày</string>
     <string name="progress_towards">Tiến độ đạt mốc</string>
-    <string name="romantic_advice_format">💡 Gợi ý lãng mạn: Chỉ còn %1$d ngày nữa là chạm mốc %2$d ngày yêu! Hãy lên kế hoạch đặt bàn hẹn hò đặc biệt hoặc chuẩn bị món quà bất ngờ dành tặng cho %3$s nhé!</string>
+    <string name="romantic_advice_format">Gợi ý lãng mạn: Chỉ còn %1$d ngày nữa là chạm mốc %2$d ngày yêu! Hãy lên kế hoạch hẹn hò đặc biệt hoặc chuẩn bị món quà bất ngờ dành tặng cho %3$s nhé!</string>
     <string name="btn_gift_ideas">Gợi Ý Quà Tặng</string>
     <string name="btn_anniversary_calendar">Lịch Kỷ Niệm</string>
     <string name="quote_section_tag">DÒNG CẢM XÚC ĐÔI LỨA</string>
-    <string name="quote_section_title">Phản Hồi &amp; Lời Yêu Thương 💕</string>
-    <string name="btn_shuffle_quote">Đổi Lời Chúc 💫</string>
-    <string name="btn_send_to_partner">Gửi Bạn Ấy 💌</string>
-    <string name="milestone_celebration_title">🎉 Chúc Mừng Cột Mốc Kỷ Niệm!</string>
-    <string name="milestone_celebration_btn">Phóng Mưa Tim Kỷ Niệm 💕</string>
+    <string name="quote_section_title">Lời Yêu Thương Đôi Lứa</string>
+    <string name="btn_shuffle_quote">Đổi Lời Chúc</string>
+    <string name="btn_send_to_partner">Gửi Bạn Ấy</string>
+    <string name="milestone_celebration_title">Chúc Mừng Cột Mốc Kỷ Niệm</string>
+    <string name="milestone_celebration_btn">Bắn Tim Chúc Mừng</string>
     <string name="ad_placeholder_notice">Khu vực chuẩn bị sẵn để tích hợp Plugin Quảng Cáo (AdMob)</string>
-    <string name="counting_days_notice">InLove: Đang đếm %1$d ngày yêu nhau ❤️</string>
+    <string name="counting_days_notice">InLove: Đang đếm %1$d ngày yêu nhau</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Cài Đặt</string>
     <string name="settings_profile_card_edit">Chỉnh sửa</string>
-    <string name="settings_sweet_days_format">Đã đồng hành %1$d ngày ngọt ngào ❤️</string>
-    <string name="settings_db_secured">💾 Dữ liệu lưu an toàn (Chạm để chỉnh sửa)</string>
+    <string name="settings_sweet_days_format">Đã đồng hành %1$d ngày ngọt ngào</string>
+    <string name="settings_db_secured">Dữ liệu lưu an toàn • Chạm để chỉnh sửa</string>
     
     <string name="settings_section_profile">Hồ Sơ &amp; Kỷ Niệm Yêu Thương</string>
     <string name="settings_edit_profile_title">Chỉnh sửa thông tin 2 bạn</string>
@@ -54,8 +54,8 @@
     <string name="settings_language_title">Ngôn Ngữ Ứng Dụng</string>
     <string name="settings_language_sub">Chuyển đổi giao diện giữa Tiếng Việt &amp; English</string>
     <string name="settings_language_toggle_label">Chuyển nhanh</string>
-    <string name="settings_language_current_en">Đang dùng: English 🇬🇧</string>
-    <string name="settings_language_current_vi">Đang dùng: Tiếng Việt 🇻🇳</string>
+    <string name="settings_language_current_en">Đang dùng: English</string>
+    <string name="settings_language_current_vi">Đang dùng: Tiếng Việt</string>
     <string name="settings_wallpaper_title">Đổi Hình Nền Đôi</string>
     <string name="settings_wallpaper_sub">Tùy chọn nền hoa anh đào, hoàng hôn biển, bầu trời sao</string>
     <string name="settings_guide_title">Cẩm Nang Hướng Dẫn</string>
@@ -74,13 +74,13 @@
     <string name="settings_lock_sub">Bảo vệ khoảnh khắc riêng tư bằng vân tay/PIN</string>
     <string name="settings_about_title">Về InLove</string>
     <string name="settings_about_sub">Phiên bản 1.0.0 • Dành cho các cặp đôi</string>
-    <string name="settings_about_toast">InLove - Lưu giữ trọn vẹn từng khoảnh khắc yêu thương ❤️</string>
+    <string name="settings_about_toast">InLove - Lưu giữ trọn vẹn từng khoảnh khắc yêu thương</string>
 
     <!-- Language Options & Dialog -->
     <string name="lang_dialog_title">Chọn Ngôn Ngữ / Select Language</string>
     <string name="lang_dialog_subtitle">Vui lòng chọn ngôn ngữ bạn muốn sử dụng trong ứng dụng</string>
-    <string name="lang_vietnamese">Tiếng Việt 🇻🇳</string>
-    <string name="lang_english">English 🇬🇧</string>
+    <string name="lang_vietnamese">Tiếng Việt</string>
+    <string name="lang_english">English</string>
     <string name="lang_vi_desc">Giao diện và tính năng bằng Tiếng Việt</string>
     <string name="lang_en_desc">Interface and features in English</string>
     <string name="btn_confirm">Xác Nhận</string>
@@ -96,7 +96,7 @@
     <string name="guide_tab_gifts">Gợi Ý Quà</string>
     <string name="guide_tab_reminders">Nhắc Hẹn</string>
     <string name="guide_tab_settings">Cài Đặt</string>
-    <string name="btn_got_it">Đã Hiểu ✨</string>
+    <string name="btn_got_it">Đã Hiểu</string>
 
     <!-- Wallpaper Dialog -->
     <string name="wallpaper_title">Đổi Hình Nền Lãng Mạn</string>
@@ -106,10 +106,10 @@
     <string name="wallpaper_preset_starry">Đêm Sao Lãng Mạn</string>
     <string name="wallpaper_preset_pastel">Hồng Phấn Ngọt Ngào</string>
     <string name="wallpaper_custom_url">Liên kết ảnh tùy chọn (URL)</string>
-    <string name="btn_apply_wallpaper">Áp Dụng Hình Nền 🌸</string>
+    <string name="btn_apply_wallpaper">Áp Dụng Hình Nền</string>
 
     <!-- Memories Screen & Dialog -->
-    <string name="memory_album_title">Album Kỷ Niệm Đôi Ta 📸</string>
+    <string name="memory_album_title">Album Kỷ Niệm Đôi Ta</string>
     <string name="memory_album_subtitle">Những bức ảnh và khoảnh khắc đáng nhớ nhất trong hành trình yêu</string>
     <string name="memory_title">Lưu Giữ Khoảnh Khắc Kỷ Niệm</string>
     <string name="memory_subtitle">Chụp ảnh hoặc chọn từ thư viện để lưu vào nhật ký tình yêu</string>
@@ -117,12 +117,12 @@
     <string name="memory_date_label">Ngày kỷ niệm (dd/MM/yyyy) *</string>
     <string name="memory_location_label">Địa điểm hẹn hò</string>
     <string name="memory_note_label">Dòng nhật ký &amp; cảm xúc</string>
-    <string name="memory_pick_photo">Chọn Từ Thư Viện 🖼️</string>
-    <string name="memory_capture_photo">Chụp Ảnh Mới 📸</string>
+    <string name="memory_pick_photo">Chọn Từ Thư Viện</string>
+    <string name="memory_capture_photo">Chụp Ảnh Mới</string>
     <string name="memory_preset_notice">Hoặc chọn nhanh ảnh mẫu lãng mạn:</string>
     <string name="memory_note_placeholder">Nhập dòng nhật ký hoặc lời nhắn gửi ngọt ngào…</string>
     <string name="memory_url_placeholder">Dán liên kết hình ảnh kỷ niệm (URL)…</string>
-    <string name="btn_save_memory">Lưu Vào Kỷ Niệm ❤️</string>
+    <string name="btn_save_memory">Lưu Vào Kỷ Niệm</string>
     <string name="btn_add_memory">Thêm Kỷ Niệm Mới</string>
     <string name="memory_empty_title">Chưa có bức ảnh kỷ niệm nào</string>
     <string name="memory_empty_subtitle">Hãy chụp hoặc chọn bức ảnh đầu tiên để lưu lại khoảnh khắc ngọt ngào của hai bạn!</string>
@@ -141,28 +141,28 @@
     <string name="edit_couple_zodiac_label">Cung hoàng đạo</string>
     <string name="edit_couple_title_label">Biệt danh tình yêu</string>
     <string name="edit_couple_days_label">Số ngày yêu nhau</string>
-    <string name="btn_save_couple">Lưu Thay Đổi ❤️</string>
+    <string name="btn_save_couple">Lưu Thay Đổi</string>
 
     <!-- Generic & Toasts -->
-    <string name="toast_switched_vi">Đã chuyển sang Tiếng Việt 🇻🇳</string>
-    <string name="toast_switched_en">Đã chuyển sang English 🇬🇧</string>
+    <string name="toast_switched_vi">Đã chuyển sang Tiếng Việt</string>
+    <string name="toast_switched_en">Đã chuyển sang English</string>
 
     <!-- Onboarding Flow -->
-    <string name="onboarding_welcome_title">Chào Mừng Đến Với InLove 💕</string>
+    <string name="onboarding_welcome_title">Chào Mừng Đến Với InLove</string>
     <string name="onboarding_welcome_sub">Không gian lãng mạn lưu giữ trọn vẹn từng khoảnh khắc tình yêu đôi bạn</string>
     <string name="onboarding_lang_select_title">Chọn Ngôn Ngữ Hiển Thị</string>
-    <string name="onboarding_counter_title">Đếm Trọn Từng Ngày Yêu ⏳</string>
+    <string name="onboarding_counter_title">Đếm Trọn Từng Ngày Yêu</string>
     <string name="onboarding_counter_sub">Đếm chính xác từng ngày bên nhau, bắn tim kỷ niệm chúc mừng các cột mốc: 100, 200, 365, 1000 ngày!</string>
-    <string name="onboarding_memories_title">Kho Kỷ Niệm &amp; Nhật Ký Đôi 📸</string>
+    <string name="onboarding_memories_title">Kho Kỷ Niệm &amp; Nhật Ký Đôi</string>
     <string name="onboarding_memories_sub">Lưu lại ảnh hẹn hò, địa điểm ý nghĩa và dòng cảm xúc ngọt ngào an toàn trên máy và đồng bộ đám mây.</string>
-    <string name="onboarding_reminder_title">Nhắc Hẹn Thông Minh &amp; Gợi Ý Quà 🎁</string>
+    <string name="onboarding_reminder_title">Nhắc Hẹn Thông Minh &amp; Gợi Ý Quà</string>
     <string name="onboarding_reminder_sub">Không bao giờ quên ngày quan trọng nhờ chuông báo trước (7 ngày, 3 ngày, 1 ngày) kèm gợi ý quà tặng từ AI.</string>
-    <string name="onboarding_start_title">Sẵn Sàng Bắt Đầu Hành Trình 🌸</string>
+    <string name="onboarding_start_title">Sẵn Sàng Bắt Đầu Hành Trình</string>
     <string name="onboarding_start_sub">Cá nhân hóa tên 2 bạn, ngày bắt đầu yêu, hoặc khám phá ngay ứng dụng!</string>
     <string name="onboarding_btn_next">Tiếp tục</string>
     <string name="onboarding_btn_back">Quay lại</string>
     <string name="onboarding_btn_skip">Bỏ qua</string>
-    <string name="onboarding_btn_start">Bắt Đầu Ngay ✨</string>
+    <string name="onboarding_btn_start">Bắt Đầu Ngay</string>
 
     <!-- Calendar Screen -->
     <string name="calendar_title">Lịch Kỷ Niệm</string>
@@ -211,8 +211,8 @@
     <string name="pairing_my_code">Mã Kết Nối Của Bạn</string>
     <string name="pairing_partner_code">Nhập Mã Của Người Ấy</string>
     <string name="pairing_btn_send">Gửi Lời Mời Kết Nối</string>
-    <string name="pairing_status_connected">Đã Kết Đôi ❤️</string>
-    <string name="pairing_status_pending">Đang Chờ Phản Hồi ⏳</string>
+    <string name="pairing_status_connected">Đã Kết Đôi</string>
+    <string name="pairing_status_pending">Đang Chờ Phản Hồi</string>
     <string name="pairing_btn_disconnect">Hủy Kết Đôi</string>
     <string name="pairing_copy_code">Đã sao chép mã kết nối vào bộ nhớ tạm!</string>
 
@@ -221,16 +221,16 @@
     <string name="paywall_sub">Tình yêu không giới hạn — Gắn kết mọi kỷ niệm trọn vẹn</string>
     <string name="paywall_benefits_header">Quyền lợi</string>
     <string name="paywall_benefit_ads">Không quảng cáo khi gói còn hiệu lực (Trọn đời: vĩnh viễn)</string>
-    <string name="paywall_plan_yearly_title">Gói 1 Năm ❤️</string>
+    <string name="paywall_plan_yearly_title">Gói 1 Năm</string>
     <string name="paywall_plan_yearly_sub">Thanh toán theo năm, hủy bất kỳ lúc nào</string>
     <string name="paywall_plan_monthly_title">Gói 1 Tháng</string>
     <string name="paywall_plan_monthly_sub">Thanh toán linh hoạt, hủy bất kỳ lúc nào</string>
-    <string name="paywall_plan_lifetime_title">Gói Trọn Đời 💫</string>
+    <string name="paywall_plan_lifetime_title">Gói Trọn Đời</string>
     <string name="paywall_plan_lifetime_sub">Thanh toán một lần — không quảng cáo khi ứng dụng còn được hỗ trợ</string>
     <string name="paywall_plan_lifetime_badge">TRỌN ĐỜI</string>
-    <string name="paywall_btn_trial">🎁 BẮT ĐẦU DÙNG THỬ MIỄN PHÍ</string>
-    <string name="paywall_btn_monthly">💳 ĐĂNG KÝ THÁNG NGAY</string>
-    <string name="paywall_btn_lifetime">👑 NÂNG CẤP TRỌN ĐỜI NGAY</string>
+    <string name="paywall_btn_trial">BẮT ĐẦU DÙNG THỬ MIỄN PHÍ</string>
+    <string name="paywall_btn_monthly">ĐĂNG KÝ THÁNG NGAY</string>
+    <string name="paywall_btn_lifetime">NÂNG CẤP TRỌN ĐỜI NGAY</string>
     <string name="paywall_btn_restore">Khôi phục gói mua (Restore Purchases)</string>
     <string name="paywall_btn_manage">Quản lý &amp; Hủy gói cước trên Google Play</string>
     <string name="paywall_terms">Điều khoản dịch vụ</string>
@@ -238,7 +238,7 @@
     <string name="paywall_restoring">Đang kiểm tra giao dịch đã mua…</string>
     <string name="paywall_restore_success">Đã khôi phục thành công gói VIP!</string>
     <string name="paywall_restore_empty">Không tìm thấy giao dịch nào với tài khoản Google Play này.</string>
-    <string name="paywall_vip_congrats">🎉 Chúc mừng! Bạn đã là thành viên VIP InLove!</string>
+    <string name="paywall_vip_congrats">Chúc mừng! Bạn đã là thành viên VIP InLove!</string>
 
     <!-- Auth Screen -->
     <string name="auth_login_title">Đăng Nhập InLove</string>

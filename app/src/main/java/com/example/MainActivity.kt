@@ -6,9 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,13 +29,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.repository.AuthState
+import com.example.ui.components.AppOpeningSplashScreen
 import com.example.ui.components.DigitalTrophyRewardDialog
 import com.example.ui.components.FloatingHeartsOverlay
 import com.example.ui.components.InLoveBottomNav
@@ -41,7 +47,6 @@ import com.example.ui.components.InLoveTopBar
 import com.example.ui.components.MilestoneBadgeShowcaseDialog
 import com.example.ui.components.NotificationsSheet
 import com.example.ui.components.rememberHasUnreadNotifications
-import com.example.ui.components.rememberTopNotification
 import com.example.ui.screens.AddAnniversaryDateDialog
 import com.example.ui.screens.AddChecklistDialog
 import com.example.ui.screens.AddGiftReminderDialog
@@ -269,9 +274,9 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       topBarState.contentOffset = 0f
     }
     val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
-    val topNotification = rememberTopNotification(viewModel)
 
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState()
+    var showAppOpening by rememberSaveable { mutableStateOf(true) }
 
     if (isFirstLaunch) {
       OnboardingScreen(
@@ -322,7 +327,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
           InLoveTopBar(
             title = screenTitle,
             avatarUrl = currentOnlineUser.avatarUrl,
-            latest = topNotification,
+            latest = null,
             isEnglish = appLanguage == AppLanguage.EN,
             scrollBehavior = topBarScroll,
             hasUnread = hasUnreadNotifications,
@@ -361,25 +366,25 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
           transitionSpec = {
             if (targetState > initialState) {
               (androidx.compose.animation.slideInHorizontally(
-                animationSpec = androidx.compose.animation.core.tween(320, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-                initialOffsetX = { fullWidth -> (fullWidth * 0.22f).toInt() }
-              ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(320)) + androidx.compose.animation.scaleIn(initialScale = 0.97f, animationSpec = androidx.compose.animation.core.tween(320)))
+                animationSpec = androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                initialOffsetX = { fullWidth -> (fullWidth * 0.25f).toInt() }
+              ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(280)) + androidx.compose.animation.scaleIn(initialScale = 0.96f, animationSpec = androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)))
                 .togetherWith(
                   androidx.compose.animation.slideOutHorizontally(
-                    animationSpec = androidx.compose.animation.core.tween(280, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-                    targetOffsetX = { fullWidth -> (-fullWidth * 0.22f).toInt() }
-                  ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(280)) + androidx.compose.animation.scaleOut(targetScale = 0.97f, animationSpec = androidx.compose.animation.core.tween(280))
+                    animationSpec = androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                    targetOffsetX = { fullWidth -> (-fullWidth * 0.25f).toInt() }
+                  ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(220)) + androidx.compose.animation.scaleOut(targetScale = 0.96f, animationSpec = androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.FastOutSlowInEasing))
                 )
             } else {
               (androidx.compose.animation.slideInHorizontally(
-                animationSpec = androidx.compose.animation.core.tween(320, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-                initialOffsetX = { fullWidth -> (-fullWidth * 0.22f).toInt() }
-              ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(320)) + androidx.compose.animation.scaleIn(initialScale = 0.97f, animationSpec = androidx.compose.animation.core.tween(320)))
+                animationSpec = androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                initialOffsetX = { fullWidth -> (-fullWidth * 0.25f).toInt() }
+              ) + fadeIn(animationSpec = androidx.compose.animation.core.tween(280)) + androidx.compose.animation.scaleIn(initialScale = 0.96f, animationSpec = androidx.compose.animation.core.tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)))
                 .togetherWith(
                   androidx.compose.animation.slideOutHorizontally(
-                    animationSpec = androidx.compose.animation.core.tween(280, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-                    targetOffsetX = { fullWidth -> (fullWidth * 0.22f).toInt() }
-                  ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(280)) + androidx.compose.animation.scaleOut(targetScale = 0.97f, animationSpec = androidx.compose.animation.core.tween(280))
+                    animationSpec = androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                    targetOffsetX = { fullWidth -> (fullWidth * 0.25f).toInt() }
+                  ) + fadeOut(animationSpec = androidx.compose.animation.core.tween(220)) + androidx.compose.animation.scaleOut(targetScale = 0.96f, animationSpec = androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.FastOutSlowInEasing))
                 )
             }
           },
@@ -407,6 +412,19 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
             )
           }
         }
+      }
+
+      // Romantic App Opening Entrance Animation
+      AnimatedVisibility(
+        visible = showAppOpening,
+        enter = fadeIn(),
+        exit = fadeOut(animationSpec = tween(380, easing = androidx.compose.animation.core.FastOutSlowInEasing)) +
+               androidx.compose.animation.scaleOut(targetScale = 1.05f, animationSpec = tween(380, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+      ) {
+        AppOpeningSplashScreen(
+          isEnglish = appLanguage == AppLanguage.EN,
+          onFinished = { showAppOpening = false }
+        )
       }
     }
 
@@ -607,7 +625,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         currentUser = currentOnlineUser,
         presetAvatars = dynamicPresetAvatars,
         isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
-        canEditPhoto = authState is AuthState.Authenticated && currentOnlineUser.uid.isNotBlank(),
+        canEditPhoto = true,
         onPhotoPicked = { viewModel.saveLocalAvatar(it, false) },
         onPhotoDiscarded = { viewModel.deleteUnsavedAvatar(it) },
         onDismiss = { viewModel.closeEditProfileDialog() },

@@ -99,6 +99,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -1445,6 +1446,12 @@ fun LoveHomeScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
+            val shuffleRotation by animateFloatAsState(
+              targetValue = currentQuoteIndex.intValue * 360f,
+              animationSpec = tween(420, easing = FastOutSlowInEasing),
+              label = "quote_shuffle_rotation"
+            )
+
             Button(
               onClick = {
                 currentQuoteIndex.intValue = (currentQuoteIndex.intValue + 1) % loveQuotes.size
@@ -1463,7 +1470,9 @@ fun LoveHomeScreen(
                 imageVector = Icons.Filled.Refresh,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier
+                  .size(16.dp)
+                  .graphicsLayer { rotationZ = shuffleRotation }
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(

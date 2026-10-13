@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
+import com.example.ui.components.animateDialogEntrance
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -661,6 +662,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   if (showLogoutConfirmDialog) {
     AlertDialog(
       onDismissRequest = { showLogoutConfirmDialog = false },
+      modifier = Modifier.animateDialogEntrance(),
       icon = {
         Icon(
           imageVector = Icons.AutoMirrored.Filled.ExitToApp,
@@ -698,6 +700,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   if (showDeleteAccountConfirmDialog) {
     AlertDialog(
       onDismissRequest = { showDeleteAccountConfirmDialog = false },
+      modifier = Modifier.animateDialogEntrance(),
       icon = {
         Icon(
           imageVector = Icons.Default.DeleteForever,

@@ -3,13 +3,23 @@ package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,12 +87,14 @@ import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
 import com.example.ui.theme.SurfaceContainerHighest
 
+import androidx.compose.ui.text.style.TextOverflow
+
 const val COUPLE_AVATAR_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuA7FGhAVlT3aua6tzpkBgh-_XXVsY-hCGooIPxOJ0acYyvZV9FZpASsMTgGO0vBFJLrLojRgwwnQEjfWAniwj2FAiKNpUjSRFNIQgmOhVN8fFSYwpOqLF8hAnWk3UM0dWxSVT1FwaK9ovXMP7Jwi-gjfRbUm2ISX1qyUY6bpBKBZnBYk7YIorizTPWI5c6w9XUdTTsMLFWT3c5ns8lYQooC0eEvt6S5zJNNobW_pn1PTJOb0K2REgdfTQ"
 
 /**
- * Collapsing top bar: the compact row (compact title, bell, avatar) is always visible; the large title and
- * the notification strip collapse away as the content scrolls (exit-until-collapsed).
+ * Clean & romantic top bar: Title, bell notification, and profile avatar are strictly aligned
+ * on a single horizontal row, with optional collapsing notification strip when active.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,13 +111,13 @@ internal fun InLoveTopBar(
   includeStatusBarPadding: Boolean = true
 ) {
   val state = scrollBehavior.state
-  val barShape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp)
+  val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
   Box(
     modifier = Modifier
       .fillMaxWidth()
-      .shadow(elevation = 8.dp, shape = barShape, ambientColor = Primary.copy(alpha = 0.25f), spotColor = Primary.copy(alpha = 0.25f))
+      .shadow(elevation = 6.dp, shape = barShape, ambientColor = Primary.copy(alpha = 0.18f), spotColor = Primary.copy(alpha = 0.18f))
       .clip(barShape)
-      .background(Brush.verticalGradient(listOf(Color.White, Color(0xFFFFF3F7))))
+      .background(Brush.verticalGradient(listOf(Color.White, Color(0xFFFFF6F9))))
   ) {
     Column(
       modifier = Modifier
@@ -113,50 +125,61 @@ internal fun InLoveTopBar(
         .then(if (includeStatusBarPadding) Modifier.statusBarsPadding() else Modifier)
     ) {
       Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(start = 20.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Text(
-          text = title,
-          color = OnSurface,
-          fontSize = 17.sp,
-          fontWeight = FontWeight.Bold,
-          modifier = Modifier.weight(1f).graphicsLayer { alpha = state.collapsedFraction }
-        )
-        NotificationBellButton(
-          hasUnread = hasUnread,
-          contentDescription = if (isEnglish) "Notifications" else "Thông báo",
-          onClick = onBellClick
-        )
-        ProfileAvatarButton(
-          avatarUrl = avatarUrl,
-          contentDescription = if (isEnglish) "Your profile" else "Hồ sơ của bạn",
-          onClick = onProfileClick
-        )
+        Row(
+          modifier = Modifier.weight(1f),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          Text(
+            text = title,
+            color = Color(0xFF2B0A1E),
+            fontSize = 21.sp,
+            fontWeight = FontWeight.ExtraBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag("topbar_large_title")
+          )
+        }
+
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          NotificationBellButton(
+            hasUnread = hasUnread,
+            contentDescription = if (isEnglish) "Notifications" else "Thông báo",
+            onClick = onBellClick
+          )
+          ProfileAvatarButton(
+            avatarUrl = avatarUrl,
+            contentDescription = if (isEnglish) "Your profile" else "Hồ sơ của bạn",
+            onClick = onProfileClick
+          )
+        }
       }
 
-      Column(
-        modifier = Modifier
-          .clipToBounds()
-          .layout { m, c ->
-            val p = m.measure(c.copy(minHeight = 0))
-            if (state.heightOffsetLimit != -p.height.toFloat()) state.heightOffsetLimit = -p.height.toFloat()
-            val h = (p.height + state.heightOffset).roundToInt().coerceAtLeast(0)
-            layout(p.width, h) { p.place(0, h - p.height) }
-          }
-          .padding(start = 16.dp, end = 16.dp, bottom = 14.dp)
-      ) {
-        Text(
-          text = title,
-          color = OnSurface,
-          fontSize = 30.sp,
-          fontWeight = FontWeight.Bold,
-          maxLines = 1,
-          modifier = Modifier.testTag("topbar_large_title")
-        )
-        if (latest != null) {
-          Spacer(Modifier.height(8.dp))
+      if (latest != null) {
+        Column(
+          modifier = Modifier
+            .clipToBounds()
+            .layout { m, c ->
+              val p = m.measure(c.copy(minHeight = 0))
+              if (state.heightOffsetLimit != -p.height.toFloat()) state.heightOffsetLimit = -p.height.toFloat()
+              val h = (p.height + state.heightOffset).roundToInt().coerceAtLeast(0)
+              layout(p.width, h) { p.place(0, h - p.height) }
+            }
+            .padding(start = 16.dp, end = 16.dp, bottom = 10.dp)
+        ) {
           NotificationStrip(latest, isEnglish, onSeeAll)
+        }
+      } else {
+        if (state.heightOffsetLimit == 0f) {
+          state.heightOffsetLimit = -1f
         }
       }
     }
@@ -373,7 +396,7 @@ fun PrimaryGradientButton(
           listOf(RoseGradientStart, RoseGradientMid, RoseGradientEnd)
         )
       )
-      .clickable { onClick() }
+      .pressClickable(onClick = onClick)
       .padding(horizontal = 20.dp, vertical = 13.dp)
       .testTag(testTag),
     contentAlignment = Alignment.Center
@@ -400,3 +423,105 @@ fun PrimaryGradientButton(
     }
   }
 }
+
+/**
+ * Modifier extension to give popup dialogs a smooth, romantic spring-entrance animation.
+ * Softly scales from 0.92f to 1.0f with bouncy spring easing, floats up from 28dp with
+ * spring physics, and fades alpha from 0 to 1 for a unified, modern iOS/Material 3 feel.
+ */
+@Composable
+fun Modifier.animateDialogEntrance(): Modifier {
+  var visible by remember { mutableStateOf(false) }
+  LaunchedEffect(Unit) {
+    visible = true
+  }
+  val scale by animateFloatAsState(
+    targetValue = if (visible) 1f else 0.92f,
+    animationSpec = spring(
+      dampingRatio = Spring.DampingRatioMediumBouncy,
+      stiffness = Spring.StiffnessLow
+    ),
+    label = "dialog_entrance_scale"
+  )
+  val translateY by animateFloatAsState(
+    targetValue = if (visible) 0f else 28f,
+    animationSpec = spring(
+      dampingRatio = Spring.DampingRatioMediumBouncy,
+      stiffness = Spring.StiffnessLow
+    ),
+    label = "dialog_entrance_translate_y"
+  )
+  val alpha by animateFloatAsState(
+    targetValue = if (visible) 1f else 0f,
+    animationSpec = tween(
+      durationMillis = 220,
+      easing = FastOutSlowInEasing
+    ),
+    label = "dialog_entrance_alpha"
+  )
+  return this.graphicsLayer {
+    scaleX = scale
+    scaleY = scale
+    translationY = translateY
+    this.alpha = alpha
+  }
+}
+
+/**
+ * Romantic reload & data syncing badge with rotating heart and gentle glowing pulse.
+ */
+@Composable
+fun RomanticSyncingBadge(
+  text: String,
+  modifier: Modifier = Modifier
+) {
+  val infiniteTransition = rememberInfiniteTransition(label = "sync_badge_pulse")
+  val rotateAngle by infiniteTransition.animateFloat(
+    initialValue = 0f,
+    targetValue = 360f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(1200, easing = LinearEasing),
+      repeatMode = RepeatMode.Restart
+    ),
+    label = "sync_badge_rotation"
+  )
+  val pulseAlpha by infiniteTransition.animateFloat(
+    initialValue = 0.6f,
+    targetValue = 1.0f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(800, easing = FastOutSlowInEasing),
+      repeatMode = RepeatMode.Reverse
+    ),
+    label = "sync_badge_alpha"
+  )
+
+  Surface(
+    shape = RoundedCornerShape(20.dp),
+    color = Color.White.copy(alpha = 0.92f),
+    border = BorderStroke(1.dp, Primary.copy(alpha = 0.35f)),
+    shadowElevation = 4.dp,
+    modifier = modifier.graphicsLayer { alpha = pulseAlpha }
+  ) {
+    Row(
+      modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      Icon(
+        imageVector = Icons.Filled.Favorite,
+        contentDescription = null,
+        tint = Primary,
+        modifier = Modifier
+          .size(16.dp)
+          .graphicsLayer { rotationZ = rotateAngle }
+      )
+      Text(
+        text = text,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = Primary
+      )
+    }
+  }
+}
+

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.ui.components.InLoveDatePickerField
 import com.example.ui.components.DatePickerPresets
+import com.example.ui.components.animateDialogEntrance
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -500,7 +501,7 @@ fun PairingScreen(
                   ) {
                     Icon(
                       imageVector = Icons.Filled.Check,
-                      contentDescription = if (isEnglish) "Coupled 1-1" else "Đã kết đôi 1-1",
+                      contentDescription = if (isEnglish) "Coupled" else "Đã kết đôi",
                       tint = Color(0xFF2E7D32),
                       modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp).size(16.dp)
                     )
@@ -693,14 +694,15 @@ fun PairingScreen(
                 if (confirmBreakup) {
                   AlertDialog(
                     onDismissRequest = { confirmBreakup = false },
+                    modifier = Modifier.animateDialogEntrance(),
                     shape = RoundedCornerShape(28.dp),
                     containerColor = Color.White,
-                    title = { Text("Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold) },
-                    text = { Text("Nếu người ấy đồng ý, hai bạn trở về Độc thân và kỷ niệm chung bị khóa.") },
+                    title = { Text(if (isEnglish) "Request to end Set Love?" else "Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold) },
+                    text = { Text(if (isEnglish) "If partner agrees, both return to Single and shared memories are locked." else "Nếu người ấy đồng ý, hai bạn trở về Độc thân và kỷ niệm chung bị khóa.") },
                     confirmButton = {
-                      Button(onClick = { confirmBreakup = false; viewModel.requestBreakup() }, colors = dangerColors) { Text("Gửi yêu cầu") }
+                      Button(onClick = { confirmBreakup = false; viewModel.requestBreakup() }, colors = dangerColors) { Text(if (isEnglish) "Send Request" else "Gửi yêu cầu") }
                     },
-                    dismissButton = { OutlinedButton(onClick = { confirmBreakup = false }) { Text("Hủy bỏ") } }
+                    dismissButton = { OutlinedButton(onClick = { confirmBreakup = false }) { Text(if (isEnglish) "Cancel" else "Hủy bỏ") } }
                   )
                 }
               }
@@ -793,11 +795,65 @@ fun PairingScreen(
                 ) {
                   OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { viewModel.updateSearchQuery(it) },
+                    onValueChange = { viewModel.updateSearchQuery(it.uppercase()) },
                     placeholder = { Text("LOVE-9966", fontSize = 14.sp) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = pairingTextFieldColors(),
+                    trailingIcon = {
+                      if (searchQuery.isNotEmpty()) {
+                        IconButton(
+                          onClick = {
+                            viewModel.updateSearchQuery("")
+                            viewModel.clearSearch()
+                          },
+                          modifier = Modifier.size(28.dp)
+                        ) {
+                          Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = if (isEnglish) "Clear" else "Xóa",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(16.dp)
+                          )
+                        }
+                      } else {
+                        Surface(
+                          shape = RoundedCornerShape(8.dp),
+                          color = Color(0xFFFFF0F5),
+                          modifier = Modifier
+                            .padding(end = 6.dp)
+                            .clickable {
+                              val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                              val clipText = clipboard.primaryClip?.getItemAt(0)?.text?.toString()?.trim() ?: ""
+                              if (clipText.isNotEmpty()) {
+                                viewModel.updateSearchQuery(clipText.uppercase())
+                                viewModel.performSearch()
+                              } else {
+                                viewModel.showToast(if (isEnglish) "Clipboard is empty" else "Bộ nhớ tạm trống")
+                              }
+                            }
+                        ) {
+                          Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                          ) {
+                            Icon(
+                              imageVector = Icons.Default.ContentCopy,
+                              contentDescription = null,
+                              tint = Color(0xFFE91E63),
+                              modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                              text = if (isEnglish) "Paste" else "Dán mã",
+                              fontSize = 11.sp,
+                              fontWeight = FontWeight.Bold,
+                              color = Color(0xFFE91E63)
+                            )
+                          }
+                        }
+                      }
+                    },
                     modifier = Modifier
                       .weight(1f)
                       .testTag("input_search_code_or_link")
@@ -807,13 +863,20 @@ fun PairingScreen(
                     onClick = { viewModel.performSearch() },
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-                    modifier = Modifier.testTag("btn_perform_search")
+                    modifier = Modifier
+                      .height(52.dp)
+                      .testTag("btn_perform_search")
                   ) {
                     if (isSearching) {
                       CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                     } else {
-                      Icon(imageVector = Icons.Default.Search, contentDescription = "Tìm")
+                      Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                      ) {
+                        Icon(imageVector = Icons.Default.Search, contentDescription = "Tìm", modifier = Modifier.size(18.dp))
+                        Text(if (isEnglish) "Search" else "Tìm", fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
+                      }
                     }
                   }
                 }
@@ -884,10 +947,10 @@ fun PairingScreen(
                           )
                           Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (target.age > 0) {
-                              Text(text = if (isEnglish) "${target.age} yrs" else "${target.age} tuổi", fontSize = 14.sp, color = Color(0xFFC2185B), fontWeight = FontWeight.SemiBold)
+                              Text(text = com.example.ui.util.ProfileUtils.formatAgeDisplay(target.age, isEnglish), fontSize = 14.sp, color = Color(0xFFC2185B), fontWeight = FontWeight.SemiBold)
                             }
                             if (target.zodiac.isNotBlank()) {
-                              Text(text = if (isEnglish) "• Zodiac " + target.zodiac else "• Cung " + target.zodiac, fontSize = 14.sp, color = Color(0xFF880E4F), fontWeight = FontWeight.SemiBold)
+                              Text(text = "• " + com.example.ui.util.ProfileUtils.formatZodiacDisplay(target.zodiac, isEnglish), fontSize = 14.sp, color = Color(0xFF880E4F), fontWeight = FontWeight.SemiBold)
                             }
                           }
                         }
@@ -911,7 +974,8 @@ fun PairingScreen(
                         label = if (isEnglish) "Start date *" else "Ngày bắt đầu yêu *",
                         placeholder = "dd/MM/yyyy",
                         dialogTitle = if (isEnglish) "Select love start date" else "Chọn ngày bắt đầu yêu",
-                        quickPresets = DatePickerPresets.relationshipStartDatePresets(),
+                        quickPresets = DatePickerPresets.relationshipStartDatePresets(isEnglish),
+                        isEnglish = isEnglish,
                         modifier = Modifier.fillMaxWidth(),
                         testTag = "input_proposed_start_date"
                       )
@@ -989,19 +1053,56 @@ fun PairingScreen(
       // 4. PERSONAL INTERESTS SECTION
       item {
         Card(
-          shape = RoundedCornerShape(20.dp),
+          shape = RoundedCornerShape(22.dp),
           colors = CardDefaults.cardColors(containerColor = Color.White),
-          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E0E0)),
-          modifier = Modifier.fillMaxWidth()
+          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCDD2)),
+          modifier = Modifier.fillMaxWidth().testTag("pairing_interests_card")
         ) {
-          Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Text(
-                text = if (isEnglish) "Interests" else "Sở thích",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-              )
+          Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+              ) {
+                Icon(
+                  imageVector = Icons.Default.AutoAwesome,
+                  contentDescription = null,
+                  tint = Color(0xFFE91E63),
+                  modifier = Modifier.size(18.dp)
+                )
+                Text(
+                  text = if (isEnglish) "Interests" else "Sở thích",
+                  fontWeight = FontWeight.Bold,
+                  fontSize = 16.sp,
+                  color = Color(0xFF880E4F)
+                )
+              }
+
+              Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFFFF0F5),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFC0D3))
+              ) {
+                Text(
+                  text = "${currentUser.interests.size}/${OnlineCoupleRepository.AVAILABLE_INTERESTS.size}",
+                  fontSize = 11.5.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color(0xFFD81B60),
+                  modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.5.dp)
+                )
+              }
             }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+              text = if (isEnglish) "Tap to select your favorite hobbies and discover mutual vibes" else "Chọn sở thích để cùng khám phá điểm tương đồng với người ấy",
+              fontSize = 12.sp,
+              color = Color.Gray
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1013,41 +1114,78 @@ fun PairingScreen(
               val myInterests = currentUser.interests
               OnlineCoupleRepository.AVAILABLE_INTERESTS.forEach { (key, label) ->
                 val isSelected = myInterests.contains(key)
-                // Emoji-only circles; the labels end with their emoji.
-                Box(
-                  contentAlignment = Alignment.Center,
+                val emoji = label.substringAfterLast(' ')
+                val name = label.substringBeforeLast(' ')
+
+                Surface(
+                  shape = RoundedCornerShape(16.dp),
+                  color = if (isSelected) Color(0xFFFFEBEE) else Color(0xFFF9F9FB),
+                  border = androidx.compose.foundation.BorderStroke(
+                    if (isSelected) 1.5.dp else 1.dp,
+                    if (isSelected) Color(0xFFE91E63) else Color(0xFFEAEAEA)
+                  ),
                   modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelected) Color(0xFFFFEBEE) else Color(0xFFF5F5F5))
-                    .border(if (isSelected) 2.dp else 0.dp, Color(0xFFC2185B), CircleShape)
-                    .clickable(onClickLabel = label) { viewModel.toggleInterest(key) }
-                    .semantics { contentDescription = label.substringBeforeLast(' ') }
+                    .clickable { viewModel.toggleInterest(key) }
+                    .testTag("interest_chip_$key")
                 ) {
-                  Text(text = label.substringAfterLast(' '), fontSize = 20.sp)
+                  Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp)
+                  ) {
+                    Text(text = emoji, fontSize = 16.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                      text = name,
+                      fontSize = 12.5.sp,
+                      fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                      color = if (isSelected) Color(0xFFC2185B) else Color(0xFF424242)
+                    )
+                    if (isSelected) {
+                      Spacer(modifier = Modifier.width(5.dp))
+                      Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = Color(0xFFE91E63),
+                        modifier = Modifier.size(13.dp)
+                      )
+                    }
+                  }
                 }
               }
             }
+
             val pickedNames = OnlineCoupleRepository.AVAILABLE_INTERESTS
               .filter { currentUser.interests.contains(it.first) }
               .joinToString(" · ") { it.second.substringBeforeLast(' ') }
             if (pickedNames.isNotEmpty()) {
-              Text(text = pickedNames, fontSize = 12.sp, color = Color(0xFFC2185B), fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
+              Spacer(modifier = Modifier.height(10.dp))
+              Text(
+                text = "Đã chọn: $pickedNames",
+                fontSize = 12.sp,
+                color = Color(0xFFC2185B),
+                fontWeight = FontWeight.SemiBold
+              )
             }
 
             if (mutualInterests.isNotEmpty()) {
               Spacer(modifier = Modifier.height(12.dp))
               Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFF3E5F5),
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xFFFFF3E0),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCC80)),
                 modifier = Modifier.fillMaxWidth()
               ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                  modifier = Modifier.padding(12.dp),
+                  verticalAlignment = Alignment.CenterVertically
+                ) {
+                  Text("💖", fontSize = 16.sp)
+                  Spacer(modifier = Modifier.width(8.dp))
                   Text(
-                    text = "✨ ${mutualInterests.joinToString(", ")}",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    color = Color(0xFF6A1B9A)
+                    text = if (isEnglish) "Mutual interests: ${mutualInterests.joinToString(", ")}" else "Điểm chung ngọt ngào: ${mutualInterests.joinToString(", ")}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.5.sp,
+                    color = Color(0xFFE65100)
                   )
                 }
               }
@@ -1080,6 +1218,7 @@ fun PairingScreen(
   selectedInviteForVerification?.let { inv ->
     VerifyInviteDialog(
       invite = inv,
+      isEnglish = isEnglish,
       onDismiss = { viewModel.dismissInspectInvite() },
       onAccept = { confirmedDateMillis ->
         viewModel.acceptSetLoveInvite(

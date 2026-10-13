@@ -52,6 +52,7 @@ fun ComposeBannerAd(
     // Tính kích thước Adaptive Banner theo chiều rộng màn hình tính bằng DP
     val screenWidthDp = configuration.screenWidthDp
     val adSize: AdSize = remember(screenWidthDp) {
+        @Suppress("DEPRECATION")
         AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
     }
 

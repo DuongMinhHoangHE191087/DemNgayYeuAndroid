@@ -55,6 +55,85 @@ object ProfileUtils {
   }
 
   /**
+   * Returns English name for a Zodiac sign
+   */
+  fun getZodiacEnglishName(zodiacVi: String): String {
+    return when (zodiacVi.trim()) {
+      "Bạch Dương" -> "Aries"
+      "Kim Ngưu" -> "Taurus"
+      "Song Tử" -> "Gemini"
+      "Cự Giải" -> "Cancer"
+      "Sư Tử" -> "Leo"
+      "Xử Nữ" -> "Virgo"
+      "Thiên Bình" -> "Libra"
+      "Bọ Cạp", "Thiên Yết", "Hổ Cáp" -> "Scorpio"
+      "Nhân Mã" -> "Sagittarius"
+      "Ma Kết" -> "Capricorn"
+      "Bảo Bình" -> "Aquarius"
+      "Song Ngư" -> "Pisces"
+      else -> zodiacVi.trim()
+    }
+  }
+
+  /**
+   * Returns the Zodiac astrological symbol emoji (♈, ♉, ♊...)
+   */
+  fun getZodiacSymbol(zodiacName: String): String {
+    return when (zodiacName.trim()) {
+      "Bạch Dương", "Aries" -> "♈"
+      "Kim Ngưu", "Taurus" -> "♉"
+      "Song Tử", "Gemini" -> "♊"
+      "Cự Giải", "Cancer" -> "♋"
+      "Sư Tử", "Leo" -> "♌"
+      "Xử Nữ", "Virgo" -> "♍"
+      "Thiên Bình", "Libra" -> "♎"
+      "Bọ Cạp", "Thiên Yết", "Hổ Cáp", "Scorpio" -> "♏"
+      "Nhân Mã", "Sagittarius" -> "♐"
+      "Ma Kết", "Capricorn" -> "♑"
+      "Bảo Bình", "Aquarius" -> "♒"
+      "Song Ngư", "Pisces" -> "♓"
+      else -> "✨"
+    }
+  }
+
+  /**
+   * Formats Zodiac for display cleanly without awkward mixing (e.g. "Scorpio ♏" or "Cung Bọ Cạp ♏")
+   */
+  fun formatZodiacDisplay(zodiacName: String, isEnglish: Boolean): String {
+    if (zodiacName.isBlank() || zodiacName == "Chưa rõ") return ""
+    val symbol = getZodiacSymbol(zodiacName)
+    return if (isEnglish) {
+      val engName = getZodiacEnglishName(zodiacName)
+      "$engName $symbol"
+    } else {
+      val viName = when (zodiacName.trim()) {
+        "Aries" -> "Bạch Dương"
+        "Taurus" -> "Kim Ngưu"
+        "Gemini" -> "Song Tử"
+        "Cancer" -> "Cự Giải"
+        "Leo" -> "Sư Tử"
+        "Virgo" -> "Xử Nữ"
+        "Libra" -> "Thiên Bình"
+        "Scorpio" -> "Bọ Cạp"
+        "Sagittarius" -> "Nhân Mã"
+        "Capricorn" -> "Ma Kết"
+        "Aquarius" -> "Bảo Bình"
+        "Pisces" -> "Song Ngư"
+        else -> zodiacName.trim()
+      }
+      "Cung $viName $symbol"
+    }
+  }
+
+  /**
+   * Formats age nicely without rough abbreviations
+   */
+  fun formatAgeDisplay(age: Int, isEnglish: Boolean): String {
+    if (age <= 0) return ""
+    return if (isEnglish) "$age years old" else "$age tuổi"
+  }
+
+  /**
    * Calculates age accurately from birth date string ("dd/MM/yyyy")
    */
   fun calculateAge(birthDateStr: String): Int {

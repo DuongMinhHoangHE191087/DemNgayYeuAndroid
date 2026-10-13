@@ -33,6 +33,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import com.example.ui.components.animateDialogEntrance
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -94,6 +95,7 @@ fun ChangePasswordDialog(
       elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
       modifier = Modifier
         .fillMaxWidth(0.95f)
+        .animateDialogEntrance()
         .padding(16.dp)
         .verticalScroll(rememberScrollState())
     ) {
@@ -259,6 +261,7 @@ fun SetPinDialog(
       elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
       modifier = Modifier
         .fillMaxWidth(0.92f)
+        .animateDialogEntrance()
         .padding(16.dp)
     ) {
       Column(
@@ -371,6 +374,7 @@ fun SecurityAuditLogsDialog(
       colors = CardDefaults.cardColors(containerColor = Color.White),
       modifier = Modifier
         .fillMaxWidth(0.92f)
+        .animateDialogEntrance()
         .padding(16.dp)
     ) {
       Column(

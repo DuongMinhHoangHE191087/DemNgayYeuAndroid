@@ -63,6 +63,35 @@ class DatePickerTest {
   }
 
   @Test
+  fun testDatePresets_MemoryDatePresets() {
+    val presets = DatePickerPresets.memoryDatePresets()
+    assertTrue("Should have multiple memory presets", presets.size >= 4)
+
+    val labels = presets.map { it.first }
+    assertTrue("Should contain 'Hôm nay'", labels.contains("Hôm nay"))
+    assertTrue("Should contain 'Hôm qua'", labels.contains("Hôm qua"))
+    assertTrue("Should contain '1 tuần trước'", labels.contains("1 tuần trước"))
+    assertTrue("Should contain '1 tháng trước'", labels.contains("1 tháng trước"))
+  }
+
+  @Test
+  fun testFormatZodiacDisplay() {
+    val (zodiacName, _) = ProfileUtils.calculateZodiac("20/11/2004")
+    val viDisplay = ProfileUtils.formatZodiacDisplay(zodiacName, isEnglish = false)
+    assertEquals("Cung Bọ Cạp ♏", viDisplay)
+
+    val enDisplay = ProfileUtils.formatZodiacDisplay(zodiacName, isEnglish = true)
+    assertEquals("Scorpio ♏", enDisplay)
+  }
+
+  @Test
+  fun testFormatAgeDisplay() {
+    val age = 21
+    assertEquals("21 tuổi", ProfileUtils.formatAgeDisplay(age, isEnglish = false))
+    assertEquals("21 years old", ProfileUtils.formatAgeDisplay(age, isEnglish = true))
+  }
+
+  @Test
   fun testLoveDaysCalculationWithPickedDate() {
     val days = ProfileUtils.calculateLoveDays("18/12/2022")
     assertTrue("Love days from 2022 should be greater than 365", days > 365)

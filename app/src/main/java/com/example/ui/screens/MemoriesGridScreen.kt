@@ -27,6 +27,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.animation.animateContentSize
+import com.example.ui.components.animateDialogEntrance
+import com.example.ui.components.DatePickerPresets
+import com.example.ui.components.InLoveDatePickerField
+import com.example.ui.components.MemoryPhotoReorderStrip
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -592,8 +598,8 @@ private fun EmptyMemoriesCard(
 }
 
 /**
- * Add Memory Dialog: pick a photo or video, then save. [onSaveMemory] returns true only once the upload
- * is confirmed and the memory is stored; the dialog closes itself on true and stays open on false.
+ * Add Memory Dialog: pick photos or video, reorder cover photo, select date with Material 3 DatePicker,
+ * auto-expanding notes, and save.
  */
 @Composable
 fun AddMemoryDialog(
@@ -614,6 +620,7 @@ fun AddMemoryDialog(
 ) {
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
+  val isEnglish = currentLanguage == AppLanguage.EN
 
   val todayFormatted = remember {
     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
@@ -625,26 +632,48 @@ fun AddMemoryDialog(
   var note by remember { mutableStateOf("") }
   var privacyLevel by remember { mutableStateOf("COUPLE_ONLY") } // "COUPLE_ONLY" or "PRIVATE"
 
-  var selectedMediaUri by remember(presetPhotos) {
-    mutableStateOf(presetPhotos.firstOrNull() ?: "")
+  // Multi-photo state: list of photo Uris/URLs
+  var selectedPhotos by remember(presetPhotos) {
+    mutableStateOf(if (presetPhotos.isNotEmpty()) listOf(presetPhotos.first()) else emptyList())
   }
-  // The picked file is the single source of truth for the media type; presets leave it null.
+  var selectedMediaUri by remember(selectedPhotos) {
+    mutableStateOf(selectedPhotos.firstOrNull().orEmpty())
+  }
+
   var pickedMedia by remember { mutableStateOf<MemoryMediaFile?>(null) }
   var validationError by remember { mutableStateOf<String?>(null) }
   var isSaving by remember { mutableStateOf(false) }
+  var isLoadingMedia by remember { mutableStateOf(false) }
   val isVideo = pickedMedia?.kind == MediaKind.VIDEO
 
-  // System photo/video picker: copy and validate off the main thread, then show the result
-  val filePickerLauncher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.PickVisualMedia()
-  ) { uri: Uri? ->
-    uri?.let { picked ->
+  // System photo/video multi-picker: supports picking up to 10 photos
+  val multiFilePickerLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
+  ) { uris: List<Uri> ->
+    if (uris.isNotEmpty()) {
+      isLoadingMedia = true
       coroutineScope.launch {
-        val pick = withContext(Dispatchers.IO) { LocalMediaStore.prepare(context, picked) }
-        validationError = pick.error
-        if (pick.media != null) {
-          pickedMedia = pick.media
-          selectedMediaUri = pick.coverUri.orEmpty()
+        try {
+          val preparedList = withContext(Dispatchers.IO) {
+            uris.mapNotNull { picked ->
+              val pick = LocalMediaStore.prepare(context, picked)
+              if (pick.error != null) {
+                validationError = pick.error
+              }
+              if (pickedMedia == null && pick.media != null) {
+                pickedMedia = pick.media
+              }
+              pick.coverUri ?: pick.media?.let { Uri.fromFile(it.file).toString() } ?: picked.toString()
+            }
+          }
+          if (preparedList.isNotEmpty()) {
+            val combined = (selectedPhotos + preparedList).distinct().take(10)
+            selectedPhotos = combined
+            selectedMediaUri = combined.firstOrNull().orEmpty()
+            validationError = null
+          }
+        } finally {
+          isLoadingMedia = false
         }
       }
     }
@@ -652,43 +681,54 @@ fun AddMemoryDialog(
 
   Dialog(onDismissRequest = { if (!isSaving) onDismiss() }) {
     Surface(
-      shape = RoundedCornerShape(26.dp),
+      shape = RoundedCornerShape(28.dp),
       color = Color.White,
-      shadowElevation = 10.dp,
+      shadowElevation = 16.dp,
+      border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFDDE6)),
       modifier = Modifier
-        .fillMaxWidth()
-        .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(26.dp))
+        .widthIn(max = 380.dp)
+        .fillMaxWidth(0.94f)
+        .animateDialogEntrance()
+        .padding(vertical = 10.dp)
     ) {
       Column(
         modifier = Modifier
-          .padding(16.dp)
-          .verticalScroll(rememberScrollState())
+          .padding(20.dp)
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
       ) {
-        // Title Row
+        // 1. Title Bar
         Row(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.SpaceBetween,
           modifier = Modifier.fillMaxWidth()
         ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+          ) {
             Box(
               modifier = Modifier
                 .size(38.dp)
-                .background(Color(0xFFFF2D75).copy(alpha = 0.12f), CircleShape),
+                .background(
+                  brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                    listOf(Color(0xFFFF4081), Color(0xFFFF2D75))
+                  ),
+                  shape = CircleShape
+                ),
               contentAlignment = Alignment.Center
             ) {
               Icon(
                 imageVector = if (isVideo) Icons.Default.Movie else Icons.Default.AddAPhoto,
                 contentDescription = null,
-                tint = Color(0xFFFF2D75),
-                modifier = Modifier.size(20.dp)
+                tint = Color.White,
+                modifier = Modifier.size(19.dp)
               )
             }
-            Spacer(modifier = Modifier.width(10.dp))
             Text(
-              text = if (currentLanguage == AppLanguage.EN) "New memory" else "Kỷ niệm mới",
+              text = if (isEnglish) "New Memory" else "Tạo Kỷ Niệm Mới",
               fontWeight = FontWeight.Bold,
-              fontSize = 17.sp,
+              fontSize = 17.5.sp,
               color = Color(0xFF880E4F),
               maxLines = 1,
               overflow = TextOverflow.Ellipsis
@@ -696,134 +736,133 @@ fun AddMemoryDialog(
           }
 
           if (!isSaving) {
-            IconButton(onClick = onDismiss) {
-              Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+            IconButton(
+              onClick = onDismiss,
+              modifier = Modifier.size(32.dp)
+            ) {
+              Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.Gray, modifier = Modifier.size(20.dp))
             }
           }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Title Input
+        // 2. Compact Title Input
         OutlinedTextField(
           value = title,
           onValueChange = { title = it },
-          label = { Text(if (currentLanguage == AppLanguage.EN) "Title" else "Tiêu đề", maxLines = 1) },
+          label = { Text(if (isEnglish) "Title" else "Tiêu đề", maxLines = 1, fontSize = 13.sp) },
+          placeholder = { Text(if (isEnglish) "e.g. Our special day" else "Ví dụ: Buổi hẹn đầu tiên", fontSize = 13.sp) },
           singleLine = true,
           shape = RoundedCornerShape(14.dp),
-          modifier = Modifier.fillMaxWidth().testTag("input_memory_title"),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("input_memory_title"),
           colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color(0xFFFF2D75),
             unfocusedBorderColor = Color(0xFFFFDDE6)
           )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Date input (Location removed per user request)
-        OutlinedTextField(
+        // 3. Compact Date Picker Field (Integrated OOP Material 3 DatePicker)
+        InLoveDatePickerField(
           value = dateText,
           onValueChange = { dateText = it },
-          label = { Text(if (currentLanguage == AppLanguage.EN) "Date" else "Ngày", maxLines = 1) },
-          singleLine = true,
-          shape = RoundedCornerShape(14.dp),
-          modifier = Modifier.fillMaxWidth().testTag("input_memory_date"),
-          colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFFFF2D75),
-            unfocusedBorderColor = Color(0xFFFFDDE6)
-          )
+          label = if (isEnglish) "Anniversary Date" else "Ngày kỷ niệm",
+          dialogTitle = if (isEnglish) "Select Anniversary Date" else "Chọn ngày kỷ niệm",
+          quickPresets = DatePickerPresets.memoryDatePresets(isEnglish),
+          isEnglish = isEnglish,
+          testTag = "input_memory_date",
+          modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Note Input (Supports long multiline notes)
+        // 4. Note Input (Auto-expanding dynamically with smooth animateContentSize)
         OutlinedTextField(
           value = note,
           onValueChange = { note = it },
-          label = { Text(if (currentLanguage == AppLanguage.EN) "Note" else "Ghi chú", maxLines = 1) },
-          minLines = 2,
-          maxLines = 5,
+          label = { Text(if (isEnglish) "Notes & Feelings" else "Ghi chú & Cảm xúc", maxLines = 1, fontSize = 13.sp) },
+          placeholder = { Text(if (isEnglish) "Write something sweet..." else "Chia sẻ dòng cảm xúc ngọt ngào...", fontSize = 13.sp) },
+          minLines = 3,
+          maxLines = Int.MAX_VALUE,
           shape = RoundedCornerShape(14.dp),
-          modifier = Modifier.fillMaxWidth().testTag("input_memory_note"),
+          modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()
+            .testTag("input_memory_note"),
           colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Color(0xFFFF2D75),
             unfocusedBorderColor = Color(0xFFFFDDE6)
           )
         )
-        Spacer(modifier = Modifier.height(10.dp))
-        // Single upload target: compact row, tap to pick a photo or video.
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(10.dp),
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0xFFFFC0D3), RoundedCornerShape(14.dp))
-            .clickable(enabled = !isSaving) {
-              filePickerLauncher.launch(
+
+        // 5. Multi-photo Reorder & Preview Strip with Loading Shimmer
+        MemoryPhotoReorderStrip(
+          photoUris = selectedPhotos,
+          onPhotosReordered = { updated ->
+            selectedPhotos = updated
+            selectedMediaUri = updated.firstOrNull().orEmpty()
+          },
+          onRemovePhoto = { index ->
+            if (index in selectedPhotos.indices) {
+              val updated = selectedPhotos.toMutableList().apply { removeAt(index) }
+              selectedPhotos = updated
+              selectedMediaUri = updated.firstOrNull().orEmpty()
+            }
+          },
+          onAddMoreClicked = {
+            if (!isSaving && !isLoadingMedia) {
+              multiFilePickerLauncher.launch(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
               )
             }
-            .padding(8.dp)
-            .testTag("btn_upload_media_file")
-        ) {
-          Box(
-            contentAlignment = Alignment.Center,
+          },
+          isLoading = isLoadingMedia,
+          isEnglish = isEnglish
+        )
+
+        // 6. Preset Thumbnails Row (if presets available and no custom photo picked)
+        if (!isVideo && presetPhotos.isNotEmpty() && selectedPhotos.size <= 1) {
+          Text(
+            text = if (isEnglish) "Or pick a romantic sample photo:" else "Hoặc chọn ảnh mẫu có sẵn:",
+            fontSize = 11.5.sp,
+            color = Color.Gray,
+            fontWeight = FontWeight.Medium
+          )
+          Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-              .size(48.dp)
-              .clip(RoundedCornerShape(10.dp))
-              .background(Color(0xFFFCE4EC))
+              .fillMaxWidth()
+              .horizontalScroll(rememberScrollState())
           ) {
-            if (!isVideo && selectedMediaUri.isNotBlank()) {
-              AsyncImage(
-                model = selectedMediaUri,
-                contentDescription = "Selected memory photo",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-              )
-            } else {
-              Icon(
-                imageVector = if (isVideo) Icons.Default.VideoFile else Icons.Default.AddAPhoto,
-                contentDescription = null,
-                tint = Color(0xFFFF2D75),
-                modifier = Modifier.size(22.dp)
-              )
+            presetPhotos.forEach { url ->
+              val isSelected = selectedMediaUri == url
+              Box(
+                modifier = Modifier
+                  .size(46.dp)
+                  .clip(RoundedCornerShape(12.dp))
+                  .border(
+                    width = if (isSelected) 2.2.dp else 1.dp,
+                    color = if (isSelected) Color(0xFFFF2D75) else Color(0xFFFFE0E9),
+                    shape = RoundedCornerShape(12.dp)
+                  )
+                  .clickable {
+                    selectedPhotos = listOf(url)
+                    selectedMediaUri = url
+                    pickedMedia = null
+                    validationError = null
+                  }
+              ) {
+                AsyncImage(
+                  model = url,
+                  contentDescription = "Preset photo",
+                  contentScale = ContentScale.Crop,
+                  modifier = Modifier.fillMaxSize()
+                )
+              }
             }
-          }
-          Column(modifier = Modifier.weight(1f)) {
-            Text(
-              text = when {
-                pickedMedia == null -> if (currentLanguage == AppLanguage.EN) "Add photo / video" else "Thêm ảnh / video"
-                isVideo -> "Video"
-                else -> if (currentLanguage == AppLanguage.EN) "Photo" else "Ảnh"
-              },
-              fontSize = 13.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color(0xFF880E4F),
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis
-            )
-            pickedMedia?.let { media ->
-              Text(
-                text = if (isVideo) "${media.durationSeconds}s · ${formatMediaSize(media.sizeBytes)}" else formatMediaSize(media.sizeBytes),
-                fontSize = 11.sp,
-                color = Color.Gray,
-                maxLines = 1
-              )
-            }
-          }
-          if (pickedMedia != null && validationError == null) {
-            Icon(
-              imageVector = Icons.Default.Check,
-              contentDescription = null,
-              tint = Color(0xFF2E7D32),
-              modifier = Modifier.size(20.dp)
-            )
           }
         }
-        // Validation Error / Status Feedback
+
+        // 7. Validation Error / Status Feedback
         validationError?.let { message ->
-          Spacer(modifier = Modifier.height(6.dp))
           Surface(
             shape = RoundedCornerShape(10.dp),
             color = Color(0xFFFFEBEE),
@@ -832,7 +871,7 @@ fun AddMemoryDialog(
           ) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+              modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
               Icon(
                 imageVector = Icons.Default.Close,
@@ -850,46 +889,8 @@ fun AddMemoryDialog(
             }
           }
         }
-        // Preset Thumbnails Row (if photo and presets available)
-        if (!isVideo && presetPhotos.isNotEmpty()) {
-          Spacer(modifier = Modifier.height(8.dp))
-          Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .horizontalScroll(rememberScrollState())
-          ) {
-            presetPhotos.forEach { url ->
-              val isSelected = selectedMediaUri == url
-              Box(
-                modifier = Modifier
-                  .size(50.dp)
-                  .clip(RoundedCornerShape(12.dp))
-                  .border(
-                    width = if (isSelected) 2.5.dp else 1.dp,
-                    color = if (isSelected) Color(0xFFFF2D75) else Color(0xFFFFE0E9),
-                    shape = RoundedCornerShape(12.dp)
-                  )
-                  .clickable {
-                    selectedMediaUri = url
-                    pickedMedia = null
-                    validationError = null
-                  }
-              ) {
-                AsyncImage(
-                  model = url,
-                  contentDescription = "Preset photo",
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier.fillMaxSize()
-                )
-              }
-            }
-          }
-        }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Privacy Options (Only 2 modes: Couple Only & Private)
+        // 8. Privacy Options (Couple Only & Just Me)
         Row(
           horizontalArrangement = Arrangement.spacedBy(10.dp),
           modifier = Modifier.fillMaxWidth()
@@ -919,9 +920,9 @@ fun AddMemoryDialog(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (currentLanguage == AppLanguage.EN) "Couple" else "2 người",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                text = if (isEnglish) "Couple" else "Cặp đôi",
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 color = if (privacyLevel == "COUPLE_ONLY") Color(0xFF880E4F) else Color.Gray
               )
@@ -953,9 +954,9 @@ fun AddMemoryDialog(
               )
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = if (currentLanguage == AppLanguage.EN) "Just me" else "Riêng tôi",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                text = if (isEnglish) "Just me" else "Riêng tôi",
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 color = if (privacyLevel == "PRIVATE") Color(0xFF4A148C) else Color.Gray
               )
@@ -963,25 +964,23 @@ fun AddMemoryDialog(
           }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Upload Status Spinner
+        // 9. Upload / Saving Progress Spinner
         if (isSaving) {
           Row(
             modifier = Modifier
               .fillMaxWidth()
-              .padding(vertical = 8.dp),
+              .padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
           ) {
             CircularProgressIndicator(
-              modifier = Modifier.size(22.dp),
+              modifier = Modifier.size(20.dp),
               color = Color(0xFFFF2D75),
               strokeWidth = 2.5.dp
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-              text = if (currentLanguage == AppLanguage.EN) "Saving…" else "Đang lưu…",
+              text = if (isEnglish) "Saving memory..." else "Đang lưu kỷ niệm...",
               fontSize = 13.sp,
               fontWeight = FontWeight.SemiBold,
               color = Color(0xFFE91E63)
@@ -989,39 +988,46 @@ fun AddMemoryDialog(
           }
         }
 
-        // Action Buttons: Cancel and Save
+        // 10. Action Buttons: Cancel and Save
         Row(
-          horizontalArrangement = Arrangement.spacedBy(12.dp),
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
           modifier = Modifier.fillMaxWidth()
         ) {
           OutlinedButton(
             onClick = onDismiss,
             enabled = !isSaving,
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.weight(1f)
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFDDE6)),
+            modifier = Modifier
+              .weight(1f)
+              .height(46.dp)
           ) {
-            Text(if (currentLanguage == AppLanguage.EN) "Cancel" else strings.btnCancel)
+            Text(
+              text = if (isEnglish) "Cancel" else "Hủy",
+              fontWeight = FontWeight.SemiBold,
+              fontSize = 14.sp
+            )
           }
 
-          val canSave = !isSaving && validationError == null
+          val canSave = !isSaving && validationError == null && !isLoadingMedia
 
           Button(
             onClick = {
               isSaving = true
               coroutineScope.launch {
                 val finalTitle = title.ifBlank {
-                  if (currentLanguage == AppLanguage.VI) "Khoảnh Khắc Kỷ Niệm" else "Special Moment"
+                  if (!isEnglish) "Khoảnh Khắc Kỷ Niệm" else "Special Moment"
                 }
-                // A preset has no picked file; a picked file uses its cover frame as the local photo.
+                val coverPhoto = selectedPhotos.firstOrNull() ?: selectedMediaUri
                 val saved = try {
                   onSaveMemory(
                     finalTitle,
                     dateText,
-                    selectedMediaUri,
+                    coverPhoto,
                     note,
                     location,
                     pickedMedia,
-                    if (pickedMedia != null) selectedMediaUri else null,
+                    if (pickedMedia != null) coverPhoto else null,
                     privacyLevel
                   )
                 } finally {
@@ -1033,13 +1039,17 @@ fun AddMemoryDialog(
             enabled = canSave,
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.weight(1.2f).testTag("btn_save_memory_submit")
+            modifier = Modifier
+              .weight(1.2f)
+              .height(46.dp)
+              .testTag("btn_save_memory_submit")
           ) {
             Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-              text = if (currentLanguage == AppLanguage.EN) "Save" else "Lưu",
+              text = if (isEnglish) "Save" else "Lưu",
               fontWeight = FontWeight.Bold,
+              fontSize = 14.5.sp,
               maxLines = 1
             )
           }
@@ -1071,7 +1081,9 @@ private fun EditMemoryDialog(
       color = Color.White,
       shadowElevation = 10.dp,
       modifier = Modifier
-        .fillMaxWidth()
+        .widthIn(max = 380.dp)
+        .fillMaxWidth(0.92f)
+        .animateDialogEntrance()
         .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(26.dp))
     ) {
       Column(
@@ -1234,7 +1246,9 @@ private fun MemoryDetailDialog(
       color = Color.White,
       shadowElevation = 12.dp,
       modifier = Modifier
-        .fillMaxWidth()
+        .widthIn(max = 380.dp)
+        .fillMaxWidth(0.92f)
+        .animateDialogEntrance()
         .border(1.dp, Color(0xFFFFDDE6), RoundedCornerShape(26.dp))
     ) {
       Column(

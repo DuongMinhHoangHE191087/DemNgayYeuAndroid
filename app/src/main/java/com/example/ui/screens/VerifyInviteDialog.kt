@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import com.example.ui.components.animateDialogEntrance
+import com.example.ui.components.InLoveDatePickerField
+import com.example.ui.components.DatePickerPresets
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,6 +69,7 @@ import com.example.ui.util.ProfileUtils
 @Composable
 fun VerifyInviteDialog(
   invite: OnlineInviteEntity,
+  isEnglish: Boolean = false,
   onDismiss: () -> Unit,
   onAccept: (confirmedDateMillis: Long) -> Unit,
   onReject: () -> Unit
@@ -84,13 +89,18 @@ fun VerifyInviteDialog(
     }
   }
 
-  Dialog(onDismissRequest = onDismiss) {
+  Dialog(
+    onDismissRequest = onDismiss,
+    properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+  ) {
     Card(
-      shape = RoundedCornerShape(26.dp),
+      shape = RoundedCornerShape(24.dp),
       colors = CardDefaults.cardColors(containerColor = Color.White),
       elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
       modifier = Modifier
-        .fillMaxWidth()
+        .widthIn(max = 380.dp)
+        .fillMaxWidth(0.92f)
+        .animateDialogEntrance()
         .padding(vertical = 12.dp)
         .testTag("verify_invite_dialog")
     ) {
@@ -116,7 +126,7 @@ fun VerifyInviteDialog(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-              text = "Xác Nhận Đúng Người",
+              text = if (isEnglish) "Verify Partner Identity" else "Xác Nhận Đúng Người",
               fontSize = 18.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF880E4F)
@@ -129,14 +139,14 @@ fun VerifyInviteDialog(
           ) {
             Icon(
               imageVector = Icons.Default.Close,
-              contentDescription = "Đóng",
+              contentDescription = if (isEnglish) "Close" else "Đóng",
               tint = Color.Gray
             )
           }
         }
 
         Text(
-          text = "Vui lòng kiểm tra kỹ thông tin người gửi và ngày kỷ niệm trước khi đồng ý kết đôi 1-1.",
+          text = if (isEnglish) "Please verify partner details before confirming connection." else "Vui lòng kiểm tra kỹ thông tin trước khi đồng ý kết đôi.",
           fontSize = 12.sp,
           color = Color.Gray,
           modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 14.dp)
@@ -174,7 +184,7 @@ fun VerifyInviteDialog(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                  text = "Mã kết đôi: ${invite.senderCoupleCode}",
+                  text = if (isEnglish) "Couple code: ${invite.senderCoupleCode}" else "Mã kết đôi: ${invite.senderCoupleCode}",
                   fontSize = 12.sp,
                   fontWeight = FontWeight.SemiBold,
                   color = Color(0xFFC2185B)
@@ -184,11 +194,11 @@ fun VerifyInviteDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                   if (invite.senderAge > 0) {
                     Surface(
-                      shape = RoundedCornerShape(6.dp),
+                      shape = RoundedCornerShape(8.dp),
                       color = Color.White
                     ) {
                       Text(
-                        text = "${invite.senderAge} tuổi",
+                        text = com.example.ui.util.ProfileUtils.formatAgeDisplay(invite.senderAge, isEnglish),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFC2185B),
@@ -199,11 +209,11 @@ fun VerifyInviteDialog(
 
                   if (invite.senderZodiac.isNotBlank()) {
                     Surface(
-                      shape = RoundedCornerShape(6.dp),
+                      shape = RoundedCornerShape(8.dp),
                       color = Color.White
                     ) {
                       Text(
-                        text = "Cung ${invite.senderZodiac}",
+                        text = com.example.ui.util.ProfileUtils.formatZodiacDisplay(invite.senderZodiac, isEnglish),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF880E4F),
@@ -269,7 +279,7 @@ fun VerifyInviteDialog(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                  text = "Tình trạng ngày yêu đề xuất:",
+                  text = if (isEnglish) "Proposed love date:" else "Tình trạng ngày yêu đề xuất:",
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color(0xFF880E4F)
@@ -277,7 +287,7 @@ fun VerifyInviteDialog(
               }
 
               Text(
-                text = if (isCustomizingDate) "Đóng chỉnh" else "Chỉnh ngày",
+                text = if (isCustomizingDate) (if (isEnglish) "Done" else "Đóng chỉnh") else (if (isEnglish) "Edit date" else "Chỉnh ngày"),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFE91E63),
@@ -304,13 +314,13 @@ fun VerifyInviteDialog(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                  text = "❤️ Đã bên nhau $calculatedDays ngày yêu",
+                  text = if (isEnglish) "❤️ $calculatedDays days together" else "❤️ Đã bên nhau $calculatedDays ngày yêu",
                   fontSize = 13.sp,
                   fontWeight = FontWeight.Bold,
                   color = Color(0xFFD84315)
                 )
                 Text(
-                  text = "Khi đồng ý, cả hai máy sẽ cùng đồng bộ mốc ngày yêu này!",
+                  text = if (isEnglish) "Both devices will synchronize this date milestone upon acceptance!" else "Khi đồng ý, cả hai máy sẽ cùng đồng bộ mốc ngày yêu này!",
                   fontSize = 11.sp,
                   color = Color.DarkGray,
                   textAlign = TextAlign.Center,
@@ -321,24 +331,22 @@ fun VerifyInviteDialog(
 
             if (isCustomizingDate) {
               Spacer(modifier = Modifier.height(10.dp))
-              OutlinedTextField(
+              InLoveDatePickerField(
                 value = confirmedDateText,
                 onValueChange = { confirmedDateText = it },
-                label = { Text("Ngày bắt đầu yêu (dd/MM/yyyy)") },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                  focusedBorderColor = Color(0xFFE91E63),
-                  unfocusedBorderColor = Color(0xFFFFCDD2)
-                ),
-                modifier = Modifier.fillMaxWidth()
+                label = if (isEnglish) "Relationship start date" else "Ngày bắt đầu yêu",
+                dialogTitle = if (isEnglish) "Select relationship start date" else "Chọn ngày bắt đầu yêu",
+                quickPresets = DatePickerPresets.relationshipStartDatePresets(isEnglish),
+                isEnglish = isEnglish,
+                modifier = Modifier.fillMaxWidth(),
+                testTag = "verify_custom_date_field"
               )
             }
 
             if (invite.loveNote.isNotBlank()) {
               Spacer(modifier = Modifier.height(10.dp))
               Text(
-                text = "💌 Lời nhắn từ đối phương:",
+                text = if (isEnglish) "💌 Message from partner:" else "💌 Lời nhắn từ đối phương:",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.DarkGray
@@ -369,7 +377,7 @@ fun VerifyInviteDialog(
           ) {
             Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Từ chối")
+            Text(if (isEnglish) "Decline" else "Từ chối")
           }
 
           Button(
@@ -383,7 +391,7 @@ fun VerifyInviteDialog(
           ) {
             Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Đồng ý Set Love ❤️", fontWeight = FontWeight.Bold)
+            Text(if (isEnglish) "Accept Set Love ❤️" else "Đồng ý Set Love ❤️", fontWeight = FontWeight.Bold)
           }
         }
       }

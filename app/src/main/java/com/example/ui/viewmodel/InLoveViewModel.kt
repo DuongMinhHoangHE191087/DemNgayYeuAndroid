@@ -972,12 +972,12 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
   ) {
     val cleanBoy = boy.trim().ifEmpty { _boyName.value.ifBlank { "Bạn" } }
     val cleanBoyBirth = boyBirth.trim().ifEmpty { _boyBirthDate.value }
-    val cleanBoyAvatar = boyAvatar.trim().ifEmpty { _boyAvatarUrl.value }
+    val cleanBoyAvatar = boyAvatar.trim()
     val cleanBoyZod = boyZod.trim().ifEmpty { _boyZodiac.value }
 
     val cleanGirl = girl.trim().ifEmpty { _girlName.value.ifBlank { "Người thương" } }
     val cleanGirlBirth = girlBirth.trim().ifEmpty { _girlBirthDate.value }
-    val cleanGirlAvatar = girlAvatar.trim().ifEmpty { _girlAvatarUrl.value }
+    val cleanGirlAvatar = girlAvatar.trim()
     val cleanGirlZod = girlZod.trim().ifEmpty { _girlZodiac.value }
 
     val cleanTitle = title.trim().ifEmpty { _loveTitle.value.ifBlank { "Hành Trình Yêu Thương" } }
@@ -1837,6 +1837,21 @@ class InLoveViewModel(application: Application) : AndroidViewModel(application) 
           com.example.ui.util.ProfileUtils.staleLocalAvatar(
             oldAvatar, avatarUrl.trim(), java.io.File(getApplication<Application>().filesDir, "avatars")
           )?.delete()
+        }
+        if (relationshipStatus.value != com.example.data.model.OnlineStatus.COUPLED) {
+          _boyName.value = name.trim().ifEmpty { "Bạn" }
+          _boyBirthDate.value = birthDate.trim()
+          _boyAvatarUrl.value = avatarUrl.trim()
+          val currentCouple = repository.getCoupleProfileSync()
+          if (currentCouple != null) {
+            repository.saveCoupleProfile(
+              currentCouple.copy(
+                partner1Name = name.trim().ifEmpty { "Bạn" },
+                partner1Birthday = birthDate.trim(),
+                partner1ProfilePicture = avatarUrl.trim()
+              )
+            )
+          }
         }
         _showEditProfileDialog.value = false
         triggerFloatingHearts()

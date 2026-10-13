@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import com.example.ui.components.animateDialogEntrance
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -158,6 +160,7 @@ fun GiftScreen(
   sharePreview?.let { text ->
     AlertDialog(
       onDismissRequest = { sharePreview = null },
+      modifier = Modifier.animateDialogEntrance(),
       containerColor = Color.White,
       title = { Text(if (isEnglish) "Share this suggestion?" else "Chia sẻ gợi ý này?", fontWeight = FontWeight.Bold) },
       text = { Text(text = text, fontSize = 14.sp) },
@@ -920,7 +923,9 @@ fun WishlistNotebookDialog(
       color = Color.White,
       shadowElevation = 16.dp,
       modifier = Modifier
-        .fillMaxWidth()
+        .widthIn(max = 380.dp)
+        .fillMaxWidth(0.92f)
+        .animateDialogEntrance()
         .fillMaxHeight(0.85f)
     ) {
       Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
@@ -1686,6 +1691,7 @@ private fun EditFieldsDialog(
   val values = remember { mutableStateListOf(*initial.toTypedArray()) }
   AlertDialog(
     onDismissRequest = onDismiss,
+    modifier = Modifier.animateDialogEntrance(),
     shape = RoundedCornerShape(28.dp),
     containerColor = Color.White,
     title = {

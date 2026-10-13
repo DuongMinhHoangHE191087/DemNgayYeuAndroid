@@ -45,3 +45,4 @@ pubsub-debug*.log
 
 /.superpowers
 /appplugin/DOC/testing
+/appplugin

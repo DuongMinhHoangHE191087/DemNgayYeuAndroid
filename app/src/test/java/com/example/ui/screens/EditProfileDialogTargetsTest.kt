@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import com.example.data.model.OnlineUserEntity
 import com.example.ui.theme.MyApplicationTheme
@@ -46,5 +47,27 @@ class EditProfileDialogTargetsTest {
         .assertHeightIsAtLeast(48.dp)
     }
     composeTestRule.onNodeWithContentDescription("Ảnh đại diện").assertExists()
+  }
+
+  @Test
+  fun avatarActions_existAndMeetMinRequirements() {
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        EditMyProfileDialogContent(
+          currentUser = OnlineUserEntity(uid = "me", coupleCode = "", avatarUrl = "https://example.com/avatar.jpg"),
+          presetAvatars = emptyList(),
+          isEnglish = false,
+          canEditPhoto = true,
+          onDismiss = {},
+          onSave = { _, _, _, _, _ -> }
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithTag("btn_photo_pencil").assertExists()
+    composeTestRule.onNodeWithTag("btn_photo_pencil").performClick()
+    composeTestRule.onNodeWithTag("btn_photo_library").assertExists()
+    composeTestRule.onNodeWithTag("btn_photo_camera").assertExists()
+    composeTestRule.onNodeWithTag("btn_photo_remove").assertExists()
   }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -108,10 +109,18 @@ fun NotificationsSheet(viewModel: InLoveViewModel, onDismiss: () -> Unit) {
     AppDensity {
     Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp).testTag("notifications_sheet")) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-          if (isEnglish) "Notifications" else "Thông báo",
-          fontSize = 20.sp, fontWeight = FontWeight.Bold, color = OnSurface
-        )
+        Column {
+          Text(
+            if (isEnglish) "Notifications" else "Thông báo",
+            fontSize = 20.sp, fontWeight = FontWeight.Bold, color = OnSurface
+          )
+          Text(
+            text = if (isEnglish) "Sent to your device when events approach" else "Thông báo chỉ gửi đến bạn khi sắp đến ngày",
+            fontSize = 12.sp,
+            color = OnSurfaceVariant,
+            modifier = Modifier.padding(top = 2.dp)
+          )
+        }
         Box(
           contentAlignment = Alignment.Center,
           modifier = Modifier
@@ -137,7 +146,7 @@ fun NotificationsSheet(viewModel: InLoveViewModel, onDismiss: () -> Unit) {
           verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
           Icon(Icons.Filled.NotificationsNone, null, tint = OnSurfaceVariant, modifier = Modifier.size(40.dp))
-          Text(if (isEnglish) "All quiet" else "Chưa có thông báo", fontSize = 14.sp, color = OnSurfaceVariant)
+          Text(if (isEnglish) "All quiet" else "Chưa có thông báo nào", fontSize = 14.sp, color = OnSurfaceVariant)
         }
       } else {
         LazyColumn(
@@ -150,14 +159,29 @@ fun NotificationsSheet(viewModel: InLoveViewModel, onDismiss: () -> Unit) {
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
                 .background(if (n.urgent && !isAllRead) PrimaryFixed.copy(alpha = 0.55f) else Color(0xFFFFF5F8))
-                .padding(12.dp),
+                .clickable { viewModel.markAllNotificationsRead() }
+                .padding(14.dp),
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-              Text(n.emoji, fontSize = 22.sp)
+              Text(n.emoji, fontSize = 24.sp)
               Column(Modifier.weight(1f)) {
                 Text(n.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnSurface)
                 Text(n.whenText, fontSize = 12.sp, color = if (n.urgent) Primary else OnSurfaceVariant)
+              }
+              if (n.urgent && !isAllRead) {
+                Surface(
+                  shape = RoundedCornerShape(8.dp),
+                  color = Primary.copy(alpha = 0.15f)
+                ) {
+                  Text(
+                    text = if (isEnglish) "Soon" else "Sắp tới",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Primary,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                  )
+                }
               }
             }
           }

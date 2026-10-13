@@ -89,6 +89,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import com.example.data.media.LocalMediaStore
+import com.example.ui.components.animateDialogEntrance
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
 import kotlinx.coroutines.Dispatchers
@@ -114,6 +115,7 @@ fun LanguageSelectionDialog(
       shadowElevation = 14.dp,
       modifier = Modifier
         .fillMaxWidth()
+        .animateDialogEntrance()
         .border(
           width = 1.5.dp,
           brush = Brush.linearGradient(listOf(Color(0xFFFF4081), Color(0xFFFF80AB))),
@@ -331,6 +333,7 @@ fun UserGuideDialog(
       shadowElevation = 16.dp,
       modifier = Modifier
         .fillMaxWidth()
+        .animateDialogEntrance()
         .border(
           width = 1.5.dp,
           brush = Brush.horizontalGradient(
@@ -764,6 +767,7 @@ fun WallpaperPickerDialog(
       shadowElevation = 14.dp,
       modifier = Modifier
         .fillMaxWidth()
+        .animateDialogEntrance()
         .border(
           width = 1.5.dp,
           brush = Brush.horizontalGradient(
