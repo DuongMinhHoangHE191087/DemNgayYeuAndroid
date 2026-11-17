@@ -1,0 +1,761 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "title-vi-with-emoji",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "title-en-with-emoji",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udd6e Mid-Autumn Festival",
+            "dateText": "25/09/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udd6e Mid-Autumn Festival",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udd6e Mid-Autumn Festival",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "custom-row-same-title-collision",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "20/06/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "09/05/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "09/05/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "unknown-title-untouched",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "Our first date",
+            "dateText": "01/01/2024",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "Our first date",
+            "dateText": "01/01/2024",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "Our first date",
+            "dateText": "01/01/2024",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "lunar-no-date-ahead-keeps-text-not-annual",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "27/08/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "16/08/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "16/08/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "rule-based-moves-forward",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83d\udc90 Ng\u00e0y C\u1ee7a M\u1eb9",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83d\udc90 Ng\u00e0y C\u1ee7a M\u1eb9",
+            "dateText": "09/05/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83d\udc90 Ng\u00e0y C\u1ee7a M\u1eb9",
+            "dateText": "09/05/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "rule-based-this-year-still-ahead",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "18/10/2025",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "17/10/2026",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "17/10/2026",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "idempotent-second-call-no-writes",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "27/11/2025",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83e\udeb7 Vu Lan (Ancestors' Day)",
+            "dateText": "27/08/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "26/11/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udeb7 Vu Lan (Ancestors' Day)",
+            "dateText": "16/08/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 3,
+        "updateCallsSecondPass": 0
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "26/11/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udeb7 Vu Lan (Ancestors' Day)",
+            "dateText": "16/08/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 3,
+        "updateCallsSecondPass": 0
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-end-today",
+      "input": {
+        "today": "2026-12-31",
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "25/09/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83e\udd83 L\u1ec5 T\u1ea1 \u01a0n",
+            "dateText": "26/11/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "21/06/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 L\u1ec5 T\u1ea1 \u01a0n",
+            "dateText": "25/11/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "20/06/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 4
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 L\u1ec5 T\u1ea1 \u01a0n",
+            "dateText": "25/11/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "20/06/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 4
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "row-without-emoji-prefix-not-matched",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "Mother's Day",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "Mother's Day",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "Mother's Day",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "title-nfd-not-matched",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udde7 Te\u0302\u0301t Nguye\u0302n \u0110a\u0301n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 Te\u0302\u0301t Nguye\u0302n \u0110a\u0301n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 Te\u0302\u0301t Nguye\u0302n \u0110a\u0301n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "multiple-rows-one-pass",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "Birthday",
+            "dateText": "05/05/2025",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83c\udf15 First Full Moon Festival",
+            "dateText": "03/03/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83c\udf6c Ng\u00e0y Ng\u1ecdt Ng\u00e0o (Sweetest Day)",
+            "dateText": "17/10/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "27/11/2025",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "27/08/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "Birthday",
+            "dateText": "05/05/2025",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83c\udf15 First Full Moon Festival",
+            "dateText": "20/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83c\udf6c Ng\u00e0y Ng\u1ecdt Ng\u00e0o (Sweetest Day)",
+            "dateText": "17/10/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "26/11/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "16/08/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 4
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "06/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "Birthday",
+            "dateText": "05/05/2025",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83c\udf15 First Full Moon Festival",
+            "dateText": "20/02/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83c\udf6c Ng\u00e0y Ng\u1ecdt Ng\u00e0o (Sweetest Day)",
+            "dateText": "17/10/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "26/11/2026",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "16/08/2027",
+            "isAnnual": false
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "15/09/2027",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 4
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty-table",
+      "input": {
+        "today": "2026-10-13",
+        "rows": []
+      },
+      "expected": {
+        "rows": [],
+        "updateCalls": 0
+      },
+      "androidLegacy": {
+        "rows": [],
+        "updateCalls": 0
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "emoji-only-title",
+      "input": {
+        "today": "2026-10-13",
+        "rows": [
+          {
+            "title": "\ud83e\udde7",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc90 ",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc90 ",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udde7",
+            "dateText": "17/02/2026",
+            "isAnnual": true
+          },
+          {
+            "title": "\ud83d\udc90 ",
+            "dateText": "10/05/2026",
+            "isAnnual": true
+          }
+        ],
+        "updateCalls": 0
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "lunar-today-equals-date-stays",
+      "input": {
+        "today": "2026-09-25",
+        "rows": [
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "25/09/2025",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "25/09/2026",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "25/09/2026",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "rule-based-today-equals-date-stays",
+      "input": {
+        "today": "2026-11-26",
+        "rows": [
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "27/11/2025",
+            "isAnnual": true
+          }
+        ]
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "26/11/2026",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "26/11/2026",
+            "isAnnual": false
+          }
+        ],
+        "updateCalls": 1
+      },
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

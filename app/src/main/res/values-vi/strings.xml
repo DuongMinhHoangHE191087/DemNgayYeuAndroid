@@ -68,6 +68,11 @@
     <string name="settings_notif_disabled_toast">Đã tắt nhắc thông báo</string>
     <string name="settings_notif_sound_title">Âm thanh chuông báo yêu thương</string>
     <string name="settings_notif_sound_sub">Giai điệu lãng mạn nhẹ nhàng</string>
+    <string name="settings_exact_alarm_title">Cho phép báo thức đúng giờ</string>
+    <string name="settings_exact_alarm_sub">Không có quyền này, nhắc có thể đến trễ vài phút.</string>
+    <string name="settings_privacy_local_title">Kỷ niệm riêng tư ở lại trên máy bạn</string>
+    <string name="settings_privacy_local_body">Ảnh, video và ghi chú kỷ niệm chỉ được lưu trên điện thoại này. Chúng tôi không lưu và không đọc chúng trên máy chủ, nên kỷ niệm riêng tư của hai bạn không bị lộ qua chúng tôi. Nếu sao lưu của Android đang bật và máy có khoá màn hình, một bản sao kỷ niệm (tối đa khoảng 25 MB, video lớn có thể không được sao lưu) nằm trong tài khoản Google của chính bạn. Chỉ thông tin ghép đôi (tên, ngày sinh, ngày kỷ niệm, lời nhắn, giới thiệu; ảnh đại diện chỉ khi bật đồng bộ ảnh đại diện) đi qua lời mời ghép đôi để người ấy nhìn thấy. Hồ sơ của bạn (tên, ngày sinh, giới tính, giới thiệu và sở thích; ảnh đại diện chỉ khi bật đồng bộ ảnh đại diện) được lưu cùng tài khoản, nên sẽ quay lại khi bạn đăng nhập trên điện thoại mới. Email và mật khẩu chỉ dùng để đăng nhập và lấy lại tài khoản. Ngoài bản sao lưu Android nói trên, ảnh và kỷ niệm không bao giờ theo bạn sang máy mới: đó là cách chúng được giữ riêng tư.</string>
+    <string name="settings_privacy_local_warning">Đừng xoá dữ liệu ứng dụng hay các thư mục của InLove trên máy: kỷ niệm sẽ mất và ứng dụng có thể báo lỗi. Khi đổi điện thoại, kỷ niệm chỉ trở lại nếu sao lưu của Android khả dụng.</string>
 
     <string name="settings_section_security">Bảo Mật &amp; Thông Tin</string>
     <string name="settings_lock_title">Khóa ứng dụng riêng tư</string>
@@ -126,6 +131,10 @@
     <string name="btn_add_memory">Thêm Kỷ Niệm Mới</string>
     <string name="memory_empty_title">Chưa có bức ảnh kỷ niệm nào</string>
     <string name="memory_empty_subtitle">Hãy chụp hoặc chọn bức ảnh đầu tiên để lưu lại khoảnh khắc ngọt ngào của hai bạn!</string>
+    <string name="memory_pick_multiple">Chọn nhiều ảnh (tối đa 10)</string>
+    <string name="memory_reorder_tip">Kéo thả để sắp xếp ảnh bìa</string>
+    <string name="memory_cover_badge">Ảnh bìa</string>
+    <string name="memory_loading_photos">Đang xử lý ảnh…</string>
     <string name="memory_filter_all">Tất cả</string>
     <string name="memory_filter_fav">Yêu thích</string>
     <string name="memory_delete_btn">Xóa Ảnh</string>
@@ -156,13 +165,21 @@
     <string name="onboarding_memories_title">Kho Kỷ Niệm &amp; Nhật Ký Đôi</string>
     <string name="onboarding_memories_sub">Lưu lại ảnh hẹn hò, địa điểm ý nghĩa và dòng cảm xúc ngọt ngào an toàn trên máy và đồng bộ đám mây.</string>
     <string name="onboarding_reminder_title">Nhắc Hẹn Thông Minh &amp; Gợi Ý Quà</string>
-    <string name="onboarding_reminder_sub">Không bao giờ quên ngày quan trọng nhờ chuông báo trước (7 ngày, 3 ngày, 1 ngày) kèm gợi ý quà tặng từ AI.</string>
+    <string name="onboarding_reminder_sub">Không bao giờ quên ngày quan trọng nhờ chuông báo trước (7 ngày, 3 ngày, 1 ngày) kèm gợi ý quà tặng lãng mạn.</string>
     <string name="onboarding_start_title">Sẵn Sàng Bắt Đầu Hành Trình</string>
     <string name="onboarding_start_sub">Cá nhân hóa tên 2 bạn, ngày bắt đầu yêu, hoặc khám phá ngay ứng dụng!</string>
     <string name="onboarding_btn_next">Tiếp tục</string>
     <string name="onboarding_btn_back">Quay lại</string>
     <string name="onboarding_btn_skip">Bỏ qua</string>
     <string name="onboarding_btn_start">Bắt Đầu Ngay</string>
+    <string name="onboarding_counter_preview">💕 Cùng nhau đi qua 100 ngày ngọt ngào!</string>
+    <string name="onboarding_memories_card_title">Lần đầu gặp gỡ • Phố Đi Bộ 📸</string>
+    <string name="onboarding_memories_card_sub">Lưu trọn vẹn hình ảnh, địa điểm và dòng nhật ký yêu thương an toàn</string>
+    <string name="onboarding_reminder_ai_tip">Gợi ý quà bất ngờ hợp với sở thích của người ấy</string>
+    <string name="onboarding_partner1_label">Tên Bạn Trai</string>
+    <string name="onboarding_partner2_label">Tên Bạn Gái</string>
+    <string name="onboarding_partner1_placeholder">Ví dụ: Hoàng</string>
+    <string name="onboarding_partner2_placeholder">Ví dụ: Mai</string>
 
     <!-- Calendar Screen -->
     <string name="calendar_title">Lịch Kỷ Niệm</string>
@@ -179,13 +196,6 @@
 
     <!-- Gift Screen -->
     <string name="gift_screen_title">Gợi Ý Quà Tặng</string>
-    <string name="gift_cat_all">Tất cả</string>
-    <string name="gift_cat_jewelry">Trang Sức</string>
-    <string name="gift_cat_tech">Công Nghệ</string>
-    <string name="gift_cat_flowers">Hoa &amp; Thiệp</string>
-    <string name="gift_cat_travel">Du Lịch &amp; Hẹn Hò</string>
-    <string name="gift_cat_fashion">Thời Trang</string>
-    <string name="gift_cat_diy">Thủ Công &amp; DIY</string>
     <string name="gift_checklist_title">Danh Sách Cần Chuẩn Bị</string>
     <string name="gift_checklist_add">Thêm Việc Chuẩn Bị</string>
     <string name="gift_delete_reminder_title">Xóa Lời Nhắc Quà Tặng?</string>

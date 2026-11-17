@@ -65,7 +65,8 @@ function isMember(rel, uid) {
 
 // Trả về { error }, { asset } (bản ghi reserved mới: ghi vào Firestore và cộng quota), hoặc { asset, resign: true }
 // (phiên còn hiệu lực: chỉ ký lại, không ghi và không cộng quota). existing là bản ghi đã có của memoryId, hoặc null.
-function planReserve({ rel, uid, input, existing, usage, nowMs }) {
+// tier: bậc của người gọi (lạ thì rơi về free). table: chỉ để test; reserveUpload không truyền.
+function planReserve({ rel, uid, input, existing, usage, nowMs, tier = 'free', table }) {
   if (!isMember(rel, uid)) return { error: fail('permission-denied', 'Bạn không thuộc cặp đôi này') };
   if (rel.status !== 'ACTIVE') return { error: fail('failed-precondition', 'Cặp đôi không còn hoạt động') };
   if (existing) {
@@ -76,8 +77,8 @@ function planReserve({ rel, uid, input, existing, usage, nowMs }) {
     if (existing.expiresAtMs <= nowMs) return { error: fail('deadline-exceeded', 'Phiên tải lên đã hết hạn, hãy thử lại') };
     return { asset: existing, resign: true };
   }
-  // Dung lượng khai báo chỉ kiểm tra sơ bộ. Giới hạn thật được kiểm tra lại khi confirm, dựa trên dung lượng Cloudinary báo.
-  const problem = policy.quotaProblem(usage, input.sizeBytes)
+  // Dung lượng khai báo chỉ kiểm tra sơ bộ. Giới hạn thật được kiểm tra lại khi confirm, dựa trên dung lượng thật của đối tượng trong kho lưu trữ.
+  const problem = policy.quotaProblem(usage, input.sizeBytes, policy.limitsFor(tier, table))
     ?? planGlobalCapacity({ globalBytes: usage.globalStoredBytes, bytes: input.sizeBytes });
   if (problem) return { error: problem };
   return {
@@ -184,7 +185,7 @@ async function markDeleted(db, memoryId, nowMs) {
   });
 }
 
-// Claim rồi xoá tệp trên Cloudinary, sau đó ghi deleted. Nếu xoá lỗi thì bản ghi còn deleting và sweeper thử lại.
+// Claim rồi xoá tệp trên kho lưu trữ, sau đó ghi deleted. Nếu xoá lỗi thì bản ghi còn deleting và sweeper thử lại.
 async function purgeOne({ db, cloud, memoryId, nowMs, shouldClaim, reason }) {
   const claimed = await claim(db, memoryId, shouldClaim, { state: 'deleting', reason });
   if (!claimed) return false;
@@ -195,7 +196,8 @@ async function purgeOne({ db, cloud, memoryId, nowMs, shouldClaim, reason }) {
 
 // ---------- Các thao tác công khai ----------
 
-async function reserveUpload({ db, cloud, uid, input, nowMs }) {
+// ponytail: chỉ reserveUpload cần bậc, thêm cho confirmUpload/getDeliveryUrl khi confirm có hạn mức riêng
+async function reserveUpload({ db, cloud, uid, input, nowMs, tier = 'free' }) {
   const keys = dailyKeys(uid, input.relationshipId, nowMs);
   const plan = await db.runTransaction(async (tx) => {
     const [relSnap, assetSnap, userSnap, relCountSnap, globalSnap, storageSnap, globalStorageSnap] = await Promise.all([
@@ -214,7 +216,7 @@ async function reserveUpload({ db, cloud, uid, input, nowMs }) {
       storedBytes: storageSnap.get('bytes') ?? 0,
       globalStoredBytes: globalStorageSnap.get('bytes') ?? 0,
     };
-    const result = planReserve({ rel: relSnap.data(), uid, input, existing: readAsset(assetSnap), usage, nowMs });
+    const result = planReserve({ rel: relSnap.data(), uid, input, existing: readAsset(assetSnap), usage, nowMs, tier });
     if (result.error) throw result.error;
     if (result.resign) return result; // ký lại: không ghi, không cộng quota
 
@@ -228,21 +230,25 @@ async function reserveUpload({ db, cloud, uid, input, nowMs }) {
   });
 
   const { asset } = plan;
+  // Phiên mới ký đúng reservationTtlMs; ký lại phiên còn hiệu lực thì ký theo hạn còn lại (tối thiểu 1 giây).
+  const ttlSeconds = plan.resign
+    ? Math.max(1, Math.ceil((asset.expiresAtMs - nowMs) / 1000))
+    : cfg.timing.reservationTtlMs / 1000;
   const signed = cloud.signUpload({
     publicId: asset.publicId,
-    kind: asset.kind,
-    format: asset.format,
-    timestampSeconds: Math.floor(nowMs / 1000),
+    contentType: policy.contentTypeOf(asset.format),
+    contentLength: asset.declaredBytes,
+    expiresInSeconds: ttlSeconds,
   });
   return {
     publicId: asset.publicId,
     uploadUrl: signed.uploadUrl,
-    fields: signed.fields,
+    headers: signed.headers,
     expiresAtMillis: plan.resign ? asset.expiresAtMs : nowMs + cfg.timing.reservationTtlMs,
   };
 }
 
-// Sau khi app upload xong: đối chiếu tệp với Cloudinary rồi mới kích hoạt tài sản và cộng dung lượng.
+// Sau khi app upload xong: đối chiếu tệp với kho lưu trữ rồi mới kích hoạt tài sản và cộng dung lượng.
 // Gọi lại khi đã xác nhận rồi thì trả kết quả cũ, không cộng thêm.
 async function confirmUpload({ db, cloud, uid, input, nowMs }) {
   const { relationshipId, memoryId } = input;
@@ -256,7 +262,7 @@ async function confirmUpload({ db, cloud, uid, input, nowMs }) {
   const resource = await cloud.fetchResource(asset.publicId, asset.kind);
   if (!resource) throw fail('not-found', 'Tệp chưa có trên máy chủ, thử tải lại');
 
-  const problem = policy.resourceProblem(resource, { publicId: asset.publicId, kind: asset.kind, format: asset.format });
+  const problem = policy.resourceProblem(resource, { kind: asset.kind, format: asset.format, declaredBytes: asset.declaredBytes });
   if (problem) {
     await purgeOne({ db, cloud, memoryId, nowMs, shouldClaim: (a) => a.state === 'reserved', reason: problem });
     throw fail('failed-precondition', problem);
@@ -294,7 +300,7 @@ async function confirmUpload({ db, cloud, uid, input, nowMs }) {
 }
 
 // Quyết định thuần: link xem chỉ cấp cho thành viên của cặp đôi còn ACTIVE. Sau khi chia tay thì link mới bị từ chối;
-// link đã cấp vẫn sống tới deliveryTtlSeconds (xem docs/architecture/MEDIA_CLOUDINARY.md).
+// link đã cấp vẫn sống tới deliveryTtlSeconds.
 function planDelivery({ rel, uid }) {
   if (!isMember(rel, uid)) return { code: 'permission-denied', message: 'Bạn không thuộc cặp đôi này' };
   if (rel.status !== 'ACTIVE') return { code: 'failed-precondition', message: 'Cặp đôi không còn hoạt động' };
@@ -318,7 +324,7 @@ async function getDeliveryUrl({ db, cloud, uid, input, nowMs }) {
     throw fail('not-found', 'Tệp chưa sẵn sàng');
   }
   const ttl = cfg.timing.deliveryTtlSeconds;
-  return { url: cloud.deliveryUrl(publicId, asset.kind, ttl), expiresAtMillis: nowMs + ttl * 1000 };
+  return { url: cloud.deliveryUrl(publicId, asset.kind, ttl, asset.format), expiresAtMillis: nowMs + ttl * 1000 };
 }
 
 // Memory bị xoá hoặc bỏ ảnh: xoá tệp của nó. Lỗi thì trigger retry, hoặc sweeper dọn ở bước deleting.
@@ -359,7 +365,7 @@ async function checkOrphan({ db, cloud, memoryId, nowMs }) {
 
 // Dọn định kỳ, bốn bước:
 //   1) reserved quá hạn -> expired (chưa xoá tệp)
-//   2) expired đủ thời gian ân hạn -> xoá tệp trên Cloudinary (kể cả tệp upload muộn)
+//   2) expired đủ thời gian ân hạn -> xoá tệp trên kho lưu trữ (kể cả tệp upload muộn)
 //   3) deleting còn sót (lần xoá trước lỗi) -> thử xoá lại
 //   4) active đến hạn kiểm tra mà không memory nào trỏ tới -> xoá (mồ côi); còn trỏ tới thì hẹn kiểm tra lại
 async function sweep({ db, cloud, nowMs, batchSize = cfg.timing.sweepBatchSize }) {

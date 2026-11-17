@@ -1,0 +1,5 @@
+{
+  "lockFiles": ["iosApp/**/Package.resolved"],
+  "inventoryDoc": "docs/release/SDK_INVENTORY.md",
+  "ignore": []
+}

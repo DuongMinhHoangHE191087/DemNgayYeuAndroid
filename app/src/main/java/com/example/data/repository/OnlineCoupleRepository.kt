@@ -2,6 +2,10 @@ package com.example.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.example.data.cloud.AndroidCloudFunctionsClient
+import com.example.data.cloud.CloudFunctionsClient
+import com.example.data.cloud.CloudFunctionsCode
+import com.example.data.cloud.CloudFunctionsException
 import com.example.data.db.InLoveDao
 import com.example.data.model.CoupleProfileEntity
 import com.example.data.model.InviteStatus
@@ -11,19 +15,31 @@ import com.example.data.model.OnlineStatus
 import com.example.data.model.OnlineUserEntity
 import com.example.data.model.RelationshipStatus
 import com.example.data.model.SharedMemoryEntity
+import com.example.data.sync.ProfileProjection
+import com.example.ui.util.Birthday
+import com.example.ui.util.DEFAULT_LOVE_NOTE
+import com.example.ui.util.DEFAULT_LOVE_TITLE
 import com.example.ui.util.ProfileUtils
+import com.example.ui.util.WELCOME_BIO
+import com.example.ui.util.cleanName
+import com.example.ui.util.isLegacyWelcomeBio
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.FirebaseFunctionsException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -32,14 +48,12 @@ import kotlinx.coroutines.withTimeout
 /** Firestore queue writes offline and never completes; bound the wait so offline flows fall through to Room-only. */
 private suspend fun <T> com.google.android.gms.tasks.Task<T>.awaitBounded(): T = withTimeout(5_000L) { await() }
 
-private const val FUNCTIONS_REGION = "asia-southeast1"
-private const val CALLABLE_TIMEOUT_MS = 20_000L // gồm cả khởi động lạnh của function
-
 class OnlineCoupleRepository(
   private val dao: InLoveDao,
   context: Context,
   private val scope: CoroutineScope,
-  private val useFirestore: Boolean = true // false = chế độ cục bộ (test/demo): ghép đôi chỉ ghi Room
+  private val useFirestore: Boolean = true, // false = chế độ cục bộ (test/demo): ghép đôi chỉ ghi Room
+  private val functions: CloudFunctionsClient? = if (useFirestore) AndroidCloudFunctionsClient() else null // null = không gọi Cloud Functions
 ) {
 
   // Demo user IDs for seamless 1-1 testing on device
@@ -81,7 +95,7 @@ class OnlineCoupleRepository(
         birthDate = "",
         age = 0,
         zodiac = "",
-        bio = "Chào mừng bạn đến với InLove 💕",
+        bio = WELCOME_BIO,
         isProfileSetup = false,
         isCurrentUser = true
       )
@@ -116,6 +130,8 @@ class OnlineCoupleRepository(
   // Optional Firestore instance
   private var firestore: FirebaseFirestore? = null
 
+  private val stateMutex = Mutex()
+
   init {
     try {
       if (useFirestore && com.google.firebase.FirebaseApp.getApps(context).isNotEmpty()) {
@@ -125,25 +141,90 @@ class OnlineCoupleRepository(
       Log.d("OnlineCoupleRepo", "Firestore not initialized or offline: ${e.message}")
     }
 
+    mergeAvatarFromDao()
+    scope.launch { refreshState() }
+    scope.launch { if (cleanStoredText()) refreshState() }
+  }
+
+  /**
+   * Idempotent cleanup of text older builds stored: names to canonical form (NFC, no emoji, see [cleanName]) and the
+   * auto-generated welcome bio without its emoji. A bio the user typed is never touched. Writes only rows that change.
+   */
+  suspend fun cleanStoredText(): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+      var changed = 0
+      dao.getAllOnlineUsersListSync().forEach { u ->
+        val name = cleanName(u.displayName)
+        // compare-and-set updates: a concurrent save changes the "expected" value, so we never overwrite it with a stale copy
+        if (isLegacyWelcomeBio(u.bio)) changed += dao.replaceOnlineUserBio(u.uid, u.bio, WELCOME_BIO)
+        if (name != u.displayName) {
+          // an emoji-only name becomes "nobody yet": same shape as a profile never set up
+          changed += if (name.isEmpty()) dao.replaceOnlineUserName(u.uid, u.displayName, "Vô danh", false)
+          else dao.replaceOnlineUserName(u.uid, u.displayName, name, u.isProfileSetup)
+        }
+      }
+      dao.getCoupleProfileSync()?.let { p ->
+        cleanName(p.partner1Name).takeIf { it.isNotEmpty() && it != p.partner1Name }?.let { changed += dao.replaceCouplePartner1Name(p.partner1Name, it) }
+        cleanName(p.partner2Name).takeIf { it.isNotEmpty() && it != p.partner2Name }?.let { changed += dao.replaceCouplePartner2Name(p.partner2Name, it) }
+      }
+      changed > 0
+    }.getOrElse { Log.w("OnlineCoupleRepo", "cleanStoredText failed: ${it.message}"); false }
+  }
+
+  /** Gộp avatar do AvatarPublisher ghi thẳng vào DAO vào _currentUser, chỉ cho cùng uid (T21). */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun mergeAvatarFromDao() {
     scope.launch {
-      refreshState()
+      _currentUserId.flatMapLatest { uid -> dao.getOnlineUserByUid(uid) }
+        .map { row -> row?.let { it.uid to it.avatarUrl } }
+        .distinctUntilChanged()
+        .collect { row ->
+          if (row != null) _currentUser.update { if (it.uid == row.first && it.avatarUrl != row.second) it.copy(avatarUrl = row.second) else it }
+        }
     }
   }
 
+  /**
+   * Hộp thoại sửa hồ sơ giữ avatar `file:` từ lúc mở. Nếu AvatarPublisher đã đổi nó sang https và xoá file trong lúc đó,
+   * bản nháp cũ không được ghi lại một `file:` đã mất (T15/B-F2). Avatar vừa chọn thì file còn tồn tại nên đi qua bình thường.
+   */
+  private fun keepLiveAvatar(live: String, submitted: String): String {
+    val gone = submitted.startsWith("file:", ignoreCase = true) &&
+      android.net.Uri.parse(submitted).path?.let { !java.io.File(it).exists() } == true
+    return if (gone && live.startsWith("https://", ignoreCase = true)) live else submitted
+  }
+
+  /** Avatar hiện có trong Room: AvatarPublisher có thể đã đổi nó trong lúc một `me` cũ được giữ qua một lần gọi mạng. */
+  private suspend fun liveAvatar(uid: String, fallback: String): String =
+    dao.getOnlineUserByUidSync(uid)?.avatarUrl ?: fallback
+
+  /**
+   * Ghi cả hàng "tôi" nhưng giữ avatar đang có trong Room, để một `me` cũ không đè lại avatar vừa được publish.
+   * Không dùng cho updateMyProfile: người dùng chủ động đổi avatar ở đó.
+   */
+  // ponytail: đọc rồi ghi không nguyên tử; còn một khoảng dưới mili giây giữa hai lệnh. Nếu cần kín: DAO chỉ cập nhật cột trạng thái.
+  private suspend fun saveMe(updated: OnlineUserEntity): OnlineUserEntity =
+    updated.copy(avatarUrl = liveAvatar(updated.uid, updated.avatarUrl)).also { dao.updateOnlineUser(it) }
+
   suspend fun setCurrentUserId(uid: String) = withContext(Dispatchers.IO) {
     if (uid.isBlank()) {
-      _currentUserId.value = GUEST_UID
-      _currentUser.value = createEmptyUser()
-      _partnerUser.value = null
-      _activeRelationship.value = null
-      _relationshipStatus.value = OnlineStatus.SINGLE
+      stateMutex.withLock {
+        _currentUserId.value = GUEST_UID
+        _currentUser.value = createEmptyUser()
+        _partnerUser.value = null
+        _activeRelationship.value = null
+        _relationshipStatus.value = OnlineStatus.SINGLE
+      }
       return@withContext
     }
     _currentUserId.value = uid
     refreshState()
   }
 
-  suspend fun refreshState() = withContext(Dispatchers.IO) {
+  // One writer at a time: init's refresh and setCurrentUserId's refresh used to race, last writer won.
+  suspend fun refreshState() = withContext(Dispatchers.IO) { stateMutex.withLock { reloadState() } }
+
+  private suspend fun reloadState() {
     val currentUid = _currentUserId.value
     var me = dao.getOnlineUserByUidSync(currentUid)
     if (me == null) {
@@ -213,23 +294,27 @@ class OnlineCoupleRepository(
     birthDate: String,
     avatarUrl: String,
     gender: String,
-    bio: String
+    bio: String,
+    clearBirthday: Boolean = false
   ): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val me = _currentUser.value
-    val trimmedName = name.trim()
+    // Room trước cache: trạng thái/đối tác do lớp đồng bộ ghi sau khi cache nạp không bị ghi đè.
+    val me = dao.getOnlineUserByUidSync(_currentUser.value.uid) ?: _currentUser.value
+    val trimmedName = cleanName(name)
     val isSetup = trimmedName.isNotEmpty() && trimmedName != "Vô danh"
     val finalDisplayName = if (isSetup) trimmedName else "Vô danh"
 
-    // Automatically calculate age and zodiac from birth date
-    val calculatedAge = ProfileUtils.calculateAge(birthDate)
-    val calculatedZodiac = ProfileUtils.calculateZodiac(birthDate).first
+    // Một ngày sinh hiệu lực: rỗng/sai thì giữ giá trị đã lưu (đường đổi tên gửi lại ngày sinh cũ, kể cả dạng "5/5/95")
+    // clearBirthday = người dùng chủ động xoá (nút X): ghi rỗng, tuổi 0, cung "Chưa rõ".
+    val effective = if (clearBirthday) "" else Birthday.parse(birthDate)?.text ?: me.birthDate
+    val calculatedAge = ProfileUtils.calculateAge(effective)
+    val calculatedZodiac = ProfileUtils.calculateZodiac(effective).first
 
     val updatedMe = me.copy(
       displayName = finalDisplayName,
-      birthDate = birthDate.trim(),
+      birthDate = effective,
       age = calculatedAge,
       zodiac = calculatedZodiac,
-      avatarUrl = avatarUrl.trim(),
+      avatarUrl = keepLiveAvatar(me.avatarUrl, avatarUrl.trim()),
       gender = gender,
       bio = bio.trim(),
       isProfileSetup = isSetup
@@ -238,11 +323,24 @@ class OnlineCoupleRepository(
     dao.updateOnlineUser(updatedMe)
     _currentUser.value = updatedMe
 
-    // If coupled, sync current user's part into CoupleProfileEntity
+    mirrorMe(updatedMe, isSetup)
+
+    refreshState()
+    return@withContext true to "Đã cập nhật hồ sơ cá nhân thành công!"
+  }
+
+  /** Chép hồ sơ "tôi" sang account đăng nhập (đổi tên) và couple profile (partner1*); dùng chung cho updateMyProfile và applyRemoteProfile. */
+  private suspend fun mirrorMe(updatedMe: OnlineUserEntity, isSetup: Boolean) {
+    if (isSetup) {
+      dao.getUserAccountByUid(updatedMe.uid)?.takeIf { it.displayName != updatedMe.displayName }
+        ?.let { dao.updateUserAccount(it.copy(displayName = updatedMe.displayName)) }
+    }
+
+    // Nơi duy nhất ghi "tôi" vào Room: partner1* luôn là tôi (theo vai trò, không theo giới tính).
+    // Chỉ cập nhật khi đã có dòng; không tạo dòng mới, không đụng partner2*, tiêu đề, ngày yêu.
     val currentProfile = dao.getCoupleProfileSync()
-    if (currentProfile != null && updatedMe.status == OnlineStatus.COUPLED) {
-      val isMale = updatedMe.gender == "MALE"
-      val newProfile = if (isMale) {
+    if (currentProfile != null) {
+      dao.insertCoupleProfile(
         currentProfile.copy(
           partner1Name = updatedMe.effectiveDisplayName,
           partner1Birthday = updatedMe.birthDate,
@@ -250,20 +348,57 @@ class OnlineCoupleRepository(
           partner1Zodiac = updatedMe.zodiac,
           partner1ProfilePicture = updatedMe.avatarUrl
         )
-      } else {
-        currentProfile.copy(
-          partner2Name = updatedMe.effectiveDisplayName,
-          partner2Birthday = updatedMe.birthDate,
-          partner2Age = updatedMe.age,
-          partner2Zodiac = updatedMe.zodiac,
-          partner2ProfilePicture = updatedMe.avatarUrl
-        )
-      }
-      dao.insertCoupleProfile(newProfile)
+      )
     }
+  }
 
+  /**
+   * Áp dụng hồ sơ từ Firestore lên dòng "tôi" của [uid] (ProfileSync). Trả false (không ghi gì) khi dòng không có,
+   * không phải người dùng hiện tại, hoặc key cục bộ đã đổi khỏi [expectedLocalKey].
+   * Chỉ ghi trường mà giá trị đã chiếu KHÁC (giữ ngày sinh thô, bio dài, giới tính lạ trên máy); avatar theo B-02:
+   * không bao giờ xoá ảnh file cục bộ. Không đụng email, coupleCode, partnerId, relationshipId, status.
+   * ponytail: updateMyProfile không giữ khoá chung, nên còn cửa sổ đua vài ms giữa kiểm key và ghi; nâng cấp = Mutex trong repository.
+   * ponytail: 12 hàm ghép đôi bắt đầu từ bản sao _currentUser rồi saveMe(me.copy(...)) ghi CẢ dòng, nên một hàm đã đọc bản sao cũ
+   * có thể ghi đè trường vừa áp dụng; khoá cục bộ lệch nên ProfileSync đẩy hồ sơ cũ đó một lần; nâng cấp = đọc lại Room trong các hàm ghi.
+   * KHÔNG BAO GIỜ gọi refreshState() khi đang giữ stateMutex (khoá không tái nhập).
+   */
+  suspend fun applyRemoteProfile(uid: String, p: ProfileProjection, expectedLocalKey: String): Boolean = withContext(Dispatchers.IO) {
+    val me = dao.getOnlineUserByUidSync(uid) ?: return@withContext false
+    if (!me.isCurrentUser) return@withContext false
+    val local = ProfileProjection.of(me)
+    if (local.key() != expectedLocalKey) return@withContext false
+
+    val name = (if (local.displayName == p.displayName) me.displayName else p.displayName).ifBlank { me.displayName }
+    val birthDate = if (local.birthDate == p.birthDate) me.birthDate else p.birthDate
+    val birthChanged = birthDate != me.birthDate
+    val updated = me.copy(
+      displayName = name,
+      birthDate = birthDate,
+      age = if (birthChanged) ProfileUtils.calculateAge(birthDate) else me.age,
+      zodiac = if (birthChanged) ProfileUtils.calculateZodiac(birthDate).first else me.zodiac,
+      gender = if (local.gender == p.gender) me.gender else p.gender,
+      bio = if (local.bio == p.bio) me.bio else p.bio,
+      interestsCsv = if (local.interestsCsv == p.interestsCsv) me.interestsCsv else p.interestsCsv,
+      avatarUrl = remoteAvatar(me.avatarUrl, p.avatarUrl),
+      isProfileSetup = name.isNotEmpty() && name != "Vô danh"
+    )
+
+    dao.updateOnlineUser(updated)
+    if (_currentUser.value.uid == uid) _currentUser.value = updated
+    mirrorMe(updated, updated.isProfileSetup)
     refreshState()
-    return@withContext true to "Đã cập nhật hồ sơ cá nhân thành công!"
+    true
+  }
+
+  /** B-02: null = giữ; "" chỉ xoá avatar https; https chỉ thay avatar trống hoặc https. Ảnh file cục bộ không bao giờ bị thay hay xoá. */
+  private fun remoteAvatar(live: String, remote: String?): String {
+    val liveIsRemote = live.startsWith("https://", ignoreCase = true)
+    return when {
+      remote == null -> live
+      remote.isEmpty() -> if (liveIsRemote) "" else live
+      remote.startsWith("https://", ignoreCase = true) && (live.isBlank() || liveIsRemote) -> remote
+      else -> live
+    }
   }
 
   /**
@@ -378,7 +513,7 @@ class OnlineCoupleRepository(
       targetUid = targetOwnerUid,
       proposedStartDate = proposedStartDateMillis,
       proposedStartDateText = ProfileUtils.formatDate(proposedStartDateMillis),
-      loveNote = loveNote.trim().ifEmpty { "Cùng anh/em xây dựng hạnh phúc Set Love nhé! ❤️" },
+      loveNote = loveNote.trim().ifEmpty { DEFAULT_LOVE_NOTE },
       status = InviteStatus.PENDING,
       createdAt = now,
       updatedAt = now,
@@ -388,8 +523,7 @@ class OnlineCoupleRepository(
     dao.insertOnlineInvite(invite)
     _outgoingInvite.value = invite
 
-    val updatedMe = me.copy(status = OnlineStatus.PENDING_INVITE)
-    dao.updateOnlineUser(updatedMe)
+    val updatedMe = saveMe(me.copy(status = OnlineStatus.PENDING_INVITE))
     _currentUser.value = updatedMe
     _relationshipStatus.value = OnlineStatus.PENDING_INVITE
 
@@ -416,8 +550,19 @@ class OnlineCoupleRepository(
     val incoming = _incomingInvite.value ?: dao.getInviteByIdSync(inviteId)
       ?: return@withContext false to "Không tìm thấy thông tin lời mời!"
 
-    val sender = dao.getOnlineUserByUidSync(incoming.senderUid)
-      ?: return@withContext false to "Không tìm thấy người gửi lời mời!"
+    // Hàng người gửi có thể chưa có trong Room (máy mới/chưa đồng bộ): dựng tạm từ lời mời, chỉ ghi sau khi máy chủ xác nhận.
+    val senderBirth = Birthday.normalize(incoming.senderBirthDate)
+    val sender = dao.getOnlineUserByUidSync(incoming.senderUid) ?: OnlineUserEntity(
+      uid = incoming.senderUid,
+      displayName = incoming.senderName,
+      coupleCode = incoming.senderCoupleCode,
+      avatarUrl = incoming.senderAvatar,
+      birthDate = senderBirth, // giá trị từ xa sai định dạng thì rỗng
+      age = ProfileUtils.calculateAge(senderBirth), // tuổi và cung suy từ ngày sinh đã chuẩn hoá, không tin số gửi kèm (T15/A-3)
+      zodiac = ProfileUtils.calculateZodiac(senderBirth).first,
+      bio = incoming.senderBio,
+      isProfileSetup = incoming.senderName.isNotBlank() && incoming.senderName != "Vô danh"
+    )
 
     val finalStartDate = confirmedStartDateMillis
       ?: if (incoming.proposedStartDate > 0) incoming.proposedStartDate
@@ -447,13 +592,11 @@ class OnlineCoupleRepository(
     // Máy chủ nhận lời mời + tạo relationship (id = id lời mời) trong một transaction; rules cấm client tự tạo.
     // Gọi lặp an toàn (idempotent). Chỉ ghi COUPLED cục bộ sau khi máy chủ xác nhận.
     try {
-      if (firestore != null) {
-        withTimeout(CALLABLE_TIMEOUT_MS) {
-          FirebaseFunctions.getInstance(FUNCTIONS_REGION).getHttpsCallable("acceptCoupleInvite")
-            .call(mapOf("inviteId" to incoming.inviteId, "startDateMillis" to finalStartDate, "startDateText" to finalStartDateText))
-            .await()
-        }
-      }
+      // Client đã tự áp timeout 20s + vùng, nên không bọc withTimeout ở đây.
+      functions?.call(
+        "acceptCoupleInvite",
+        mapOf("inviteId" to incoming.inviteId, "startDateMillis" to finalStartDate, "startDateText" to finalStartDateText)
+      )
       // insertOnlineRelationship, not updateOnlineRelationship: @Update matches by primary
       // key and silently does nothing if the row doesn't exist yet locally — which it never
       // does at this point, since this relationship id is brand new. insertOnlineRelationship
@@ -461,14 +604,16 @@ class OnlineCoupleRepository(
       val synced = relationship.copy(pendingSync = false)
       dao.insertOnlineRelationship(synced)
       _activeRelationship.value = synced
+    } catch (e: CancellationException) {
+      throw e
     } catch (e: Exception) {
       Log.d("OnlineCoupleRepo", "acceptCoupleInvite error: ${e.message}")
       // Kết nối thật mà lỗi/hết giờ: KHÔNG ghi trạng thái COUPLED cục bộ (server chưa có relationship). Giữ lời mời để thử lại.
-      if (firestore != null) {
-        val rejected = (e as? FirebaseFunctionsException)?.code in setOf(
-          FirebaseFunctionsException.Code.FAILED_PRECONDITION,
-          FirebaseFunctionsException.Code.PERMISSION_DENIED,
-          FirebaseFunctionsException.Code.NOT_FOUND
+      if (functions != null) {
+        val rejected = (e as? CloudFunctionsException)?.code in setOf(
+          CloudFunctionsCode.FAILED_PRECONDITION,
+          CloudFunctionsCode.PERMISSION_DENIED,
+          CloudFunctionsCode.NOT_FOUND
         )
         return@withContext false to if (rejected) {
           "Không thể chấp nhận lời mời này (đã xử lý, hết hiệu lực, hoặc một trong hai bạn đang có mối quan hệ khác)."
@@ -480,11 +625,13 @@ class OnlineCoupleRepository(
       _activeRelationship.value = relationship
     }
 
-    // Update both users to COUPLED
-    val updatedMe = me.copy(
-      status = OnlineStatus.COUPLED,
-      partnerId = sender.uid,
-      relationshipId = relId
+    // Update both users to COUPLED. `me` được giữ qua cuộc gọi máy chủ tới 20 giây: avatar lấy lại từ Room khi ghi.
+    val updatedMe = saveMe(
+      me.copy(
+        status = OnlineStatus.COUPLED,
+        partnerId = sender.uid,
+        relationshipId = relId
+      )
     )
     val updatedSender = sender.copy(
       status = OnlineStatus.COUPLED,
@@ -492,8 +639,7 @@ class OnlineCoupleRepository(
       relationshipId = relId
     )
 
-    dao.updateOnlineUser(updatedMe)
-    dao.updateOnlineUser(updatedSender)
+    dao.insertOnlineUser(updatedSender) // REPLACE: updateOnlineUser sẽ không làm gì nếu hàng người gửi chưa có
 
     _currentUser.value = updatedMe
     _partnerUser.value = updatedSender
@@ -506,15 +652,18 @@ class OnlineCoupleRepository(
 
     // Update couple profile in Room for Home screen
     val currentProfile = dao.getCoupleProfileSync()
-    val isMeMale = updatedMe.gender == "MALE"
-    val p1 = if (isMeMale) updatedMe else updatedSender
-    val p2 = if (!isMeMale) updatedMe else updatedSender
+    val p1 = updatedMe // partner1* = tôi, partner2* = người ấy, bất kể giới tính
+    val p2 = updatedSender
+
+    // Tiêu đề cũ chỉ giữ khi chưa từng yêu cặp khác (lần đầu hoặc quay lại đúng người cũ); người mới nhận tiêu đề mặc định.
+    val pair = setOf(me.uid, sender.uid)
+    val keepTitle = dao.getAllRelationshipsSync().none { it.relationshipId != relId && setOf(it.user1, it.user2) != pair }
 
     val syncedProfile = CoupleProfileEntity(
       id = 1,
       partner1Name = p1.effectiveDisplayName,
       partner1Birthday = p1.birthDate,
-      partner1ProfilePicture = p1.avatarUrl,
+      partner1ProfilePicture = liveAvatar(me.uid, p1.avatarUrl), // REPLACE bên dưới: đọc lại sát lúc ghi
       partner1Age = p1.age,
       partner1Zodiac = p1.zodiac,
       partner2Name = p2.effectiveDisplayName,
@@ -522,7 +671,7 @@ class OnlineCoupleRepository(
       partner2ProfilePicture = p2.avatarUrl,
       partner2Age = p2.age,
       partner2Zodiac = p2.zodiac,
-      loveTitle = currentProfile?.loveTitle?.ifBlank { "InLove" } ?: "InLove",
+      loveTitle = currentProfile?.loveTitle?.takeIf { keepTitle && it.isNotBlank() } ?: DEFAULT_LOVE_TITLE,
       loveDays = finalLoveDays,
       anniversaryDate = finalStartDateText,
       updatedAt = System.currentTimeMillis(),
@@ -577,8 +726,7 @@ class OnlineCoupleRepository(
       dao.deleteOnlineInvite(outgoing.inviteId)
     }
 
-    val updatedMe = me.copy(status = OnlineStatus.SINGLE)
-    dao.updateOnlineUser(updatedMe)
+    val updatedMe = saveMe(me.copy(status = OnlineStatus.SINGLE))
     _currentUser.value = updatedMe
     _relationshipStatus.value = OnlineStatus.SINGLE
     _outgoingInvite.value = null
@@ -638,12 +786,13 @@ class OnlineCoupleRepository(
     }
 
     // Both users return to SINGLE (soft locks shared memories)
-    val updatedMe = me.copy(
-      status = OnlineStatus.SINGLE,
-      partnerId = null,
-      relationshipId = null
+    val updatedMe = saveMe(
+      me.copy(
+        status = OnlineStatus.SINGLE,
+        partnerId = null,
+        relationshipId = null
+      )
     )
-    dao.updateOnlineUser(updatedMe)
     _currentUser.value = updatedMe
     _relationshipStatus.value = OnlineStatus.SINGLE
 
@@ -700,8 +849,7 @@ class OnlineCoupleRepository(
       currentSet.add(interestKey)
     }
 
-    val updatedMe = me.copy(interestsCsv = currentSet.joinToString(","))
-    dao.updateOnlineUser(updatedMe)
+    val updatedMe = saveMe(me.copy(interestsCsv = currentSet.joinToString(",")))
     _currentUser.value = updatedMe
 
     val partner = _partnerUser.value

@@ -1,6 +1,7 @@
 package com.example.data.db
 
 import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
@@ -18,7 +19,7 @@ class Migration12To13Test {
     InstrumentationRegistry.getInstrumentation(),
     AppDatabase::class.java,
     emptyList(),
-    FrameworkSQLiteOpenHelperFactory()
+    WindowsSafeOpenHelperFactory()
   )
 
   @Test
@@ -95,5 +96,20 @@ class Migration12To13Test {
 
   companion object {
     private const val TEST_DB = "migration-test"
+  }
+}
+
+/**
+ * Room 2.8.x's legacy MigrationTestHelper opens the DB through SupportSQLiteDriver, which compares the open helper's
+ * name with the requested absolute path via substringAfterLast('/'); that never matches a Windows path (backslashes).
+ * Reporting the absolute path as the helper name makes the check pass; the delegate still opens the same file.
+ */
+internal class WindowsSafeOpenHelperFactory : SupportSQLiteOpenHelper.Factory {
+  override fun create(configuration: SupportSQLiteOpenHelper.Configuration): SupportSQLiteOpenHelper {
+    val delegate = FrameworkSQLiteOpenHelperFactory().create(configuration)
+    val absoluteName = configuration.name?.let { configuration.context.getDatabasePath(it).absolutePath }
+    return object : SupportSQLiteOpenHelper by delegate {
+      override val databaseName: String? = absoluteName
+    }
   }
 }

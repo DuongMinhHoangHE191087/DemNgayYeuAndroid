@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -72,7 +73,6 @@ import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -111,14 +111,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.LoveBadgeEntity
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
 import com.example.ui.theme.PrimaryContainer
 import com.example.ui.theme.Secondary
 import com.example.ui.theme.SurfaceContainerLowest
 import com.example.ui.util.AppLanguage
+import com.example.ui.util.displayMeName
+import com.example.ui.util.displayPartnerName
 import com.example.ui.viewmodel.InLoveViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -647,8 +649,8 @@ fun MilestoneBadgeShowcaseDialog(
   val loveDays by viewModel.loveDays.collectAsState()
   val badges by viewModel.loveBadges.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
-  val boyName by viewModel.boyName.collectAsState()
-  val girlName by viewModel.girlName.collectAsState()
+  val boyName = displayMeName(viewModel.boyName.collectAsState().value, appLanguage == AppLanguage.EN)
+  val girlName = displayPartnerName(viewModel.girlName.collectAsState().value, appLanguage == AppLanguage.EN)
 
   var selectedFilter by remember { mutableStateOf("ALL") } // ALL, UNLOCKED, LOCKED
   var viewMode by remember { mutableStateOf("TIMELINE") } // TIMELINE, GRID
@@ -664,7 +666,7 @@ fun MilestoneBadgeShowcaseDialog(
     }
   }
 
-  Dialog(
+  AppDialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false)
   ) {
@@ -691,7 +693,7 @@ fun MilestoneBadgeShowcaseDialog(
             IconButton(
               onClick = onDismiss,
               modifier = Modifier
-                .size(48.dp)
+                .size(MinTouchBox)
                 .clip(CircleShape)
                 .background(Color.White)
             ) {
@@ -734,7 +736,7 @@ fun MilestoneBadgeShowcaseDialog(
             IconButton(
               onClick = { viewMode = "TIMELINE" },
               modifier = Modifier
-                .size(48.dp)
+                .size(MinTouchBox)
                 .clip(CircleShape)
                 .background(if (viewMode == "TIMELINE") Primary else Color.Transparent)
             ) {
@@ -748,7 +750,7 @@ fun MilestoneBadgeShowcaseDialog(
             IconButton(
               onClick = { viewMode = "GRID" },
               modifier = Modifier
-                .size(48.dp)
+                .size(MinTouchBox)
                 .clip(CircleShape)
                 .background(if (viewMode == "GRID") Primary else Color.Transparent)
             ) {
@@ -889,7 +891,7 @@ fun MilestoneTimelineCard(
   val theme = getBadgeTheme(badge.tier)
   val title = if (appLanguage == AppLanguage.VI) badge.titleVi else badge.titleEn
   val desc = if (appLanguage == AppLanguage.VI) badge.descVi else badge.descEn
-  val progress = (currentLoveDays.toFloat() / badge.targetDays.toFloat()).coerceIn(0f, 1f)
+  val progress = (currentLoveDays.toFloat() / badge.targetDays.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
 
   Card(
     shape = RoundedCornerShape(20.dp),
@@ -1118,8 +1120,8 @@ fun DigitalTrophyRewardDialog(
 ) {
   val context = LocalContext.current
   val appLanguage by viewModel.appLanguage.collectAsState()
-  val boyName by viewModel.boyName.collectAsState()
-  val girlName by viewModel.girlName.collectAsState()
+  val boyName = displayMeName(viewModel.boyName.collectAsState().value, appLanguage == AppLanguage.EN)
+  val girlName = displayPartnerName(viewModel.girlName.collectAsState().value, appLanguage == AppLanguage.EN)
   val anniversaryDate by viewModel.anniversaryDate.collectAsState()
 
   val isUnlocked = badge.targetDays <= currentLoveDays
@@ -1131,7 +1133,7 @@ fun DigitalTrophyRewardDialog(
   var customNoteText by remember { mutableStateOf(badge.customNote) }
   var isEditingNote by remember { mutableStateOf(false) }
 
-  Dialog(
+  AppDialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false)
   ) {
@@ -1174,7 +1176,7 @@ fun DigitalTrophyRewardDialog(
           IconButton(
             onClick = onDismiss,
             modifier = Modifier
-              .size(48.dp)
+              .size(MinTouchBox)
               .clip(CircleShape)
               .background(Color(0xFFF5F5F5))
           ) {
@@ -1332,7 +1334,7 @@ fun DigitalTrophyRewardDialog(
               )
               IconButton(
                 onClick = { isEditingNote = !isEditingNote },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(MinTouchBox)
               ) {
                 Icon(
                   imageVector = Icons.Filled.Edit,
@@ -1369,21 +1371,14 @@ fun DigitalTrophyRewardDialog(
                 })
               )
               Spacer(modifier = Modifier.height(6.dp))
-              Button(
+              PrimaryGradientButton(
+                text = if (appLanguage == AppLanguage.VI) "Lưu ghi chú" else "Save Note",
                 onClick = {
                   viewModel.claimBadge(badge.id, customNoteText)
                   isEditingNote = false
                 },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                modifier = Modifier.align(Alignment.End)
-              ) {
-                Text(
-                  text = if (appLanguage == AppLanguage.VI) "Lưu ghi chú" else "Save Note",
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.Bold
-                )
-              }
+                modifier = Modifier.align(Alignment.End).heightIn(min = MinTouchBox)
+              )
             } else {
               Text(
                 text = if (customNoteText.isNotEmpty()) {
@@ -1413,36 +1408,27 @@ fun DigitalTrophyRewardDialog(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
             // Re-celebrate button (Triggers floating hearts shower)
-            Button(
+            PrimaryGradientButton(
+              text = if (appLanguage == AppLanguage.VI) "Bão Tim 🎉" else "Shower Hearts 🎉",
               onClick = {
                 viewModel.celebrateBadge(badge)
               },
-              shape = RoundedCornerShape(16.dp),
-              colors = ButtonDefaults.buttonColors(containerColor = Primary),
+              icon = Icons.Filled.VolunteerActivism,
               modifier = Modifier
                 .weight(1f)
-                .height(48.dp)
-                .testTag("celebrate_badge_button")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.VolunteerActivism,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = if (appLanguage == AppLanguage.VI) "Bão Tim 🎉" else "Shower Hearts 🎉",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = Color.White
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              testTag = "celebrate_badge_button"
+            )
 
             // Share Achievement Button
-            OutlinedButton(
+            SecondaryButton(
+              text = if (appLanguage == AppLanguage.VI) "Chia Sẻ" else "Share",
               onClick = {
-                val shareText = "🏆 $boyName & $girlName đã đạt cột mốc \"$title\" (${badge.targetDays} ngày bên nhau)! 💕 $quote"
+                val shareText = if (appLanguage == AppLanguage.VI) {
+                  "🏆 $boyName & $girlName đã đạt cột mốc \"$title\" (${badge.targetDays} ngày bên nhau)! 💕 $quote"
+                } else {
+                  "🏆 $boyName & $girlName reached the \"$title\" milestone (${badge.targetDays} days together)! 💕 $quote"
+                }
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip = ClipData.newPlainText("Love Milestone", shareText)
                 clipboard.setPrimaryClip(clip)
@@ -1453,32 +1439,22 @@ fun DigitalTrophyRewardDialog(
                 }
                 viewModel.showToast(msg)
               },
-              shape = RoundedCornerShape(16.dp),
-              border = BorderStroke(1.5.dp, Primary),
+              icon = Icons.Filled.Share,
               modifier = Modifier
                 .weight(1f)
-                .height(48.dp)
-                .testTag("share_badge_button")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Share,
-                contentDescription = null,
-                tint = Primary,
-                modifier = Modifier.size(18.dp)
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = if (appLanguage == AppLanguage.VI) "Chia Sẻ" else "Share",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = Primary
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              testTag = "share_badge_button"
+            )
           }
         } else {
           // Locked Encouragement
           val daysToWait = badge.targetDays - currentLoveDays
-          Button(
+          PrimaryGradientButton(
+            text = if (appLanguage == AppLanguage.VI) {
+              "Đang Đếm Ngược: Còn $daysToWait Ngày"
+            } else {
+              "Countdown: $daysToWait Days Left"
+            },
             onClick = {
               val msg = if (appLanguage == AppLanguage.VI) {
                 "Cố lên nhé! Chỉ còn $daysToWait ngày nữa để hai bạn mở khóa huy hiệu này! 💕"
@@ -1488,30 +1464,11 @@ fun DigitalTrophyRewardDialog(
               viewModel.showToast(msg)
               viewModel.triggerFloatingHearts()
             },
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+            icon = Icons.Filled.Favorite,
             modifier = Modifier
               .fillMaxWidth()
-              .height(48.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Favorite,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (appLanguage == AppLanguage.VI) {
-                "Đang Đếm Ngược: Còn $daysToWait Ngày"
-              } else {
-                "Countdown: $daysToWait Days Left"
-              },
-              fontWeight = FontWeight.Bold,
-              fontSize = 13.sp,
-              color = Color.White
-            )
-          }
+              .heightIn(min = MinTouchBox)
+          )
         }
       }
     }

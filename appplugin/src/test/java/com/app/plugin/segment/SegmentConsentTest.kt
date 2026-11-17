@@ -9,7 +9,9 @@ import com.app.plugin.segment.SegmentTestSupport.prefsContext
 import com.app.plugin.segment.SegmentTestSupport.properties
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
+import java.util.Locale
 
 /**
  * 2.2.0 SEG H3 (R-P1, D18-220): user property `seg_*` của engine đi qua `SegmentHooks.setUserProperty`; tầng DENIED
@@ -17,7 +19,16 @@ import org.junit.Test
  * đếm được).
  */
 class SegmentConsentTest {
-    @After fun tearDown() = SegmentTestSupport.reset()
+    private val savedLocale = Locale.getDefault()
+
+    @Before fun setUp() {
+        Locale.setDefault(Locale.forLanguageTag("vi-VN")) // VN ngoài tier 1/2 mặc định: điểm không phụ thuộc locale của máy chạy test
+    }
+
+    @After fun tearDown() {
+        Locale.setDefault(savedLocale)
+        SegmentTestSupport.reset()
+    }
 
     @Test fun `H3 - DENIED va UNKNOWN khong ghi user property seg_, prefs van ghi, GRANTED ghi ca ba`() {
         for (tier in listOf(ConsentTier.DENIED, ConsentTier.UNKNOWN, ConsentTier.GRANTED)) {

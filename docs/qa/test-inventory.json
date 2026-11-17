@@ -1,0 +1,741 @@
+{
+  "files": {
+    "app/src/test/java/com/example/AuthSecurityTest.kt": {
+      "count": 8,
+      "tests": [
+        "generateSalt_returns32CharacterHexString",
+        "hashPassword_isDeterministicWithSameSalt",
+        "hashPassword_differsWithDifferentSalt",
+        "emailValidation_worksCorrectly",
+        "evaluatePasswordStrength_identifiesLevels",
+        "checkLockoutStatus_handlesActiveLockout",
+        "maskEmail_masksProperly",
+        "hashPin_producesDeterministicHash"
+      ]
+    },
+    "app/src/test/java/com/example/CloudEnrichmentDataTest.kt": {
+      "count": 9,
+      "tests": [
+        "initializeDefaultDataIfEmpty sets up neutral reminder cadences",
+        "anti-decompilation audit - no fake personal memories hardcoded in fresh database",
+        "presetPhotos and presetAvatars flow initialization",
+        "initializeDefaultDataIfEmpty seeds the full GiftIdeasSeed catalog, not the old 2-item placeholder",
+        "custom milestones and gift ideas created locally coexist instead of replacing each other",
+        "seeding the gift catalog twice is idempotent",
+        "ensureSeedGiftCatalog adopts a collapsed legacy row, keeping its id and favorite",
+        "ensureSeedGiftCatalog run twice keeps twenty rows and every favorite",
+        "initializeDefaultDataIfEmpty seeds holiday anniversaries from VietnameseHolidays and WesternHolidays"
+      ]
+    },
+    "app/src/test/java/com/example/DatePickerTest.kt": {
+      "count": 9,
+      "tests": [
+        "testDateParsingAndFormatting_RoundTrip",
+        "testDatePresets_RelationshipStartDatePresets",
+        "testDatePresets_UpcomingAnniversaryPresets",
+        "testFriendlyDateDescription",
+        "testDaysUntil_todayFutureAndPastAndGarbage",
+        "testDatePresets_MemoryDatePresets",
+        "testFormatZodiacDisplay",
+        "testFormatAgeDisplay",
+        "testLoveDaysCalculationWithPickedDate"
+      ]
+    },
+    "app/src/test/java/com/example/ExampleRobolectricTest.kt": {
+      "count": 4,
+      "tests": [
+        "read string from context",
+        "insert and retrieve couple profile in Room",
+        "rbac policy and ad free subscription logic",
+        "online repository pairing and breakup logic with clean fixtures"
+      ]
+    },
+    "app/src/test/java/com/example/ExampleUnitTest.kt": {
+      "count": 1,
+      "tests": [
+        "addition_isCorrect"
+      ]
+    },
+    "app/src/test/java/com/example/GreetingScreenshotTest.kt": {
+      "count": 1,
+      "tests": [
+        "greeting_screenshot"
+      ]
+    },
+    "app/src/test/java/com/example/ads/AdsEligibilityTest.kt": {
+      "count": 6,
+      "tests": [
+        "vipNeverGetsAds",
+        "noConsentNeverGetsAds",
+        "blankAdUnitNeverGetsAds",
+        "freeUserWithConsentAndUnitGetsAds",
+        "v1ShipsBannerOnly",
+        "unresolvedConsentIsPublishedAsNotAllowedAndPrivacyRowHidden"
+      ]
+    },
+    "app/src/test/java/com/example/ads/RequestConfigurationMergeTest.kt": {
+      "count": 1,
+      "tests": [
+        "applyingTestDeviceIds_preservesAnExistingContentRatingAlreadySet"
+      ]
+    },
+    "app/src/test/java/com/example/alarm/AlarmOwnerFenceTest.kt": {
+      "count": 4,
+      "tests": [
+        "scheduledAlarmCarriesTheTokenOfTheAccountInForce",
+        "receiverShowsAlarmSetByTheAccountInForce",
+        "receiverDropsAlarmSetByAnotherAccount",
+        "switchingAccountCancelsTheOutgoingAccountsAlarms"
+      ]
+    },
+    "app/src/test/java/com/example/alarm/ReminderSchedulingTest.kt": {
+      "count": 32,
+      "tests": [
+        "annualDateRollsForwardWhenItsDayHasPassed",
+        "sameDayBeforeNineStaysOnToday",
+        "sameDayAfterNineRollsToNextYear",
+        "leapDayFallsOnFebruary28InCommonYears",
+        "leapDayLandsOnFebruary29InLeapYears",
+        "dayThirtyOneClampsToThirtyInShorterMonths",
+        "alarmIdsFollowTheAnniversaryScheme",
+        "disabledNotificationSchedulesNothingAndClearsItsAlarms",
+        "disabling7DaysRemovesOnlyTheAdvanceAlarm",
+        "disablingExactDayRemovesOnlyTheDayOfAlarm",
+        "onlyDisabledCadenceRowsCountAsOff",
+        "twoDayAdvanceIsNotGatedByAnyCadenceRow",
+        "advanceAlarmIsClearedWhenDaysBeforeDropsToZero",
+        "morningCheckPostsTheDayOfNotificationForToday",
+        "morningCheckAndDayOfAlarmShareOneNotificationSlot",
+        "morningCheckHonoursDisabledExactDay",
+        "morningCheckSkipsAOneOffDateFromAnotherYearButShowsThisYear",
+        "morningCheckSkipsDisabledNotifications",
+        "rebootRestoresAFutureCustomReminderUnderItsRowId",
+        "rebootSkipsACustomReminderWhoseTimeHasPassed",
+        "nineAmFollowsTheDeviceZoneWhenItChanges",
+        "bootAndClockActionsTriggerARescheduleAndOthersDoNot",
+        "exactAlarmAllowedFollowsTheSdkAndTheExactPermission",
+        "schedulingStillSucceedsWithoutExactAlarmAccess",
+        "lunarHolidayMovesToItsNextVerifiedYearAndStopsWhenNoneIsVerified",
+        "ruleBasedHolidayRecomputesForTheNextYear",
+        "refreshRewritesALegacyLunarRowAndNeverRevivesOrAddsRows",
+        "refreshMovesALegacyRuleBasedRowToItsNextYear",
+        "setCustomReminderAlarmPersistsMillisAndFormattedText",
+        "anniversaryNotificationsAreOnByDefaultAndTheSwitchPersists",
+        "switchOffSilencesAnAnniversaryAlarmAtDeliveryButNotACustomReminder",
+        "switchOffSilencesTheMorningNotice"
+      ]
+    },
+    "app/src/test/java/com/example/billing/EntitlementRepositoryTest.kt": {
+      "count": 2,
+      "tests": [
+        "isVipUser_seedsFromPersistedCache_beforeAnyBillingResponseThisSession",
+        "isVipUser_updatesAndPersists_onlyAfterHasSyncedOnceBecomesTrue"
+      ]
+    },
+    "app/src/test/java/com/example/billing/PlanOfferTest.kt": {
+      "count": 5,
+      "tests": [
+        "isoPeriodsConvertToWholeDays",
+        "offerWithoutPriceIsNull",
+        "trialOfferKeepsLengthAndPaidOfferDropsIt",
+        "explicitActivityWinsOverContext",
+        "activityIsFoundThroughWrappersButNotThroughConfigurationContext"
+      ],
+      "moved": [
+        {
+          "test": "explicitActivityWinsOverContext",
+          "to": "app/src/test/java/com/example/billing/ResolveHostActivityTest.kt"
+        },
+        {
+          "test": "activityIsFoundThroughWrappersButNotThroughConfigurationContext",
+          "to": "app/src/test/java/com/example/billing/ResolveHostActivityTest.kt"
+        }
+      ]
+    },
+    "app/src/test/java/com/example/billing/VipEntitlementResolverTest.kt": {
+      "count": 8,
+      "tests": [
+        "failedQueryIsNotDefinitiveAndNeverRevokes",
+        "bothQueriesEmptyRevokes",
+        "unrelatedProductsAreIgnored",
+        "suspendedSubscriptionDoesNotGrantButLifetimeStillDoes",
+        "suspendedSubscriptionAloneRevokes",
+        "pendingPurchaseDoesNotGrant",
+        "yearlyBeatsMonthlyAndLifetimeBeatsBoth",
+        "oneFailedQueryStillGrantsFromTheOtherButCannotRevoke"
+      ]
+    },
+    "app/src/test/java/com/example/data/db/AccountIsolationTest.kt": {
+      "count": 7,
+      "tests": [
+        "accountsDoNotSeeEachOthersData_andGetThemBackOnReturn",
+        "adoptKeepsGuestDataForNewAccount",
+        "discardCurrentDropsAccountDataInsteadOfLeakingToGuest",
+        "firstCallAdoptsExistingRowsForThatScope_notGuest",
+        "interruptedSwitchIsFinishedOnNextCall_withoutLosingData",
+        "cadenceSwitchesFollowTheAccount",
+        "favoritesOnCatalogRowsFollowTheAccount"
+      ]
+    },
+    "app/src/test/java/com/example/data/db/Migration12To13Test.kt": {
+      "count": 1,
+      "tests": [
+        "migrate12To13_preservesExistingRows_andAddsSyncColumns"
+      ]
+    },
+    "app/src/test/java/com/example/data/db/Migration13To14Test.kt": {
+      "count": 2,
+      "tests": [
+        "migrate13To14_keepsCoupleProfileRow_andAddsPreferenceColumns",
+        "migrate12To14_fullChain"
+      ]
+    },
+    "app/src/test/java/com/example/data/media/FirebaseMemoryMediaParseTest.kt": {
+      "count": 6,
+      "tests": [
+        "parseSignedUpload_readsFieldsAsStrings",
+        "parseSignedUpload_rejectsOtherHostsAndPlainHttp",
+        "parseSignedUpload_rejectsPublicIdMismatchAndMissingFields",
+        "parseConfirmed_requiresTheSamePublicId",
+        "parseDelivery_acceptsCloudinaryHostsOnly",
+        "parseDelivery_acceptsNumericExpiryFromAnySdkNumberType"
+      ],
+      "moved": [
+        {
+          "test": "parseSignedUpload_readsFieldsAsStrings",
+          "to": "app/src/test/java/com/example/data/media/FirebaseMemoryMediaParseTest.kt",
+          "as": "parseSignedUpload_readsHeadersAsStrings"
+        },
+        {
+          "test": "parseSignedUpload_rejectsOtherHostsAndPlainHttp",
+          "to": "app/src/test/java/com/example/data/media/FirebaseMemoryMediaParseTest.kt",
+          "as": "parseSignedUpload_rejectsNonR2HostsPlainHttpAndTrickyUrls"
+        },
+        {
+          "test": "parseSignedUpload_rejectsPublicIdMismatchAndMissingFields",
+          "to": "app/src/test/java/com/example/data/media/FirebaseMemoryMediaParseTest.kt",
+          "as": "parseSignedUpload_rejectsPublicIdMismatchMissingHeadersAndOldFields"
+        },
+        {
+          "test": "parseDelivery_acceptsCloudinaryHostsOnly",
+          "to": "app/src/test/java/com/example/data/media/FirebaseMemoryMediaParseTest.kt",
+          "as": "parseDelivery_acceptsR2HostsOnly"
+        }
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/AccountDeletionOrderTest.kt": {
+      "count": 3,
+      "tests": [
+        "deleteAccount_runsCloudThenAuth_thenRemovesLocalAccount",
+        "deleteAccount_cloudFailure_skipsAuth_andKeepsAccount",
+        "deleteAccount_recentLoginRequired_keepsLocalAccount_thenRetrySucceeds"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/AuthRepositoryTest.kt": {
+      "count": 8,
+      "tests": [
+        "testRegister_success",
+        "testRegister_duplicateEmail_fails",
+        "testLogin_success_and_logout",
+        "testLogin_wrongPassword_incrementsFailedAttempts",
+        "testPasswordRecovery_hasOnlyTheFirebaseEmailRoute",
+        "testChangePassword_verifiesOldPassword",
+        "testAppPin_and_lockUnlockFlow",
+        "login_keepsEditedOnlineAvatar_whenAccountPhotoIsSet"
+      ],
+      "deleted": [
+        {
+          "test": "testLogin_wrongPassword_incrementsFailedAttempts",
+          "reason": "B-23: AuthRepository.login không còn đếm failedAttempts cục bộ (Firebase là nguồn xác thực duy nhất); sai mật khẩu vẫn được ghim bởi login_wrongPassword_messageContainsKhongChinhXac cùng file. Ghi bù lúc chốt V-09 (2026-10-20) vì B-23 không cập nhật bản kiểm kê."
+        }
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/GuestAdoptionTest.kt": {
+      "count": 4,
+      "tests": [
+        "guestHasData_falseWhenOnlyCatalogRows",
+        "guestHasData_trueWithUserCreatedRow",
+        "registerKeep_adoptsGuestDataIntoNewAccount",
+        "registerFresh_startsEmpty_andGuestDataStaysInGuestScope"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/InLoveRepositorySyncTest.kt": {
+      "count": 9,
+      "tests": [
+        "addSharedMemory_assignsSyncId_andEnqueuesOutboxEntry",
+        "addSharedMemory_private_staysLocal_noOutbox",
+        "updateSharedMemory_sharedToPrivate_sendsStrippedTombstone_keepsLocalContent",
+        "updateSharedMemory_sharedToPrivate_supersedesPendingUpsert",
+        "deleteSharedMemory_private_isLocalOnly",
+        "updateSharedMemory_privateCannotBecomeShared",
+        "applyRemoteMemory_doesNotOverwriteOrHidePrivateLocalRow",
+        "addSharedMemory_usesGivenSyncId_forUploadedMemory",
+        "updateSharedMemory_sharedToPrivate_clearsLocalCloudinaryPublicId"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/MemoryPrivacyTest.kt": {
+      "count": 11,
+      "tests": [
+        "privateMemory_withPhoto_neverUploads_andIsStoredWithoutPublicId",
+        "unpairedShare_isKeptOnDevice_andNeverUploads",
+        "signedOutShare_isRefused_withoutUploadOrStore",
+        "invalidMedia_isRefused_beforeAnyUpload",
+        "uploadFailure_neverCallsStore_andReportsUploadFailed",
+        "sharedUpload_storesThePublicIdBoundToTheSameMemoryId",
+        "textOnlyShare_storesWithoutAnyUpload",
+        "storeFailure_isReportedAsSaveFailed",
+        "cancelledSave_isRethrown_notReportedAsSaveFailed",
+        "resolve_anotherCoupleOrNoCouple_isRefused_withoutAnyRequest",
+        "resolve_ownCouple_returnsDeliveryUrl_forRemotePlayback"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/OnlineCoupleRepositoryPairingTest.kt": {
+      "count": 6,
+      "tests": [
+        "acceptSetLoveInvite_afterBreakup_createsANewRelationshipId_notTheTerminatedOne",
+        "cancelSentInvite_deletesTheLocalInviteRow_notJustResetsState",
+        "rejectSetLoveInvite_deletesTheLocalInviteRow",
+        "confirmBreakup_withNoFirestoreConfigured_stillTerminatesLocally",
+        "updateMyProfile_blankAvatar_clears",
+        "publishCoupleCode_withoutFirestore_returnsFailure"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/PinAndFacebookAuthTest.kt": {
+      "count": 11,
+      "tests": [
+        "wrongPinsLockOutEvenTheCorrectPin",
+        "lockoutSurvivesANewRepositoryInstance",
+        "pinIsStoredWithSlowV2Hash",
+        "legacyPlaintextAndSha256PinsAreUpgradedOnUnlock",
+        "nonNumericOrShortPinNeverUnlocks",
+        "facebookLoginCreatesProviderOnlyAccountThatPasswordCannotUnlock",
+        "facebookWithoutEmailGetsStableSyntheticEmail",
+        "facebookUnlockClearsLockoutAndUnlocks",
+        "facebookUnlockRejectsAnotherFacebookUser",
+        "cancelledFacebookLoginReturnsMessageWithoutAccount",
+        "attemptStoreEscalatesAndGuardsAgainstClockRollback"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/PresetDedupeTest.kt": {
+      "count": 3,
+      "tests": [
+        "upsertGiftIdeaByRemoteId_calledTwiceWithSameRemoteId_doesNotDuplicate",
+        "upsertGiftIdeaByRemoteId_twentySeedsSyncedTwice_keepTwentyRows",
+        "generateAiGiftSuggestions_calledTwice_keepsRowIdentityAndFavorites"
+      ]
+    },
+    "app/src/test/java/com/example/data/repository/RepositoryScopeLifecycleTest.kt": {
+      "count": 1,
+      "tests": [
+        "onlineCoupleRepository_stopsWork_whenCallerScopeIsCancelled"
+      ]
+    },
+    "app/src/test/java/com/example/data/sync/AnniversarySyncAdapterTest.kt": {
+      "count": 2,
+      "tests": [
+        "toFirestoreMap_includesAllSyncedFields",
+        "entityType_isStableIdentifierUsedByTheOutbox"
+      ]
+    },
+    "app/src/test/java/com/example/data/sync/MemorySyncAdapterTest.kt": {
+      "count": 9,
+      "tests": [
+        "toFirestoreMap_roundTripsThroughFromFirestoreDoc_viaMap",
+        "entityType_isStableIdentifierUsedByTheOutbox",
+        "toFirestoreMap_neverSendsLocalUrisOrLegacyCloudinaryFields",
+        "toFirestoreMap_blanksPhotoHostedOnCloudinary",
+        "toFirestoreMap_keepsHttpsPhotoOutsideCloudinary",
+        "toFirestoreMap_keepsPublicIdOnlyWhenBoundToThisMemory",
+        "toFirestoreMap_tombstoneSendsNoMedia",
+        "safeSharedPhotoUri_keepsOnlyHttpsUrlsOutsideCloudinary",
+        "safePublicId_acceptsOnlyTheMemoryOwnName"
+      ]
+    },
+    "app/src/test/java/com/example/data/sync/NetworkMonitorTest.kt": {
+      "count": 1,
+      "tests": [
+        "isOnline_reflectsShadowConnectivityState"
+      ]
+    },
+    "app/src/test/java/com/example/data/sync/SyncCoordinatorTest.kt": {
+      "count": 3,
+      "tests": [
+        "applyRemoteAnniversary_keepsLocalPendingEdit_whenRemoteUpdateIsOlder",
+        "applyRemoteMemory_withDeletedRemote_andNoLocalRow_doesNotResurrectIt",
+        "applyRemoteMemory_echoOfOwnTombstone_doesNotResurrectSoftDeletedLocalRow"
+      ]
+    },
+    "app/src/test/java/com/example/data/sync/SyncWorkerTest.kt": {
+      "count": 7,
+      "tests": [
+        "doWork_drainsOnePendingOutboxEntry_andRemovesItOnSuccess",
+        "doWork_poisonRow_isKeptWithReason_andDoesNotBlockHealthyRows",
+        "doWork_drainsEveryPendingRow_notJustTheFirstBatch",
+        "doWork_persistentlyFailingRow_doesNotHoldBackHealthyRowsInTheSameRun",
+        "doWork_scopeSwitchDuringPush_acknowledgesNothingAndStartsNoFurtherWrites",
+        "anniversaryDelete_replacesTheQueuedUpsertForTheSameSyncId",
+        "anniversaryEdit_keepsOneQueuedUpsertPerSyncId"
+      ]
+    },
+    "app/src/test/java/com/example/domain/AppModeTest.kt": {
+      "count": 2,
+      "tests": [
+        "resolvesModes",
+        "offlineMessageOnlyWhenSignedIn"
+      ]
+    },
+    "app/src/test/java/com/example/domain/GiftRankerTest.kt": {
+      "count": 1,
+      "tests": [
+        "interest match ranks first, ties keep order"
+      ]
+    },
+    "app/src/test/java/com/example/domain/content/GiftCatalogTest.kt": {
+      "count": 13,
+      "tests": [
+        "chips_keysDoNotChangeWithLanguage",
+        "everySeedCategory_isAChip_andEveryCategoryChipSelectsASeed",
+        "filterByChip_matchesCategoryExactly_andAllAndAiAreSpecial",
+        "localized_seedRowFollowsTheRequestedLanguage",
+        "localized_nonSeedRowKeepsItsStoredText",
+        "localized_flagsOnlySeedRowsForTheIllustrationCaption",
+        "englishTags_areAsciiForEverySeed",
+        "priceLabel_isIndicativeVndRange_andNullWhenUnknown",
+        "categoryLabel_isEnglishForEachChip_andTheKeyOtherwise",
+        "categoryLabel_aiChipIsPersonalizedInBothLanguages",
+        "seedCopy_claimsNothingTheAppCannotBack",
+        "seedRemoteIds_areTwentyDistinctNonBlankIdentities",
+        "seedRemoteIdFor_adoptsLegacyRowsByImageOrTitle_andLeavesStrangersAlone"
+      ]
+    },
+    "app/src/test/java/com/example/domain/media/MemoryMediaTest.kt": {
+      "count": 17,
+      "tests": [
+        "validate_videoNeedsAtLeastOneSecond",
+        "validate_videoMaxSixtySeconds",
+        "validate_sizeLimitsAreInclusive",
+        "validate_rejectsUnknownMimeAndKindMismatch",
+        "validate_mimeIsCaseInsensitive",
+        "validate_messagesQuoteTheRealLimits",
+        "formatExtensionOf_matchesServerFormatTable",
+        "upload_withoutSharing_skipsRepository",
+        "upload_withoutRelationshipOrMedia_skipsRepository",
+        "upload_shared_returnsPublicIdFromRepository",
+        "upload_repositoryFailure_isReturnedAsFailure",
+        "upload_cancellation_isRethrownNotWrapped",
+        "resolve_returnsDeliveryUrl",
+        "resolve_repositoryFailure_isReturnedAsFailure",
+        "memoryMediaFile_exposesPathString",
+        "formatBytes_oneDecimalForMbZeroDecimalForKb",
+        "uploadFormats_uppercaseIsLocaleInvariant"
+      ]
+    },
+    "app/src/test/java/com/example/email/EmailQueueServiceTest.kt": {
+      "count": 5,
+      "tests": [
+        "generateOtpCode_returns6DigitsNumericString",
+        "enqueueVerificationEmail_enqueuesTaskAndProtectsOtp",
+        "enqueueVerificationEmail_enforcesCooldownRateLimit",
+        "verifyOtp_succeedsWithCorrectCode",
+        "verifyOtp_failsWithWrongCode_andEnforcesMaxAttempts"
+      ]
+    },
+    "app/src/test/java/com/example/ui/PrivacyOptionsRowTest.kt": {
+      "count": 4,
+      "tests": [
+        "isPrivacyOptionsRequired_returnsFalseSafely_whenNoConsentFlowHasEverRunInThisProcess",
+        "adPrivacyOptionsRow_rendersOnlyWhenVisibleIsTrue",
+        "adPrivacyOptionsRow_rendersWhenVisibleIsTrue",
+        "adPrivacyOptionsRow_clickInvokesCallback"
+      ]
+    },
+    "app/src/test/java/com/example/ui/components/AppOpeningSplashScreenTest.kt": {
+      "count": 1,
+      "tests": [
+        "splashScreen_rendersLogoAndDismissesOnClick"
+      ]
+    },
+    "app/src/test/java/com/example/ui/components/InLoveTopBarTest.kt": {
+      "count": 8,
+      "tests": [
+        "bellAndAvatar_presentExpandedAndCollapsed",
+        "strip_hiddenWhenNoNotification",
+        "strip_showsFullItem_andSeeAllFires",
+        "largeTitle_hasNoVisualOverflow",
+        "scrollUp_collapses",
+        "tabChange_resetsCollapse",
+        "expanded_screenshot",
+        "collapsed_screenshot"
+      ]
+    },
+    "app/src/test/java/com/example/ui/components/NotificationItemsTest.kt": {
+      "count": 6,
+      "tests": [
+        "milestoneToday_isUrgent_withTodayText",
+        "milestone5Days_notUrgent_textHasDate",
+        "reminder_blankTime_fallsBackToDateText",
+        "topNotification_prefersUrgentOverFirst",
+        "topNotification_empty_isNull",
+        "sheetDensity_matchesApp"
+      ]
+    },
+    "app/src/test/java/com/example/ui/screens/AddMilestoneExamplesTest.kt": {
+      "count": 3,
+      "tests": [
+        "exampleChip_fillsTitle",
+        "exampleChip_selectsCategory_andKeepsStoredVietnameseTag",
+        "categoryCell_meetsMinTouchHeight"
+      ]
+    },
+    "app/src/test/java/com/example/ui/screens/EditProfileDialogTargetsTest.kt": {
+      "count": 2,
+      "tests": [
+        "closeAndPresets_meetMinTouchBox",
+        "avatarActions_existAndMeetMinRequirements"
+      ]
+    },
+    "app/src/test/java/com/example/ui/screens/PaywallFooterTest.kt": {
+      "count": 3,
+      "tests": [
+        "footer_hasCtaAndDisclosure",
+        "footer_priceUnavailable_showsRetry_disablesCta",
+        "footer_screenshot"
+      ]
+    },
+    "app/src/test/java/com/example/ui/theme/ThemeResourcesTest.kt": {
+      "count": 1,
+      "tests": [
+        "templatePurpleAndTealColors_areNotDeclared"
+      ]
+    },
+    "app/src/test/java/com/example/ui/theme/ThemeTokensTest.kt": {
+      "count": 2,
+      "tests": [
+        "minTouchBox_scalesToAtLeast48dp",
+        "appShapes_areRaised"
+      ]
+    },
+    "app/src/test/java/com/example/ui/util/AvatarFilesTest.kt": {
+      "count": 6,
+      "tests": [
+        "staleLocalAvatar_returnsOldFileInsideDir",
+        "staleLocalAvatar_nullWhenSameUrl",
+        "staleLocalAvatar_nullForHttpsUrl",
+        "staleLocalAvatar_nullForFileOutsideDir",
+        "shareableAvatar_blanksFileScheme",
+        "shareableAvatar_keepsHttps"
+      ]
+    },
+    "app/src/test/java/com/example/ui/util/LocaleManagerTest.kt": {
+      "count": 1,
+      "tests": [
+        "wallpaperUrl_survivesAcrossReads_onceSaved"
+      ]
+    },
+    "app/src/test/java/com/example/ui/util/OnlineProfileRulesTest.kt": {
+      "count": 8,
+      "tests": [
+        "guestAndBlankUidAreNoProfile",
+        "firstArrivalIsNotAReplacement",
+        "sameProfileIsNotAReplacement",
+        "anotherProfileReplacesTheApplied",
+        "vanishedProfileIsAChange",
+        "blankFieldOfTheSameProfileClears",
+        "blankFieldOnFirstArrivalKeepsWhatTheCardShows",
+        "filledFieldAlwaysApplies"
+      ]
+    },
+    "app/src/test/java/com/example/ui/util/ProfileUtilsThreadSafetyTest.kt": {
+      "count": 1,
+      "tests": [
+        "parseDateToMillis_isThreadSafe"
+      ]
+    },
+    "app/src/androidTest/java/com/example/ExampleInstrumentedTest.kt": {
+      "count": 1,
+      "tests": [
+        "useAppContext"
+      ]
+    },
+    "scripts/rules-tests/media.rules.test.js": {
+      "count": 17,
+      "tests": [
+        "a text-only memory is created by its author",
+        "a preset photo listed in preset_assets/photos is allowed",
+        "a photo that is not a listed preset (device path, unlisted or public link) is refused",
+        "public links, Cloudinary storage flags and local video URIs are never stored",
+        "a publicId with an active asset owned by the author in this couple is allowed",
+        "a video memory is allowed when its confirmed asset is a video",
+        "a publicId without a confirmed active asset is refused (none, reserved, deleting, expired, deleted)",
+        "a publicId whose asset was uploaded by the partner, or belongs to another couple, is refused",
+        "a publicId that is not inlove_mem_<this memory id> is refused, even with a matching asset",
+        "authorId must be the caller, and a stranger cannot create a memory",
+        "an update cannot attach a file to a memory that has none",
+        "the partner can edit the text and keep the file, but cannot change the author",
+        "an update may clear the file",
+        "a legacy memory that still holds a public link cannot be rewritten until it is migrated",
+        "a stranger cannot read or write media memories, and nobody writes to a terminated couple",
+        "clients can never read or write media bookkeeping (mediaAssets, mediaQuota)",
+        "the legacy top-level memories collection accepts no new rows; the author can delete their own"
+      ]
+    },
+    "scripts/rules-tests/pairing.rules.test.js": {
+      "count": 5,
+      "tests": [
+        "a client cannot create relationships/{id} even for an ACCEPTED invite (server-only via acceptCoupleInvite); the server-created doc keeps its identity locked",
+        "a relationship cannot be created without a matching ACCEPTED invite at the same id",
+        "a stale invite cannot be replayed after the relationship already exists (invite stuck at ACCEPTED, no new relationship id can reuse it maliciously)",
+        "coupleCodes: any authenticated user can look up a code, but list is denied and a taken code cannot be overwritten",
+        "memories/anniversaries subcollections: both relationship members can read and write, a stranger cannot"
+      ]
+    },
+    "scripts/rules-tests/users-entitlements.rules.test.js": {
+      "count": 12,
+      "tests": [
+        "allows create with valid profile fields",
+        "denies create with ${k}",
+        "denies update that adds ${k}",
+        "denies update that modifies ${k}",
+        "denies update that deletes ${k}",
+        "denies create with an unknown field",
+        "denies mixed valid + sensitive update",
+        "allows valid profile update and keeps pre-existing server fields untouched",
+        "denies spoofing uid field",
+        "denies other UID read/create/update/delete",
+        "denies unauthenticated access",
+        "allows owner to delete own profile"
+      ]
+    },
+    "firebase/functions/test/client-contract.test.js": {
+      "count": 5,
+      "tests": [
+        "public_id: tiền tố app và server dùng giống nhau",
+        "giới hạn dung lượng và thời lượng: app khớp config.js",
+        "định dạng upload: MIME trong app khớp mimeFormats của config.js (cả ảnh và video)",
+        "region: app gọi Functions cùng region với config.js",
+        "callable: mọi hàm app gọi đều được server export"
+      ]
+    },
+    "firebase/functions/test/cloudinary.test.js": {
+      "count": 8,
+      "tests": [
+        "signUpload: chữ ký khớp quy tắc của Cloudinary (tham số sắp xếp, nối &, thêm secret, SHA-1)",
+        "signUpload: video dùng đường dẫn video; secret không xuất hiện trong kết quả trả về app",
+        "deliveryUrl (token): đường dẫn đúng, không có chữ ký s--, token hết hạn sau đúng TTL, HMAC khớp khoá",
+        "createCloudinary: từ chối cấu hình thiếu hoặc sai; cấu hình đủ thì được nhận",
+        "fetchResource: 404 trả về null, lỗi khác thì ném ra; gọi đúng loại tài nguyên và kiểu authenticated",
+        "destroy: \"ok\" và \"not found\" đều coi là đã xoá; kết quả khác thì báo lỗi để sweeper thử lại",
+        "moveToPrivate: đổi từ upload sang authenticated, không ghi đè, xoá cache CDN",
+        "httpCodeOf: đọc được cả hai dạng lỗi của SDK"
+      ]
+    },
+    "firebase/functions/test/legacy.test.js": {
+      "count": 10,
+      "tests": [
+        "parseLegacyUrl: bỏ phiên bản, biến đổi và phần mở rộng, giữ thư mục của public_id",
+        "parseLegacyUrl: từ chối link không phải Cloudinary public cần chuyển",
+        "planLegacyMemory: ảnh public của cloud này -> migrate, đổi public_id và xoá link cũ",
+        "planLegacyMemory: video public -> migrate kiểu VIDEO và xoá videoUri",
+        "planLegacyMemory: ảnh preset của app được giữ nguyên",
+        "planLegacyMemory: đường dẫn cục bộ và link không rõ nguồn bị bỏ khỏi memory",
+        "planLegacyMemory: link thuộc cloud khác thì bỏ qua, không đụng tới",
+        "planLegacyMemory: memory đã theo mô hình mới thì giữ nguyên, không chuyển lại",
+        "planLegacyMemory: public_id cũ không còn link vẫn được chuyển như tệp của cloud này",
+        "planLegacyMemory: preset nằm trên chính cloud này vẫn không bị chuyển sang riêng tư (dùng chung cho mọi người)"
+      ]
+    },
+    "firebase/functions/test/media.plan.test.js": {
+      "count": 15,
+      "tests": [
+        "isMember: khớp bất kỳ trường thành viên nào; uid trống hoặc không có cặp đôi thì không khớp",
+        "planDelivery: chỉ thành viên của cặp đôi còn ACTIVE mới nhận link xem; người ngoài và cặp đôi đã chia tay thì bị từ chối",
+        "planReserve: từ chối người ngoài, cặp đôi không active, tệp đã có, vượt quota",
+        "planReserve: gọi lại đúng phiên còn hiệu lực thì ký lại, không cộng quota; khác chủ, khác loại, hết hạn thì từ chối",
+        "planReserve: phiên có public_id theo quy ước, trạng thái reserved, hạn đúng 2 giờ",
+        "planConfirm: chỉ chủ phiên, đúng cặp đôi, còn reserved và chưa hết hạn (đúng mốc là hết hạn)",
+        "planCapacity: đúng ngưỡng 2 GB vẫn nhận, vượt 1 byte thì từ chối",
+        "planGlobalCapacity: đúng trần toàn hệ thống vẫn nhận, vượt 1 byte thì từ chối; reserve cũng bị chặn sớm",
+        "alreadyConfirmed: đã active đúng chủ và đúng cặp đôi thì coi là đã xác nhận (app gửi lại); còn lại thì không",
+        "planRelease: chỉ giải phóng tài sản active hoặc đang deleting của đúng cặp đôi",
+        "planExpire: reserved quá hạn (kể cả đúng mốc) mới chuyển sang expired; không chạm vào tệp active",
+        "planPurge: expired phải đủ 1 giờ ân hạn (lateUploadGraceMs) kể từ lúc đánh dấu mới được xoá tệp",
+        "dailyKeys và storageKey: khoá theo ngày UTC, tách theo người, cặp đôi và toàn hệ thống",
+        "readAsset: đổi Timestamp thành millis; thiếu expiresAt thì coi là 0 (fail-closed); không tồn tại thì null",
+        "planOrphan: chỉ xét tài sản active đến hạn; memory còn trỏ tới thì hẹn kiểm tra lại, không còn thì xoá"
+      ]
+    },
+    "firebase/functions/test/migrate-legacy-media.test.js": {
+      "count": 4,
+      "tests": [
+        "legacyProblem: đúng loại, đúng giới hạn dung lượng và thời lượng video",
+        "fingerprint: đổi một field legacy thì khác; field không liên quan thì giống nhau",
+        "toUpdate: null thành FieldValue.delete(), giá trị khác giữ nguyên",
+        "MEMORY_PATH: chỉ nhận relationships/{id}/memories/{id}"
+      ]
+    },
+    "firebase/functions/test/pairing.accept.test.js": {
+      "count": 6,
+      "tests": [
+        "accept lần đầu: tạo relationships/{inviteId} ACTIVE, invite thành ACCEPTED, alreadyAccepted=false",
+        "accept lại: alreadyAccepted=true, không ghi gì, dữ liệu không đổi",
+        "hai accept đồng thời: đúng một lần tạo, một lần alreadyAccepted, chỉ một relationship",
+        "invite đã ACCEPTED nhưng thiếu relationship: failed-precondition",
+        "uid không phải người nhận lời mời: permission-denied",
+        "caller đã có relationship ACTIVE khác: failed-precondition, không ghi gì"
+      ]
+    },
+    "firebase/functions/test/policy.test.js": {
+      "count": 11,
+      "tests": [
+        "publicIdFor: tiền tố cố định, không có thư mục hay tên người dùng",
+        "ảnh: đúng 10 MB được nhận, vượt 1 byte thì bị từ chối",
+        "dung lượng không hợp lệ bị từ chối",
+        "video: đúng 50 MB và 60 giây được nhận, vượt ngưỡng hoặc thiếu thời lượng thì bị từ chối",
+        "kind chỉ nhận IMAGE hoặc VIDEO",
+        "id: memoryId là UUID viết thường, relationshipId không có ký tự lạ",
+        "MIME: chỉ nhận đúng bảng, không lọt khoá kiểu prototype, không khớp nhầm loại",
+        "resourceProblem: tệp khớp mọi điều kiện thì không có lỗi",
+        "resourceProblem: video phải có thời lượng, không quá 61 giây (dung sai 1 giây do làm tròn)",
+        "quotaProblem: đúng ngưỡng vẫn được, vượt ngưỡng thì từ chối",
+        "dayKey theo UTC: 23:59 UTC vẫn là ngày đó, 00:00 UTC là ngày sau"
+      ],
+      "moved": [
+        {
+          "test": "resourceProblem: tệp khớp mọi điều kiện thì không có lỗi",
+          "to": "firebase/functions/test/policy.test.js",
+          "as": "resourceProblem: tệp khớp thì null; thiếu tệp, lệch dung lượng, vượt trần, sai content-type, sai họ thì có lý do"
+        }
+      ],
+      "deleted": [
+        {
+          "test": "resourceProblem: video phải có thời lượng, không quá 61 giây (dung sai 1 giây do làm tròn)",
+          "reason": "DEC-270 của kế hoạch R2: R2 không đọc metadata nên resourceProblem không còn so thời lượng video với số đo của Cloudinary; thời lượng khai báo vẫn bị chặn lúc reserve bởi test 'video: đúng 50 MB và 60 giây được nhận, vượt ngưỡng hoặc thiếu thời lượng thì bị từ chối' cùng file. Ghi bù lúc chốt R2 (2026-10-21) vì bước R2 không cập nhật bản kiểm kê."
+        }
+      ]
+    },
+    "firebase/functions/test/rateLimit.test.js": {
+      "count": 12,
+      "tests": [
+        "1. đúng max lần qua, lần max+1 bị resource-exhausted",
+        "2. lần bị từ chối không ghi gì",
+        "3. uid khác đếm riêng",
+        "4. name khác đếm riêng",
+        "5. sang window kế tiếp thì đếm lại từ đầu",
+        "6. doc counter có expiresAt là Date lớn hơn nowMs, count=1",
+        "7. name không có trong cfg.rateLimits thì ném lỗi rõ ràng, không ghi gì",
+        "8. đồng thời: counter ở max-1, 5 lần enforce thì đúng 1 qua, 4 resource-exhausted, counter cuối = max",
+        "9. fail-closed khi đọc counter lỗi: enforce reject đúng lỗi đó, không ghi gì",
+        "10. fail-closed khi commit lỗi: reject đúng lỗi đã inject, dữ liệu và writes không đổi",
+        "11. tĩnh: mỗi callable onCall trong index.js gọi limit ngay sau requireUid, và khớp cfg.rateLimits",
+        "12. wiring: index.js gọi rateLimit.enforce đúng db/uid/name/nowMs, trước mọi logic nghiệp vụ"
+      ],
+      "moved": [
+        {
+          "test": "11. tĩnh: mỗi callable onCall trong index.js gọi limit ngay sau requireUid, và khớp cfg.rateLimits",
+          "to": "firebase/functions/test/rateLimit.test.js",
+          "as": "11. tĩnh: mỗi callable onCall trong index.js và src/entitlement/index.js gọi limit ngay sau requireUid, và khớp cfg.rateLimits"
+        }
+      ]
+    }
+  }
+}

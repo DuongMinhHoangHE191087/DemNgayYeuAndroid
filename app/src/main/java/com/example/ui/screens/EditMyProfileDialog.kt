@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,12 +31,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.widthIn
+import com.example.ui.components.AppDialog
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
 import com.example.ui.components.animateDialogEntrance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
@@ -46,8 +48,6 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
@@ -55,14 +55,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,13 +77,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.data.model.OnlineUserEntity
+import com.example.ui.components.BirthdayField
+import com.example.ui.components.ProfileAvatar
 import com.example.ui.components.pressClickable
 import com.example.ui.theme.MinTouchBox
-import com.example.ui.util.ProfileUtils
+import com.example.ui.util.Birthday
 import java.io.File
 
 @Composable
@@ -111,13 +110,11 @@ fun EditMyProfileDialog(
   canEditPhoto: Boolean = true,
   onPhotoPicked: (Uri) -> String = { "" },
   onDismiss: () -> Unit,
-  onSave: (name: String, birthDate: String, avatarUrl: String, gender: String, bio: String) -> Unit,
+  onSave: (name: String, birthDate: String, avatarUrl: String, gender: String, bio: String, clearBirthday: Boolean) -> Unit,
   onPhotoDiscarded: (String) -> Unit = {}
 ) {
-  Dialog(onDismissRequest = onDismiss) {
-    com.example.ui.theme.AppDensity {
-      EditMyProfileDialogContent(currentUser, presetAvatars, isEnglish, canEditPhoto, onPhotoPicked, onDismiss, onSave, onPhotoDiscarded)
-    }
+  AppDialog(onDismissRequest = onDismiss) {
+    EditMyProfileDialogContent(currentUser, presetAvatars, isEnglish, canEditPhoto, onPhotoPicked, onDismiss, onSave, onPhotoDiscarded)
   }
 }
 
@@ -170,13 +167,12 @@ internal fun EditMyProfileDialogContent(
   canEditPhoto: Boolean = true,
   onPhotoPicked: (Uri) -> String = { "" },
   onDismiss: () -> Unit,
-  onSave: (name: String, birthDate: String, avatarUrl: String, gender: String, bio: String) -> Unit,
+  onSave: (name: String, birthDate: String, avatarUrl: String, gender: String, bio: String, clearBirthday: Boolean) -> Unit,
   onPhotoDiscarded: (String) -> Unit = {}
 ) {
-  var displayName by remember {
-    mutableStateOf(if (currentUser.displayName == "Vô danh" && !currentUser.isProfileSetup) "" else currentUser.displayName)
-  }
-  var birthDate by remember { mutableStateOf(currentUser.birthDate.ifEmpty { "15/10/2004" }) }
+  var displayName by remember { mutableStateOf(currentUser.effectiveDisplayName) }
+  var birthDate by remember { mutableStateOf(Birthday.normalize(currentUser.birthDate)) }
+  val openedWithBirthday = remember { birthDate.isNotBlank() }
   var avatarUrl by remember { mutableStateOf(currentUser.avatarUrl) }
   var gender by remember { mutableStateOf(currentUser.gender) }
   var bio by remember { mutableStateOf(currentUser.bio) }
@@ -203,14 +199,6 @@ internal fun EditMyProfileDialogContent(
   val captureFile = remember { File(context.cacheDir, "camera/avatar_capture.jpg") }
   val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
     if (saved) applyPick(onPhotoPicked(FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", captureFile)))
-  }
-
-  // Auto-calculated fields derived in real-time from birth date
-  val calculatedAge by remember(birthDate) {
-    derivedStateOf { ProfileUtils.calculateAge(birthDate) }
-  }
-  val calculatedZodiacPair by remember(birthDate) {
-    derivedStateOf { ProfileUtils.calculateZodiac(birthDate) }
   }
 
   var showPhotoActionPicker by remember { mutableStateOf(false) }
@@ -293,33 +281,39 @@ internal fun EditMyProfileDialogContent(
               if (canEditPhoto) showPhotoActionPicker = !showPhotoActionPicker
             }
         ) {
-          AsyncImage(
-            model = avatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
+          ProfileAvatar(
+            url = avatarUrl,
             contentDescription = if (isEnglish) "Profile photo" else "Ảnh đại diện",
-            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
           )
         }
 
         // Cute pencil button at bottom-end corner
         if (canEditPhoto) {
-          Surface(
-            shape = CircleShape,
-            color = Color(0xFFE91E63),
-            shadowElevation = 3.dp,
+          Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-              .size(28.dp)
+              .size(MinTouchBox)
               .align(Alignment.BottomEnd)
+              .offset(x = 14.dp, y = 14.dp)
+              .clip(CircleShape)
               .clickable { showPhotoActionPicker = !showPhotoActionPicker }
               .testTag("btn_photo_pencil")
           ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-              Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = if (isEnglish) "Edit avatar" else "Chỉnh sửa ảnh đại diện",
-                tint = Color.White,
-                modifier = Modifier.size(15.dp)
-              )
+            Surface(
+              shape = CircleShape,
+              color = Color(0xFFE91E63),
+              shadowElevation = 3.dp,
+              modifier = Modifier.size(28.dp)
+            ) {
+              Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                  imageVector = Icons.Default.Edit,
+                  contentDescription = if (isEnglish) "Edit avatar" else "Chỉnh sửa ảnh đại diện",
+                  tint = Color.White,
+                  modifier = Modifier.size(15.dp)
+                )
+              }
             }
           }
         }
@@ -363,9 +357,9 @@ internal fun EditMyProfileDialogContent(
               }
               IconButton(
                 onClick = { showPhotoActionPicker = false },
-                modifier = Modifier.size(24.dp).testTag("btn_photo_cancel")
+                modifier = Modifier.size(MinTouchBox).testTag("btn_photo_cancel")
               ) {
-                Icon(Icons.Default.Close, contentDescription = "Đóng", tint = Color.Gray, modifier = Modifier.size(15.dp))
+                Icon(Icons.Default.Close, contentDescription = if (isEnglish) "Close" else "Đóng", tint = Color.Gray, modifier = Modifier.size(15.dp))
               }
             }
 
@@ -374,55 +368,41 @@ internal fun EditMyProfileDialogContent(
               horizontalArrangement = Arrangement.spacedBy(6.dp),
               verticalAlignment = Alignment.CenterVertically
             ) {
-              Button(
+              SecondaryButton(
+                text = if (isEnglish) "Camera" else "Chụp ảnh",
                 onClick = {
                   showPhotoActionPicker = false
                   captureFile.parentFile?.mkdirs()
                   takePhoto.launch(FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", captureFile))
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFE91E63)),
-                border = BorderStroke(1.dp, Color(0xFFFFB6C1)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f).height(40.dp).testTag("btn_photo_camera")
-              ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                  Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(14.dp))
-                  Text(if (isEnglish) "Camera" else "Chụp ảnh", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                }
-              }
+                icon = Icons.Default.CameraAlt,
+                modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                testTag = "btn_photo_camera"
+              )
 
-              Button(
+              SecondaryButton(
+                text = if (isEnglish) "Gallery" else "Thư viện",
                 onClick = {
                   showPhotoActionPicker = false
                   pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFE91E63)),
-                border = BorderStroke(1.dp, Color(0xFFFFB6C1)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f).height(40.dp).testTag("btn_photo_library")
-              ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                  Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(14.dp))
-                  Text(if (isEnglish) "Gallery" else "Thư viện", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                }
-              }
+                icon = Icons.Default.PhotoLibrary,
+                modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                testTag = "btn_photo_library"
+              )
 
               if (avatarUrl.isNotBlank()) {
-                Button(
+                SecondaryButton(
+                  text = if (isEnglish) "Delete" else "Xoá",
                   onClick = {
                     showPhotoActionPicker = false
                     avatarUrl = ""
                   },
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE), contentColor = Color(0xFFD32F2F)),
-                  border = BorderStroke(1.dp, Color(0xFFFFCDD2)),
-                  shape = RoundedCornerShape(12.dp),
-                  modifier = Modifier.weight(1f).height(40.dp).testTag("btn_photo_remove")
-                ) {
-                  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Text(if (isEnglish) "Delete" else "Xoá", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                  }
-                }
+                  icon = Icons.Default.DeleteOutline,
+                  isDestructive = true,
+                  modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                  testTag = "btn_photo_remove"
+                )
               }
             }
           }
@@ -485,6 +465,7 @@ internal fun EditMyProfileDialogContent(
         label = { Text(if (isEnglish) "Name" else "Tên") },
         placeholder = { Text(if (isEnglish) "Leave empty to show 'Anonymous'" else "Để trống sẽ hiển thị 'Vô danh'") },
         singleLine = true,
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false),
         shape = RoundedCornerShape(14.dp),
         leadingIcon = {
           Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color(0xFFE91E63))
@@ -529,51 +510,15 @@ internal fun EditMyProfileDialogContent(
 
       Spacer(modifier = Modifier.height(10.dp))
 
-      // Birth Date Input
-      OutlinedTextField(
+      // Birth Date Input (picked from the calendar only, always dd/MM/yyyy)
+      BirthdayField(
+        label = if (isEnglish) "Birthday" else "Ngày sinh",
         value = birthDate,
         onValueChange = { birthDate = it },
-        label = { Text(if (isEnglish) "Birthday" else "Ngày sinh") },
-        placeholder = { Text("15/10/2004") },
-        singleLine = true,
-        shape = RoundedCornerShape(14.dp),
-        leadingIcon = {
-          Icon(imageVector = Icons.Default.Cake, contentDescription = null, tint = Color(0xFFE91E63))
-        },
-        colors = profileDialogTextFieldColors(),
-        modifier = Modifier
-          .fillMaxWidth()
-          .testTag("input_my_profile_birth")
+        modifier = Modifier.fillMaxWidth(),
+        isEnglish = isEnglish,
+        testTag = "input_my_profile_birth"
       )
-
-      Spacer(modifier = Modifier.height(8.dp))
-
-      // Real-time Auto-Calculated Age & Zodiac Pill (NON-EDITABLE BY USER)
-      Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFFFF0F5),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB6C1)),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Row(
-          modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-          Icon(
-            imageVector = Icons.Default.AutoAwesome,
-            contentDescription = null,
-            tint = Color(0xFFE91E63),
-            modifier = Modifier.size(18.dp)
-          )
-          Text(
-            text = "${ProfileUtils.formatAgeDisplay(calculatedAge, isEnglish)} • ${ProfileUtils.formatZodiacDisplay(calculatedZodiacPair.first, isEnglish)}",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF880E4F)
-          )
-        }
-      }
 
       Spacer(modifier = Modifier.height(10.dp))
 
@@ -594,40 +539,25 @@ internal fun EditMyProfileDialogContent(
       Spacer(modifier = Modifier.height(18.dp))
 
       // Action Buttons
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-      ) {
-        OutlinedButton(
-          onClick = onDismiss,
-          shape = RoundedCornerShape(14.dp),
-          modifier = Modifier.weight(1f)
-        ) {
-          Text(if (isEnglish) "Cancel" else "Hủy")
-        }
-
-        Button(
-          onClick = {
-            submittedUrl = avatarUrl.trim()
-            onSave(
-              displayName.trim(),
-              birthDate.trim(),
-              submittedUrl,
-              gender,
-              bio.trim()
-            )
-          },
-          shape = RoundedCornerShape(14.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-          modifier = Modifier
-            .weight(1f)
-            .testTag("btn_save_my_profile")
-        ) {
-          Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(if (isEnglish) "Save" else "Lưu", fontWeight = FontWeight.Bold, maxLines = 1)
-        }
-      }
+      PrimaryGradientButton(
+        text = if (isEnglish) "Save" else "Lưu",
+        onClick = {
+          submittedUrl = avatarUrl.trim()
+          onSave(
+            displayName.trim(),
+            birthDate.trim(),
+            submittedUrl,
+            gender,
+            bio.trim(),
+            openedWithBirthday && birthDate.trim().isBlank()
+          )
+        },
+        icon = Icons.Default.Check,
+        modifier = Modifier
+          .fillMaxWidth()
+          .heightIn(min = MinTouchBox),
+        testTag = "btn_save_my_profile"
+      )
     }
   }
 }

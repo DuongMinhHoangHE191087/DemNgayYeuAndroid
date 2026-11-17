@@ -1,0 +1,14 @@
+{
+  "gates": [
+    {
+      "id": "ANDROID-DATEMATH",
+      "runner": "android",
+      "sourceGlob": "scripts/qa/fixtures/junit/**/TEST-*.xml",
+      "classGlob": "com.example.DateMathTest",
+      "tests": ["adds days", "subtracts days", "handles leap year"],
+      "minCases": 3,
+      "ownerTask": "Q-09",
+      "note": "extra fields are ignored"
+    }
+  ]
+}

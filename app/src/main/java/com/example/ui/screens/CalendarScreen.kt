@@ -3,6 +3,7 @@ package com.example.ui.screens
 
 import com.example.ui.util.AppLanguage
 import java.util.Calendar
+import java.util.Locale
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -67,7 +69,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.runtime.CompositionLocalProvider
@@ -104,6 +105,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.model.AnniversaryDateEntity
 import com.example.data.model.MilestoneEntity
+import com.example.ui.components.AppDropdownMenu
 import com.example.ui.components.DatePickerUtils
 import com.example.ui.components.MilestoneBadgeDashboardCard
 import com.example.ui.components.MilestoneTimelineCard
@@ -137,25 +139,33 @@ enum class CalendarViewMode {
   MONTH
 }
 
-private fun matchesCalendarDay(dateText: String, day: Int, month: Int): Boolean {
+private fun matchesCalendarDay(dateText: String, day: Int, month: Int, year: Int, annual: Boolean): Boolean {
   val trimmed = dateText.trim()
   if (trimmed.contains("/")) {
     val parts = trimmed.split("/")
     if (parts.size >= 2) {
       val d = parts[0].toIntOrNull()
       val m = parts[1].toIntOrNull()
-      if (d == day && m == (month + 1)) return true
+      val y = parts.getOrNull(2)?.toIntOrNull()
+      if (d == day && m == (month + 1)) return annual || y == null || y == year
     }
   } else if (trimmed.contains("-")) {
     val parts = trimmed.split("-")
     if (parts.size >= 3) {
       val m = parts[1].toIntOrNull()
       val d = parts[2].toIntOrNull()
-      if (d == day && m == (month + 1)) return true
+      val y = parts[0].toIntOrNull()
+      if (d == day && m == (month + 1)) return annual || y == null || y == year
     }
   }
   return false
 }
+
+internal fun MilestoneEntity.fallsOn(cell: Calendar): Boolean =
+  matchesCalendarDay(dateText, cell.get(Calendar.DAY_OF_MONTH), cell.get(Calendar.MONTH), cell.get(Calendar.YEAR), annual = false)
+
+internal fun AnniversaryDateEntity.fallsOn(cell: Calendar): Boolean =
+  matchesCalendarDay(dateText, cell.get(Calendar.DAY_OF_MONTH), cell.get(Calendar.MONTH), cell.get(Calendar.YEAR), annual = isAnnual)
 
 /** Stored daysRemaining/isPast are snapshots from creation time; recompute from the date when it parses. */
 private fun MilestoneEntity.withLiveDays(): MilestoneEntity {
@@ -228,7 +238,7 @@ private fun CalendarDayCell(
       verticalArrangement = Arrangement.Center
     ) {
       Text(
-        text = String.format("%02d", dayNum),
+        text = String.format(Locale.ROOT, "%02d", dayNum),
         fontSize = 13.sp,
         fontWeight = if ((isMilestoneDay || isToday || isSelected) && isCurrentMonth) FontWeight.Bold else FontWeight.Medium,
         color = when {
@@ -412,13 +422,15 @@ fun CalendarScreen(
                   }
                 }
               }
-              DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+              AppDropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
+                  modifier = Modifier.heightIn(min = MinTouchBox),
                   text = { Text(if (isEnglish) "Anniversary date" else "Ngày kỷ niệm") },
                   leadingIcon = { Icon(Icons.Filled.Favorite, contentDescription = null, tint = Primary) },
                   onClick = { menuOpen = false; viewModel.openAddAnniversaryDialog() }
                 )
                 DropdownMenuItem(
+                  modifier = Modifier.heightIn(min = MinTouchBox),
                   text = { Text(if (isEnglish) "Milestone" else "Cột mốc") },
                   leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null, tint = Primary) },
                   onClick = { menuOpen = false; viewModel.openAddMilestoneDialog() }
@@ -435,17 +447,13 @@ fun CalendarScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
               ) {
+                val shift: (Int) -> Unit = { sign: Int ->
+                  val field = if (activeViewMode == CalendarViewMode.MONTH) Calendar.MONTH else Calendar.WEEK_OF_YEAR
+                  activeCalendar = (activeCalendar.clone() as Calendar).apply { add(field, sign) }
+                  calendarNavTick++
+                }
                 IconButton(
-                  onClick = {
-                    if (activeViewMode == CalendarViewMode.MONTH) {
-                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
-                      activeCalendar = nextCal
-                    } else {
-                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, -1) }
-                      activeCalendar = nextCal
-                    }
-                    calendarNavTick++
-                  },
+                  onClick = { shift(-1) },
                   modifier = Modifier.size(MinTouchBox).testTag("btn_calendar_prev")
                 ) {
                   Icon(
@@ -456,16 +464,7 @@ fun CalendarScreen(
                   )
                 }
                 IconButton(
-                  onClick = {
-                    if (activeViewMode == CalendarViewMode.MONTH) {
-                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
-                      activeCalendar = nextCal
-                    } else {
-                      val nextCal = (activeCalendar.clone() as Calendar).apply { add(Calendar.WEEK_OF_YEAR, 1) }
-                      activeCalendar = nextCal
-                    }
-                    calendarNavTick++
-                  },
+                  onClick = { shift(1) },
                   modifier = Modifier.size(MinTouchBox).testTag("btn_calendar_next")
                 ) {
                   Icon(
@@ -722,8 +721,8 @@ fun CalendarScreen(
                     dayCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)
                   val isSelected = dayCal.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
                     dayCal.get(Calendar.DAY_OF_YEAR) == selectedCal.get(Calendar.DAY_OF_YEAR)
-                  val matchingMilestone = milestones.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
-                  val matchingAnniversary = anniversaryDates.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
+                  val matchingMilestone = milestones.firstOrNull { it.fallsOn(dayCal) }
+                  val matchingAnniversary = anniversaryDates.firstOrNull { it.fallsOn(dayCal) }
                   val isMilestoneDay = matchingMilestone != null || matchingAnniversary != null
 
                   CalendarDayCell(
@@ -778,8 +777,8 @@ fun CalendarScreen(
                         cellCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)
                       val isSelected = cellCal.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
                         cellCal.get(Calendar.DAY_OF_YEAR) == selectedCal.get(Calendar.DAY_OF_YEAR)
-                      val matchingMilestone = milestones.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
-                      val matchingAnniversary = anniversaryDates.firstOrNull { matchesCalendarDay(it.dateText, dayNum, dayMonth) }
+                      val matchingMilestone = milestones.firstOrNull { it.fallsOn(cellCal) }
+                      val matchingAnniversary = anniversaryDates.firstOrNull { it.fallsOn(cellCal) }
                       val isMilestoneDay = matchingMilestone != null || matchingAnniversary != null
 
                       CalendarDayCell(
@@ -1455,10 +1454,10 @@ fun MilestoneCard(
                 modifier = Modifier.size(17.dp)
               )
             }
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            AppDropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
               if (!milestone.isPast) {
                 DropdownMenuItem(
-                  modifier = Modifier.testTag("menu_notif_milestone_${milestone.id}"),
+                  modifier = Modifier.heightIn(min = MinTouchBox).testTag("menu_notif_milestone_${milestone.id}"),
                   text = { Text(if (isEnglish) "Notify" else "Thông báo") },
                   leadingIcon = {
                     Icon(
@@ -1478,7 +1477,7 @@ fun MilestoneCard(
                 )
               }
               DropdownMenuItem(
-                modifier = Modifier.testTag("menu_alarm_milestone_${milestone.id}"),
+                modifier = Modifier.heightIn(min = MinTouchBox).testTag("menu_alarm_milestone_${milestone.id}"),
                 text = { Text(if (isEnglish) "Alarm" else "Báo thức") },
                 leadingIcon = { Icon(imageVector = Icons.Filled.Alarm, contentDescription = null) },
                 onClick = {

@@ -1,0 +1,3067 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "stable-ties",
+      "input": {
+        "ideas": [
+          {
+            "id": 5,
+            "title": "Hoa",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "Hop xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 9,
+            "title": "Sach",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 1,
+            "title": "Den xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 7,
+            "title": "Non",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          1,
+          5,
+          9,
+          7
+        ],
+        "matchesAnyInterestIds": [
+          3,
+          1
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "nfc-vs-nfd-vietnamese-interest",
+      "input": {
+        "ideas": [
+          {
+            "id": 10,
+            "title": "Bo qua tang",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "\u0111\u1ecdc s\u00e1ch",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 20,
+            "title": "Ke sach",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "\u0111o\u0323c sa\u0301ch",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 30,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "Thich \u0111o\u0323c sa\u0301ch",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "\u0111o\u0323c sa\u0301ch"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          10,
+          20,
+          30
+        ],
+        "matchesAnyInterestIds": [
+          10,
+          20,
+          30
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": {
+        "rankedIds": [
+          20,
+          30,
+          10
+        ],
+        "matchesAnyInterestIds": [
+          20,
+          30
+        ],
+        "fitsOccasionIds": []
+      },
+      "divergence": "nfc-interest-match",
+      "optional": false
+    },
+    {
+      "id": "d-with-stroke-uppercase",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Sach",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "\u0111\u1ed3 ch\u01a1i",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "B\u1ed9 \u0110\u1ed2 CH\u01a0I l\u1eafp r\u00e1p",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "\u0110\u1ed2 CH\u01a0I"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          3,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2,
+          3
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty-interests",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Hoa",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "Thiep",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 3,
+            "title": "Banh",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": [
+          3
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "interests-case-variants-count-twice",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "gaming",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "Gaming chair",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 3,
+            "title": "Hoa",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "Gaming",
+          "gaming",
+          "GAMING"
+        ],
+        "occasion": "Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2,
+          3
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          2
+        ],
+        "fitsOccasionIds": [
+          2
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "target-interests-trailing-commas",
+      "input": {
+        "ideas": [
+          {
+            "id": 4,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": ",,",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "music,",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "art,,",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": ",music",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 5,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "music,,art",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "music"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2,
+          5,
+          4,
+          3
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          2,
+          5
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "occasion-bat-ky",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Valentine",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "Valentine"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          3,
+          1
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": [
+          2,
+          3
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "occasion-bat-ky-nfd-does-not-match",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Ba\u0302\u0301t ky\u0300 di\u0323p na\u0300o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Valentine",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1,
+          3
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": [
+          2
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "occasion-any",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Any occasion",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Company event",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Valentine",
+            "isAiGenerated": false
+          },
+          {
+            "id": 4,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "ANY",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "T\u1ebft"
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2,
+          4,
+          3
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": [
+          1,
+          2,
+          4
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "occasion-exact",
+      "input": {
+        "ideas": [
+          {
+            "id": 4,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Valentine",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt 18",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "SINH NH\u1eacT",
+            "isAiGenerated": false
+          },
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "sinh nh\u1eadt",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "  Sinh Nh\u1eadt "
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1,
+          4,
+          3
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": [
+          2,
+          1
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty-occasion",
+      "input": {
+        "ideas": [
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1,
+          3
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ai-generated-plus-1",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Non",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "Den",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 3,
+            "title": "Hoa hong",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 4,
+            "title": "Hoa lan",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          }
+        ],
+        "interests": [
+          "hoa"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          4,
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [
+          3,
+          4
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "turkish-dotted-I",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "kiz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "k\u0131z",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "KIZ",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 4,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "Hediye \u0130ZM\u0130R",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 5,
+            "title": "izmir",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "KIZ",
+          "\u0130ZM\u0130R"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          1,
+          4,
+          2,
+          5
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          3,
+          4
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "greek-final-sigma",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "\u03bf\u03b4\u03bf\u03c2",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "\u03bf\u03b4\u03bf\u03c3",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "\u039f\u0394\u039f\u03a3",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "\u039f\u0394\u039f\u03a3"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          3
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "german-sharp-s-capital",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Stra\u00dfe",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "STRASSE",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "STRA\u1e9eE",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "STRA\u1e9eE"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          3
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "large-list-100-ideas-stable-order",
+      "input": {
+        "ideas": [
+          {
+            "id": 37,
+            "title": "Qua so 1",
+            "tag": "tag1",
+            "category": "nhom1",
+            "description": "Mo ta 1",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 74,
+            "title": "Qua so 2",
+            "tag": "tag2",
+            "category": "nhom2",
+            "description": "Mo ta 2",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 10,
+            "title": "Qua so 3",
+            "tag": "tag3",
+            "category": "nhom3",
+            "description": "Mo ta 3",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 47,
+            "title": "Qua so 4",
+            "tag": "tag0",
+            "category": "nhom4",
+            "description": "Mo ta 4",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 84,
+            "title": "Qua so 5",
+            "tag": "tag1",
+            "category": "nhom0",
+            "description": "Mo ta 5",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 20,
+            "title": "Qua so 6",
+            "tag": "tag2",
+            "category": "nhom1",
+            "description": "Mo ta 6",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 57,
+            "title": "Qua so 7",
+            "tag": "tag3",
+            "category": "nhom2",
+            "description": "Mo ta 7",
+            "targetInterests": "art",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 94,
+            "title": "Qua so 8",
+            "tag": "tag0",
+            "category": "nhom3",
+            "description": "Mo ta 8",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 30,
+            "title": "Qua so 9",
+            "tag": "tag1",
+            "category": "nhom4",
+            "description": "Mo ta 9",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 67,
+            "title": "Qua so 10",
+            "tag": "tag2",
+            "category": "nhom0",
+            "description": "Mo ta 10",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 3,
+            "title": "Qua so 11",
+            "tag": "tag3",
+            "category": "nhom1",
+            "description": "Mo ta 11",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 40,
+            "title": "Qua so 12",
+            "tag": "tag0",
+            "category": "nhom2",
+            "description": "Mo ta 12",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 77,
+            "title": "Qua so 13",
+            "tag": "tag1",
+            "category": "nhom3",
+            "description": "Mo ta 13",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 13,
+            "title": "Qua so 14",
+            "tag": "tag2",
+            "category": "nhom4",
+            "description": "Mo ta 14",
+            "targetInterests": "art",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 50,
+            "title": "Qua so 15",
+            "tag": "tag3",
+            "category": "nhom0",
+            "description": "Mo ta 15",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 87,
+            "title": "Qua so 16",
+            "tag": "tag0",
+            "category": "nhom1",
+            "description": "Mo ta 16",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 23,
+            "title": "Qua so 17",
+            "tag": "tag1",
+            "category": "nhom2",
+            "description": "Mo ta 17",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 60,
+            "title": "Qua so 18",
+            "tag": "tag2",
+            "category": "nhom3",
+            "description": "Mo ta 18",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 97,
+            "title": "Qua so 19",
+            "tag": "tag3",
+            "category": "nhom4",
+            "description": "Mo ta 19",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 33,
+            "title": "Qua so 20",
+            "tag": "tag0",
+            "category": "nhom0",
+            "description": "Mo ta 20",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 70,
+            "title": "Qua so 21",
+            "tag": "tag1",
+            "category": "nhom1",
+            "description": "Mo ta 21",
+            "targetInterests": "art",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 6,
+            "title": "Qua so 22",
+            "tag": "tag2",
+            "category": "nhom2",
+            "description": "Mo ta 22",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 43,
+            "title": "Qua so 23",
+            "tag": "tag3",
+            "category": "nhom3",
+            "description": "Mo ta 23",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 80,
+            "title": "Qua so 24",
+            "tag": "tag0",
+            "category": "nhom4",
+            "description": "Mo ta 24",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 16,
+            "title": "Qua so 25",
+            "tag": "tag1",
+            "category": "nhom0",
+            "description": "Mo ta 25",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 53,
+            "title": "Qua so 26",
+            "tag": "tag2",
+            "category": "nhom1",
+            "description": "Mo ta 26",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 90,
+            "title": "Qua so 27",
+            "tag": "tag3",
+            "category": "nhom2",
+            "description": "Mo ta 27",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 26,
+            "title": "Qua so 28",
+            "tag": "tag0",
+            "category": "nhom3",
+            "description": "Mo ta 28",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 63,
+            "title": "Qua so 29",
+            "tag": "tag1",
+            "category": "nhom4",
+            "description": "Mo ta 29",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 100,
+            "title": "Qua so 30",
+            "tag": "tag2",
+            "category": "nhom0",
+            "description": "Mo ta 30",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 36,
+            "title": "Qua so 31",
+            "tag": "tag3",
+            "category": "nhom1",
+            "description": "Mo ta 31",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 73,
+            "title": "Qua so 32",
+            "tag": "tag0",
+            "category": "nhom2",
+            "description": "Mo ta 32",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 9,
+            "title": "Qua so 33",
+            "tag": "tag1",
+            "category": "nhom3",
+            "description": "Mo ta 33",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 46,
+            "title": "Qua so 34",
+            "tag": "tag2",
+            "category": "nhom4",
+            "description": "Mo ta 34",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 83,
+            "title": "Qua so 35",
+            "tag": "tag3",
+            "category": "nhom0",
+            "description": "Mo ta 35",
+            "targetInterests": "art",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 19,
+            "title": "Qua so 36",
+            "tag": "tag0",
+            "category": "nhom1",
+            "description": "Mo ta 36",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 56,
+            "title": "Qua so 37",
+            "tag": "tag1",
+            "category": "nhom2",
+            "description": "Mo ta 37",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 93,
+            "title": "Qua so 38",
+            "tag": "tag2",
+            "category": "nhom3",
+            "description": "Mo ta 38",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 29,
+            "title": "Qua so 39",
+            "tag": "tag3",
+            "category": "nhom4",
+            "description": "Mo ta 39",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 66,
+            "title": "Qua so 40",
+            "tag": "tag0",
+            "category": "nhom0",
+            "description": "Mo ta 40",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 2,
+            "title": "Qua so 41",
+            "tag": "tag1",
+            "category": "nhom1",
+            "description": "Mo ta 41",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 39,
+            "title": "Qua so 42",
+            "tag": "tag2",
+            "category": "nhom2",
+            "description": "Mo ta 42",
+            "targetInterests": "art",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 76,
+            "title": "Qua so 43",
+            "tag": "tag3",
+            "category": "nhom3",
+            "description": "Mo ta 43",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 12,
+            "title": "Qua so 44",
+            "tag": "tag0",
+            "category": "nhom4",
+            "description": "Mo ta 44",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 49,
+            "title": "Qua so 45",
+            "tag": "tag1",
+            "category": "nhom0",
+            "description": "Mo ta 45",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 86,
+            "title": "Qua so 46",
+            "tag": "tag2",
+            "category": "nhom1",
+            "description": "Mo ta 46",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 22,
+            "title": "Qua so 47",
+            "tag": "tag3",
+            "category": "nhom2",
+            "description": "Mo ta 47",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 59,
+            "title": "Qua so 48",
+            "tag": "tag0",
+            "category": "nhom3",
+            "description": "Mo ta 48",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 96,
+            "title": "Qua so 49",
+            "tag": "tag1",
+            "category": "nhom4",
+            "description": "Mo ta 49",
+            "targetInterests": "art",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 32,
+            "title": "Qua so 50",
+            "tag": "tag2",
+            "category": "nhom0",
+            "description": "Mo ta 50",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 69,
+            "title": "Qua so 51",
+            "tag": "tag3",
+            "category": "nhom1",
+            "description": "Mo ta 51",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 5,
+            "title": "Qua so 52",
+            "tag": "tag0",
+            "category": "nhom2",
+            "description": "Mo ta 52",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 42,
+            "title": "Qua so 53",
+            "tag": "tag1",
+            "category": "nhom3",
+            "description": "Mo ta 53",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 79,
+            "title": "Qua so 54",
+            "tag": "tag2",
+            "category": "nhom4",
+            "description": "Mo ta 54",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 15,
+            "title": "Qua so 55",
+            "tag": "tag3",
+            "category": "nhom0",
+            "description": "Mo ta 55",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 52,
+            "title": "Qua so 56",
+            "tag": "tag0",
+            "category": "nhom1",
+            "description": "Mo ta 56",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 89,
+            "title": "Qua so 57",
+            "tag": "tag1",
+            "category": "nhom2",
+            "description": "Mo ta 57",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 25,
+            "title": "Qua so 58",
+            "tag": "tag2",
+            "category": "nhom3",
+            "description": "Mo ta 58",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 62,
+            "title": "Qua so 59",
+            "tag": "tag3",
+            "category": "nhom4",
+            "description": "Mo ta 59",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 99,
+            "title": "Qua so 60",
+            "tag": "tag0",
+            "category": "nhom0",
+            "description": "Mo ta 60",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 35,
+            "title": "Qua so 61",
+            "tag": "tag1",
+            "category": "nhom1",
+            "description": "Mo ta 61",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 72,
+            "title": "Qua so 62",
+            "tag": "tag2",
+            "category": "nhom2",
+            "description": "Mo ta 62",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 8,
+            "title": "Qua so 63",
+            "tag": "tag3",
+            "category": "nhom3",
+            "description": "Mo ta 63",
+            "targetInterests": "art",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 45,
+            "title": "Qua so 64",
+            "tag": "tag0",
+            "category": "nhom4",
+            "description": "Mo ta 64",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 82,
+            "title": "Qua so 65",
+            "tag": "tag1",
+            "category": "nhom0",
+            "description": "Mo ta 65",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 18,
+            "title": "Qua so 66",
+            "tag": "tag2",
+            "category": "nhom1",
+            "description": "Mo ta 66",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 55,
+            "title": "Qua so 67",
+            "tag": "tag3",
+            "category": "nhom2",
+            "description": "Mo ta 67",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 92,
+            "title": "Qua so 68",
+            "tag": "tag0",
+            "category": "nhom3",
+            "description": "Mo ta 68",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 28,
+            "title": "Qua so 69",
+            "tag": "tag1",
+            "category": "nhom4",
+            "description": "Mo ta 69",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 65,
+            "title": "Qua so 70",
+            "tag": "tag2",
+            "category": "nhom0",
+            "description": "Mo ta 70",
+            "targetInterests": "art",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 1,
+            "title": "Qua so 71",
+            "tag": "tag3",
+            "category": "nhom1",
+            "description": "Mo ta 71",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 38,
+            "title": "Qua so 72",
+            "tag": "tag0",
+            "category": "nhom2",
+            "description": "Mo ta 72",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 75,
+            "title": "Qua so 73",
+            "tag": "tag1",
+            "category": "nhom3",
+            "description": "Mo ta 73",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 11,
+            "title": "Qua so 74",
+            "tag": "tag2",
+            "category": "nhom4",
+            "description": "Mo ta 74",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 48,
+            "title": "Qua so 75",
+            "tag": "tag3",
+            "category": "nhom0",
+            "description": "Mo ta 75",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 85,
+            "title": "Qua so 76",
+            "tag": "tag0",
+            "category": "nhom1",
+            "description": "Mo ta 76",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 21,
+            "title": "Qua so 77",
+            "tag": "tag1",
+            "category": "nhom2",
+            "description": "Mo ta 77",
+            "targetInterests": "art",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 58,
+            "title": "Qua so 78",
+            "tag": "tag2",
+            "category": "nhom3",
+            "description": "Mo ta 78",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 95,
+            "title": "Qua so 79",
+            "tag": "tag3",
+            "category": "nhom4",
+            "description": "Mo ta 79",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 31,
+            "title": "Qua so 80",
+            "tag": "tag0",
+            "category": "nhom0",
+            "description": "Mo ta 80",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 68,
+            "title": "Qua so 81",
+            "tag": "tag1",
+            "category": "nhom1",
+            "description": "Mo ta 81",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 4,
+            "title": "Qua so 82",
+            "tag": "tag2",
+            "category": "nhom2",
+            "description": "Mo ta 82",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 41,
+            "title": "Qua so 83",
+            "tag": "tag3",
+            "category": "nhom3",
+            "description": "Mo ta 83",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 78,
+            "title": "Qua so 84",
+            "tag": "tag0",
+            "category": "nhom4",
+            "description": "Mo ta 84",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 14,
+            "title": "Qua so 85",
+            "tag": "tag1",
+            "category": "nhom0",
+            "description": "Mo ta 85",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 51,
+            "title": "Qua so 86",
+            "tag": "tag2",
+            "category": "nhom1",
+            "description": "Mo ta 86",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 88,
+            "title": "Qua so 87",
+            "tag": "tag3",
+            "category": "nhom2",
+            "description": "Mo ta 87",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 24,
+            "title": "Qua so 88",
+            "tag": "tag0",
+            "category": "nhom3",
+            "description": "Mo ta 88",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 61,
+            "title": "Qua so 89",
+            "tag": "tag1",
+            "category": "nhom4",
+            "description": "Mo ta 89",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 98,
+            "title": "Qua so 90",
+            "tag": "tag2",
+            "category": "nhom0",
+            "description": "Mo ta 90",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 34,
+            "title": "Qua so 91",
+            "tag": "tag3",
+            "category": "nhom1",
+            "description": "Mo ta 91",
+            "targetInterests": "art",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 71,
+            "title": "Qua so 92",
+            "tag": "tag0",
+            "category": "nhom2",
+            "description": "Mo ta 92",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 7,
+            "title": "Qua so 93",
+            "tag": "tag1",
+            "category": "nhom3",
+            "description": "Mo ta 93",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 44,
+            "title": "Qua so 94",
+            "tag": "tag2",
+            "category": "nhom4",
+            "description": "Mo ta 94",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 81,
+            "title": "Qua so 95",
+            "tag": "tag3",
+            "category": "nhom0",
+            "description": "Mo ta 95",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": true
+          },
+          {
+            "id": 17,
+            "title": "Qua so 96",
+            "tag": "tag0",
+            "category": "nhom1",
+            "description": "Mo ta 96",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 54,
+            "title": "Qua so 97",
+            "tag": "tag1",
+            "category": "nhom2",
+            "description": "Mo ta 97",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 91,
+            "title": "Qua so 98",
+            "tag": "tag2",
+            "category": "nhom3",
+            "description": "Mo ta 98",
+            "targetInterests": "art",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 27,
+            "title": "Qua so 99",
+            "tag": "tag3",
+            "category": "nhom4",
+            "description": "Mo ta 99",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 64,
+            "title": "Qua so 100",
+            "tag": "tag0",
+            "category": "nhom0",
+            "description": "Mo ta 100",
+            "targetInterests": "music,tech",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          }
+        ],
+        "interests": [
+          "Music",
+          "art"
+        ],
+        "occasion": " Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          47,
+          57,
+          94,
+          13,
+          87,
+          33,
+          26,
+          73,
+          83,
+          66,
+          12,
+          96,
+          5,
+          52,
+          45,
+          92,
+          65,
+          85,
+          21,
+          31,
+          24,
+          34,
+          71,
+          91,
+          64,
+          40,
+          70,
+          80,
+          19,
+          39,
+          59,
+          99,
+          8,
+          38,
+          78,
+          17,
+          37,
+          74,
+          84,
+          67,
+          3,
+          77,
+          23,
+          97,
+          6,
+          43,
+          16,
+          53,
+          63,
+          36,
+          46,
+          56,
+          93,
+          2,
+          76,
+          86,
+          22,
+          32,
+          42,
+          15,
+          25,
+          62,
+          35,
+          72,
+          82,
+          55,
+          1,
+          75,
+          11,
+          95,
+          4,
+          41,
+          14,
+          51,
+          61,
+          44,
+          81,
+          54,
+          10,
+          20,
+          30,
+          50,
+          60,
+          90,
+          100,
+          9,
+          29,
+          49,
+          69,
+          79,
+          89,
+          18,
+          28,
+          48,
+          58,
+          68,
+          88,
+          98,
+          7,
+          27
+        ],
+        "matchesAnyInterestIds": [
+          47,
+          57,
+          94,
+          40,
+          13,
+          87,
+          33,
+          70,
+          80,
+          26,
+          73,
+          83,
+          19,
+          66,
+          39,
+          12,
+          59,
+          96,
+          5,
+          52,
+          99,
+          8,
+          45,
+          92,
+          65,
+          38,
+          85,
+          21,
+          31,
+          78,
+          24,
+          34,
+          71,
+          17,
+          91,
+          64
+        ],
+        "fitsOccasionIds": [
+          37,
+          74,
+          47,
+          84,
+          57,
+          94,
+          67,
+          3,
+          77,
+          13,
+          87,
+          23,
+          97,
+          33,
+          6,
+          43,
+          16,
+          53,
+          26,
+          63,
+          36,
+          73,
+          46,
+          83,
+          56,
+          93,
+          66,
+          2,
+          76,
+          12,
+          86,
+          22,
+          96,
+          32,
+          5,
+          42,
+          15,
+          52,
+          25,
+          62,
+          35,
+          72,
+          45,
+          82,
+          55,
+          92,
+          65,
+          1,
+          75,
+          11,
+          85,
+          21,
+          95,
+          31,
+          4,
+          41,
+          14,
+          51,
+          24,
+          61,
+          34,
+          71,
+          44,
+          81,
+          54,
+          91,
+          64
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "target-element-exact-not-substring",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "musical",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "music",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "music box",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "music"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          3,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2,
+          3
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "multiple-interests-accumulate",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "lego va cafe",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "lego",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "lego sach cafe",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 4,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "lego,cafe",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "lego",
+          "sach",
+          "cafe"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          4,
+          2,
+          3,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "interest-whitespace-trimmed",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Hoa",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "G\u1ea5u b\u00f4ng ng\u1ee7",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": " g\u1ea5u b\u00f4ng ",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "  g\u1ea5u b\u00f4ng  ",
+          "\u0009",
+          ""
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          3,
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2,
+          3
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "target-elements-trimmed",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": " music , art ",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "artist",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "art,music",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "art"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          3,
+          2
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          3
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "occasion-case-insensitive",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Valentine",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "noel",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Noel",
+            "isAiGenerated": false
+          },
+          {
+            "id": 4,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "NOEL ",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "NOEL"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          3,
+          1,
+          4
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": [
+          2,
+          3
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "no-match-keeps-input-order",
+      "input": {
+        "ideas": [
+          {
+            "id": 9,
+            "title": "A",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 8,
+            "title": "B",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 7,
+            "title": "C",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 6,
+            "title": "D",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 5,
+            "title": "E",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "zzz"
+        ],
+        "occasion": "none"
+      },
+      "expected": {
+        "rankedIds": [
+          9,
+          8,
+          7,
+          6,
+          5
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank-interests-ignored",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "A",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "",
+          "   ",
+          "\u0009"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2,
+          3
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank-occasion-whitespace",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "B\u1ea5t k\u1ef3 d\u1ecbp n\u00e0o",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 3,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Any",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [],
+        "occasion": "   "
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2,
+          3
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-target-up",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": true
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "xyz",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": "Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2
+        ],
+        "fitsOccasionIds": [
+          1
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-target-down",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "xyz",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": "Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2
+        ],
+        "fitsOccasionIds": [
+          1
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-text-up",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 2,
+            "title": "xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-text-down",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Hoa",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          2
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-occasion-up",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "T\u1ebft",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": "T\u1ebft"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          1
+        ],
+        "fitsOccasionIds": [
+          2
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-occasion-down",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "T\u1ebft",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": "T\u1ebft"
+      },
+      "expected": {
+        "rankedIds": [
+          2,
+          1
+        ],
+        "matchesAnyInterestIds": [
+          1
+        ],
+        "fitsOccasionIds": [
+          2
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-ai-up",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [
+          1
+        ],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-ai-down",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "Hoa",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "",
+            "isAiGenerated": true
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": ""
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [],
+        "fitsOccasionIds": []
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "weight-target-up-vs-occasion-and-text",
+      "input": {
+        "ideas": [
+          {
+            "id": 1,
+            "title": "xyz",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "",
+            "suggestedOccasion": "Sinh nh\u1eadt",
+            "isAiGenerated": false
+          },
+          {
+            "id": 2,
+            "title": "",
+            "tag": "",
+            "category": "",
+            "description": "",
+            "targetInterests": "xyz",
+            "suggestedOccasion": "",
+            "isAiGenerated": false
+          }
+        ],
+        "interests": [
+          "xyz"
+        ],
+        "occasion": "Sinh nh\u1eadt"
+      },
+      "expected": {
+        "rankedIds": [
+          1,
+          2
+        ],
+        "matchesAnyInterestIds": [
+          1,
+          2
+        ],
+        "fitsOccasionIds": [
+          1
+        ]
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

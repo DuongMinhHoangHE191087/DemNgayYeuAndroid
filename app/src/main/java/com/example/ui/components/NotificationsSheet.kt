@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.alarm.LoveMilestoneInfo
 import com.example.data.model.CustomReminderEntity
 import com.example.ui.theme.AppDensity
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.Primary
@@ -124,18 +125,25 @@ fun NotificationsSheet(viewModel: InLoveViewModel, onDismiss: () -> Unit) {
         Box(
           contentAlignment = Alignment.Center,
           modifier = Modifier
-            .size(40.dp)
+            .size(MinTouchBox)
             .clip(CircleShape)
-            .background(PrimaryFixed.copy(alpha = if (isAllRead) 0.3f else 0.7f))
             .clickable(enabled = !isAllRead) { viewModel.markAllNotificationsRead() }
             .testTag("btn_mark_all_read")
         ) {
-          Icon(
-            Icons.Filled.DoneAll,
-            contentDescription = if (isEnglish) "Mark all read" else "Đã đọc tất cả",
-            tint = if (isAllRead) OnSurfaceVariant else Primary,
-            modifier = Modifier.size(20.dp)
-          )
+          Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+              .size(40.dp)
+              .clip(CircleShape)
+              .background(PrimaryFixed.copy(alpha = if (isAllRead) 0.3f else 0.7f))
+          ) {
+            Icon(
+              Icons.Filled.DoneAll,
+              contentDescription = if (isEnglish) "Mark all read" else "Đã đọc tất cả",
+              tint = if (isAllRead) OnSurfaceVariant else Primary,
+              modifier = Modifier.size(20.dp)
+            )
+          }
         }
       }
 

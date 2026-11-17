@@ -8,38 +8,60 @@ const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret, defineString } = require('firebase-functions/params');
 const logger = require('firebase-functions/logger');
-const cloudinarySdk = require('cloudinary');
 const cfg = require('./src/config');
 const policy = require('./src/policy');
 const media = require('./src/media');
 const pairing = require('./src/pairing');
 const accountDeletion = require('./src/accountDeletion');
+const avatar = require('./src/avatar');
 const rateLimit = require('./src/rateLimit');
 const { getAuth } = require('firebase-admin/auth');
-const { createCloudinary } = require('./src/cloudinary');
+const { createObjectStore } = require('./src/objectStore');
+const { STORE_SECRETS } = require('./src/entitlement/options');
+const { gateFor } = require('./src/entitlement/runtime');
 
 if (getApps().length === 0) initializeApp();
 
 // Cấu hình không bí mật đặt bằng defineString (firebase functions:config không dùng nữa); secret ở Secret Manager.
-const CLOUDINARY_CLOUD_NAME = defineString('CLOUDINARY_CLOUD_NAME');
-const CLOUDINARY_API_KEY = defineSecret('CLOUDINARY_API_KEY');
-const CLOUDINARY_API_SECRET = defineSecret('CLOUDINARY_API_SECRET');
-const CLOUDINARY_TOKEN_KEY = defineSecret('CLOUDINARY_TOKEN_KEY');
-const CLOUDINARY_SECRETS = [CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_TOKEN_KEY];
+const R2_ACCOUNT_ID = defineString('R2_ACCOUNT_ID');
+const R2_BUCKET = defineString('R2_BUCKET');
+const R2_ACCESS_KEY_ID = defineSecret('R2_ACCESS_KEY_ID');
+const R2_SECRET_ACCESS_KEY = defineSecret('R2_SECRET_ACCESS_KEY');
+const R2_SECRETS = [R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY];
 
 // Một client cho mỗi instance. Secret không đổi trong vòng đời instance; đổi secret thì deploy lại.
-let cloudinary = null;
+let objectStore = null;
 function cloud() {
-  if (!cloudinary) {
-    cloudinary = createCloudinary({
-      sdk: cloudinarySdk,
-      cloudName: CLOUDINARY_CLOUD_NAME.value(),
-      apiKey: CLOUDINARY_API_KEY.value(),
-      apiSecret: CLOUDINARY_API_SECRET.value(),
-      tokenKey: CLOUDINARY_TOKEN_KEY.value(),
+  if (!objectStore) {
+    objectStore = createObjectStore({
+      accountId: R2_ACCOUNT_ID.value(),
+      bucket: R2_BUCKET.value(),
+      accessKeyId: R2_ACCESS_KEY_ID.value(),
+      secretAccessKey: R2_SECRET_ACCESS_KEY.value(),
     });
   }
-  return cloudinary;
+  return objectStore;
+}
+
+// Bucket avatar CÔNG KHAI riêng, cùng khoá truy cập R2. Mặc định '' = tắt (chủ dự án bật bằng cách đặt hai tham số rồi deploy).
+const R2_AVATAR_BUCKET = defineString('R2_AVATAR_BUCKET', { default: '' });
+const R2_AVATAR_PUBLIC_BASE_URL = defineString('R2_AVATAR_PUBLIC_BASE_URL', { default: '' });
+const avatarBaseUrl = () => R2_AVATAR_PUBLIC_BASE_URL.value();
+
+// Trả null khi chưa cấu hình: kiểm TRƯỚC createObjectStore vì nó ném Error thường (client thấy `internal`).
+let avatarObjectStore = null;
+function avatarCloud() {
+  const bucket = R2_AVATAR_BUCKET.value();
+  if (!avatar.isConfigured({ bucket, baseUrl: avatarBaseUrl() })) return null;
+  if (!avatarObjectStore) {
+    avatarObjectStore = createObjectStore({
+      accountId: R2_ACCOUNT_ID.value(),
+      bucket,
+      accessKeyId: R2_ACCESS_KEY_ID.value(),
+      secretAccessKey: R2_SECRET_ACCESS_KEY.value(),
+    });
+  }
+  return avatarObjectStore;
 }
 
 const db = () => getFirestore();
@@ -55,15 +77,16 @@ function requireUid(request) {
 }
 
 // App Check bắt buộc: chặn client không phải app chính chính thức gọi trực tiếp.
+// Ba callable media còn qua cổng quyền (gateFor tra store) nên cần cả secret của store.
 const callableOptions = {
   region: cfg.region,
   enforceAppCheck: true,
-  secrets: CLOUDINARY_SECRETS,
+  secrets: [...R2_SECRETS, ...STORE_SECRETS],
   maxInstances: 10,
 };
 
 // Ghép đôi: nhận lời mời + tạo relationship trong một transaction; client không còn tự ghi relationships.
-// Không cần secret Cloudinary nên không khai báo secrets.
+// Không cần secret R2 nên không khai báo secrets.
 exports.acceptCoupleInvite = onCall({ region: cfg.region, enforceAppCheck: true, maxInstances: 10 }, async (request) => {
   const uid = requireUid(request);
   await limit('acceptCoupleInvite', uid);
@@ -85,7 +108,7 @@ exports.requestAccountDeletion = onCall({ region: cfg.region, enforceAppCheck: t
 exports.processAccountDeletion = onDocumentWritten({
   document: 'accountDeletions/{uid}',
   region: cfg.region,
-  secrets: CLOUDINARY_SECRETS,
+  secrets: R2_SECRETS,
   retry: true,
   timeoutSeconds: 540,
   maxInstances: 10,
@@ -99,30 +122,42 @@ exports.processAccountDeletion = onDocumentWritten({
     db: db(),
     auth: getAuth(),
     purge: (args) => media.purgeOne({ db: db(), cloud: cl, ...args }),
+    purgeAvatar: (uid) => avatar.purge({ store: avatarCloud(), uid }),
     uid: event.params.uid,
     nowMs: Date.now(),
   });
 });
 
+// Avatar: không qua cổng quyền (hàng `free` trong GATES). Chỉ cần secret R2, không cần secret store.
+exports.signAvatarUpload = onCall({ region: cfg.region, enforceAppCheck: true, secrets: R2_SECRETS, maxInstances: 10 }, async (request) => {
+  const uid = requireUid(request);
+  await limit('signAvatarUpload', uid);
+  const input = avatar.parseSignInput(request.data);
+  return avatar.sign({ store: avatarCloud(), uid, input, baseUrl: avatarBaseUrl(), nowMs: Date.now() });
+});
+
 exports.signMemoryUpload = onCall(callableOptions, async (request) => {
   const uid = requireUid(request);
   await limit('signMemoryUpload', uid);
+  const { tier } = await gateFor('signMemoryUpload', uid);
   const input = policy.parseReserveInput(request.data);
-  return media.reserveUpload({ db: db(), cloud: cloud(), uid, input, nowMs: Date.now() });
+  return media.reserveUpload({ db: db(), cloud: cloud(), uid, input, tier, nowMs: Date.now() });
 });
 
 exports.confirmMemoryUpload = onCall(callableOptions, async (request) => {
   const uid = requireUid(request);
   await limit('confirmMemoryUpload', uid);
+  const { tier } = await gateFor('confirmMemoryUpload', uid);
   const input = policy.parseIds(request.data ?? {});
-  return media.confirmUpload({ db: db(), cloud: cloud(), uid, input, nowMs: Date.now() });
+  return media.confirmUpload({ db: db(), cloud: cloud(), uid, input, tier, nowMs: Date.now() });
 });
 
 exports.getMemoryMediaUrl = onCall(callableOptions, async (request) => {
   const uid = requireUid(request);
   await limit('getMemoryMediaUrl', uid);
+  const { tier } = await gateFor('getMemoryMediaUrl', uid);
   const input = policy.parseIds(request.data ?? {});
-  return media.getDeliveryUrl({ db: db(), cloud: cloud(), uid, input, nowMs: Date.now() });
+  return media.getDeliveryUrl({ db: db(), cloud: cloud(), uid, input, tier, nowMs: Date.now() });
 });
 
 // Memory bị xoá (bởi bất kỳ thành viên nào), hoặc bị bỏ ảnh (cloudinaryPublicId về rỗng), thì giải phóng tệp của nó.
@@ -130,7 +165,7 @@ exports.getMemoryMediaUrl = onCall(callableOptions, async (request) => {
 exports.onMemoryChanged = onDocumentWritten({
   document: 'relationships/{relationshipId}/memories/{memoryId}',
   region: cfg.region,
-  secrets: CLOUDINARY_SECRETS,
+  secrets: R2_SECRETS,
   retry: true,
   maxInstances: 10,
 }, async (event) => {
@@ -144,16 +179,17 @@ exports.onMemoryChanged = onDocumentWritten({
   await media.releaseAssetForMemory({ db: db(), cloud: cloud(), relationshipId, memoryId, nowMs: Date.now() });
 });
 
-// Dọn mỗi giờ (xem docs/architecture/MEDIA_CLOUDINARY.md). Tệp upload dở được dọn sớm hơn nhờ lịch hàng giờ.
+// Dọn mỗi giờ. Tệp upload dở được dọn sớm hơn nhờ lịch hàng giờ.
 // timeoutSeconds 540: mỗi bước xử lý tuần tự tối đa sweepBatchSize mục, nên cần thời gian hơn mặc định 60 giây.
 exports.sweepMediaAssets = onSchedule({
   schedule: '0 * * * *',
   timeZone: 'Etc/UTC',
   region: cfg.region,
-  secrets: CLOUDINARY_SECRETS,
+  secrets: R2_SECRETS,
   retryCount: 2,
   timeoutSeconds: 540,
 }, async () => {
   const summary = await media.sweep({ db: db(), cloud: cloud(), nowMs: Date.now() });
   logger.info('sweepMediaAssets', summary);
 });
+Object.assign(exports, require('./src/entitlement'));

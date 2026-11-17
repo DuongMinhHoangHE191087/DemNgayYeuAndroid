@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.DateMathTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-14T00:00:00" hostname="ci" time="0.012">
+  <properties/>
+  <testcase name="adds days" classname="com.example.DateMathTest" time="0.004"/>
+  <testcase name="subtracts days" classname="com.example.DateMathTest" time="0.003"/>
+  <testcase name="handles leap year" classname="com.example.DateMathTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

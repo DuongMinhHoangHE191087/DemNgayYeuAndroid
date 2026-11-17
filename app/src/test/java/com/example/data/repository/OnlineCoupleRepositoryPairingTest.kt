@@ -157,7 +157,7 @@ class OnlineCoupleRepositoryPairingTest {
     db.inLoveDao().insertOnlineUser(
       com.example.data.model.OnlineUserEntity(uid = "uid_a", coupleCode = "A", isCurrentUser = true, avatarUrl = "file:/x.jpg")
     )
-    scope.coroutineContext.job.children.forEach { it.join() } // let the init refreshState finish so it cannot overwrite the current user
+    repo.refreshState() // queues behind the init refresh (same mutex); joining every scope child would hang on the avatar collector
     repo.setCurrentUserId("uid_a")
 
     repo.updateMyProfile("An", "15/10/2004", "", "MALE", "")

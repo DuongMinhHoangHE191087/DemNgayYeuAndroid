@@ -1,0 +1,127 @@
+{
+  "note": "TEST-ONLY key pair, private key discarded. kid starts with \"test-\": the P7 release gate rejects it if present in release EntitlementPublicKeys. Generated once, do not regenerate.",
+  "kid": "test-b176e51269cc1d5e",
+  "publicKeySpkiBase64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoJkiAf2YARHtirMnc+4rO2DGoU6haxiWH5ldeuwjgnwQOQdB0WkAx23hMVX5Zb1qM45E+99Mn46W+thuvXQ4TA==",
+  "nowMs": 2000000000000,
+  "cases": [
+    {
+      "name": "valid_vip_monthly",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOnRydWUsInBsYW5JZCI6Im1vbnRobHkiLCJleHBpcmVzQXRNcyI6MjAwMjU5MjAwMDAwMCwic291cmNlIjoiYXBwbGUiLCJlbnZpcm9ubWVudCI6IlByb2R1Y3Rpb24iLCJpYXQiOjIwMDAwMDAwMDAwMDAsIm5vdEFmdGVyTXMiOjIwMDAyNTkyMDAwMDAsIm5vbmNlIjoiZ29sZGVuLW5vbmNlLTAwMDEifQ.3UheblDKjyxdkoNvhPslIOdCc5M_eXWE8G4tZ11pUyuyDzcClJIpRgoaoqEqp1-kKNsZGlyQpDXhxWO4mYFXGw",
+      "signatureValid": true,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": true,
+        "planId": "monthly",
+        "expiresAtMs": 2002592000000,
+        "source": "apple",
+        "environment": "Production",
+        "iat": 2000000000000,
+        "notAfterMs": 2000259200000,
+        "nonce": "golden-nonce-0001"
+      }
+    },
+    {
+      "name": "valid_vip_lifetime",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOnRydWUsInBsYW5JZCI6ImxpZmV0aW1lIiwiZXhwaXJlc0F0TXMiOm51bGwsInNvdXJjZSI6Imdvb2dsZSIsImVudmlyb25tZW50IjoiUHJvZHVjdGlvbiIsImlhdCI6MjAwMDAwMDAwMDAwMCwibm90QWZ0ZXJNcyI6MjAwMDI1OTIwMDAwMCwibm9uY2UiOiJnb2xkZW4tbm9uY2UtMDAwMiJ9.vF6qXtMxRCbts54Y-5dp_KrdpV-B9iKr4P59dVpCi_y97lVPLxOg3rZCtTFr50xSnzHsi6Rc329CJev5JdBl5Q",
+      "signatureValid": true,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": true,
+        "planId": "lifetime",
+        "expiresAtMs": null,
+        "source": "google",
+        "environment": "Production",
+        "iat": 2000000000000,
+        "notAfterMs": 2000259200000,
+        "nonce": "golden-nonce-0002"
+      }
+    },
+    {
+      "name": "valid_not_vip",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOmZhbHNlLCJwbGFuSWQiOm51bGwsImV4cGlyZXNBdE1zIjpudWxsLCJzb3VyY2UiOm51bGwsImVudmlyb25tZW50IjpudWxsLCJpYXQiOjIwMDAwMDAwMDAwMDAsIm5vdEFmdGVyTXMiOjIwMDAyNTkyMDAwMDAsIm5vbmNlIjoiZ29sZGVuLW5vbmNlLTAwMDMifQ.1cANu2EE_1HXpGf_Q77VmvQaBF9_iSB4PLNu7eC0BRcx5SWXTqnrzNOgbwxXrlX-sf1r6rVFiKTrCoV-HwVpig",
+      "signatureValid": true,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": false,
+        "planId": null,
+        "expiresAtMs": null,
+        "source": null,
+        "environment": null,
+        "iat": 2000000000000,
+        "notAfterMs": 2000259200000,
+        "nonce": "golden-nonce-0003"
+      }
+    },
+    {
+      "name": "tampered_payload",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOnRydWUsInBsYW5JZCI6ImxpZmV0aW1lIiwiZXhwaXJlc0F0TXMiOm51bGwsInNvdXJjZSI6ImFwcGxlIiwiZW52aXJvbm1lbnQiOiJQcm9kdWN0aW9uIiwiaWF0IjoyMDAwMDAwMDAwMDAwLCJub3RBZnRlck1zIjoyMDMxNzk1MjAwMDAwLCJub25jZSI6ImdvbGRlbi1ub25jZS0wMDAxIn0.3UheblDKjyxdkoNvhPslIOdCc5M_eXWE8G4tZ11pUyuyDzcClJIpRgoaoqEqp1-kKNsZGlyQpDXhxWO4mYFXGw",
+      "signatureValid": false,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": true,
+        "planId": "lifetime",
+        "expiresAtMs": null,
+        "source": "apple",
+        "environment": "Production",
+        "iat": 2000000000000,
+        "notAfterMs": 2031795200000,
+        "nonce": "golden-nonce-0001"
+      }
+    },
+    {
+      "name": "tampered_signature",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOnRydWUsInBsYW5JZCI6Im1vbnRobHkiLCJleHBpcmVzQXRNcyI6MjAwMjU5MjAwMDAwMCwic291cmNlIjoiYXBwbGUiLCJlbnZpcm9ubWVudCI6IlByb2R1Y3Rpb24iLCJpYXQiOjIwMDAwMDAwMDAwMDAsIm5vdEFmdGVyTXMiOjIwMDAyNTkyMDAwMDAsIm5vbmNlIjoiZ29sZGVuLW5vbmNlLTAwMDEifQ.3EheblDKjyxdkoNvhPslIOdCc5M_eXWE8G4tZ11pUyuyDzcClJIpRgoaoqEqp1-kKNsZGlyQpDXhxWO4mYFXGw",
+      "signatureValid": false,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": true,
+        "planId": "monthly",
+        "expiresAtMs": 2002592000000,
+        "source": "apple",
+        "environment": "Production",
+        "iat": 2000000000000,
+        "notAfterMs": 2000259200000,
+        "nonce": "golden-nonce-0001"
+      }
+    },
+    {
+      "name": "wrong_key_same_kid",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOnRydWUsInBsYW5JZCI6Im1vbnRobHkiLCJleHBpcmVzQXRNcyI6MjAwMjU5MjAwMDAwMCwic291cmNlIjoiYXBwbGUiLCJlbnZpcm9ubWVudCI6IlByb2R1Y3Rpb24iLCJpYXQiOjIwMDAwMDAwMDAwMDAsIm5vdEFmdGVyTXMiOjIwMDAyNTkyMDAwMDAsIm5vbmNlIjoiZ29sZGVuLW5vbmNlLTAwMDYifQ.o1DtcTUoYC-koiBfLUKEEcOvsvAqA4zyQhZXnqwBnxHjJlhJoPwhm42jrI0jxSCfjcnG-Nk8E3lG589yzNzj-Q",
+      "signatureValid": false,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": true,
+        "planId": "monthly",
+        "expiresAtMs": 2002592000000,
+        "source": "apple",
+        "environment": "Production",
+        "iat": 2000000000000,
+        "notAfterMs": 2000259200000,
+        "nonce": "golden-nonce-0006"
+      }
+    },
+    {
+      "name": "expired_notAfter",
+      "jws": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRlc3QtYjE3NmU1MTI2OWNjMWQ1ZSJ9.eyJ2IjoxLCJ1aWQiOiJnb2xkZW4tdWlkLTEiLCJ2aXAiOnRydWUsInBsYW5JZCI6Im1vbnRobHkiLCJleHBpcmVzQXRNcyI6MjAwMjU5MjAwMDAwMCwic291cmNlIjoiYXBwbGUiLCJlbnZpcm9ubWVudCI6IlByb2R1Y3Rpb24iLCJpYXQiOjE5OTk5OTI4MDAwMDAsIm5vdEFmdGVyTXMiOjE5OTk5OTY0MDAwMDAsIm5vbmNlIjoiZ29sZGVuLW5vbmNlLTAwMDcifQ.NDbIMhD08CApuwhCMErcdiNadGNTOI_dKSPuCVkWJ0OHhPkvtt_cW8Vve1p0hicbMYJzTx0s0h0561HelNKnpw",
+      "signatureValid": true,
+      "claims": {
+        "v": 1,
+        "uid": "golden-uid-1",
+        "vip": true,
+        "planId": "monthly",
+        "expiresAtMs": 2002592000000,
+        "source": "apple",
+        "environment": "Production",
+        "iat": 1999992800000,
+        "notAfterMs": 1999996400000,
+        "nonce": "golden-nonce-0007"
+      }
+    }
+  ]
+}

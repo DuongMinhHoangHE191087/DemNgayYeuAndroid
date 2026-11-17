@@ -70,6 +70,9 @@ interface InLoveDao {
   @Update
   suspend fun updateGiftIdea(item: GiftIdeaEntity)
 
+  @Query("UPDATE gift_ideas SET isFavorited = :fav WHERE id = :id")
+  suspend fun setGiftFavorite(id: Long, fav: Boolean)
+
   // Upsert-by-remoteId (fixes duplicate rows from repeated Firestore preset syncs)
   @Query("SELECT * FROM gift_ideas WHERE remoteId = :remoteId LIMIT 1")
   suspend fun getGiftIdeaByRemoteId(remoteId: String): GiftIdeaEntity?
@@ -78,11 +81,15 @@ interface InLoveDao {
   suspend fun upsertGiftIdeaByRemoteId(item: GiftIdeaEntity) {
     val existing = getGiftIdeaByRemoteId(item.remoteId)
     if (existing != null) {
-      updateGiftIdea(item.copy(id = existing.id, isFavorited = existing.isFavorited))
+      val merged = item.copy(id = existing.id, isFavorited = existing.isFavorited)
+      if (merged != existing) updateGiftIdea(merged)
     } else {
       insertGiftIdeas(listOf(item))
     }
   }
+
+  @Query("DELETE FROM gift_ideas WHERE remoteId LIKE 'tpl\\_%' ESCAPE '\\' AND isFavorited = 0")
+  suspend fun deleteUnfavoritedTemplates(): Int
 
   // Checklist Items
   @Query("SELECT * FROM checklist_items ORDER BY id ASC")
@@ -301,6 +308,28 @@ interface InLoveDao {
   @Query("SELECT * FROM online_users WHERE uid = :uid LIMIT 1")
   suspend fun getOnlineUserByUidSync(uid: String): com.example.data.model.OnlineUserEntity?
 
+  @Query("UPDATE online_users SET displayName = :replacement, isProfileSetup = :setup WHERE uid = :uid AND displayName = :expected")
+  suspend fun replaceOnlineUserName(uid: String, expected: String, replacement: String, setup: Boolean): Int
+
+  @Query("UPDATE online_users SET bio = :replacement WHERE uid = :uid AND bio = :expected")
+  suspend fun replaceOnlineUserBio(uid: String, expected: String, replacement: String): Int
+
+  @Query("UPDATE couple_profile SET partner1Name = :replacement WHERE id = 1 AND partner1Name = :expected")
+  suspend fun replaceCouplePartner1Name(expected: String, replacement: String): Int
+
+  @Query("UPDATE couple_profile SET partner2Name = :replacement WHERE id = 1 AND partner2Name = :expected")
+  suspend fun replaceCouplePartner2Name(expected: String, replacement: String): Int
+
+  @Query("UPDATE online_users SET avatarUrl = :replacement WHERE uid = :uid AND avatarUrl = :expected")
+  suspend fun replaceOnlineUserAvatar(uid: String, expected: String, replacement: String): Int
+
+  @Query("UPDATE couple_profile SET partner1ProfilePicture = :replacement WHERE id = 1 AND partner1ProfilePicture = :expected")
+  suspend fun replaceCoupleProfilePicture(expected: String, replacement: String): Int
+
+  /** Một khoá `uid|avatarUrl` cho mỗi hàng còn avatar cục bộ; dùng làm tín hiệu "có gì cần đẩy lên". */
+  @Query("SELECT uid || '|' || avatarUrl FROM online_users WHERE avatarUrl LIKE :prefix || '%' ORDER BY uid")
+  fun watchLocalAvatarKeys(prefix: String): Flow<List<String>>
+
   @Query("SELECT * FROM online_users WHERE coupleCode = :code LIMIT 1")
   suspend fun getOnlineUserByCoupleCodeSync(code: String): com.example.data.model.OnlineUserEntity?
 
@@ -324,6 +353,9 @@ interface InLoveDao {
 
   @Query("SELECT * FROM online_relationships WHERE relationshipId = :relId LIMIT 1")
   suspend fun getOnlineRelationshipSync(relId: String): com.example.data.model.OnlineRelationshipEntity?
+
+  @Query("SELECT * FROM online_relationships")
+  fun observeRelationships(): Flow<List<com.example.data.model.OnlineRelationshipEntity>>
 
   @Query("SELECT * FROM online_relationships")
   suspend fun getAllRelationshipsSync(): List<com.example.data.model.OnlineRelationshipEntity>

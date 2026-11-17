@@ -1,0 +1,9 @@
+# Line endings (F-14): scripts, Xcode/Swift sources and golden vectors are LF; Windows batch files are CRLF.
+gradlew text eol=lf
+*.sh text eol=lf
+*.pbxproj text eol=lf
+*.xcconfig text eol=lf
+*.swift text eol=lf
+*.plist text eol=lf
+shared/src/commonTest/resources/golden/** text eol=lf
+*.bat text eol=crlf

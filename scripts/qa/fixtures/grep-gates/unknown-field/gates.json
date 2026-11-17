@@ -1,0 +1,12 @@
+[
+  {
+    "id": "GG-01",
+    "pattern": "^import java",
+    "paths": [
+      "shared/src/commonMain/kotlin/com/example/data"
+    ],
+    "exceptGlobs": [],
+    "reason": "fixture",
+    "severity": "error"
+  }
+]

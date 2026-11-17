@@ -1,0 +1,403 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "birthday-today",
+      "input": {
+        "birth": "15/06/2001",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "birthday-tomorrow",
+      "input": {
+        "birth": "16/06/2001",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 23,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "birthday-yesterday",
+      "input": {
+        "birth": "14/06/2001",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-birthday-on-28-02",
+      "input": {
+        "birth": "29/02/2000",
+        "today": "2025-02-28",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-birthday-on-29-02-2024",
+      "input": {
+        "birth": "29/02/2000",
+        "today": "2024-02-29",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "born-01-03-2000-evaluated-01-03-2025",
+      "input": {
+        "birth": "01/03/2000",
+        "today": "2025-03-01",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 25,
+      "androidLegacy": 24,
+      "divergence": "age-day-of-year",
+      "optional": false
+    },
+    {
+      "id": "born-01-03-2001-evaluated-29-02-2024",
+      "input": {
+        "birth": "01/03/2001",
+        "today": "2024-02-29",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 22,
+      "androidLegacy": 23,
+      "divergence": "age-day-of-year",
+      "optional": false
+    },
+    {
+      "id": "iso-garbage-fallback",
+      "input": {
+        "birth": "2000-01-15",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 2010,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "non-numeric-year-gives-2000",
+      "input": {
+        "birth": "15/06/abcd",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 25,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "future-birth",
+      "input": {
+        "birth": "15/06/2030",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 0,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank",
+      "input": {
+        "birth": "",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 0,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "two-digit-year",
+      "input": {
+        "birth": "15/01/24",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 2001,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "age-zero",
+      "input": {
+        "birth": "10/03/2025",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 0,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "age-over-100",
+      "input": {
+        "birth": "15/06/1921",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 104,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-born-on-birthday-in-non-leap-year",
+      "input": {
+        "birth": "15/06/2000",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 25,
+      "androidLegacy": 24,
+      "divergence": "age-day-of-year",
+      "optional": false
+    },
+    {
+      "id": "non-leap-born-day-before-birthday-in-leap-year",
+      "input": {
+        "birth": "15/06/2001",
+        "today": "2024-06-14",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 22,
+      "androidLegacy": 23,
+      "divergence": "age-day-of-year",
+      "optional": false
+    },
+    {
+      "id": "born-29-02-2000-evaluated-28-02-2025",
+      "input": {
+        "birth": "29/02/2000",
+        "today": "2025-02-28",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "born-29-02-2000-evaluated-01-03-2025",
+      "input": {
+        "birth": "29/02/2000",
+        "today": "2025-03-01",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 25,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "born-before-feb-29-in-leap-year-agrees",
+      "input": {
+        "birth": "15/01/2000",
+        "today": "2025-01-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 25,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zone-los-angeles-uses-local-date",
+      "input": {
+        "birth": "16/06/2001",
+        "today": "2025-06-15",
+        "zone": "America/Los_Angeles"
+      },
+      "expected": 23,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "birth-wrapped-in-newlines",
+      "input": {
+        "birth": "\u000a15/06/2001\u000a",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "birth-newlines-before-birthday",
+      "input": {
+        "birth": "\u000a16/06/2001\u000a",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 23,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zone-los-angeles-birthday-today",
+      "input": {
+        "birth": "15/06/2001",
+        "today": "2025-06-15",
+        "zone": "America/Los_Angeles"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zone-kiritimati-dob-day-boundary",
+      "input": {
+        "birth": "16/06/2001",
+        "today": "2025-06-15",
+        "zone": "Pacific/Kiritimati"
+      },
+      "expected": 23,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "garbage-four-parts-gives-0",
+      "input": {
+        "birth": "ab/cd/ef/gh",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 0,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "two-parts-gives-0",
+      "input": {
+        "birth": "15/06",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 0,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dot-separated-fallback",
+      "input": {
+        "birth": "16.06.2001",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dash-separated-fallback",
+      "input": {
+        "birth": "16-06-2001",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dash-future-year-fallback",
+      "input": {
+        "birth": "15-06-2030",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 0,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "fallback-input-wrapped-in-newlines",
+      "input": {
+        "birth": "\u000a16-06-2001\u000a",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "invalid-day-31-06-falls-back",
+      "input": {
+        "birth": "31/06/2001",
+        "today": "2025-06-15",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "fallback-year-uses-zone-los-angeles-new-year-eve",
+      "input": {
+        "birth": "16-06-2001",
+        "today": "2025-12-31",
+        "zone": "America/Los_Angeles"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "fallback-year-uses-zone-kiritimati-new-year-day",
+      "input": {
+        "birth": "16-06-2001",
+        "today": "2025-01-01",
+        "zone": "Pacific/Kiritimati"
+      },
+      "expected": 24,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

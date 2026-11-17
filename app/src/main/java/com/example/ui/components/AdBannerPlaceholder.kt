@@ -1,20 +1,21 @@
 @file:Suppress("FunctionName")
 package com.example.ui.components
 
+import android.content.Context
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.app.plugin.ads.AdsHelper
 import com.example.di.AppServiceLocator
+import com.example.ads.isAdsEligible
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -34,47 +35,48 @@ import com.google.android.gms.ads.AdView
  * @param isVip Nếu true, không render component này — người dùng VIP không thấy quảng cáo.
  * @param adUnitId Ad Unit ID từ AdMob Console. Mặc định là Google Test Banner ID.
  * @param modifier Modifier tùy chỉnh từ caller.
+ * @param canRequestAds Đã có sự đồng ý UMP chưa — mặc định đọc từ AdsManager (test truyền thẳng).
+ * @param sdkDisabled Cờ kill switch của SDK, đọc lại mỗi lần recompose — true thì ẩn banner.
+ * @param createBanner Tạo View banner; mặc định là AdView thật (test truyền View giả).
  */
 @Composable
 fun ComposeBannerAd(
     isVip: Boolean,
     adUnitId: String = com.example.BuildConfig.ADMOB_BANNER_ID,
-    modifier: Modifier = Modifier
-) {
-    val canRequestAds by AppServiceLocator.adsManager.canRequestAds.collectAsState()
-
-    // Guard: người dùng VIP hoặc chưa có sự đồng ý UMP hoặc adUnitId rỗng → return sớm, không tốn layout
-    if (isVip || !canRequestAds || adUnitId.isBlank()) return
-
-    val context = LocalContext.current
-    val configuration = LocalConfiguration.current
-
-    // Tính kích thước Adaptive Banner theo chiều rộng màn hình tính bằng DP
-    val screenWidthDp = configuration.screenWidthDp
-    val adSize: AdSize = remember(screenWidthDp) {
-        @Suppress("DEPRECATION")
-        AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, screenWidthDp)
+    modifier: Modifier = Modifier,
+    canRequestAds: Boolean = AppServiceLocator.adsManager.canRequestAds.collectAsState().value,
+    // Fail closed: không đọc được kill switch (SDK chưa init) → ẩn banner, không crash
+    sdkDisabled: () -> Boolean = { runCatching { AdsHelper.instance.isDisableAds(0) }.getOrDefault(true) },
+    createBanner: (Context, String) -> View = { ctx, unitId ->
+        AdView(ctx).apply {
+            // Adaptive Banner theo chiều rộng màn hình tính bằng DP
+            @Suppress("DEPRECATION")
+            setAdSize(
+                AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+                    ctx,
+                    ctx.resources.configuration.screenWidthDp
+                )
+            )
+            this.adUnitId = unitId
+            loadAd(AdRequest.Builder().build())
+        }
     }
+) {
+    // Guard: VIP / chưa có sự đồng ý UMP / adUnitId rỗng / SDK kill switch → return sớm, không tốn layout
+    if (!isAdsEligible(isVip, canRequestAds, adUnitId, killed = sdkDisabled())) return
 
     // Bao trong Box với padding vertical để ngăn Accidental Clicks theo Policy Google
     Box(
         modifier = modifier
+            .testTag("compose_banner")
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
             modifier = Modifier.fillMaxWidth(),
-            factory = { ctx ->
-                AdView(ctx).apply {
-                    setAdSize(adSize)
-                    this.adUnitId = adUnitId
-                    loadAd(AdRequest.Builder().build())
-                }
-            },
-            onRelease = { adView ->
-                adView.destroy()
-            }
+            factory = { ctx -> createBanner(ctx, adUnitId) },
+            onRelease = { view -> (view as? AdView)?.destroy() }
         )
     }
 }

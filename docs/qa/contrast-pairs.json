@@ -1,0 +1,10 @@
+{
+  "pairs": [
+    { "fg": "OnPrimary", "bg": "Primary", "kind": "text", "knownFailing": true, "fixBy": "U-75" },
+    { "fg": "OnPrimaryContainer", "bg": "PrimaryContainer", "kind": "text", "knownFailing": true, "fixBy": "U-75" },
+    { "fg": "OnSecondary", "bg": "Secondary", "kind": "text", "knownFailing": true, "fixBy": "U-75" },
+    { "fg": "OnTertiary", "bg": "TertiaryContainer", "kind": "text", "knownFailing": true, "fixBy": "U-75" },
+    { "fg": "Primary", "bg": "Surface", "kind": "text", "knownFailing": true, "fixBy": "U-75" },
+    { "fg": "VipGoldText", "bg": "VipGoldContainer", "kind": "text", "knownFailing": true, "fixBy": "U-75" }
+  ]
+}

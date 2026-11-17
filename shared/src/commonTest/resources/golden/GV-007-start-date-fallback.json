@@ -1,0 +1,241 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "millis-positive-wins",
+      "input": {
+        "startDateMillis": 1700000000000,
+        "startDateText": "15/06/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 1700000000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank-gives-NOW",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "   ",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": "NOW",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "invalid-31-04-gives-NOW",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "31/04/2024",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": "NOW",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "locale-th-TH-buddhist",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15/06/2001",
+        "locale": "th-TH",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "locale-ja-JP-japanese-calendar",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15/06/2001",
+        "locale": "ja-JP-u-ca-japanese",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "arabic-indic-digits",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15/06/2001",
+        "locale": "ar-EG-u-nu-arab",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "valid-dd-MM-yyyy",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15/06/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "valid-dd-MM-yyyy-dash",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15-06-2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "valid-iso-yyyy-MM-dd",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "2001-06-15",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "single-digit-day-month",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "5/6/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 991674000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "whitespace-trimmed",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "  15/06/2001  ",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "trailing-text-ignored",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15/06/2001 abc",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zero-millis-uses-text",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "15/06/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "negative-millis-uses-text",
+      "input": {
+        "startDateMillis": -5,
+        "startDateText": "15/06/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-29-02-2000",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "29/02/2000",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 951757200000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "invalid-29-02-2001-gives-NOW",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "29/02/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": "NOW",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "millis-one-wins",
+      "input": {
+        "startDateMillis": 1,
+        "startDateText": "15/06/2001",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 1,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "newline-wrapped-trimmed",
+      "input": {
+        "startDateMillis": 0,
+        "startDateText": "\u000a15/06/2001\u000a",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": 992538000000,
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

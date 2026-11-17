@@ -1,0 +1,8 @@
+{
+  "exempt": [
+    {
+      "name": "CallableInvoker",
+      "reason": "M-36b: CallableInvoker dùng stub cục bộ trong test nên không có Fake dùng chung (DEC-252)"
+    }
+  ]
+}

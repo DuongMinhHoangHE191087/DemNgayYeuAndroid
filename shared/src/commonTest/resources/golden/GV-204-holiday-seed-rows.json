@@ -1,0 +1,4597 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "2024-01-01-vi",
+      "input": {
+        "today": "2024-01-01",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "12/02/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 408
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 293
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 324
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 356
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 179
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "07/04/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 462
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 208
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 79
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "06/10/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 644
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "29/01/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 394
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 152
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "06/09/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 614
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "12/02/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 408
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 293
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 324
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 356
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 179
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "07/04/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 462
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 208
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 79
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "06/10/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 644
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "29/01/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 394
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 152
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "06/09/2025",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 614
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2024-01-01-en",
+      "input": {
+        "today": "2024-01-01",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "19/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 292
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "16/06/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 167
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "12/05/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 132
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "28/11/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 332
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "19/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 292
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "16/06/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 167
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "12/05/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 132
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2024",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "28/11/2024",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 332
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2027-12-31-vi",
+      "input": {
+        "today": "2027-12-31",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 246
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "09/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 40
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 68
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 294
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 325
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 122
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 357
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 180
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 95
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 136
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 112
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 209
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 80
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 277
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "26/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 26
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 153
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 247
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 246
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "09/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 40
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 68
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 294
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 325
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 122
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 357
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 180
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 95
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 136
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 112
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 209
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 80
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 277
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "26/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 26
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 153
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 247
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2027-12-31-en",
+      "input": {
+        "today": "2027-12-31",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 77
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 295
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 305
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 360
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 186
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 170
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 277
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2027",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 328
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 77
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 295
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 305
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 360
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 186
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 170
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 277
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2027",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 328
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-01-01-vi",
+      "input": {
+        "today": "2028-01-01",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "09/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 39
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 293
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 324
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 356
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 179
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 94
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 208
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 79
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "26/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 25
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 152
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 246
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "09/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 39
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 293
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 324
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 356
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 179
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 94
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 208
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 79
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "26/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 25
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 152
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 246
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-01-01-en",
+      "input": {
+        "today": "2028-01-01",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 294
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 169
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 134
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 327
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 294
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 169
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 134
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 44
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 327
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-02-14-vi",
+      "input": {
+        "today": "2028-02-14",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 201
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 379
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 314
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 23
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 249
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 280
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 77
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 322
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 312
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 50
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 91
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 164
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 35
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 232
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 108
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 202
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 201
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 379
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 314
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 23
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 249
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 280
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 77
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 322
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 312
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 50
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 91
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 164
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 35
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 232
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 108
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 202
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-02-14-en",
+      "input": {
+        "today": "2028-02-14",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 314
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 32
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 250
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 260
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 315
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 141
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 322
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 125
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 90
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 232
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 321
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 283
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 314
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 32
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 250
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 260
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 315
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 141
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 322
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 125
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 90
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 232
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 321
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 283
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-02-28-vi",
+      "input": {
+        "today": "2028-02-28",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 62
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 187
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 300
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 9
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 235
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 266
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 63
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 308
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 298
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 36
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 77
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 352
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 53
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 150
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 21
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 218
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 351
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 94
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 188
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 62
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 187
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 365
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 300
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 9
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 235
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 266
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 63
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 308
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 298
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 36
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 77
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 352
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 53
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 150
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 21
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 218
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 351
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 94
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 188
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-02-28-en",
+      "input": {
+        "today": "2028-02-28",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 300
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 18
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 236
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 246
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 301
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 127
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 308
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 218
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 352
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 307
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 269
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 300
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 18
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 236
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 246
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 301
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 127
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 308
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 218
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 352
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 307
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 269
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-02-29-vi",
+      "input": {
+        "today": "2028-02-29",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 61
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 186
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 364
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 299
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 8
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 234
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 265
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 62
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 307
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 297
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 35
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 351
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 52
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 149
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 20
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 217
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 350
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 93
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 187
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 61
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 186
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 364
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 299
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 8
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 234
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 265
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 62
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 307
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 297
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 35
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 351
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 52
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 149
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 20
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 217
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 350
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 93
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 187
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-02-29-en",
+      "input": {
+        "today": "2028-02-29",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 299
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 17
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 235
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 300
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 126
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 307
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 110
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 75
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 217
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 351
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 306
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 268
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 299
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 17
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 235
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 300
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 126
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 307
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 110
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 75
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 217
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 351
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 306
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 268
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-03-01-vi",
+      "input": {
+        "today": "2028-03-01",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 60
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 363
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 298
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 7
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 233
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 264
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 61
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 306
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 296
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 119
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 34
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 75
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 350
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 51
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 148
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 19
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 216
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 349
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 92
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 186
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 60
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 363
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 298
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 7
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 233
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 264
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 61
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 306
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 296
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 119
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "04/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 34
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 75
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 350
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 51
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 148
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 19
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 216
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 349
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 92
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 186
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-03-01-en",
+      "input": {
+        "today": "2028-03-01",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 298
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 16
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 234
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 244
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 299
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 125
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 306
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 109
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 74
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 216
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 350
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 305
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 267
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 298
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 16
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 234
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 244
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 299
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 125
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 306
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "18/06/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 109
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "14/05/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 74
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 216
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 350
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 305
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 267
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-07-15-vi",
+      "input": {
+        "today": "2028-07-15",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 289
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 49
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 227
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 162
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 236
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 97
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 128
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 290
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 170
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 160
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 348
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "23/04/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 282
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 214
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 280
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 12
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 248
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 80
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 213
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 321
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 50
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 289
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 49
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "27/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 227
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 162
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 236
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 97
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 128
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 290
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 170
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 160
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 348
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "23/04/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 282
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 214
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 280
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 12
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 248
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 80
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "13/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 213
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 321
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "03/09/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 50
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2028-07-15-en",
+      "input": {
+        "today": "2028-07-15",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 162
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 98
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 108
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 163
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 354
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 170
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "17/06/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 337
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "13/05/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 302
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 80
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 214
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 169
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 131
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 162
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "21/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 98
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 108
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 163
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 354
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 170
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "17/06/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 337
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "13/05/2029",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 302
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 80
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2029",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 214
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2028",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 169
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "23/11/2028",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 131
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2030-12-31-vi",
+      "input": {
+        "today": "2030-12-31",
+        "language": "vi"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "06/02/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 37
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 293
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 324
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 356
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 179
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "01/04/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 91
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 208
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 79
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "01/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 274
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "23/01/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 23
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 152
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "01/09/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 244
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "dateText": "30/04/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 120
+          },
+          {
+            "title": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "dateText": "02/09/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 245
+          },
+          {
+            "title": "\ud83c\udf15 R\u1eb1m Th\u00e1ng Gi\u00eang",
+            "dateText": "06/02/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 37
+          },
+          {
+            "title": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "dateText": "24/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "dateText": "08/03/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 67
+          },
+          {
+            "title": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "dateText": "20/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 293
+          },
+          {
+            "title": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "dateText": "20/11/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 324
+          },
+          {
+            "title": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "dateText": "01/05/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 121
+          },
+          {
+            "title": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "dateText": "01/01/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "dateText": "22/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 356
+          },
+          {
+            "title": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "dateText": "28/06/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 179
+          },
+          {
+            "title": "\ud83c\udfef Gi\u1ed7 T\u1ed5 H\u00f9ng V\u01b0\u01a1ng",
+            "dateText": "01/04/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 91
+          },
+          {
+            "title": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "dateText": "15/05/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 135
+          },
+          {
+            "title": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "dateText": "14/02/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "dateText": "21/04/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 111
+          },
+          {
+            "title": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "dateText": "27/07/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 208
+          },
+          {
+            "title": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "dateText": "20/03/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 79
+          },
+          {
+            "title": "\ud83e\udd6e T\u1ebft Trung Thu",
+            "dateText": "01/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 274
+          },
+          {
+            "title": "\ud83e\udde7 T\u1ebft Nguy\u00ean \u0110\u00e1n",
+            "dateText": "23/01/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 23
+          },
+          {
+            "title": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "dateText": "01/06/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 152
+          },
+          {
+            "title": "\ud83e\udeb7 L\u1ec5 Vu Lan",
+            "dateText": "01/09/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 244
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "2030-12-31-en",
+      "input": {
+        "today": "2030-12-31",
+        "language": "en"
+      },
+      "expected": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "18/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 291
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "15/06/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 166
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "11/05/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 131
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2030",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "27/11/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 331
+          }
+        ]
+      },
+      "androidLegacy": {
+        "rows": [
+          {
+            "title": "\ud83c\udf1f Christmas Eve",
+            "dateText": "24/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 358
+          },
+          {
+            "title": "\ud83c\udf40 St. Patrick's Day",
+            "dateText": "17/03/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 76
+          },
+          {
+            "title": "\ud83c\udf6c Sweetest Day",
+            "dateText": "18/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 291
+          },
+          {
+            "title": "\ud83c\udf83 Halloween",
+            "dateText": "31/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 304
+          },
+          {
+            "title": "\ud83c\udf84 Christmas Day",
+            "dateText": "25/12/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 359
+          },
+          {
+            "title": "\ud83c\udf86 Independence Day",
+            "dateText": "04/07/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 185
+          },
+          {
+            "title": "\ud83c\udf89 New Year's Day",
+            "dateText": "01/01/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 1
+          },
+          {
+            "title": "\ud83d\udc54 Father's Day",
+            "dateText": "15/06/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 166
+          },
+          {
+            "title": "\ud83d\udc90 Mother's Day",
+            "dateText": "11/05/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 131
+          },
+          {
+            "title": "\ud83d\udc99 National Boyfriend Day",
+            "dateText": "03/10/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 276
+          },
+          {
+            "title": "\ud83d\udc9d Valentine's Day",
+            "dateText": "14/02/2031",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 45
+          },
+          {
+            "title": "\ud83e\udd42 New Year's Eve",
+            "dateText": "31/12/2030",
+            "type": "CUSTOM",
+            "isAnnual": true,
+            "daysRemaining": 0
+          },
+          {
+            "title": "\ud83e\udd83 Thanksgiving",
+            "dateText": "27/11/2031",
+            "type": "CUSTOM",
+            "isAnnual": false,
+            "daysRemaining": 331
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

@@ -75,12 +75,14 @@ function createCloudinary({ sdk, cloudName, apiKey, apiSecret, tokenKey }) {
 
   // URL xem gắn với đúng đường dẫn tài sản và hết hạn sau ttlSeconds (HMAC-SHA256 bằng token key).
   // sign_url: true là bắt buộc: SDK chỉ sinh token khi bật sign_url, và khi có token thì SDK không thêm chữ ký s--.
-  function deliveryUrl(publicId, kind, ttlSeconds) {
+  // Ảnh HEIC đổi sang jpg khi phân phát (iOS/Android hiển thị được); SDK tính token trên đường dẫn đã có f_jpg nên vẫn hợp lệ.
+  function deliveryUrl(publicId, kind, ttlSeconds, format) {
     return v2.url(publicId, {
       resource_type: resourceTypeOf(kind),
       type: 'authenticated',
       secure: true,
       sign_url: true,
+      ...(kind === 'IMAGE' && format === 'heic' ? { fetch_format: 'jpg' } : {}),
       auth_token: { key: tokenKey, duration: ttlSeconds },
     });
   }

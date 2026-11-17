@@ -16,6 +16,7 @@ import com.example.R
 import com.example.data.db.AccountDataVault
 import com.example.data.db.AppDatabase
 import com.example.data.db.InLoveDao
+import com.example.data.repository.visibleAnniversaryDatesList
 import com.example.data.seed.HolidayDates
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocaleManager
@@ -118,12 +119,12 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val disabledCadence = AlarmNotificationScheduler.disabledCadenceKeys(dao)
         if (AlarmNotificationScheduler.CADENCE_EXACT_DAY in disabledCadence) return
         val today = AlarmNotificationScheduler.today()
-        for (ann in dao.getAnniversaryDatesList().filter { it.notificationEnabled }) {
+        for (ann in dao.visibleAnniversaryDatesList().filter { it.notificationEnabled }) {
           val (day, month, year) = AlarmNotificationScheduler.parseDateToMonthDayYear(ann.dateText) ?: continue
           if (day != today.dayOfMonth || month != today.monthValue) continue
           // A one-off date from another year is not today's occurrence.
           if (!ann.isAnnual && year != null && year != today.year) continue
-          val (title, message) = AlarmNotificationScheduler.dayOfTexts(ann.title, ann.dateText)
+          val (title, message) = AlarmNotificationScheduler.dayOfTexts(ann.title, ann.dateText, AlarmNotificationScheduler.isEnglish(context))
           showNotification(
             context = context,
             title = title,

@@ -120,7 +120,7 @@ const GIFT_IDEAS = [
     id: 'gift_album_diy',
     title: 'Hộp Album Ảnh Kỷ Niệm Handmade DIY',
     category: 'Kỷ vật Handmade',
-    badgeText: '98% Cặp đôi mê mẩn',
+    badgeText: 'Lựa chọn tinh tế 💖',
     tag: 'Dễ làm',
     description: 'Lưu giữ trọn vẹn những tháng ngày bên nhau bằng những trang ảnh kỷ niệm tự tay dán và viết lời nhắn ngọt ngào.',
     imageUrl: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=800&auto=format&fit=crop',
@@ -325,21 +325,6 @@ const GIFT_IDEAS = [
     targetInterests: 'fashion,travel',
     suggestedOccasion: 'Kỷ niệm ngày yêu',
     priceRange: '180.000đ - 380.000đ'
-  },
-  {
-    id: 'gift_ai_custom_song',
-    title: 'Bài Hát Riêng Được Sáng Tác Cho Chuyện Tình Hai Đứa',
-    category: 'AI Đề Xuất ✨',
-    badgeText: 'Duy nhất độc bản',
-    tag: 'Công nghệ AI',
-    description: 'Trợ lý AI phân tích những kỷ niệm đáng nhớ nhất của hai bạn để viết nên một bản tình ca acoustic độc quyền mang tên hai người.',
-    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop',
-    detailsSnippet: 'Tải file âm thanh chất lượng cao & in kèm mã QR lên tấm kính mica',
-    actionText: 'Trải nghiệm tạo bài hát với AI',
-    isAiGenerated: true,
-    targetInterests: 'music,technology',
-    suggestedOccasion: 'Kỷ niệm 1.000 ngày',
-    priceRange: 'Miễn phí với VIP'
   }
 ];
 

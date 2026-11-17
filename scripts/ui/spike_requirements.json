@@ -1,0 +1,215 @@
+{
+  "p4-u01-lovehome-perf": {
+    "metrics": {
+      "p95_frame_ms_60hz": ["<=", 16.7],
+      "p95_frame_ms_120hz": ["<=", 8.3],
+      "jank_pct_30s": ["<=", 1.0],
+      "hitch_ms_per_s": ["<=", 5],
+      "cold_start_ms_a14": ["<=", 1200]
+    },
+    "fallbacks": {
+      "animation-ladder": ["p95_frame_ms_60hz", "p95_frame_ms_120hz", "jank_pct_30s", "hitch_ms_per_s"],
+      "device-not-available": ["p95_frame_ms_120hz"]
+    }
+  },
+  "p4-u02-locale-font": {
+    "metrics": {
+      "locale_switch_needs_restart": ["==", 0],
+      "empty_first_frame": ["==", 0],
+      "diacritic_clipped_cases": ["==", 0]
+    },
+    "fallbacks": {
+      "static-string-table": ["locale_switch_needs_restart", "empty_first_frame"]
+    }
+  },
+  "p4-u03-dialog-lifecycle": {
+    "metrics": {
+      "dialog_double_scale": ["==", 0],
+      "lifecycle_events_ok": [">=", 1]
+    },
+    "fallbacks": {
+      "dialog-density-wrap": ["dialog_double_scale"]
+    }
+  },
+  "p4-u04-clipboard-icons": {
+    "metrics": {
+      "clipboard_roundtrip_ok": [">=", 1],
+      "icons_framework_delta_mb": ["<=", 8],
+      "icons_link_delta_s": ["<=", 60],
+      "icons_cold_start_delta_ms": ["<=", 100]
+    },
+    "fallbacks": {
+      "vendor-icons-xml": ["icons_framework_delta_mb", "icons_link_delta_s", "icons_cold_start_delta_ms"]
+    }
+  },
+  "p4-u05-a11y-mapping": {
+    "metrics": {
+      "testtag_to_identifier": [">=", 1],
+      "voiceover_label_ok": [">=", 1],
+      "touch_target_pt_min": [">=", 44]
+    },
+    "fallbacks": {}
+  },
+  "p4-u06-motion-dyntype": {
+    "metrics": {
+      "reduce_motion_flag_read": [">=", 1],
+      "fontscale_at_launch_matches_system": [">=", 1]
+    },
+    "fallbacks": {
+      "uifontmetrics-density": ["fontscale_at_launch_matches_system"]
+    }
+  },
+  "p4-u07-vm-robolectric": {
+    "metrics": {
+      "vm_constructs_in_robolectric": [">=", 1]
+    },
+    "fallbacks": {
+      "fake-deps": ["vm_constructs_in_robolectric"]
+    }
+  },
+  "p4-u08-android-drift": {
+    "metrics": {
+      "max_pixel_diff_pct": ["<=", 0.5],
+      "screens_compared": [">=", 8]
+    },
+    "fallbacks": {
+      "cmp-1.9": ["max_pixel_diff_pct"]
+    }
+  },
+  "p4-u09-vietnamese-ime": {
+    "metrics": {
+      "telex_cases_pass": [">=", 8],
+      "vni_cases_pass": [">=", 8],
+      "backspace_cursor_cases_pass": [">=", 4]
+    },
+    "fallbacks": {}
+  },
+  "p4-u10-insets-backswipe": {
+    "metrics": {
+      "keyboard_overlap_px": ["==", 0],
+      "safe_area_top_correct": [">=", 1],
+      "pager_swipeback_conflict": ["==", 0]
+    },
+    "fallbacks": {}
+  },
+  "p4-u11-image-decode": {
+    "metrics": {
+      "decode_main_thread_ms_max": ["<=", 16],
+      "peak_mem_mb": ["<=", 300],
+      "scroll_jank_pct": ["<=", 1]
+    },
+    "fallbacks": {
+      "predownscale-2048": ["decode_main_thread_ms_max", "peak_mem_mb", "scroll_jank_pct"]
+    }
+  },
+  "p4-u12-video-banner": {
+    "metrics": {
+      "video_play_ok": [">=", 1],
+      "player_leak": ["==", 0],
+      "banner_scroll_block": ["==", 0]
+    },
+    "fallbacks": {
+      "bottom-slot": ["banner_scroll_block"]
+    }
+  },
+  "p4-ui-perf-final": {
+    "metrics": {
+      "p95_frame_ms_60hz": ["<=", 16.7],
+      "p95_frame_ms_120hz": ["<=", 8.3],
+      "jank_pct_30s": ["<=", 1.0],
+      "hitch_ms_per_s": ["<=", 5],
+      "cold_start_ms_a14": ["<=", 1200],
+      "lowpower_p95_frame_ms_60hz": ["<=", 16.7]
+    },
+    "fallbacks": {
+      "device-not-available": ["p95_frame_ms_120hz"]
+    }
+  },
+  "p4-u121-a11y-audit": {
+    "metrics": {
+      "audit_failures": ["<=", 0],
+      "baseline_items_left": ["<=", 0]
+    },
+    "fallbacks": {
+      "device-not-available": []
+    }
+  },
+  "p4-u122-paywall-manual": {
+    "metrics": {
+      "price_period_ok": [">=", 1],
+      "trial_ok": [">=", 1],
+      "purchase_ok": [">=", 1],
+      "restore_ok": [">=", 1],
+      "legal_links_ok": [">=", 1],
+      "mq108_steps_pass": [">=", 5],
+      "mq109_steps_pass": [">=", 5],
+      "vip_before_server_confirm": ["<=", 0]
+    },
+    "fallbacks": {}
+  },
+  "p4-u123-a11y-pin-manual": {
+    "metrics": {
+      "mq302_steps_pass": [">=", 7],
+      "mq303_steps_pass": [">=", 2],
+      "mq304_steps_pass": [">=", 4],
+      "mq307_steps_pass": [">=", 2],
+      "mq308_steps_pass": [">=", 4],
+      "mq403_steps_pass": [">=", 5],
+      "fp607_pass": [">=", 1],
+      "fp608_pass": [">=", 1]
+    },
+    "fallbacks": {}
+  },
+  "p4-ui-perf-flows": {
+    "metrics": {
+      "grid_scroll_p95_frame_ms_60hz": ["<=", 16.7],
+      "grid_scroll_p95_frame_ms_120hz": ["<=", 8.3],
+      "reorder_drag_p95_frame_ms_60hz": ["<=", 16.7],
+      "reorder_drag_p95_frame_ms_120hz": ["<=", 8.3],
+      "tab_switch_p95_frame_ms_60hz": ["<=", 16.7],
+      "tab_switch_p95_frame_ms_120hz": ["<=", 8.3],
+      "dialog_open_close_p95_frame_ms_60hz": ["<=", 16.7],
+      "dialog_open_close_p95_frame_ms_120hz": ["<=", 8.3],
+      "mq606_steps_pass": [">=", 4]
+    },
+    "fallbacks": {
+      "device-not-available": [
+        "grid_scroll_p95_frame_ms_120hz",
+        "reorder_drag_p95_frame_ms_120hz",
+        "tab_switch_p95_frame_ms_120hz",
+        "dialog_open_close_p95_frame_ms_120hz"
+      ]
+    }
+    },
+  "p6-m04-server-libs": {
+    "metrics": {
+      "node22_load_ok": [">=", 1],
+      "apple_root_g3_sha256_recorded": [">=", 1],
+      "retry_option_checked": [">=", 1],
+      "es256_ieee_p1363_sign_ok": [">=", 1],
+      "verifier_order_and_status_ok": [">=", 1]
+    }
+  },
+  "r2-spike": {
+    "metrics": {
+      "put_ok": ["==", 1],
+      "put_wrong_content_type_rejected": ["==", 1],
+      "put_overwrite_rejected": ["==", 1],
+      "put_after_expiry_rejected": ["==", 1],
+      "content_length_enforced": [">=", 0],
+      "get_ok": ["==", 1],
+      "get_content_type_matches": ["==", 1],
+      "range_206_with_total": ["==", 1],
+      "tail_range_206": ["==", 1],
+      "unsigned_range_206": ["==", 1],
+      "get_after_expiry_rejected": ["==", 1],
+      "delete_then_404": ["==", 1],
+      "delete_missing_tolerated": ["==", 1],
+      "p50_put_1mib_ms": ["<=", 5000],
+      "p50_range_get_ms": ["<=", 1000]
+    },
+    "fallbacks": {
+      "staging-copy": ["put_overwrite_rejected"]
+    }
+  }
+}

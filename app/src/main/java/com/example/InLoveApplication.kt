@@ -7,6 +7,7 @@ import com.example.billing.VipProductIds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.AppCheckProviderFactory
 import com.google.firebase.appcheck.FirebaseAppCheck
+import kotlinx.coroutines.launch
 
 class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider {
 
@@ -32,6 +33,7 @@ class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider 
     }
 
     override fun onCreate() {
+        com.example.data.auth.CurrentActivityProvider.register(this)
         // Unit test không khởi tạo Firebase: trên Robolectric, Firebase Sessions ném
         // NameNotFoundException ở thread nền (applicationId không có trong PackageManager giả)
         // và lỗi đó làm hỏng runTest chạy sau. Test nào cần FirebaseApp tự gọi initializeApp.
@@ -54,6 +56,17 @@ class InLoveApplication : AppPluginBase(), androidx.work.Configuration.Provider 
         // tiên dựng ViewModel. Enqueue công việc đồng bộ định kỳ ngay sau đó.
         com.example.di.AppServiceLocator.initialize(this)
         com.example.data.sync.SyncWorker.enqueuePeriodic(this)
+
+        // --- Sao lưu manifest kỷ niệm (T18a): restore xong rồi mới chạy collector ---
+        val backupDao = com.example.data.db.AppDatabase.getDatabase(this).inLoveDao()
+        kotlinx.coroutines.CoroutineScope(
+            kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO +
+                kotlinx.coroutines.CoroutineExceptionHandler { _, t -> Log.e("InLoveApp", "memory backup failed", t) }
+        ).launch { com.example.data.media.MemoryBackup(filesDir, noBackupFilesDir, backupDao).run() }
+        // --- hết T18a ---
+
+        // --- Đẩy avatar `file:` lên R2 khi bật cờ (T21); cờ tắt thì không làm gì ---
+        com.example.data.media.AvatarUploadWorker.watch(this, backupDao)
 
         try {
             super.onCreate()

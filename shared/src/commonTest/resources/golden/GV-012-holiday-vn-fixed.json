@@ -1,0 +1,778 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "table-dump-15-entries",
+      "input": {
+        "source": "VietnameseHolidays.fixedHolidays"
+      },
+      "expected": {
+        "entries": [
+          {
+            "emoji": "\ud83c\udf89",
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "titleEn": "New Year's Day",
+            "month": 1,
+            "day": 1,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc9d",
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "titleEn": "Valentine's Day",
+            "month": 2,
+            "day": 14,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf37",
+            "titleVi": "Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "titleEn": "International Women's Day",
+            "month": 3,
+            "day": 8,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83d\ude0a",
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "titleEn": "International Day of Happiness",
+            "month": 3,
+            "day": 20,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83d\udcda",
+            "titleVi": "Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "titleEn": "Vietnam Book Day",
+            "month": 4,
+            "day": 21,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\uddfb\ud83c\uddf3",
+            "titleVi": "Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "titleEn": "Reunification Day",
+            "month": 4,
+            "day": 30,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf88",
+            "titleVi": "Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "titleEn": "International Workers' Day",
+            "month": 5,
+            "day": 1,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67",
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "titleEn": "International Day of Families",
+            "month": 5,
+            "day": 15,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83e\uddf8",
+            "titleVi": "Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "titleEn": "International Children's Day",
+            "month": 6,
+            "day": 1,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udfe1",
+            "titleVi": "Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "titleEn": "Vietnamese Family Day",
+            "month": 6,
+            "day": 28,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83d\udd6f\ufe0f",
+            "titleVi": "Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "titleEn": "War Invalids and Martyrs Day",
+            "month": 7,
+            "day": 27,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\uddfb\ud83c\uddf3",
+            "titleVi": "Qu\u1ed1c Kh\u00e1nh",
+            "titleEn": "National Day",
+            "month": 9,
+            "day": 2,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf39",
+            "titleVi": "Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "titleEn": "Vietnamese Women's Day",
+            "month": 10,
+            "day": 20,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf4e",
+            "titleVi": "Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "titleEn": "Vietnamese Teachers' Day",
+            "month": 11,
+            "day": 20,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf96\ufe0f",
+            "titleVi": "Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "titleEn": "Vietnam People's Army Day",
+            "month": 12,
+            "day": 22,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf1f",
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "titleEn": "Christmas Eve",
+            "month": 12,
+            "day": 24,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          }
+        ]
+      },
+      "androidLegacy": {
+        "entries": [
+          {
+            "emoji": "\ud83c\udf89",
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "titleEn": "New Year's Day",
+            "month": 1,
+            "day": 1,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc9d",
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "titleEn": "Valentine's Day",
+            "month": 2,
+            "day": 14,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf37",
+            "titleVi": "Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "titleEn": "International Women's Day",
+            "month": 3,
+            "day": 8,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83d\ude0a",
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "titleEn": "International Day of Happiness",
+            "month": 3,
+            "day": 20,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83d\udcda",
+            "titleVi": "Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "titleEn": "Vietnam Book Day",
+            "month": 4,
+            "day": 21,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\uddfb\ud83c\uddf3",
+            "titleVi": "Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "titleEn": "Reunification Day",
+            "month": 4,
+            "day": 30,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf88",
+            "titleVi": "Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "titleEn": "International Workers' Day",
+            "month": 5,
+            "day": 1,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67",
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "titleEn": "International Day of Families",
+            "month": 5,
+            "day": 15,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83e\uddf8",
+            "titleVi": "Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "titleEn": "International Children's Day",
+            "month": 6,
+            "day": 1,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udfe1",
+            "titleVi": "Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "titleEn": "Vietnamese Family Day",
+            "month": 6,
+            "day": 28,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83d\udd6f\ufe0f",
+            "titleVi": "Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "titleEn": "War Invalids and Martyrs Day",
+            "month": 7,
+            "day": 27,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\uddfb\ud83c\uddf3",
+            "titleVi": "Qu\u1ed1c Kh\u00e1nh",
+            "titleEn": "National Day",
+            "month": 9,
+            "day": 2,
+            "suggestedGiftCategory": "Tr\u1ea3i Nghi\u1ec7m",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf39",
+            "titleVi": "Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "titleEn": "Vietnamese Women's Day",
+            "month": 10,
+            "day": 20,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf4e",
+            "titleVi": "Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "titleEn": "Vietnamese Teachers' Day",
+            "month": 11,
+            "day": 20,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf96\ufe0f",
+            "titleVi": "Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "titleEn": "Vietnam People's Army Day",
+            "month": 12,
+            "day": 22,
+            "suggestedGiftCategory": "\u00dd Ngh\u0129a",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf1f",
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "titleEn": "Christmas Eve",
+            "month": 12,
+            "day": 24,
+            "suggestedGiftCategory": "L\u00e3ng M\u1ea1n",
+            "isCoupleRelevant": true
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "title-nfc-emoji-prefix",
+      "input": {
+        "templates": [
+          "${emoji} ${titleVi}",
+          "${emoji} ${titleEn}"
+        ]
+      },
+      "expected": {
+        "titles": [
+          {
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "language": "vi",
+            "text": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "isNfc": true,
+            "firstCodePoint": "U+1F389"
+          },
+          {
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "language": "en",
+            "text": "\ud83c\udf89 New Year's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F389"
+          },
+          {
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "language": "vi",
+            "text": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "isNfc": true,
+            "firstCodePoint": "U+1F49D"
+          },
+          {
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "language": "en",
+            "text": "\ud83d\udc9d Valentine's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F49D"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "language": "vi",
+            "text": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "isNfc": true,
+            "firstCodePoint": "U+1F337"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "language": "en",
+            "text": "\ud83c\udf37 International Women's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F337"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "language": "vi",
+            "text": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "isNfc": true,
+            "firstCodePoint": "U+1F60A"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "language": "en",
+            "text": "\ud83d\ude0a International Day of Happiness",
+            "isNfc": true,
+            "firstCodePoint": "U+1F60A"
+          },
+          {
+            "titleVi": "Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F4DA"
+          },
+          {
+            "titleVi": "Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83d\udcda Vietnam Book Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F4DA"
+          },
+          {
+            "titleVi": "Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "language": "vi",
+            "text": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "language": "en",
+            "text": "\ud83c\uddfb\ud83c\uddf3 Reunification Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "language": "vi",
+            "text": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "isNfc": true,
+            "firstCodePoint": "U+1F388"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "language": "en",
+            "text": "\ud83c\udf88 International Workers' Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F388"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "language": "vi",
+            "text": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "isNfc": true,
+            "firstCodePoint": "U+1F468"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "language": "en",
+            "text": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 International Day of Families",
+            "isNfc": true,
+            "firstCodePoint": "U+1F468"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "language": "vi",
+            "text": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "isNfc": true,
+            "firstCodePoint": "U+1F9F8"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "language": "en",
+            "text": "\ud83e\uddf8 International Children's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F9F8"
+          },
+          {
+            "titleVi": "Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F3E1"
+          },
+          {
+            "titleVi": "Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udfe1 Vietnamese Family Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F3E1"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "language": "vi",
+            "text": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "isNfc": true,
+            "firstCodePoint": "U+1F56F"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "language": "en",
+            "text": "\ud83d\udd6f\ufe0f War Invalids and Martyrs Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F56F"
+          },
+          {
+            "titleVi": "Qu\u1ed1c Kh\u00e1nh",
+            "language": "vi",
+            "text": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Qu\u1ed1c Kh\u00e1nh",
+            "language": "en",
+            "text": "\ud83c\uddfb\ud83c\uddf3 National Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F339"
+          },
+          {
+            "titleVi": "Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udf39 Vietnamese Women's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F339"
+          },
+          {
+            "titleVi": "Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F34E"
+          },
+          {
+            "titleVi": "Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udf4e Vietnamese Teachers' Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F34E"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F396"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udf96\ufe0f Vietnam People's Army Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F396"
+          },
+          {
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "language": "vi",
+            "text": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "isNfc": true,
+            "firstCodePoint": "U+1F31F"
+          },
+          {
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "language": "en",
+            "text": "\ud83c\udf1f Christmas Eve",
+            "isNfc": true,
+            "firstCodePoint": "U+1F31F"
+          }
+        ]
+      },
+      "androidLegacy": {
+        "titles": [
+          {
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "language": "vi",
+            "text": "\ud83c\udf89 T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "isNfc": true,
+            "firstCodePoint": "U+1F389"
+          },
+          {
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "language": "en",
+            "text": "\ud83c\udf89 New Year's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F389"
+          },
+          {
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "language": "vi",
+            "text": "\ud83d\udc9d L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "isNfc": true,
+            "firstCodePoint": "U+1F49D"
+          },
+          {
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n Valentine",
+            "language": "en",
+            "text": "\ud83d\udc9d Valentine's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F49D"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "language": "vi",
+            "text": "\ud83c\udf37 Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "isNfc": true,
+            "firstCodePoint": "U+1F337"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Ph\u1ee5 N\u1eef",
+            "language": "en",
+            "text": "\ud83c\udf37 International Women's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F337"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "language": "vi",
+            "text": "\ud83d\ude0a Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "isNfc": true,
+            "firstCodePoint": "U+1F60A"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf H\u1ea1nh Ph\u00fac",
+            "language": "en",
+            "text": "\ud83d\ude0a International Day of Happiness",
+            "isNfc": true,
+            "firstCodePoint": "U+1F60A"
+          },
+          {
+            "titleVi": "Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83d\udcda Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F4DA"
+          },
+          {
+            "titleVi": "Ng\u00e0y S\u00e1ch Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83d\udcda Vietnam Book Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F4DA"
+          },
+          {
+            "titleVi": "Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "language": "vi",
+            "text": "\ud83c\uddfb\ud83c\uddf3 Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Gi\u1ea3i Ph\u00f3ng Mi\u1ec1n Nam",
+            "language": "en",
+            "text": "\ud83c\uddfb\ud83c\uddf3 Reunification Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "language": "vi",
+            "text": "\ud83c\udf88 Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "isNfc": true,
+            "firstCodePoint": "U+1F388"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Lao \u0110\u1ed9ng",
+            "language": "en",
+            "text": "\ud83c\udf88 International Workers' Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F388"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "language": "vi",
+            "text": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "isNfc": true,
+            "firstCodePoint": "U+1F468"
+          },
+          {
+            "titleVi": "Ng\u00e0y Qu\u1ed1c T\u1ebf Gia \u0110\u00ecnh",
+            "language": "en",
+            "text": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 International Day of Families",
+            "isNfc": true,
+            "firstCodePoint": "U+1F468"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "language": "vi",
+            "text": "\ud83e\uddf8 Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "isNfc": true,
+            "firstCodePoint": "U+1F9F8"
+          },
+          {
+            "titleVi": "Qu\u1ed1c T\u1ebf Thi\u1ebfu Nhi",
+            "language": "en",
+            "text": "\ud83e\uddf8 International Children's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F9F8"
+          },
+          {
+            "titleVi": "Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udfe1 Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F3E1"
+          },
+          {
+            "titleVi": "Ng\u00e0y Gia \u0110\u00ecnh Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udfe1 Vietnamese Family Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F3E1"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "language": "vi",
+            "text": "\ud83d\udd6f\ufe0f Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "isNfc": true,
+            "firstCodePoint": "U+1F56F"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u01b0\u01a1ng Binh Li\u1ec7t S\u0129",
+            "language": "en",
+            "text": "\ud83d\udd6f\ufe0f War Invalids and Martyrs Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F56F"
+          },
+          {
+            "titleVi": "Qu\u1ed1c Kh\u00e1nh",
+            "language": "vi",
+            "text": "\ud83c\uddfb\ud83c\uddf3 Qu\u1ed1c Kh\u00e1nh",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Qu\u1ed1c Kh\u00e1nh",
+            "language": "en",
+            "text": "\ud83c\uddfb\ud83c\uddf3 National Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F1FB"
+          },
+          {
+            "titleVi": "Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udf39 Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F339"
+          },
+          {
+            "titleVi": "Ng\u00e0y Ph\u1ee5 N\u1eef Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udf39 Vietnamese Women's Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F339"
+          },
+          {
+            "titleVi": "Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udf4e Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F34E"
+          },
+          {
+            "titleVi": "Ng\u00e0y Nh\u00e0 Gi\u00e1o Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udf4e Vietnamese Teachers' Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F34E"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "language": "vi",
+            "text": "\ud83c\udf96\ufe0f Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "isNfc": true,
+            "firstCodePoint": "U+1F396"
+          },
+          {
+            "titleVi": "Ng\u00e0y Th\u00e0nh L\u1eadp Q\u0110ND Vi\u1ec7t Nam",
+            "language": "en",
+            "text": "\ud83c\udf96\ufe0f Vietnam People's Army Day",
+            "isNfc": true,
+            "firstCodePoint": "U+1F396"
+          },
+          {
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "language": "vi",
+            "text": "\ud83c\udf1f \u0110\u00eam Gi\u00e1ng Sinh",
+            "isNfc": true,
+            "firstCodePoint": "U+1F31F"
+          },
+          {
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "language": "en",
+            "text": "\ud83c\udf1f Christmas Eve",
+            "isNfc": true,
+            "firstCodePoint": "U+1F31F"
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

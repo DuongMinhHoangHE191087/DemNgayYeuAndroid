@@ -1,0 +1,4 @@
+{
+  "_doc": "Sign-off per FP-xxx of the P8 parity matrix. A missing FP counts as pending. Statuses: pass {evidence, build, commit(40 hex), platform: ios, device, date}; pending; waived {reason, owner} (P1, external-testflight only); descoped {decision: DEC-nn}. Check: node scripts/qa/check-release-signoff.mjs --stage external-testflight|app-store --build <n> --commit <sha>",
+  "entries": {}
+}

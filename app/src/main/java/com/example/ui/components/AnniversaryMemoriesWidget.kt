@@ -49,7 +49,6 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VolunteerActivism
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -60,7 +59,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -91,12 +89,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.data.media.LocalMediaStore
 import com.example.data.model.SharedMemoryEntity
 import com.example.domain.media.MemoryMediaFile
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
 import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
@@ -471,6 +469,7 @@ fun AnniversaryMemoriesWidget(
         TextButton(
           onClick = onNavigateToFullAlbum,
           interactionSource = viewAllSource,
+          colors = ButtonDefaults.textButtonColors(contentColor = Primary),
           modifier = Modifier.pressScale(viewAllSource).testTag("btn_view_full_memories")
         ) {
           Icon(
@@ -482,9 +481,8 @@ fun AnniversaryMemoriesWidget(
           Spacer(modifier = Modifier.width(6.dp))
           Text(
             text = if (isVietnamese) "Xem tất cả (${memories.size})" else "View all (${memories.size})",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Primary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
             maxLines = 1
           )
         }
@@ -830,20 +828,12 @@ private fun EmptyAnniversaryPhotoCard(
         modifier = Modifier.padding(bottom = 8.dp)
       )
 
-      Button(
+      PrimaryGradientButton(
+        text = if (isVietnamese) "Chọn ảnh" else "Choose photos",
         onClick = onPickGallery,
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        shape = RoundedCornerShape(14.dp)
-      ) {
-        Icon(Icons.Filled.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(16.dp))
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-          text = if (isVietnamese) "Chọn ảnh" else "Choose photos",
-          fontWeight = FontWeight.Bold,
-          fontSize = 12.sp,
-          maxLines = 1
-        )
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        icon = Icons.Filled.AddPhotoAlternate
+      )
     }
   }
 }
@@ -865,7 +855,7 @@ private fun AddAnniversaryPhotoDialog(
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
   val todayFormatted = remember {
-    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+    SimpleDateFormat("dd/MM/yyyy", Locale.ROOT).format(Date())
   }
 
   var title by remember { mutableStateOf("") }
@@ -898,7 +888,7 @@ private fun AddAnniversaryPhotoDialog(
     }
   } else null
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(26.dp),
       color = Color.White,
@@ -1109,29 +1099,20 @@ private fun AddAnniversaryPhotoDialog(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Confirm Button
-        Button(
+        PrimaryGradientButton(
+          text = if (isVietnamese) "Lưu Vào Kỷ Niệm ❤️" else "Save Memory ❤️",
           onClick = {
             val finalTitle = title.trim().ifBlank {
               if (isVietnamese) "Khoảnh Khắc Kỷ Niệm" else "Anniversary Moment"
             }
             onSave(finalTitle, dateText, currentPhotoUri, note, location, selectedAnniversary, currentMedia)
           },
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
-          shape = RoundedCornerShape(16.dp),
           modifier = Modifier
             .fillMaxWidth()
-            .height(46.dp)
-            .testTag("btn_confirm_save_anniversary_photo")
-        ) {
-          Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = if (isVietnamese) "Lưu Vào Kỷ Niệm ❤️" else "Save Memory ❤️",
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            fontSize = 14.sp
-          )
-        }
+            .heightIn(min = MinTouchBox),
+          icon = Icons.Filled.Favorite,
+          testTag = "btn_confirm_save_anniversary_photo"
+        )
       }
     }
   }
@@ -1157,7 +1138,7 @@ private fun AnniversaryPhotoDetailDialog(
     resolve = resolveMedia,
   )
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(26.dp),
       color = Color.White,
@@ -1295,22 +1276,23 @@ private fun AnniversaryPhotoDetailDialog(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-              OutlinedButton(
+              SecondaryButton(
+                text = if (isVietnamese) "Hủy" else "Cancel",
                 onClick = { showDeleteConfirm = false },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f)
-              ) {
-                Text(if (isVietnamese) "Hủy" else "Cancel")
-              }
+                modifier = Modifier
+                  .weight(1f)
+                  .heightIn(min = MinTouchBox)
+              )
 
-              Button(
+              SecondaryButton(
+                text = if (isVietnamese) "Xác nhận xóa" else "Delete",
                 onClick = onDelete,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f)
-              ) {
-                Text(if (isVietnamese) "Xác nhận xóa" else "Delete", color = Color.White)
-              }
+                modifier = Modifier
+                  .weight(1f)
+                  .heightIn(min = MinTouchBox),
+                isDestructive = true,
+                filled = true
+              )
             }
           } else {
             Row(
@@ -1318,23 +1300,19 @@ private fun AnniversaryPhotoDetailDialog(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically
             ) {
-              OutlinedButton(
+              SecondaryButton(
+                text = if (isVietnamese) "Xóa" else "Delete",
                 onClick = { showDeleteConfirm = true },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
-                shape = RoundedCornerShape(12.dp)
-              ) {
-                Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(if (isVietnamese) "Xóa" else "Delete")
-              }
+                modifier = Modifier.heightIn(min = MinTouchBox),
+                icon = Icons.Filled.Delete,
+                isDestructive = true
+              )
 
-              Button(
+              SecondaryButton(
+                text = if (isVietnamese) "Đóng" else "Close",
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                shape = RoundedCornerShape(12.dp)
-              ) {
-                Text(if (isVietnamese) "Đóng" else "Close", color = Color.White)
-              }
+                modifier = Modifier.heightIn(min = MinTouchBox)
+              )
             }
           }
         }

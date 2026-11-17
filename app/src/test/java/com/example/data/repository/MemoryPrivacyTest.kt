@@ -9,7 +9,6 @@ import com.example.domain.media.SaveSharedMemoryOutcome
 import com.example.domain.media.SaveSharedMemoryUseCase
 import com.example.domain.media.UploadMemoryMediaUseCase
 import com.example.domain.media.validateMemoryMedia
-import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
@@ -52,7 +51,7 @@ class MemoryPrivacyTest {
   @Test
   fun invalidMedia_isRefused_beforeAnyUpload() = runBlocking {
     val h = SaveHarness()
-    val tooLong = MemoryMediaFile(File("clip.mp4"), MediaKind.VIDEO, "video/mp4", 5_000_000L, durationSeconds = 61)
+    val tooLong = MemoryMediaFile("clip.mp4", MediaKind.VIDEO, "video/mp4", 5_000_000L, durationSeconds = 61)
     val expected = checkNotNull(validateMemoryMedia(MediaKind.VIDEO, "video/mp4", 5_000_000L, 61))
     assertEquals(SaveSharedMemoryOutcome.InvalidMedia(expected), h.save(media = tooLong))
     assertTrue(h.repo.uploads.isEmpty())
@@ -121,7 +120,7 @@ class MemoryPrivacyTest {
 
 private data class Stored(val memoryId: String, val shareWithCouple: Boolean, val publicId: String?)
 
-private fun photo() = MemoryMediaFile(File("photo.jpg"), MediaKind.IMAGE, "image/jpeg", 2_000_000L)
+private fun photo() = MemoryMediaFile("photo.jpg", MediaKind.IMAGE, "image/jpeg", 2_000_000L)
 
 private class SaveHarness(
   uploadFails: Boolean = false,
@@ -129,7 +128,7 @@ private class SaveHarness(
 ) {
   val repo = FakeMemoryMediaRepository(uploadFails = uploadFails)
   val stored = mutableListOf<Stored>()
-  private val useCase = SaveSharedMemoryUseCase(UploadMemoryMediaUseCase(repo))
+  private val useCase = SaveSharedMemoryUseCase(UploadMemoryMediaUseCase(repo), cloudContent = true)
 
   suspend fun save(
     signedIn: Boolean = true,

@@ -409,35 +409,3 @@ class BillingManager(context: Context) : PurchasesUpdatedListener {
         }
     }
 }
-
-/** Helper extensions for selecting subscription offers and dynamic price formatting */
-fun ProductDetails.findBestOffer(preferFreeTrial: Boolean = false): ProductDetails.SubscriptionOfferDetails? {
-    val offers = subscriptionOfferDetails ?: return null
-    if (offers.isEmpty()) return null
-
-    if (preferFreeTrial) {
-        // Locate offer containing a free trial phase (priceAmountMicros == 0)
-        val trialOffer = offers.firstOrNull { offer ->
-            offer.pricingPhases.pricingPhaseList.any { it.priceAmountMicros == 0L }
-        }
-        if (trialOffer != null) return trialOffer
-    }
-
-    // Default: base plan (without promotional offerId) or first available offer
-    return offers.firstOrNull { it.offerId == null } ?: offers.firstOrNull()
-}
-
-fun ProductDetails.getFormattedPrice(preferFreeTrial: Boolean = false): String? {
-    oneTimePurchaseOfferDetails?.formattedPrice?.let { return it }
-    val offer = findBestOffer(preferFreeTrial)
-    val phases = offer?.pricingPhases?.pricingPhaseList
-    return phases?.lastOrNull { it.priceAmountMicros > 0 }?.formattedPrice
-        ?: phases?.firstOrNull()?.formattedPrice
-}
-
-/** Sealed class đại diện cho các sự kiện thanh toán được emit lên UI */
-sealed class PurchaseEvent {
-    data object Success : PurchaseEvent()
-    data object Pending : PurchaseEvent()
-    data class Error(val message: String) : PurchaseEvent()
-}

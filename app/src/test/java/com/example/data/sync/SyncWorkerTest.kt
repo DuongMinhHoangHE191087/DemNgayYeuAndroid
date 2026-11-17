@@ -7,8 +7,11 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import com.example.data.db.AppDatabase
 import com.example.data.db.InLoveDao
 import com.example.data.model.AnniversaryDateEntity
+import com.example.data.model.OnlineRelationshipEntity
+import com.example.data.model.RelationshipStatus
 import com.example.data.model.SharedMemoryEntity
 import com.example.data.model.SyncOutboxEntity
+import java.util.concurrent.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,7 +43,7 @@ class SyncWorkerTest {
     )
 
     val worker = TestListenableWorkerBuilder<SyncWorker>(context)
-      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { _, _ -> /* no-op success */ }))
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { _, _ -> /* no-op success */ }, cloudContent = { true }))
       .build()
 
     val result = worker.doWork()
@@ -53,6 +56,28 @@ class SyncWorkerTest {
   }
 
   @Test
+  fun localOnly_doWorkKeepsOutboxAndSucceeds() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val dao = db.inLoveDao()
+    enqueueMemories(dao, count = 1)
+
+    val pushed = mutableListOf<String>()
+    val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { false }))
+      .build()
+
+    val result = worker.doWork()
+
+    assert(result is ListenableWorker.Result.Success)
+    assert(pushed.isEmpty()) { "local-only must never push, got $pushed" }
+    val row = dao.getPendingOutboxEntries(limit = 100).single()
+    assert(row.attemptCount == 0 && row.lastError == null) { "the outbox row must stay untouched" }
+    db.close()
+  }
+
+  @Test
   fun doWork_poisonRow_isKeptWithReason_andDoesNotBlockHealthyRows() = runBlocking {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
@@ -60,7 +85,7 @@ class SyncWorkerTest {
     val dao = db.inLoveDao()
     val adapter = SyncWorker.moshiAdapterFor<SharedMemoryEntity>()
 
-    // Dòng hỏng: memory thiếu relationshipId. Trước đây bị xoá im lặng; giờ phải giữ lại và ghi lý do.
+    // Dòng hỏng: memory thiếu relationshipId. Được đỗ: giữ lại, không tính lỗi, không retry.
     val poisonId = dao.insertOutboxEntry(
       SyncOutboxEntity(
         entityType = MemorySyncAdapter.entityType,
@@ -90,18 +115,152 @@ class SyncWorkerTest {
 
     val pushed = mutableListOf<String>()
     val worker = TestListenableWorkerBuilder<SyncWorker>(context)
-      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }))
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { true }))
       .build()
 
     val result = worker.doWork()
 
-    assert(result is ListenableWorker.Result.Retry) { "a failed row must ask for a retry, not report success" }
+    assert(result is ListenableWorker.Result.Success) { "a parked row is not a failure, so no endless retry" }
     assert(pushed == listOf("relationships/rel_1/memories/sync-ok")) { "the healthy row must not be blocked by the poison row" }
     val remaining = dao.getPendingOutboxEntries()
     assert(remaining.none { it.syncId == "sync-ok" }) { "the healthy row must be removed after a successful push" }
     val poison = remaining.single { it.id == poisonId }
-    assert(poison.attemptCount >= 1) { "the poison row must record the failed attempt" }
-    assert(poison.lastError?.startsWith("outbox $poisonId") == true) { "lastError must name the entry id" }
+    assert(poison.attemptCount == 0) { "a parked row is not counted as a failed attempt" }
+    assert(poison.lastError == null) { "a parked row must not call markOutboxAttemptFailed" }
+    db.close()
+  }
+
+  @Test
+  fun doWork_invalidJsonMemoryRow_isParkedKeptAndNotPushed() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val dao = db.inLoveDao()
+    // Không phải JSON hợp lệ (JsonEncodingException), JSON sai kiểu (JsonDataException) và "null" (decode ra null).
+    val badPayloads = listOf("{not json", "{\"title\": 123, \"dateText\": [1]}", "null")
+    badPayloads.forEachIndexed { i, payload ->
+      dao.insertOutboxEntry(
+        SyncOutboxEntity(entityType = MemorySyncAdapter.entityType, syncId = "bad-$i", operation = "UPSERT", payloadJson = payload)
+      )
+    }
+
+    val pushed = mutableListOf<String>()
+    val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { true }))
+      .build()
+
+    val result = worker.doWork()
+
+    assert(result is ListenableWorker.Result.Success) { "unpushable payloads must not force a retry" }
+    assert(pushed.isEmpty()) { "push must not be called for a bad payload, got $pushed" }
+    val remaining = dao.getPendingOutboxEntries(limit = 100)
+    assert(remaining.size == badPayloads.size) { "parked rows must stay in the outbox" }
+    assert(remaining.all { it.attemptCount == 0 && it.lastError == null }) { "parked rows are not failed attempts" }
+    db.close()
+  }
+
+  @Test
+  fun doWork_memoryWithNullRelationshipId_isParkedAndKept() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val dao = db.inLoveDao()
+    val memory = SharedMemoryEntity(
+      title = "x", dateText = "2026-01-01", photoUri = "file:///a.jpg",
+      relationshipId = null, syncId = "no-rel", updatedAt = 1L, pendingSync = true
+    )
+    dao.insertOutboxEntry(
+      outboxFor(MemorySyncAdapter.entityType, "no-rel", "UPSERT", SyncWorker.moshiAdapterFor<SharedMemoryEntity>().toJson(memory))
+    )
+
+    val pushed = mutableListOf<String>()
+    val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { true }))
+      .build()
+
+    val result = worker.doWork()
+
+    assert(result is ListenableWorker.Result.Success)
+    assert(pushed.isEmpty())
+    val row = dao.getPendingOutboxEntries(limit = 100).single()
+    assert(row.attemptCount == 0 && row.lastError == null)
+    db.close()
+  }
+
+  @Test
+  fun doWork_unknownEntityType_isParkedAndKept_andGoodRowAfterItIsPushed() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val dao = db.inLoveDao()
+    dao.insertOutboxEntry(outboxFor("alien_type", "alien-1", "UPSERT", "{}"))
+    enqueueMemories(dao, count = 1)
+
+    val pushed = mutableListOf<String>()
+    val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { true }))
+      .build()
+
+    val result = worker.doWork()
+
+    assert(result is ListenableWorker.Result.Success)
+    assert(pushed == listOf("relationships/rel_1/memories/sync-0")) { "the good row must go out, got $pushed" }
+    val remaining = dao.getPendingOutboxEntries(limit = 100)
+    assert(remaining.map { it.syncId } == listOf("alien-1")) { "only the unknown-type row may stay" }
+    assert(remaining.single().attemptCount == 0)
+    db.close()
+  }
+
+  @Test
+  fun doWork_endedRelationship_isParkedAndKept_thenPushedOnceActive() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val dao = db.inLoveDao()
+    enqueueMemories(dao, count = 1)
+    val pushed = mutableListOf<String>()
+    val factory = SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { true })
+
+    for (status in listOf(RelationshipStatus.TERMINATED, RelationshipStatus.PENDING_BREAKUP)) {
+      dao.insertOnlineRelationship(OnlineRelationshipEntity(relationshipId = "rel_1", user1 = "u1", user2 = "u2", startDate = 1L, status = status))
+      val result = TestListenableWorkerBuilder<SyncWorker>(context).setWorkerFactory(factory).build().doWork()
+      assert(result is ListenableWorker.Result.Success) { "$status: a parked row is not a failure" }
+      assert(pushed.isEmpty()) { "$status: nothing may be pushed, got $pushed" }
+      val row = dao.getPendingOutboxEntries(limit = 100).single()
+      assert(row.attemptCount == 0 && row.lastError == null) { "$status: the row must be kept untouched" }
+    }
+
+    dao.insertOnlineRelationship(OnlineRelationshipEntity(relationshipId = "rel_1", user1 = "u1", user2 = "u2", startDate = 1L, status = RelationshipStatus.ACTIVE))
+    val result = TestListenableWorkerBuilder<SyncWorker>(context).setWorkerFactory(factory).build().doWork()
+
+    assert(result is ListenableWorker.Result.Success)
+    assert(pushed == listOf("relationships/rel_1/memories/sync-0")) { "the row must go out once ACTIVE, got $pushed" }
+    assert(dao.getPendingOutboxEntries(limit = 100).isEmpty()) { "the pushed row must be removed" }
+    db.close()
+  }
+
+  @Test
+  fun doWork_cancellationFromPush_isRethrown_andRowIsNotMarkedFailed() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+      .allowMainThreadQueries().build()
+    val dao = db.inLoveDao()
+    enqueueMemories(dao, count = 1)
+
+    val worker = TestListenableWorkerBuilder<SyncWorker>(context)
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { _, _ -> throw CancellationException("stopped") }, cloudContent = { true }))
+      .build()
+
+    var rethrown = false
+    try {
+      worker.doWork()
+    } catch (e: CancellationException) {
+      rethrown = true
+    }
+
+    assert(rethrown) { "CancellationException must escape doWork, not be swallowed as a failed row" }
+    val row = dao.getPendingOutboxEntries(limit = 100).single()
+    assert(row.attemptCount == 0 && row.lastError == null) { "a cancelled push is not a failed attempt" }
     db.close()
   }
 
@@ -115,7 +274,7 @@ class SyncWorkerTest {
 
     val pushed = mutableListOf<String>()
     val worker = TestListenableWorkerBuilder<SyncWorker>(context)
-      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }))
+      .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ -> pushed += path }, cloudContent = { true }))
       .build()
 
     val result = worker.doWork()
@@ -139,7 +298,7 @@ class SyncWorkerTest {
       .setWorkerFactory(SyncWorkerFactory(dao, fakeFirestorePush = { path, _ ->
         if (path.endsWith("/sync-3")) error("network down for sync-3")
         pushed += path
-      }))
+      }, cloudContent = { true }))
       .build()
 
     val result = worker.doWork()
@@ -166,7 +325,7 @@ class SyncWorkerTest {
         pushed += path
         // Another account takes the device while this write is in flight.
         if (path.endsWith("/sync-0")) com.example.data.db.AccountDataVault.epoch.incrementAndGet()
-      }))
+      }, cloudContent = { true }))
       .build()
 
     val result = worker.doWork()

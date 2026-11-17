@@ -17,7 +17,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,7 +38,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.WorkspacePremium
 import kotlin.time.Duration.Companion.milliseconds
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -78,8 +76,11 @@ import com.example.billing.BillingManager
 import com.example.billing.PurchaseEvent
 import com.example.billing.findBestOffer
 import com.example.billing.toPlanOffer
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.disabledLook
 import com.example.ui.components.pressClickable
 import com.example.ui.theme.MinTouchBox
+import com.example.ui.theme.Primary
 
 // ─── Nội dung chọn gói ───────────────────────────────────────────────────────
 private enum class PaywallPlan { YEARLY, MONTHLY, LIFETIME }
@@ -522,48 +523,20 @@ internal fun PaywallFooter(
         )
 
         // ── Nút CTA chính ─────────────────────────────────────────────────
-        Button(
-            onClick = onPurchase,
-            enabled = canPurchase,
+        PrimaryGradientButton(
+            text = ctaText,
+            onClick = { if (canPurchase) onPurchase() },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = MinTouchBox)
-                .testTag("paywall_cta"),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            contentPadding = PaddingValues(0.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = MinTouchBox)
-                    .graphicsLayer { alpha = if (canPurchase) 1f else 0.5f }
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(Color(0xFFFF2D75), Color(0xFFE91E63))
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = ctaText,
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.3.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
+                .disabledLook(canPurchase),
+            testTag = "paywall_cta"
+        )
 
         if (priceUnavailable) {
             TextButton(
                 onClick = onRetryPrices,
+                colors = ButtonDefaults.textButtonColors(contentColor = Primary),
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = MinTouchBox)
@@ -571,9 +544,8 @@ internal fun PaywallFooter(
             ) {
                 Text(
                     text = stringResource(R.string.paywall_connecting),
-                    color = Color(0xFFE91E63),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
             }
@@ -586,27 +558,28 @@ internal fun PaywallFooter(
             // ── Nút Khôi phục gói mua — BẮT BUỘC theo Google Play Policy ────
             TextButton(
                 onClick = onRestore,
+                colors = ButtonDefaults.textButtonColors(contentColor = Primary),
                 modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
             ) {
                 if (isRestoring) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
-                        color = Color(0xFFE91E63),
+                        color = Primary,
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text(
                     text = stringResource(R.string.paywall_btn_restore),
-                    color = Color(0xFFE91E63),
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
             }
             // Nút Quản Lý & Hủy Gói Thuê Bao Trực Tiếp trên Google Play (Google Play Policy Bắt Buộc)
             TextButton(
                 onClick = onManage,
+                colors = ButtonDefaults.textButtonColors(contentColor = Primary),
                 modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
             ) {
                 Icon(
@@ -618,8 +591,7 @@ internal fun PaywallFooter(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = stringResource(R.string.paywall_btn_manage),
-                    color = Color(0xFF8A2E5B),
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )

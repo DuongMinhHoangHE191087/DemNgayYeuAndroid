@@ -18,7 +18,8 @@ const NAME = 'acceptCoupleInvite';
 const keyOf = (name, uid, nowMs) => `mediaQuota/rl_${name}_${uid}_${Math.floor(nowMs / cfg.rateLimits[name].windowMs)}`;
 const exhausted = { code: 'resource-exhausted' };
 const INDEX_SRC = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
-const HANDLERS = ['acceptCoupleInvite', 'requestAccountDeletion', 'signMemoryUpload', 'confirmMemoryUpload', 'getMemoryMediaUrl'];
+const ENTITLEMENT_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'entitlement', 'index.js'), 'utf8');
+const HANDLERS = ['acceptCoupleInvite', 'requestAccountDeletion', 'signMemoryUpload', 'confirmMemoryUpload', 'getMemoryMediaUrl', 'signAvatarUpload'];
 
 // Gọi enforce đúng n lần, tuần tự.
 async function callN(enforce, args, n) {
@@ -130,19 +131,21 @@ test('10. fail-closed khi commit lỗi: reject đúng lỗi đã inject, dữ li
   assert.equal(db.writes, writes);
 });
 
-test('11. tĩnh: mỗi callable onCall trong index.js gọi limit ngay sau requireUid, và khớp cfg.rateLimits', () => {
-  const found = [...INDEX_SRC.matchAll(/^exports\.(\w+) = onCall\(/gm)];
-  assert.ok(found.length > 0, 'không tìm thấy callable nào');
+test('11. tĩnh: mỗi callable onCall trong index.js và src/entitlement/index.js gọi limit ngay sau requireUid, và khớp cfg.rateLimits', () => {
   const names = [];
-  found.forEach((m, i) => {
-    const name = m[1];
-    names.push(name);
-    const end = i + 1 < found.length ? found[i + 1].index : INDEX_SRC.length;
-    const body = INDEX_SRC.slice(m.index, end);
-    const re = new RegExp(`async \\(request\\) => \\{\\r?\\n\\s*const uid = requireUid\\(request\\);\\r?\\n\\s*await limit\\('${name}', uid\\);`);
-    assert.match(body, re, `${name}: thiếu await limit('${name}', uid); ngay sau requireUid`);
-    assert.ok(cfg.rateLimits?.[name], `${name}: thiếu trong cfg.rateLimits`);
-  });
+  for (const src of [INDEX_SRC, ENTITLEMENT_SRC]) {
+    const found = [...src.matchAll(/^exports\.(\w+) = onCall\(/gm)];
+    assert.ok(found.length > 0, 'không tìm thấy callable nào');
+    found.forEach((m, i) => {
+      const name = m[1];
+      names.push(name);
+      const end = i + 1 < found.length ? found[i + 1].index : src.length;
+      const body = src.slice(m.index, end);
+      const re = new RegExp(`async \\(request\\) => \\{\\r?\\n\\s*const uid = requireUid\\(request\\);\\r?\\n\\s*await limit\\('${name}', uid\\);`);
+      assert.match(body, re, `${name}: thiếu await limit('${name}', uid); ngay sau requireUid`);
+      assert.ok(cfg.rateLimits?.[name], `${name}: thiếu trong cfg.rateLimits`);
+    });
+  }
   assert.deepEqual(Object.keys(cfg.rateLimits ?? {}).sort(), [...names].sort());
 });
 
@@ -163,13 +166,16 @@ test('12. wiring: index.js gọi rateLimit.enforce đúng db/uid/name/nowMs, tr�
     'firebase-functions/v2/scheduler': { onSchedule: noop },
     'firebase-functions/params': { defineSecret: secret, defineString: secret },
     'firebase-functions/logger': { info() {} },
-    cloudinary: {},
     './src/config': cfg,
     './src/policy': rec('policy'),
     './src/media': rec('media'),
     './src/pairing': rec('pairing'),
     './src/accountDeletion': rec('accountDeletion'),
-    './src/cloudinary': { createCloudinary: () => ({}) },
+    './src/avatar': rec('avatar'),
+    './src/objectStore': { createObjectStore: () => ({}) },
+    './src/entitlement': {},
+    './src/entitlement/options': { STORE_SECRETS: [] },
+    './src/entitlement/runtime': rec('entitlementRuntime'),
     './src/rateLimit': { enforce: async (args) => { enforceCalls.push(args); throw SENTINEL; } },
   };
   const fakeRequire = (id) => {
@@ -186,7 +192,7 @@ test('12. wiring: index.js gọi rateLimit.enforce đúng db/uid/name/nowMs, tr�
       calls.length = 0;
       enforceCalls.length = 0;
       await assert.rejects(exp[name]({ auth: { uid }, data: {} }), (e) => e === SENTINEL);
-      assert.deepEqual(calls, [], `${name}/${uid}: module nghiệp vụ bị gọi trước khi limit chặn`);
+      assert.deepEqual(calls, [], `${name}/${uid}: module nghiệp vụ hoặc gateFor (entitlementRuntime) bị gọi trước khi limit chặn`);
       assert.equal(enforceCalls.length, 1, `${name}/${uid}: enforce phải được gọi đúng 1 lần`);
       const arg = enforceCalls[0];
       assert.equal(arg.db, fakeDb);

@@ -41,6 +41,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
           Log.d(TAG, "Rescheduling all anniversary alarms from Room DB ($action)...")
           val dao = AppDatabase.getDatabase(context).inLoveDao()
           AlarmNotificationScheduler.scheduleAllAnniversariesFromDb(context, dao)
+          LoveAnniversaryMilestoneScheduler.rearmFromBootCopy(context, dao)
         } catch (e: Exception) {
           Log.e(TAG, "Error rescheduling alarms on boot: ${e.message}", e)
         } finally {

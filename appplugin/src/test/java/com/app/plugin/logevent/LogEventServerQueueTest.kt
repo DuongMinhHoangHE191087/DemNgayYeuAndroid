@@ -185,7 +185,7 @@ class LogEventServerQueueTest {
      * và đọc đúng một lần mỗi event (hợp đồng nguồn; JMM không quan sát được bằng test hành vi).
      */
     @Test fun `endpoint volatile va sendEvent doc mot lan`() {
-        val src = java.io.File("src/main/java/com/app/plugin/logevent/LogEventTransport.kt").readText()
+        val src = java.io.File("src/main/java/com/app/plugin/logevent/LogEventTransport.kt").readText().replace("\r\n", "\n") // checkout CRLF (autocrlf) không làm lệch "\n    }\n" bên dưới
         val lines = src.lines()
         val decl = lines.indexOfFirst { it.trim() == "private var endpoint: String? = null" }
         assertTrue("endpoint phải là `@Volatile private var endpoint: String? = null` (decl=$decl)",

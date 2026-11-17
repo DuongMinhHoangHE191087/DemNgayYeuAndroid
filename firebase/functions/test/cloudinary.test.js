@@ -90,6 +90,31 @@ test('deliveryUrl (token): đường dẫn đúng, không có chữ ký s--, tok
   assert.equal(match[2], expected);
 });
 
+// Oracle HMAC: token ký đúng đường dẫn cuối cùng (kể cả đoạn biến đổi f_jpg), nên URL phải còn hợp lệ.
+function assertTokenMatchesPath(url) {
+  const match = /^exp=(\d+)~hmac=([0-9a-f]{64})$/.exec(url.searchParams.get('__cld_token__') ?? '');
+  assert.ok(match, 'thiếu token');
+  const expected = crypto.createHmac('sha256', Buffer.from(TOKEN_KEY, 'hex'))
+    .update(`exp=${match[1]}~url=${url.pathname.replace(/\//g, '%2f')}`)
+    .digest('hex');
+  assert.equal(match[2], expected);
+}
+
+test('deliveryUrl_heic_hasFetchFormatJpgAndTokenStillValid: heic IMAGE được chuyển sang jpg và token ký đúng đường dẫn mới', () => {
+  const url = new URL(make().deliveryUrl(PUBLIC_ID, 'IMAGE', 900, 'heic'));
+  assert.equal(url.pathname, `/${CLOUD}/image/authenticated/f_jpg/${PUBLIC_ID}`);
+  assertTokenMatchesPath(url);
+});
+
+test('deliveryUrl_jpg_hasNoFetchFormat: jpg, VIDEO hoặc không có format thì URL không đổi', () => {
+  for (const [kind, format] of [['IMAGE', 'jpg'], ['IMAGE', undefined], ['VIDEO', 'heic'], ['VIDEO', 'mp4']]) {
+    const url = new URL(make().deliveryUrl(PUBLIC_ID, kind, 900, format));
+    assert.doesNotMatch(url.pathname, /f_jpg/, `${kind}/${format}`);
+    assert.equal(url.pathname, `/${CLOUD}/${kind === 'IMAGE' ? 'image' : 'video'}/authenticated/${PUBLIC_ID}`);
+    assertTokenMatchesPath(url);
+  }
+});
+
 test('createCloudinary: từ chối cấu hình thiếu hoặc sai; cấu hình đủ thì được nhận', () => {
   assert.throws(() => make({ cloudName: '' }), /cloud name/);
   assert.throws(() => make({ apiSecret: undefined }), /API secret/);

@@ -1,0 +1,726 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "start-equals-now",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1718427600000,
+        "startText": null,
+        "startLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "minus-1ms",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1718427599999,
+        "startText": null,
+        "startLocal": "2024-06-15T11:59:59.999+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-24h",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1718341200000,
+        "startText": null,
+        "startLocal": "2024-06-14T12:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "24h-minus-1ms",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718470799999,
+        "nowLocal": "2024-06-15T23:59:59.999+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1718384400000,
+        "startText": null,
+        "startLocal": "2024-06-15T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "future-start-long-gives-0",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1718514000000,
+        "startText": null,
+        "startLocal": "2024-06-16T12:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 0
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank-string-gives-1",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "unparsable-string-gives-1",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "not-a-date",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "epoch-0",
+      "input": {
+        "zone": "UTC",
+        "nowMillis": 1718452800000,
+        "nowLocal": "2024-06-15T12:00Z[UTC]",
+        "startMillis": 0,
+        "startText": null,
+        "startLocal": "1970-01-01T00:00Z[UTC]"
+      },
+      "expected": {
+        "days": 19890
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-day-start",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1709269200000,
+        "nowLocal": "2024-03-01T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "29/02/2024",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-spring",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1710142200000,
+        "nowLocal": "2024-03-11T00:30-07:00[America/Los_Angeles]",
+        "startMillis": 1709971200000,
+        "startText": null,
+        "startLocal": "2024-03-09T00:00-08:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": {
+        "days": 2
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-fall",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1730705400000,
+        "nowLocal": "2024-11-03T23:30-08:00[America/Los_Angeles]",
+        "startMillis": 1730530800000,
+        "startText": null,
+        "startLocal": "2024-11-02T00:00-07:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": {
+        "days": 3
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-auckland-spring",
+      "input": {
+        "zone": "Pacific/Auckland",
+        "nowMillis": 1727609400000,
+        "nowLocal": "2024-09-30T00:30+13:00[Pacific/Auckland]",
+        "startMillis": 1727438400000,
+        "startText": null,
+        "startLocal": "2024-09-28T00:00+12:00[Pacific/Auckland]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": {
+        "days": 2
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-auckland-autumn",
+      "input": {
+        "zone": "Pacific/Auckland",
+        "nowMillis": 1712489400000,
+        "nowLocal": "2024-04-07T23:30+12:00[Pacific/Auckland]",
+        "startMillis": 1712314800000,
+        "startText": null,
+        "startLocal": "2024-04-06T00:00+13:00[Pacific/Auckland]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": {
+        "days": 3
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "ho-chi-minh-plain",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "01/01/2024",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 167
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-spring-outside-ghost-hour-agrees",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1710183600000,
+        "nowLocal": "2024-03-11T12:00-07:00[America/Los_Angeles]",
+        "startMillis": 1709971200000,
+        "startText": null,
+        "startLocal": "2024-03-09T00:00-08:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-spring-start-on-transition-day",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1710142200000,
+        "nowLocal": "2024-03-11T00:30-07:00[America/Los_Angeles]",
+        "startMillis": 1710057600000,
+        "startText": null,
+        "startLocal": "2024-03-10T00:00-08:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": {
+        "days": 1
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-spring-same-day-agrees",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1710136800000,
+        "nowLocal": "2024-03-10T23:00-07:00[America/Los_Angeles]",
+        "startMillis": 1710057600000,
+        "startText": null,
+        "startLocal": "2024-03-10T00:00-08:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-fall-outside-ghost-hour-agrees",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1730664000000,
+        "nowLocal": "2024-11-03T12:00-08:00[America/Los_Angeles]",
+        "startMillis": 1730530800000,
+        "startText": null,
+        "startLocal": "2024-11-02T00:00-07:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-fall-start-on-transition-day",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1730705400000,
+        "nowLocal": "2024-11-03T23:30-08:00[America/Los_Angeles]",
+        "startMillis": 1730617200000,
+        "startText": null,
+        "startLocal": "2024-11-03T00:00-07:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": {
+        "days": 2
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-los-angeles-fall-same-day-agrees",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1730664000000,
+        "nowLocal": "2024-11-03T12:00-08:00[America/Los_Angeles]",
+        "startMillis": 1730617200000,
+        "startText": null,
+        "startLocal": "2024-11-03T00:00-07:00[America/Los_Angeles]"
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-dst-day-los-angeles",
+      "input": {
+        "zone": "America/Los_Angeles",
+        "nowMillis": 1710142200000,
+        "nowLocal": "2024-03-11T00:30-07:00[America/Los_Angeles]",
+        "startMillis": null,
+        "startText": "10/03/2024",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": {
+        "days": 1
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-auckland-spring-outside-ghost-hour-agrees",
+      "input": {
+        "zone": "Pacific/Auckland",
+        "nowMillis": 1727650800000,
+        "nowLocal": "2024-09-30T12:00+13:00[Pacific/Auckland]",
+        "startMillis": 1727438400000,
+        "startText": null,
+        "startLocal": "2024-09-28T00:00+12:00[Pacific/Auckland]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-auckland-autumn-outside-ghost-hour-agrees",
+      "input": {
+        "zone": "Pacific/Auckland",
+        "nowMillis": 1712448000000,
+        "nowLocal": "2024-04-07T12:00+12:00[Pacific/Auckland]",
+        "startMillis": 1712314800000,
+        "startText": null,
+        "startLocal": "2024-04-06T00:00+13:00[Pacific/Auckland]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-london-spring-ghost-hour",
+      "input": {
+        "zone": "Europe/London",
+        "nowMillis": 1711927800000,
+        "nowLocal": "2024-04-01T00:30+01:00[Europe/London]",
+        "startMillis": 1711756800000,
+        "startText": null,
+        "startLocal": "2024-03-30T00:00Z[Europe/London]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": {
+        "days": 2
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-london-autumn-ghost-hour",
+      "input": {
+        "zone": "Europe/London",
+        "nowMillis": 1730071800000,
+        "nowLocal": "2024-10-27T23:30Z[Europe/London]",
+        "startMillis": 1729897200000,
+        "startText": null,
+        "startLocal": "2024-10-26T00:00+01:00[Europe/London]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": {
+        "days": 3
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-london-spring-outside-ghost-hour-agrees",
+      "input": {
+        "zone": "Europe/London",
+        "nowMillis": 1711969200000,
+        "nowLocal": "2024-04-01T12:00+01:00[Europe/London]",
+        "startMillis": 1711756800000,
+        "startText": null,
+        "startLocal": "2024-03-30T00:00Z[Europe/London]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-lord-howe-spring-half-hour",
+      "input": {
+        "zone": "Australia/Lord_Howe",
+        "nowMillis": 1728220200000,
+        "nowLocal": "2024-10-07T00:10+11:00[Australia/Lord_Howe]",
+        "startMillis": 1728048600000,
+        "startText": null,
+        "startLocal": "2024-10-05T00:00+10:30[Australia/Lord_Howe]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": {
+        "days": 2
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-lord-howe-autumn-half-hour",
+      "input": {
+        "zone": "Australia/Lord_Howe",
+        "nowMillis": 1712495700000,
+        "nowLocal": "2024-04-07T23:45+10:30[Australia/Lord_Howe]",
+        "startMillis": 1712322000000,
+        "startText": null,
+        "startLocal": "2024-04-06T00:00+11:00[Australia/Lord_Howe]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": {
+        "days": 3
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-lord-howe-spring-outside-half-hour-agrees",
+      "input": {
+        "zone": "Australia/Lord_Howe",
+        "nowMillis": 1728262800000,
+        "nowLocal": "2024-10-07T12:00+11:00[Australia/Lord_Howe]",
+        "startMillis": 1728048600000,
+        "startText": null,
+        "startLocal": "2024-10-05T00:00+10:30[Australia/Lord_Howe]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-2024-feb28-to-feb29",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1709182800000,
+        "nowLocal": "2024-02-29T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1709053200000,
+        "startText": null,
+        "startLocal": "2024-02-28T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-2024-feb28-to-mar01",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1709269200000,
+        "nowLocal": "2024-03-01T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1709053200000,
+        "startText": null,
+        "startLocal": "2024-02-28T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 3
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "non-leap-2023-feb28-to-mar01",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1677646800000,
+        "nowLocal": "2023-03-01T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1677517200000,
+        "startText": null,
+        "startLocal": "2023-02-28T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-2028-feb29-to-mar01",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1835499600000,
+        "nowLocal": "2028-03-01T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1835370000000,
+        "startText": null,
+        "startLocal": "2028-02-29T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-2028-feb29-to-next-feb28",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1866949200000,
+        "nowLocal": "2029-02-28T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1835370000000,
+        "startText": null,
+        "startLocal": "2028-02-29T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 366
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cross-year-dec31-to-jan01",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1704085200000,
+        "nowLocal": "2024-01-01T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1703955600000,
+        "startText": null,
+        "startLocal": "2023-12-31T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cross-year-jan01-to-dec31-leap",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1735621200000,
+        "nowLocal": "2024-12-31T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": 1704042000000,
+        "startText": null,
+        "startLocal": "2024-01-01T00:00+07:00[Asia/Ho_Chi_Minh]"
+      },
+      "expected": {
+        "days": 366
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-lenient-rejected-31-feb",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "31/02/2024",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-padded",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718514000000,
+        "nowLocal": "2024-06-16T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "  15/06/2024  ",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 2
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-iso-format-gives-1",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "2024-06-15",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 1
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-single-digit-day-month",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "1/2/2024",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 136
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-future-gives-0",
+      "input": {
+        "zone": "Asia/Ho_Chi_Minh",
+        "nowMillis": 1718427600000,
+        "nowLocal": "2024-06-15T12:00+07:00[Asia/Ho_Chi_Minh]",
+        "startMillis": null,
+        "startText": "01/01/2099",
+        "startLocal": null
+      },
+      "expected": {
+        "days": 0
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

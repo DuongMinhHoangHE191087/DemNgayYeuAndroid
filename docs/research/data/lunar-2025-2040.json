@@ -1,0 +1,1860 @@
+{
+ "vn": {
+  "tet": {
+   "2025": "2025-01-29",
+   "2026": "2026-02-17",
+   "2027": "2027-02-06",
+   "2028": "2028-01-26",
+   "2029": "2029-02-13",
+   "2030": "2030-02-02",
+   "2031": "2031-01-23",
+   "2032": "2032-02-11",
+   "2033": "2033-01-31",
+   "2034": "2034-02-19",
+   "2035": "2035-02-08",
+   "2036": "2036-01-28",
+   "2037": "2037-02-15",
+   "2038": "2038-02-04",
+   "2039": "2039-01-24",
+   "2040": "2040-02-12"
+  },
+  "ram_thang_gieng": {
+   "2025": "2025-02-12",
+   "2026": "2026-03-03",
+   "2027": "2027-02-20",
+   "2028": "2028-02-09",
+   "2029": "2029-02-27",
+   "2030": "2030-02-16",
+   "2031": "2031-02-06",
+   "2032": "2032-02-25",
+   "2033": "2033-02-14",
+   "2034": "2034-03-05",
+   "2035": "2035-02-22",
+   "2036": "2036-02-11",
+   "2037": "2037-03-01",
+   "2038": "2038-02-18",
+   "2039": "2039-02-07",
+   "2040": "2040-02-26"
+  },
+  "gio_to": {
+   "2025": "2025-04-07",
+   "2026": "2026-04-26",
+   "2027": "2027-04-16",
+   "2028": "2028-04-04",
+   "2029": "2029-04-23",
+   "2030": "2030-04-12",
+   "2031": "2031-04-01",
+   "2032": "2032-04-19",
+   "2033": "2033-04-09",
+   "2034": "2034-04-28",
+   "2035": "2035-04-17",
+   "2036": "2036-04-06",
+   "2037": "2037-04-24",
+   "2038": "2038-04-13",
+   "2039": "2039-04-03",
+   "2040": "2040-04-20"
+  },
+  "doan_ngo": {
+   "2025": "2025-05-31",
+   "2026": "2026-06-19",
+   "2027": "2027-06-09",
+   "2028": "2028-05-28",
+   "2029": "2029-06-16",
+   "2030": "2030-06-05",
+   "2031": "2031-06-24",
+   "2032": "2032-06-12",
+   "2033": "2033-06-01",
+   "2034": "2034-06-20",
+   "2035": "2035-06-10",
+   "2036": "2036-05-30",
+   "2037": "2037-06-18",
+   "2038": "2038-06-07",
+   "2039": "2039-05-27",
+   "2040": "2040-06-14"
+  },
+  "that_tich": {
+   "2025": "2025-08-29",
+   "2026": "2026-08-19",
+   "2027": "2027-08-08",
+   "2028": "2028-08-26",
+   "2029": "2029-08-16",
+   "2030": "2030-08-05",
+   "2031": "2031-08-24",
+   "2032": "2032-08-12",
+   "2033": "2033-08-01",
+   "2034": "2034-08-20",
+   "2035": "2035-08-10",
+   "2036": "2036-08-28",
+   "2037": "2037-08-17",
+   "2038": "2038-08-07",
+   "2039": "2039-08-26",
+   "2040": "2040-08-14"
+  },
+  "vu_lan": {
+   "2025": "2025-09-06",
+   "2026": "2026-08-27",
+   "2027": "2027-08-16",
+   "2028": "2028-09-03",
+   "2029": "2029-08-24",
+   "2030": "2030-08-13",
+   "2031": "2031-09-01",
+   "2032": "2032-08-20",
+   "2033": "2033-08-09",
+   "2034": "2034-08-28",
+   "2035": "2035-08-18",
+   "2036": "2036-09-05",
+   "2037": "2037-08-25",
+   "2038": "2038-08-15",
+   "2039": "2039-09-03",
+   "2040": "2040-08-22"
+  },
+  "trung_thu": {
+   "2025": "2025-10-06",
+   "2026": "2026-09-25",
+   "2027": "2027-09-15",
+   "2028": "2028-10-03",
+   "2029": "2029-09-22",
+   "2030": "2030-09-12",
+   "2031": "2031-10-01",
+   "2032": "2032-09-19",
+   "2033": "2033-09-08",
+   "2034": "2034-09-26",
+   "2035": "2035-09-16",
+   "2036": "2036-10-04",
+   "2037": "2037-09-24",
+   "2038": "2038-09-13",
+   "2039": "2039-10-02",
+   "2040": "2040-09-20"
+  },
+  "chap23_ong_tao": {
+   "2025": "2025-01-22",
+   "2026": "2026-02-10",
+   "2027": "2027-01-30",
+   "2028": "2028-01-19",
+   "2029": "2029-02-06",
+   "2030": "2030-01-26",
+   "2031": "2031-01-16",
+   "2032": "2032-02-04",
+   "2033": "2033-01-23",
+   "2034": "2034-02-11",
+   "2035": "2035-01-31",
+   "2036": "2036-01-20",
+   "2037": "2037-02-07",
+   "2038": "2038-01-27",
+   "2039": "2039-01-17",
+   "2040": "2040-02-05"
+  }
+ },
+ "cn": {
+  "lny": {
+   "2025": "2025-01-29",
+   "2026": "2026-02-17",
+   "2027": "2027-02-06",
+   "2028": "2028-01-26",
+   "2029": "2029-02-13",
+   "2030": "2030-02-03",
+   "2031": "2031-01-23",
+   "2032": "2032-02-11",
+   "2033": "2033-01-31",
+   "2034": "2034-02-19",
+   "2035": "2035-02-08",
+   "2036": "2036-01-28",
+   "2037": "2037-02-15",
+   "2038": "2038-02-04",
+   "2039": "2039-01-24",
+   "2040": "2040-02-12"
+  },
+  "lantern": {
+   "2025": "2025-02-12",
+   "2026": "2026-03-03",
+   "2027": "2027-02-20",
+   "2028": "2028-02-09",
+   "2029": "2029-02-27",
+   "2030": "2030-02-17",
+   "2031": "2031-02-06",
+   "2032": "2032-02-25",
+   "2033": "2033-02-14",
+   "2034": "2034-03-05",
+   "2035": "2035-02-22",
+   "2036": "2036-02-11",
+   "2037": "2037-03-01",
+   "2038": "2038-02-18",
+   "2039": "2039-02-07",
+   "2040": "2040-02-26"
+  },
+  "qixi": {
+   "2025": "2025-08-29",
+   "2026": "2026-08-19",
+   "2027": "2027-08-08",
+   "2028": "2028-08-26",
+   "2029": "2029-08-16",
+   "2030": "2030-08-05",
+   "2031": "2031-08-24",
+   "2032": "2032-08-12",
+   "2033": "2033-08-01",
+   "2034": "2034-08-20",
+   "2035": "2035-08-10",
+   "2036": "2036-08-28",
+   "2037": "2037-08-17",
+   "2038": "2038-08-07",
+   "2039": "2039-08-26",
+   "2040": "2040-08-14"
+  },
+  "mid_autumn": {
+   "2025": "2025-10-06",
+   "2026": "2026-09-25",
+   "2027": "2027-09-15",
+   "2028": "2028-10-03",
+   "2029": "2029-09-22",
+   "2030": "2030-09-12",
+   "2031": "2031-10-01",
+   "2032": "2032-09-19",
+   "2033": "2033-09-08",
+   "2034": "2034-09-27",
+   "2035": "2035-09-16",
+   "2036": "2036-10-04",
+   "2037": "2037-09-24",
+   "2038": "2038-09-13",
+   "2039": "2039-10-02",
+   "2040": "2040-09-20"
+  },
+  "double_ninth": {
+   "2025": "2025-10-29",
+   "2026": "2026-10-18",
+   "2027": "2027-10-08",
+   "2028": "2028-10-26",
+   "2029": "2029-10-16",
+   "2030": "2030-10-05",
+   "2031": "2031-10-24",
+   "2032": "2032-10-12",
+   "2033": "2033-10-01",
+   "2034": "2034-10-20",
+   "2035": "2035-10-09",
+   "2036": "2036-10-27",
+   "2037": "2037-10-17",
+   "2038": "2038-10-07",
+   "2039": "2039-10-26",
+   "2040": "2040-10-14"
+  },
+  "chap23": {
+   "2025": "2025-01-22",
+   "2026": "2026-02-10",
+   "2027": "2027-01-30",
+   "2028": "2028-01-19",
+   "2029": "2029-02-06",
+   "2030": "2030-01-26",
+   "2031": "2031-01-16",
+   "2032": "2032-02-04",
+   "2033": "2033-01-23",
+   "2034": "2034-02-11",
+   "2035": "2035-01-31",
+   "2036": "2036-01-20",
+   "2037": "2037-02-07",
+   "2038": "2038-01-27",
+   "2039": "2039-01-17",
+   "2040": "2040-02-05"
+  }
+ },
+ "diffVnCn": [
+  {
+   "year": 2030,
+   "occasion": "tet",
+   "vn": "2030-02-02",
+   "cn": "2030-02-03"
+  },
+  {
+   "year": 2030,
+   "occasion": "ram_thang_gieng",
+   "vn": "2030-02-16",
+   "cn": "2030-02-17"
+  },
+  {
+   "year": 2034,
+   "occasion": "trung_thu",
+   "vn": "2034-09-26",
+   "cn": "2034-09-27"
+  },
+  {
+   "year": 2037,
+   "occasion": "gio_to",
+   "vn": "2037-04-24",
+   "cn": "2037-04-25"
+  },
+  {
+   "year": 2038,
+   "occasion": "gio_to",
+   "vn": "2038-04-13",
+   "cn": "2038-04-14"
+  }
+ ],
+ "diffVnKr": [
+  {
+   "year": 2027,
+   "occasion": "tet",
+   "vn": "2027-02-06",
+   "kr": "2027-02-07"
+  },
+  {
+   "year": 2027,
+   "occasion": "ram_thang_gieng",
+   "vn": "2027-02-20",
+   "kr": "2027-02-21"
+  },
+  {
+   "year": 2028,
+   "occasion": "tet",
+   "vn": "2028-01-26",
+   "kr": "2028-01-27"
+  },
+  {
+   "year": 2028,
+   "occasion": "ram_thang_gieng",
+   "vn": "2028-02-09",
+   "kr": "2028-02-10"
+  },
+  {
+   "year": 2030,
+   "occasion": "tet",
+   "vn": "2030-02-02",
+   "kr": "2030-02-03"
+  },
+  {
+   "year": 2030,
+   "occasion": "ram_thang_gieng",
+   "vn": "2030-02-16",
+   "kr": "2030-02-17"
+  },
+  {
+   "year": 2034,
+   "occasion": "trung_thu",
+   "vn": "2034-09-26",
+   "kr": "2034-09-27"
+  },
+  {
+   "year": 2037,
+   "occasion": "gio_to",
+   "vn": "2037-04-24",
+   "kr": "2037-04-25"
+  },
+  {
+   "year": 2038,
+   "occasion": "gio_to",
+   "vn": "2038-04-13",
+   "kr": "2038-04-14"
+  },
+  {
+   "year": 2040,
+   "occasion": "trung_thu",
+   "vn": "2040-09-20",
+   "kr": "2040-09-21"
+  }
+ ],
+ "repoMatch": "14/15",
+ "leapMonths": {
+  "vn": {
+   "2025": 6,
+   "2028": 5,
+   "2031": 3,
+   "2034": 11,
+   "2036": 6,
+   "2039": 5
+  },
+  "cn": {
+   "2025": 6,
+   "2028": 5,
+   "2031": 3,
+   "2034": 11,
+   "2036": 6,
+   "2039": 5
+  }
+ },
+ "confidence": {
+  "vn": {
+   "tet": {
+    "2025": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY",
+      "repo-table"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia CNY",
+      "repo-table"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "baolamdong.vn",
+      "Wikipedia CNY",
+      "repo-table"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "baolamdong.vn",
+      "Wikipedia CNY",
+      "repo-table"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia CNY"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "ngaydep.com",
+      "baolamdong.vn"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia CNY"
+     ]
+    },
+    "2032": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2033": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2034": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2035": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2036": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2037": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "ram_thang_gieng": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "repo-table"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "baolamdong.vn"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "ngaydep.com",
+      "baolamdong.vn"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "gio_to": {
+    "2025": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "repo-table"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "repo-table"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "repo-table"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "repo-table"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "baolamdong.vn"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "baolamdong.vn"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "doan_ngo": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "that_tich": {
+    "2025": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "baolamdong.vn"
+     ]
+    },
+    "2026": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2027": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2028": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2029": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "vu_lan": {
+    "2025": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "baolamdong.vn",
+      "repo-table"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "repo-table"
+     ]
+    },
+    "2027": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2028": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2029": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "baolamdong.vn"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "trung_thu": {
+    "2025": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "repo-table"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia Mid-Autumn",
+      "repo-table"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia Mid-Autumn",
+      "repo-table"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "baolamdong.vn",
+      "Wikipedia Mid-Autumn"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia Mid-Autumn"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com",
+      "Wikipedia Mid-Autumn"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "baolamdong.vn"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "baolamdong.vn"
+     ]
+    }
+   },
+   "chap23_ong_tao": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2027": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2028": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2029": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   }
+  },
+  "cn": {
+   "lny": {
+    "2025": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY",
+      "ngaydep.com"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY",
+      "ngaydep.com"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY",
+      "ngaydep.com"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY",
+      "ngaydep.com"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2033": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2034": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2035": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2036": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2037": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia CNY"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "lantern": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "qixi": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2027": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2028": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2029": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "mid_autumn": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia Mid-Autumn",
+      "ngaydep.com"
+     ]
+    },
+    "2027": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia Mid-Autumn",
+      "ngaydep.com"
+     ]
+    },
+    "2028": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia Mid-Autumn",
+      "ngaydep.com"
+     ]
+    },
+    "2029": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia Mid-Autumn",
+      "ngaydep.com"
+     ]
+    },
+    "2030": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "Wikipedia Mid-Autumn",
+      "ngaydep.com"
+     ]
+    },
+    "2031": {
+     "status": "verified-2",
+     "sources": [
+      "HKO",
+      "ngaydep.com"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "double_ninth": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2027": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2028": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2029": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   },
+   "chap23": {
+    "2025": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2026": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2027": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2028": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2029": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2030": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2031": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2032": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2033": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2034": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2035": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2036": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2037": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2038": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2039": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    },
+    "2040": {
+     "status": "verified-1",
+     "sources": [
+      "HKO"
+     ]
+    }
+   }
+  }
+ },
+ "fragileNote": "Dates whose new-moon instant lies within ~10 min of local midnight: CN lny/lantern 2027 (new moon 2027-02-06 15:56 UTC), CN lny/lantern 2030 (2030-02-02 16:09 UTC). HKO agrees with algorithm on both.",
+ "sources": {
+  "HKO": "https://www.hko.gov.hk/en/gts/time/calendar/text/files/T<year>e.txt (2025-2040)",
+  "ngaydep.com": "https://ngaydep.com/<slug>-nam-<year>-la-ngay-nao-am-lich-va-duong-lich-con-bao-ngay.html (2026-2031 only)",
+  "baolamdong.vn": "https://baolamdong.vn/am-duong-lich-ngay-<d>-thang-<m>-nam-<y>.html (21 spot dates)",
+  "Wikipedia CNY": "https://en.wikipedia.org/wiki/Chinese_New_Year (2025-2037)",
+  "Wikipedia Mid-Autumn": "https://en.wikipedia.org/wiki/Mid-Autumn_Festival (2026-2030)"
+ }
+}

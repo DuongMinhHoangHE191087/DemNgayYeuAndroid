@@ -1,7 +1,6 @@
 package com.example.data.db
 
 import androidx.room.testing.MigrationTestHelper
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
@@ -18,7 +17,7 @@ class Migration13To14Test {
     InstrumentationRegistry.getInstrumentation(),
     AppDatabase::class.java,
     emptyList(),
-    FrameworkSQLiteOpenHelperFactory()
+    WindowsSafeOpenHelperFactory()
   )
 
   @Test

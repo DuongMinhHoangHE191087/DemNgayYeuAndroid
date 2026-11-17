@@ -59,7 +59,7 @@ async function relationshipsOf(db, uid) {
   return [...found.values()];
 }
 
-async function processAccountDeletion({ db, auth, purge, uid, nowMs }) {
+async function processAccountDeletion({ db, auth, purge, purgeAvatar = async () => {}, uid, nowMs }) {
   // 1. Mọi mối quan hệ: xoá kỷ niệm của uid rồi ngắt liên kết, giữ phần của đối phương.
   for (const rel of await relationshipsOf(db, uid)) {
     await deleteQuery(db, rel.ref.collection('memories').where('authorId', '==', uid));
@@ -75,12 +75,17 @@ async function processAccountDeletion({ db, auth, purge, uid, nowMs }) {
     await purge({ memoryId: doc.id, nowMs, shouldClaim: needsPurge, reason: 'account-deleted' });
   }
 
-  // 3. Lời mời, mã cặp đôi, kỷ niệm cũ ở cấp gốc, hồ sơ.
+  // 3. Lời mời, mã cặp đôi, kỷ niệm cũ ở cấp gốc, chặn/báo cáo (cả hai chiều), hồ sơ.
   await deleteQuery(db, db.collection('invites').where('senderUid', '==', uid));
   await deleteQuery(db, db.collection('invites').where('receiverUid', '==', uid));
   await deleteQuery(db, db.collection('invites').where('targetUid', '==', uid));
   await deleteQuery(db, db.collection('coupleCodes').where('ownerUid', '==', uid));
   await deleteQuery(db, db.collection('memories').where('authorUid', '==', uid));
+  await deleteQuery(db, db.collection('blockedUsers').where('blockerUid', '==', uid));
+  await deleteQuery(db, db.collection('blockedUsers').where('blockedUid', '==', uid));
+  await deleteQuery(db, db.collection('userReports').where('reporterUid', '==', uid));
+  await deleteQuery(db, db.collection('userReports').where('reportedUid', '==', uid));
+  await purgeAvatar(uid); // destroy idempotent (204/404) nên retry an toàn
   await db.collection('users').doc(uid).delete();
 
   // 4. Danh tính Auth đi cuối: nếu bước trước lỗi thì tài khoản còn, người dùng đăng nhập thử lại được.
@@ -94,11 +99,11 @@ async function processAccountDeletion({ db, auth, purge, uid, nowMs }) {
 }
 
 // Trigger gọi hàm này: chỉ chạy khi việc đang pending; lỗi thì ghi lastError và ném lại để Firebase retry.
-async function runJob({ db, auth, purge, uid, nowMs }) {
+async function runJob({ db, auth, purge, purgeAvatar, uid, nowMs }) {
   const snap = await jobRef(db, uid).get();
   if (!snap.exists || snap.get('state') !== 'pending') return;
   try {
-    await processAccountDeletion({ db, auth, purge, uid, nowMs });
+    await processAccountDeletion({ db, auth, purge, purgeAvatar, uid, nowMs });
   } catch (err) {
     const message = err?.message ?? String(err);
     await jobRef(db, uid).set({ lastError: message.slice(0, 500), lastErrorAt: nowMs }, { merge: true });

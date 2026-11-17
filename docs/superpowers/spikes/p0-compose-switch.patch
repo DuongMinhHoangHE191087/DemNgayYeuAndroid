@@ -1,0 +1,91 @@
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index dda2fcc..1d81996 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -13,7 +13,7 @@ plugins {
+ 
+ android {
+   namespace = "com.example"
+-  compileSdk { version = release(36) { minorApiLevel = 1 } }
++  compileSdk { version = release(37) }
+ 
+   val envFile = rootProject.file(".env")
+   val envExampleFile = rootProject.file(".env.example")
+@@ -168,6 +168,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
+ // This makes it easy to add them back in the future if needed.
+ dependencies {
+   implementation(libs.appplugin)
++  implementation(project(":shared"))
+   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+   implementation(platform(libs.androidx.compose.bom))
+   implementation(platform(libs.firebase.bom))
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 819063b..bb507ef 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -5,14 +5,15 @@ coreKtx = "1.18.0"
+ junit = "4.13.2"
+ junitVersion = "1.3.0"
+ espressoCore = "3.7.0"
+-lifecycleRuntimeKtx = "2.8.7"
+-lifecycleViewmodelCompose = "2.8.7"
+-lifecycleRuntimeCompose = "2.8.7"
+-activityCompose = "1.10.1"
++lifecycleRuntimeKtx = "2.11.0"
++lifecycleViewmodelCompose = "2.11.0"
++lifecycleRuntimeCompose = "2.11.0"
++activityCompose = "1.13.0"
+ kotlin = "2.4.21"
+-composeBom = "2024.09.00"
++composeBom = "2026.09.00"
++androidxMaterial3 = "1.5.0-alpha22"
+ googleDevtoolsKsp = "2.3.12"
+-navigationCompose = "2.8.9"
++navigationCompose = "2.10.2"
+ roomRuntime = "2.8.5"
+ roomKtx = "2.8.5"
+ roomCompiler = "2.8.5"
+@@ -88,7 +89,7 @@ androidx-work-testing = { group = "androidx.work", name = "work-testing", versio
+ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
+ androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
++androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "androidxMaterial3" }
+ androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
+ androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
+diff --git a/shared/build.gradle.kts b/shared/build.gradle.kts
+index 42c582c..ad35e16 100644
+--- a/shared/build.gradle.kts
++++ b/shared/build.gradle.kts
+@@ -14,7 +14,7 @@ plugins {
+ kotlin {
+   android {
+     namespace = "com.example.shared"
+-    compileSdk { version = release(36) { minorApiLevel = 1 } }
++    compileSdk { version = release(37) }
+     minSdk = 24
+     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+     withHostTest { isIncludeAndroidResources = true }
+@@ -27,9 +27,6 @@ kotlin {
+       implementation(libs.kotlinx.serialization.json)
+       implementation(libs.androidx.room.runtime)
+       implementation(libs.androidx.sqlite.bundled)
+-    }
+-    // F-05: Compose CHI o iosMain (F-24 se dua sang commonMain). Android classpath khong duoc co "compose".
+-    iosMain.dependencies {
+       implementation(libs.compose.runtime)
+       implementation(libs.compose.foundation)
+       implementation(libs.compose.ui)
+@@ -43,11 +40,6 @@ kotlin {
+     }
+   }
+ }
+-// F-05: plugin kotlin.compose gan vao MOI compilation; compilation Android khong co compose runtime -> crash
+-// IncompatibleComposeRuntimeVersionException. Bo compiler plugin khoi classpath Android (iOS giu nguyen).
+-configurations.matching { it.name.startsWith("kotlinCompilerPluginClasspathAndroid") }.configureEach {
+-  exclude(group = "org.jetbrains.kotlin", module = "kotlin-compose-compiler-plugin-embeddable")
+-}
+ room { schemaDirectory("$projectDir/schemas") }
+ dependencies {
+   add("kspAndroid", libs.androidx.room.compiler)

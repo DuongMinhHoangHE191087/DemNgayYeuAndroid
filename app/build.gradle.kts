@@ -143,6 +143,11 @@ secrets {
       "CLOUDINARY_CLOUD_NAME",
       "CLOUDINARY_UPLOAD_PRESET",
       "CLOUDINARY_FOLDER",
+      // Khóa phía server Cloudflare R2: không bao giờ vào BuildConfig, kể cả khi lỡ có trong .env của máy dev.
+      "R2_ACCOUNT_ID",
+      "R2_BUCKET",
+      "R2_ACCESS_KEY_ID",
+      "R2_SECRET_ACCESS_KEY",
       // SMTP_* may still exist in a developer .env; never expose them in BuildConfig (empty values break javac).
       "SMTP_HOST",
       "SMTP_PORT",
@@ -202,15 +207,13 @@ dependencies {
   // Callable Cloud Functions: upload ký số và URL phát Cloudinary (docs/release/SECRETS_AND_CONFIG.md)
   implementation(libs.firebase.functions)
 
-  // Firebase Auth and Google Sign-In via Credential Manager:
+  // Firebase Auth:
   implementation(libs.firebase.auth)
-  implementation(libs.androidx.credentials)
-  implementation(libs.androidx.credentials.play.services)
-  implementation(libs.googleid)
   implementation(libs.firebase.appcheck.playintegrity)
   implementation(libs.firebase.appcheck.recaptcha)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.datetime)
   implementation(libs.logging.interceptor)
   implementation(libs.moshi.kotlin)
   implementation(libs.okhttp)
@@ -238,6 +241,8 @@ dependencies {
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
+  testImplementation(kotlin("test"))
+  testImplementation(kotlin("test-junit"))
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.androidx.room.testing)
   testImplementation(libs.androidx.work.testing)

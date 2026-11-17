@@ -36,31 +36,38 @@ object MemorySyncAdapter : EntitySyncAdapter<SharedMemoryEntity> {
     "deleted" to entity.deleted
   )
 
-  override fun fromFirestoreDoc(doc: DocumentSnapshot): SharedMemoryEntity? {
-    val syncId = doc.getString("syncId") ?: return null
-    val title = doc.getString("title") ?: return null
+  override fun fromFirestoreDoc(doc: DocumentSnapshot): SharedMemoryEntity? =
+    doc.data?.let { fromFirestoreMap(it) }
+
+  /**
+   * Map thuần (từ `doc.data`) -> entity. Chỉ ép kiểu an toàn: trường tuỳ chọn thiếu HOẶC sai kiểu nhận đúng giá trị mặc định
+   * của trường thiếu; syncId/title thiếu hoặc sai kiểu thì trả null như trước.
+   */
+  internal fun fromFirestoreMap(data: Map<String, Any?>, now: Long = System.currentTimeMillis()): SharedMemoryEntity? {
+    val syncId = data.optString("syncId") ?: return null
+    val title = data.optString("title") ?: return null
     return SharedMemoryEntity(
       syncId = syncId,
       title = title,
-      dateText = doc.getString("dateText") ?: "",
-      note = doc.getString("note") ?: "",
-      photoUri = safeSharedPhotoUri(doc.getString("photoUri")),
-      location = doc.getString("location") ?: "",
-      isFavorite = doc.getBoolean("isFavorite") ?: false,
-      anniversaryTitle = doc.getString("anniversaryTitle") ?: "Kỷ Niệm Ngày Yêu",
-      createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
-      relationshipId = doc.getString("relationshipId"),
-      authorId = doc.getString("authorId") ?: "",
-      authorName = doc.getString("authorName") ?: "Bạn",
-      mediaType = doc.getString("mediaType") ?: "IMAGE",
+      dateText = data.optString("dateText") ?: "",
+      note = data.optString("note") ?: "",
+      photoUri = safeSharedPhotoUri(data.optString("photoUri")),
+      location = data.optString("location") ?: "",
+      isFavorite = data.optBool("isFavorite") ?: false,
+      anniversaryTitle = data.optString("anniversaryTitle") ?: "Kỷ Niệm Ngày Yêu",
+      createdAt = data.optLong("createdAt") ?: now,
+      relationshipId = data.optString("relationshipId"),
+      authorId = data.optString("authorId") ?: "",
+      authorName = data.optString("authorName") ?: "Bạn",
+      mediaType = data.optString("mediaType") ?: "IMAGE",
       // Video không đi qua URI: máy nhận xin URL phát từ máy chủ bằng cloudinaryPublicId.
       videoUri = null,
-      cloudinaryPublicId = safePublicId(syncId, doc.getString("cloudinaryPublicId")).ifBlank { null },
-      fileSizeFormatted = doc.getString("fileSizeFormatted") ?: "",
-      durationSeconds = (doc.getLong("durationSeconds") ?: 0L).toInt(),
-      privacyLevel = doc.getString("privacyLevel") ?: "COUPLE_ONLY",
-      updatedAt = doc.getLong("updatedAt") ?: 0L,
-      deleted = doc.getBoolean("deleted") ?: false,
+      cloudinaryPublicId = safePublicId(syncId, data.optString("cloudinaryPublicId")).ifBlank { null },
+      fileSizeFormatted = data.optString("fileSizeFormatted") ?: "",
+      durationSeconds = (data.optLong("durationSeconds") ?: 0L).toInt(),
+      privacyLevel = data.optString("privacyLevel") ?: "COUPLE_ONLY",
+      updatedAt = data.optLong("updatedAt") ?: 0L,
+      deleted = data.optBool("deleted") ?: false,
       pendingSync = false
     )
   }

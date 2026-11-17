@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,7 +29,7 @@ import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.EditCalendar
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
@@ -38,17 +39,13 @@ import androidx.compose.material.icons.filled.ViewWeek
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,9 +65,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
 import com.example.ui.util.AppLanguage
+import com.example.ui.util.ProfileUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -109,7 +107,7 @@ fun calculateDetailedLoveTime(
   var startCal: Calendar? = null
   for (pattern in formats) {
     try {
-      val sdf = SimpleDateFormat(pattern, Locale.getDefault())
+      val sdf = SimpleDateFormat(pattern, Locale.ROOT)
       sdf.isLenient = false
       val date = sdf.parse(startDateStr.trim())
       if (date != null) {
@@ -194,7 +192,7 @@ fun calculateDetailedLoveTime(
 /**
  * Romantic Love Days Calculator Widget for the Main Dashboard.
  * Calculates and displays the total number of days a couple has been together,
- * offering detailed time breakdowns (years, months, weeks, hours, minutes, live seconds),
+ * offering detailed time breakdowns (years, months, weeks, hours, minutes),
  * anniversary date picker, sync with main circular counter, and milestone progression.
  */
 @Composable
@@ -213,11 +211,11 @@ fun LoveDaysCalculatorWidget(
   var showManualInputDialog by remember { mutableStateOf(false) }
   var showM3DatePicker by remember { mutableStateOf(false) }
 
-  // Live seconds ticker for romantic immersion
+  // Re-read the clock every minute so the counters roll over right after midnight
   var currentTimestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
   LaunchedEffect(Unit) {
     while (true) {
-      delay(1.seconds)
+      delay(1.minutes)
       currentTimestamp = System.currentTimeMillis()
     }
   }
@@ -309,7 +307,7 @@ fun LoveDaysCalculatorWidget(
               modifier = Modifier.size(15.dp)
             )
             Text(
-              text = anniversaryDate,
+              text = anniversaryDate.ifBlank { if (isVietnamese) "Chọn ngày bắt đầu yêu" else "Pick your start date" },
               fontSize = 13.sp,
               fontWeight = FontWeight.ExtraBold,
               color = Color(0xFFC2185B)
@@ -489,58 +487,28 @@ fun LoveDaysCalculatorWidget(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
         // Sync button to apply calculated days to the circular counter on home screen
-        Button(
+        PrimaryGradientButton(
+          text = if (isVietnamese) "Đồng bộ" else "Sync",
           onClick = {
             onRecalculateAndSync(breakdown.totalDays.toInt())
           },
-          shape = RoundedCornerShape(14.dp),
-          colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFF4081)
-          ),
+          icon = Icons.Filled.Sync,
           modifier = Modifier
             .weight(1f)
-            .testTag("btn_sync_days_to_counter")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Sync,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(16.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = if (isVietnamese) "Đồng bộ" else "Sync",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            color = Color.White
-          )
-        }
+            .heightIn(min = MinTouchBox),
+          testTag = "btn_sync_days_to_counter"
+        )
 
         // Quick button to open manual date input dialog
-        OutlinedButton(
+        SecondaryButton(
+          text = if (isVietnamese) "Nhập ngày" else "Edit Date",
           onClick = { showManualInputDialog = true },
-          shape = RoundedCornerShape(14.dp),
-          border = BorderStroke(1.2.dp, Color(0xFFFF80AB)),
+          icon = Icons.Filled.DateRange,
           modifier = Modifier
             .weight(1f)
-            .testTag("btn_manual_anniversary_input")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.DateRange,
-            contentDescription = null,
-            tint = Color(0xFFFF4081),
-            modifier = Modifier.size(15.dp)
-          )
-          Spacer(modifier = Modifier.width(4.dp))
-          Text(
-            text = if (isVietnamese) "Nhập ngày" else "Edit Date",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            color = Color(0xFFC2185B)
-          )
-        }
+            .heightIn(min = MinTouchBox),
+          testTag = "btn_manual_anniversary_input"
+        )
       }
     }
   }
@@ -645,118 +613,134 @@ private fun ManualDateInputDialog(
   onDismiss: () -> Unit,
   onConfirm: (String) -> Unit
 ) {
+  AppDialog(onDismissRequest = onDismiss) { ManualDateInputContent(currentDate, isVietnamese, onDismiss, onConfirm) }
+}
+
+// Split from the Dialog window so tests can compose it directly: Robolectric never goes idle with an OutlinedTextField inside a Dialog window.
+@Composable
+internal fun ManualDateInputContent(
+  currentDate: String,
+  isVietnamese: Boolean,
+  onDismiss: () -> Unit,
+  onConfirm: (String) -> Unit
+) {
   var dateText by remember { mutableStateOf(currentDate) }
   var isError by remember { mutableStateOf(false) }
 
-  Dialog(onDismissRequest = onDismiss) {
-    Card(
-      shape = RoundedCornerShape(22.dp),
-      colors = CardDefaults.cardColors(containerColor = Color.White),
-      border = BorderStroke(1.2.dp, Color(0xFFFFC6DB)),
-      modifier = Modifier.fillMaxWidth()
+  Card(
+    shape = RoundedCornerShape(22.dp),
+    colors = CardDefaults.cardColors(containerColor = Color.White),
+    border = BorderStroke(1.2.dp, Color(0xFFFFC6DB)),
+    modifier = Modifier.fillMaxWidth()
+  ) {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(20.dp),
+      verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Favorite,
-            contentDescription = null,
-            tint = Color(0xFFFF4081)
-          )
-          Text(
-            text = if (isVietnamese) "Chọn Ngày Bắt Đầu Yêu" else "Set Anniversary Date",
-            fontWeight = FontWeight.Bold,
-            fontSize = 17.sp,
-            color = Color(0xFF26071B)
-          )
-        }
-
-        Text(
-          text = if (isVietnamese) {
-            "Nhập ngày hai bạn chính thức yêu nhau (định dạng ngày/tháng/năm, ví dụ: 14/02/2023)."
-          } else {
-            "Enter your relationship start date (format dd/MM/yyyy, e.g. 14/02/2023)."
-          },
-          fontSize = 12.sp,
-          color = Color(0xFF6B2B50)
+        Icon(
+          imageVector = Icons.Filled.Favorite,
+          contentDescription = null,
+          tint = Color(0xFFFF4081)
         )
-
-        InLoveDatePickerField(
-          value = dateText,
-          onValueChange = {
-            dateText = it
-            isError = false
-          },
-          label = if (isVietnamese) "Ngày bắt đầu (dd/MM/yyyy) *" else "Start Date (dd/MM/yyyy) *",
-          placeholder = "dd/MM/yyyy",
-          dialogTitle = if (isVietnamese) "Chọn Ngày Bắt Đầu Yêu" else "Select Start Date",
-          quickPresets = DatePickerPresets.relationshipStartDatePresets(),
-          testTag = "input_anniversary_text"
-        )
-
-        // Presets
         Text(
-          text = if (isVietnamese) "Hoặc chọn nhanh:" else "Or quick select:",
+          text = if (isVietnamese) "Chọn Ngày Bắt Đầu Yêu" else "Set Anniversary Date",
+          fontWeight = FontWeight.Bold,
+          fontSize = 17.sp,
+          color = Color(0xFF26071B)
+        )
+      }
+
+      Text(
+        text = if (isVietnamese) {
+          "Nhập ngày hai bạn chính thức yêu nhau (định dạng ngày/tháng/năm, ví dụ: 14/02/2023)."
+        } else {
+          "Enter your relationship start date (format dd/MM/yyyy, e.g. 14/02/2023)."
+        },
+        fontSize = 12.sp,
+        color = Color(0xFF6B2B50)
+      )
+
+      InLoveDatePickerField(
+        value = dateText,
+        onValueChange = {
+          dateText = it
+          isError = false
+        },
+        label = if (isVietnamese) "Ngày bắt đầu (dd/MM/yyyy) *" else "Start Date (dd/MM/yyyy) *",
+        placeholder = "dd/MM/yyyy",
+        dialogTitle = if (isVietnamese) "Chọn Ngày Bắt Đầu Yêu" else "Select Start Date",
+        quickPresets = DatePickerPresets.relationshipStartDatePresets(),
+        testTag = "input_anniversary_text"
+      )
+      if (isError) {
+        Text(
+          text = if (isVietnamese) "Nhập dd/MM/yyyy, không ở tương lai" else "Use dd/MM/yyyy, not in the future",
           fontSize = 11.sp,
-          color = Color(0xFF8E24AA),
-          fontWeight = FontWeight.SemiBold
+          color = Color(0xFFD32F2F),
+          modifier = Modifier.testTag("text_anniversary_error")
         )
+      }
 
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-          val presets = listOf("14/02/2023", "20/10/2022", "08/03/2024")
-          presets.forEach { preset ->
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = Color(0xFFFFF0F5),
-              border = BorderStroke(1.dp, Color(0xFFFFC6DB)),
-              modifier = Modifier
-                .clickable { dateText = preset }
-                .padding(vertical = 2.dp)
-            ) {
-              Text(
-                text = preset,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFFC2185B),
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-              )
-            }
-          }
-        }
+      // Presets
+      Text(
+        text = if (isVietnamese) "Hoặc chọn nhanh:" else "Or quick select:",
+        fontSize = 11.sp,
+        color = Color(0xFF8E24AA),
+        fontWeight = FontWeight.SemiBold
+      )
 
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.End
-        ) {
-          TextButton(onClick = onDismiss) {
-            Text(if (isVietnamese) "Hủy" else "Cancel")
-          }
-          Spacer(modifier = Modifier.width(8.dp))
-          Button(
-            onClick = {
-              val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply { isLenient = false }
-              try {
-                sdf.parse(dateText.trim())
-                onConfirm(dateText.trim())
-              } catch (_: Exception) {
-                isError = true
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+      ) {
+        val presets = listOf("14/02/2023", "20/10/2022", "08/03/2024")
+        presets.forEach { preset ->
+          Surface(
+            shape = RoundedCornerShape(50.dp),
+            color = Color(0xFFFFF0F5),
+            border = BorderStroke(1.dp, Color(0xFFFFC6DB)),
+            modifier = Modifier
+              .clickable {
+                dateText = preset
+                isError = false
               }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF4081))
+              .padding(vertical = 2.dp)
           ) {
-            Text(if (isVietnamese) "Lưu & Tính Ngày" else "Save & Calculate")
+            Text(
+              text = preset,
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Medium,
+              color = Color(0xFFC2185B),
+              modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
           }
         }
+      }
+
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End
+      ) {
+        SecondaryButton(
+          text = if (isVietnamese) "Hủy" else "Cancel",
+          onClick = onDismiss,
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        PrimaryGradientButton(
+          text = if (isVietnamese) "Lưu & Tính Ngày" else "Save & Calculate",
+          onClick = {
+            val normalized = ProfileUtils.normalizeAnniversaryInput(dateText)
+            if (normalized == null) isError = true else onConfirm(normalized)
+          },
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       }
     }
   }

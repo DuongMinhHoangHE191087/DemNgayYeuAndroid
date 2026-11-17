@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="AppShellSmokeTests" tests="2" failures="0" skipped="1">
+    <testcase classname="AppShellSmokeTests" name="testTabsVisible()" time="1.2"/>
+    <testcase classname="AppShellSmokeTests" name="testPaywallOpens()" time="0.0">
+      <skipped/>
+    </testcase>
+  </testsuite>
+</testsuites>

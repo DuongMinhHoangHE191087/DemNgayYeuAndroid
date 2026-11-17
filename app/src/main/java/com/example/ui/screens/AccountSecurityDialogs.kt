@@ -28,17 +28,19 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import com.example.ui.components.AppDialog
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
 import com.example.ui.components.animateDialogEntrance
+import com.example.ui.components.disabledLook
+import com.example.ui.theme.MinTouchBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,7 +62,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.SecurityAuditLogEntity
 import com.example.ui.util.AuthSecurityManager
@@ -88,7 +89,7 @@ fun ChangePasswordDialog(
     AuthSecurityManager.evaluatePasswordStrength(newPassword)
   }
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Card(
       shape = RoundedCornerShape(24.dp),
       colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -211,33 +212,34 @@ fun ChangePasswordDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          OutlinedButton(
+          SecondaryButton(
+            text = "Hủy",
             onClick = onDismiss,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.weight(1f)
-          ) {
-            Text("Hủy")
-          }
+            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+          )
 
-          Button(
-            onClick = {
-              isSubmitting = true
-              scope.launch {
-                val res = viewModel.authRepo.changePassword(oldPassword, newPassword, confirmPassword)
-                isSubmitting = false
-                viewModel.showToast(res.second)
-                if (res.first) onDismiss()
-              }
-            },
-            enabled = !isSubmitting && oldPassword.isNotBlank() && newPassword.length >= 8 && newPassword == confirmPassword,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-            modifier = Modifier.weight(1.4f)
+          Box(
+            modifier = Modifier.weight(1.4f),
+            contentAlignment = Alignment.Center
           ) {
+            val updateEnabled = !isSubmitting && oldPassword.isNotBlank() && newPassword.length >= 8 && newPassword == confirmPassword
+            PrimaryGradientButton(
+              text = if (isSubmitting) "" else "Cập Nhật",
+              onClick = {
+                if (updateEnabled) {
+                  isSubmitting = true
+                  scope.launch {
+                    val res = viewModel.authRepo.changePassword(oldPassword, newPassword, confirmPassword)
+                    isSubmitting = false
+                    viewModel.showToast(res.second)
+                    if (res.first) onDismiss()
+                  }
+                }
+              },
+              modifier = Modifier.heightIn(min = MinTouchBox).disabledLook(updateEnabled)
+            )
             if (isSubmitting) {
-              CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
-            } else {
-              Text("Cập Nhật")
+              CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
             }
           }
         }
@@ -254,7 +256,7 @@ fun SetPinDialog(
   var pinInput by remember { mutableStateOf("") }
   var confirmPinInput by remember { mutableStateOf("") }
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Card(
       shape = RoundedCornerShape(24.dp),
       colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -265,7 +267,7 @@ fun SetPinDialog(
         .padding(16.dp)
     ) {
       Column(
-        modifier = Modifier.padding(20.dp),
+        modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
         Box(
@@ -329,26 +331,22 @@ fun SetPinDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          OutlinedButton(
+          SecondaryButton(
+            text = "Hủy",
             onClick = onDismiss,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.weight(1f)
-          ) {
-            Text("Hủy")
-          }
+            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+          )
 
-          Button(
+          PrimaryGradientButton(
+            text = "Lưu PIN",
             onClick = {
-              viewModel.setAppPin(pinInput)
-              onDismiss()
+              if (isValid) {
+                viewModel.setAppPin(pinInput)
+                onDismiss()
+              }
             },
-            enabled = isValid,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-            modifier = Modifier.weight(1.3f)
-          ) {
-            Text("Lưu PIN")
-          }
+            modifier = Modifier.weight(1.3f).heightIn(min = MinTouchBox).disabledLook(isValid)
+          )
         }
       }
     }
@@ -363,9 +361,9 @@ fun SecurityAuditLogsDialog(
   val logs by viewModel.authRepo.getAuditLogsForCurrentAccount()
     .collectAsState(initial = emptyList())
 
-  val dateFormat = remember { SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault()) }
+  val dateFormat = remember { SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.ROOT) }
 
-  Dialog(
+  AppDialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false)
   ) {
@@ -446,14 +444,11 @@ fun SecurityAuditLogsDialog(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Button(
+        PrimaryGradientButton(
+          text = "Đóng",
           onClick = onDismiss,
-          shape = RoundedCornerShape(12.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Text("Đóng")
-        }
+          modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox)
+        )
       }
     }
   }

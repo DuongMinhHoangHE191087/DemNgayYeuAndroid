@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import com.example.ui.components.AppAlertDialog
+import com.example.ui.components.AppDialog
 import com.example.ui.components.animateDialogEntrance
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -70,7 +72,7 @@ import androidx.compose.material.icons.filled.TableRestaurant
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -85,6 +87,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,13 +110,17 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.data.model.ChecklistItemEntity
 import com.example.data.model.GiftIdeaEntity
 import com.example.data.model.GiftReminderEntity
 import com.example.domain.content.GiftCatalog
 import com.example.domain.usecase.GetPersonalizedGiftSuggestionsUseCase
+import com.example.domain.usecase.PersonalizedGiftSuggestion
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
+import com.example.ui.components.disabledLook
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.OnPrimaryFixed
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
@@ -158,14 +165,16 @@ fun GiftScreen(
   // Xem trước rồi mới gửi: nội dung chỉ gồm tên quà và giá tham khảo, không kèm thông tin hồ sơ nào.
   // ponytail: chỉ Sharesheet của Android; bản ghi gợi ý riêng cho thành viên trong cặp (Firestore) làm sau khi có thời gian.
   sharePreview?.let { text ->
-    AlertDialog(
+    AppAlertDialog(
       onDismissRequest = { sharePreview = null },
+      scrollableText = true,
       modifier = Modifier.animateDialogEntrance(),
       containerColor = Color.White,
       title = { Text(if (isEnglish) "Share this suggestion?" else "Chia sẻ gợi ý này?", fontWeight = FontWeight.Bold) },
       text = { Text(text = text, fontSize = 14.sp) },
       confirmButton = {
-        TextButton(
+        PrimaryGradientButton(
+          text = if (isEnglish) "Share" else "Chia sẻ",
           onClick = {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
               type = "text/plain"
@@ -174,14 +183,16 @@ fun GiftScreen(
             context.startActivity(Intent.createChooser(shareIntent, if (isEnglish) "Share suggestion via" else "Chia sẻ gợi ý qua"))
             sharePreview = null
           },
-          modifier = Modifier.heightIn(min = 48.dp).testTag("btn_confirm_share_gift")
-        ) { Text(if (isEnglish) "Share" else "Chia sẻ") }
+          modifier = Modifier.heightIn(min = MinTouchBox),
+          testTag = "btn_confirm_share_gift"
+        )
       },
       dismissButton = {
-        TextButton(
+        SecondaryButton(
+          text = if (isEnglish) "Cancel" else "Hủy",
           onClick = { sharePreview = null },
-          modifier = Modifier.heightIn(min = 48.dp)
-        ) { Text(if (isEnglish) "Cancel" else "Hủy") }
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       }
     )
   }
@@ -320,18 +331,11 @@ fun GiftScreen(
           }
 
           if (personalizedGifts.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-              personalizedGifts.forEach { s ->
-                PersonalizedGiftCard(
-                  title = s.gift.title,
-                  reason = s.reason,
-                  preparation = s.preparation,
-                  priceLabel = s.priceLabel,
-                  onShare = { sharePreview = listOfNotNull(s.gift.title, s.priceLabel).joinToString("\n") },
-                  shareLabel = if (isEnglish) "Share this suggestion" else "Chia sẻ gợi ý này"
-                )
-              }
-            }
+            PersonalizedGiftList(
+              suggestions = personalizedGifts,
+              shareLabel = if (isEnglish) "Share this suggestion" else "Chia sẻ gợi ý này",
+              onShare = { sharePreview = it }
+            )
           } else {
             Text(
               text = if (isEnglish) "Choose interests on the Pairing screen, note what your partner likes below, or add your anniversary and birthdays, to see suggestions made for both of you. You can still browse the full catalog below." else "Hãy chọn sở thích ở trang Ghép Đôi, ghi lại điều đối tác thích ở bên dưới, hoặc nhập ngày yêu và ngày sinh, để xem gợi ý dành riêng cho hai bạn. Bạn vẫn có thể xem toàn bộ danh mục bên dưới.",
@@ -341,22 +345,15 @@ fun GiftScreen(
           }
 
           Spacer(modifier = Modifier.height(10.dp))
-          androidx.compose.material3.Button(
+          PrimaryGradientButton(
+            text = if (isEnglish) "More ideas" else "Gợi ý thêm",
+            icon = Icons.Default.AutoAwesome,
             onClick = { viewModel.triggerAiGiftSuggestions() },
-            shape = RoundedCornerShape(12.dp),
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-              containerColor = Color(0xFFC2185B)
-            ),
             modifier = Modifier
               .fillMaxWidth()
-              .testTag("btn_trigger_ai_gift_suggestions")
-          ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(if (isEnglish) "More ideas" else "Gợi ý thêm", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            }
-          }
+              .heightIn(min = MinTouchBox),
+            testTag = "btn_trigger_ai_gift_suggestions"
+          )
 
           Spacer(modifier = Modifier.height(4.dp))
           PartnerPreferencesEditor(
@@ -532,7 +529,7 @@ fun GiftScreen(
               horizontalArrangement = Arrangement.Center
             ) {
               Text(
-                text = if (isEnglish) "View plan" else "Xem lịch trình",
+                text = if (isEnglish) "View VIP plan" else "Xem gói VIP",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Primary
@@ -917,7 +914,7 @@ fun WishlistNotebookDialog(
 ) {
   val favorites = remember(giftIdeas) { giftIdeas.filter { it.isFavorited } }
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(28.dp),
       color = Color.White,
@@ -956,7 +953,7 @@ fun WishlistNotebookDialog(
               )
             }
           }
-          IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
+          IconButton(onClick = onDismiss, modifier = Modifier.size(MinTouchBox)) {
             Icon(imageVector = Icons.Filled.Close, contentDescription = if (isEnglish) "Close" else "Đóng")
           }
         }
@@ -1076,13 +1073,13 @@ fun GiftIdeaCard(
           modifier = Modifier
             .padding(2.dp)
             .align(Alignment.TopEnd)
-            .size(48.dp)
+            .size(MinTouchBox)
             .clip(CircleShape)
             .background(Color.White.copy(alpha = 0.85f))
         ) {
           Icon(
             imageVector = if (idea.isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Favorite",
+            contentDescription = if (isEnglish) "Favorite" else "Yêu thích",
             tint = Primary,
             modifier = Modifier.size(18.dp)
           )
@@ -1219,11 +1216,13 @@ internal fun PersonalizedGiftCard(
   onShare: (() -> Unit)? = null,
   shareLabel: String = ""
 ) {
+  var expanded by rememberSaveable { mutableStateOf(false) }
   Column(
     modifier = modifier
       .fillMaxWidth()
       .background(Color.White, RoundedCornerShape(10.dp))
       .heightIn(min = 48.dp)
+      .clickable { expanded = !expanded }
       .padding(horizontal = 10.dp, vertical = 8.dp)
   ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1239,7 +1238,7 @@ internal fun PersonalizedGiftCard(
         IconButton(
           onClick = onShare,
           modifier = Modifier
-            .size(40.dp)
+            .size(MinTouchBox)
             .testTag("btn_share_gift_suggestion")
         ) {
           Icon(
@@ -1251,8 +1250,38 @@ internal fun PersonalizedGiftCard(
         }
       }
     }
+    if (expanded) {
+      Text(text = reason, fontSize = 11.sp, color = Color.Gray)
+      Text(text = preparation, fontSize = 11.sp, color = Color.Gray)
+    }
     if (priceLabel != null) {
       Text(text = priceLabel, fontSize = 11.sp, color = Color.Gray, maxLines = 1)
+    }
+  }
+}
+
+/**
+ * Danh sách gợi ý cá nhân hóa của màn Quà tặng. Mỗi thẻ gắn với quà của nó (khóa là [GiftIdeaEntity.remoteId]),
+ * nên khi thứ tự đổi, trạng thái mở rộng đi theo đúng quà thay vì theo vị trí trong danh sách.
+ */
+@Composable
+internal fun PersonalizedGiftList(
+  suggestions: List<PersonalizedGiftSuggestion>,
+  shareLabel: String,
+  onShare: (String) -> Unit
+) {
+  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    suggestions.forEach { s ->
+      key(s.idea.remoteId) {
+        PersonalizedGiftCard(
+          title = s.gift.title,
+          reason = s.reason,
+          preparation = s.preparation,
+          priceLabel = s.priceLabel,
+          onShare = { onShare(listOfNotNull(s.gift.title, s.priceLabel).joinToString("\n")) },
+          shareLabel = shareLabel
+        )
+      }
     }
   }
 }
@@ -1276,7 +1305,7 @@ private fun PersonalizedGiftCardPreview() {
  * và độc lập với ngôn ngữ giao diện. Chưa kiểm tra trùng/chính tả sở thích; thêm gợi ý chọn nhanh khi cần.
  */
 @Composable
-private fun PartnerPreferencesEditor(
+internal fun PartnerPreferencesEditor(
   profileExists: Boolean,
   savedLikes: String,
   savedBudgetVnd: Long,
@@ -1292,15 +1321,15 @@ private fun PartnerPreferencesEditor(
   Column(modifier = Modifier.fillMaxWidth()) {
     TextButton(
       onClick = { expanded = !expanded },
+      colors = ButtonDefaults.textButtonColors(contentColor = Primary),
       modifier = Modifier
         .heightIn(min = 48.dp)
         .testTag("btn_toggle_partner_preferences")
     ) {
       Text(
         text = if (isEnglish) "Likes & budget" else "Sở thích & ngân sách",
-        fontSize = 12.5.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFFC2185B)
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium
       )
     }
     if (expanded) {
@@ -1339,9 +1368,10 @@ private fun PartnerPreferencesEditor(
             val isSelected = region == key
             Row(
               verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(6.dp),
+              horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
               modifier = Modifier
-                .heightIn(min = 40.dp)
+                .widthIn(min = MinTouchBox)
+                .heightIn(min = MinTouchBox)
                 .clip(RoundedCornerShape(20.dp))
                 .background(if (isSelected) Color(0xFFC2185B) else Color(0xFFFFF5F8))
                 .clickable { region = if (isSelected) "" else key }
@@ -1366,24 +1396,20 @@ private fun PartnerPreferencesEditor(
             color = Color.Gray
           )
         }
-        androidx.compose.material3.Button(
+        PrimaryGradientButton(
+          text = if (isEnglish) "Save" else "Lưu",
           onClick = {
-            onSave(likes.trim(), budgetText.toLongOrNull() ?: 0L, region)
-            expanded = false
+            if (profileExists) {
+              onSave(likes.trim(), budgetText.toLongOrNull() ?: 0L, region)
+              expanded = false
+            }
           },
-          enabled = profileExists,
-          shape = RoundedCornerShape(12.dp),
-          colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFC2185B),
-            contentColor = Color.White
-          ),
           modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .testTag("btn_save_partner_preferences")
-        ) {
-          Text(if (isEnglish) "Save" else "Lưu", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
-        }
+            .heightIn(min = MinTouchBox)
+            .disabledLook(profileExists),
+          testTag = "btn_save_partner_preferences"
+        )
       }
     }
   }
@@ -1441,7 +1467,7 @@ fun ChecklistRow(
         // Check circle: the only toggle target now that a row tap expands
         Box(
           modifier = Modifier
-            .size(48.dp)
+            .size(MinTouchBox)
             .clip(CircleShape)
             .clickable { onToggle() }
             .testTag("btn_toggle_checklist_${item.id}"),
@@ -1543,7 +1569,7 @@ fun GiftReminderRow(
         IconButton(
           onClick = onToggle,
           modifier = Modifier
-            .size(48.dp)
+            .size(MinTouchBox)
             .testTag("btn_toggle_gift_reminder_${item.id}")
         ) {
           Icon(
@@ -1660,7 +1686,7 @@ private fun RowActions(
     horizontalArrangement = Arrangement.End,
     verticalAlignment = Alignment.CenterVertically
   ) {
-    IconButton(onClick = onEdit, modifier = Modifier.size(48.dp).testTag(editTag)) {
+    IconButton(onClick = onEdit, modifier = Modifier.size(MinTouchBox).testTag(editTag)) {
       Icon(
         imageVector = Icons.Filled.Edit,
         contentDescription = if (isEnglish) "Edit" else "Sửa",
@@ -1668,7 +1694,7 @@ private fun RowActions(
         modifier = Modifier.size(20.dp)
       )
     }
-    IconButton(onClick = onDelete, modifier = Modifier.size(48.dp).testTag(deleteTag)) {
+    IconButton(onClick = onDelete, modifier = Modifier.size(MinTouchBox).testTag(deleteTag)) {
       Icon(
         imageVector = Icons.Filled.Delete,
         contentDescription = if (isEnglish) "Delete" else "Xóa",
@@ -1689,8 +1715,9 @@ private fun EditFieldsDialog(
   onSave: (List<String>) -> Unit
 ) {
   val values = remember { mutableStateListOf(*initial.toTypedArray()) }
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = true,
     modifier = Modifier.animateDialogEntrance(),
     shape = RoundedCornerShape(28.dp),
     containerColor = Color.White,

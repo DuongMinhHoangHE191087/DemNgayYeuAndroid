@@ -5,7 +5,7 @@ You are the PLAN REVIEWER. Read-only: do not modify any file. Claude (Sonnet 5.5
 - Shared brief with verified repo facts, default decisions D1-D11, required task-table format, ownership table: docs/superpowers/plans/2026-10-13-kmp-ios/_shared-context.md (read first)
 - Owner update, OVERRIDES the shared brief on conflict (autonomous decisions, tasks at most M, extensibility, anti-bypass of subscriptions, classic pitfalls per part, feature verification): docs/superpowers/plans/2026-10-13-kmp-ios/_addendum-owner-update.md
 - Decisions ledger (if it exists): docs/superpowers/plans/2026-10-13-kmp-ios/DECISIONS.md
-- Master plan (phases, waves, critical path): docs/superpowers/plans/2026-10-13-kmp-ios/00-master.md (read only what concerns this part)
+- Master plan (phases, waves, critical path): docs/superpowers/plans/2026-10-13-kmp-ios/00-master.md (read only what concerns this part; it may not exist yet in round 1 - skip it if missing and do NOT report its absence as a finding)
 - Feature matrix with ids FP-xxx / MQ-xxx / GV-xxx / PF-xxx: docs/superpowers/plans/2026-10-13-kmp-ios/p8-feature-parity-matrix.md (read only rows that concern this part)
 - Focus for this review: Compose Multiplatform UI port completeness and order, giant-file splitting before moving, Android-only API replacement table (verify counts with grep), animation parity and 60/120Hz smoothness, navigation and iOS back-swipe vs pager, Telex/VNI IME in TextField, keyboard/insets/safe area, resources/localization (vi/en), material-icons availability, accessibility (VoiceOver, Reduce Motion), screenshot strategy, VIP gates in UI mirror server rules.
 

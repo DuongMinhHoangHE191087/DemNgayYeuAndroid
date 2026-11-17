@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "<TeamID>.com.aistudio.inlove.kmrv"
+        ],
+        "components": [
+          {
+            "/": "/pair",
+            "?": {
+              "code": "?*"
+            }
+          },
+          {
+            "/": "/pair/*"
+          }
+        ]
+      }
+    ]
+  }
+}

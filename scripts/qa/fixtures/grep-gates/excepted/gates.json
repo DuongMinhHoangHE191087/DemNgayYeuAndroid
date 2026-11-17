@@ -1,0 +1,13 @@
+[
+  {
+    "id": "GG-01",
+    "pattern": "^import (android\\.|java|javax|com\\.google\\.firebase|com\\.squareup\\.moshi|androidx\\.(work|core|sqlite\\.db))",
+    "paths": [
+      "shared/src/commonMain/kotlin/com/example/data"
+    ],
+    "exceptGlobs": [
+      "shared/src/commonMain/kotlin/com/example/data/platform/**"
+    ],
+    "reason": "fixture"
+  }
+]

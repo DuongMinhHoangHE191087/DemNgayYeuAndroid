@@ -27,7 +27,11 @@ object LocalMediaStore {
   /** Sao chép URI vào bộ nhớ app. Trả về null nếu không đọc được; khi lỗi không để lại tệp dở. */
   fun copyPickedUri(context: Context, uri: Uri): File? {
     val extension = formatExtensionOf(mimeOf(context, uri)) ?: "bin"
-    val dest = File(mediaDir(context), "picked_${System.currentTimeMillis()}.$extension")
+    val dest = try {
+      newMediaFile(mediaDir(context), "picked_", ".$extension")
+    } catch (e: Exception) {
+      return null
+    }
     return try {
       val copied = context.contentResolver.openInputStream(uri)?.use { input ->
         FileOutputStream(dest).use { output -> input.copyTo(output) }
@@ -55,7 +59,7 @@ object LocalMediaStore {
       return MemoryPick(null, null, error)
     }
     val cover = if (kind == MediaKind.VIDEO) saveFrameAsJpeg(context, copy) else copy
-    val media = MemoryMediaFile(copy, kind, mime, copy.length(), duration)
+    val media = MemoryMediaFile(copy.absolutePath, kind, mime, copy.length(), duration)
     return MemoryPick(media, cover?.let { Uri.fromFile(it).toString() }, null)
   }
 
@@ -64,6 +68,10 @@ object LocalMediaStore {
 
   // ponytail: tệp của lựa chọn bị bỏ dở (không lưu) chưa được dọn; thêm dọn khi khởi động nếu bộ nhớ đầy.
   private fun mediaDir(context: Context): File = File(context.filesDir, "media").apply { mkdirs() }
+
+  // Tên ngẫu nhiên, duy nhất (createTempFile): mili-giây có thể trùng khi lưu nhiều tệp cùng lúc.
+  internal fun newMediaFile(dir: File, prefix: String, suffix: String): File =
+    File.createTempFile(prefix, suffix, dir.apply { mkdirs() })
 
   // Làm tròn lên: video 60,2 giây bị coi là 61 giây và bị từ chối, đúng với giới hạn 60 giây của máy chủ.
   private fun durationSecondsOf(file: File): Int {
@@ -74,7 +82,12 @@ object LocalMediaStore {
   // Ảnh bìa chỉ để hiển thị trên máy; video mới là thứ được tải lên.
   private fun saveFrameAsJpeg(context: Context, video: File): File? {
     val frame = extractVideoFrame(video) ?: return null
-    val dest = File(mediaDir(context), "cover_${System.currentTimeMillis()}.jpg")
+    val dest = try {
+      newMediaFile(mediaDir(context), "cover_", ".jpg")
+    } catch (e: Exception) {
+      frame.recycle()
+      return null
+    }
     return try {
       val saved = FileOutputStream(dest).use { frame.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, it) }
       if (saved) {

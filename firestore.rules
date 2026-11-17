@@ -57,25 +57,28 @@ service cloud.firestore {
     // ===============================================================
     // Users Collection (Strict privacy: owner-only access)
     // ===============================================================
-    // Entitlement/role fields (isVip, subscriptionTier, role, ...) are server-owned: they
-    // are in NO allowlist below, so a client can never create, modify or delete them
-    // (writes only via Admin SDK / trusted backend, which bypasses rules).
-    // The app does not currently write users/{uid} from the client; this allowlist mirrors
-    // the profile fields of OnlineUserEntity minus entitlement fields.
+    // users/{uid}: profile only, whole-document overwrite by the owner (ProfileSync). Server-owned data never lives here.
     function userProfileFields() {
-      return ['uid', 'displayName', 'email', 'coupleCode', 'partnerId', 'relationshipId',
-              'status', 'interests', 'interestsCsv', 'avatarUrl', 'gender', 'birthDate',
-              'age', 'zodiac', 'bio', 'isProfileSetup', 'createdAt', 'updatedAt'];
+      return ['displayName', 'birthDate', 'gender', 'bio', 'interestsCsv', 'avatarUrl', 'schemaVersion', 'updatedAt'];
     }
-
+    function validUserProfile(d) {
+      return d.keys().hasAll(['displayName', 'birthDate', 'gender', 'bio', 'interestsCsv', 'schemaVersion', 'updatedAt']) &&
+        d.displayName is string && d.displayName.size() <= 100 &&
+        d.birthDate is string && d.birthDate.matches('^$|^[0-9]{2}/[0-9]{2}/[0-9]{4}$') &&
+        d.gender in ['MALE', 'FEMALE'] &&
+        d.bio is string && d.bio.size() <= 1000 &&
+        d.interestsCsv is string && d.interestsCsv.size() <= 1024 &&
+        (!('avatarUrl' in d) ||
+          (d.avatarUrl is string && d.avatarUrl.size() <= 2048 &&
+           (d.avatarUrl == '' || d.avatarUrl.matches('^https://[^ ]+$')))) &&
+        d.schemaVersion == 1 &&
+        d.updatedAt is timestamp;
+    }
     match /users/{userId} {
       allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) &&
+      allow create, update: if isOwner(userId) &&
         request.resource.data.keys().hasOnly(userProfileFields()) &&
-        (!('uid' in request.resource.data) || request.resource.data.uid == userId);
-      allow update: if isOwner(userId) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(userProfileFields()) &&
-        (!('uid' in request.resource.data) || request.resource.data.uid == userId);
+        validUserProfile(request.resource.data);
       allow delete: if isOwner(userId);
     }
 
@@ -187,6 +190,24 @@ service cloud.firestore {
       allow delete: if isActiveRelMember(relId);
     }
 
+    // Whole-word, case-insensitive blocklist match (\pL = any letter, so "Ạxạ" is not a hit).
+    // TODO(owner): replace the placeholder with the reviewed list, e.g. 'w1|w2|w3'.
+    // (?s) lets '.' cross newlines; without it a hit on a later line slips past the '.*X.*' full match.
+    function containsBlockedWord(s) {
+      return s.matches('(?is).*(^|[^\\pL])(blockedtestword)($|[^\\pL]).*');
+    }
+
+    // Optional string field: <= max chars, no blocked word, no control chars. Multi-line fields (bio, love
+    // note: the app uses maxLines 3 and 2) keep tab, LF and CR; single-line fields (name) allow none.
+    function moderatedText(data, field, max, multiline) {
+      return !(field in data) || (
+        data[field] is string &&
+        data[field].size() <= max &&
+        !data[field].matches(multiline ? '(?s).*[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f].*' : '(?s).*[\\x00-\\x1f\\x7f].*') &&
+        !containsBlockedWord(data[field])
+      );
+    }
+
     // ===============================================================
     // Invites Collection (Couple Pairing: only sender and receiver)
     // ===============================================================
@@ -200,7 +221,14 @@ service cloud.firestore {
       // already-ACCEPTED invite (that would let it force a relationship onto a victim).
       allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid &&
         request.resource.data.status == 'PENDING' &&
-        request.resource.data.targetUid != request.auth.uid;
+        request.resource.data.targetUid != request.auth.uid &&
+        // The target has not blocked this sender (blockedUsers/{blockerUid}_{blockedUid}).
+        !exists(/databases/$(database)/documents/blockedUsers/$(request.resource.data.targetUid + '_' + request.auth.uid)) &&
+        // MOD-FILTER (DEC-228 layer a): user text shown to the target is length-capped,
+        // control-char free and free of whole blocked words. Absent/empty fields pass.
+        moderatedText(request.resource.data, 'senderName', 100, false) &&
+        moderatedText(request.resource.data, 'senderBio', 1000, true) &&
+        moderatedText(request.resource.data, 'loveNote', 1000, true);
       // Receiver may only move PENDING -> ACCEPTED/DECLINED. Sender may only move
       // PENDING -> CANCELLED. Identity fields stay locked as before.
       allow update: if isAuthenticated() &&
@@ -214,6 +242,37 @@ service cloud.firestore {
           (resource.data.senderUid == request.auth.uid && request.resource.data.status == 'CANCELLED')
         );
       allow delete: if isAuthenticated() && resource.data.senderUid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Block list: blockedUsers/{blockerUid}_{blockedUid}. Only the blocker can see, create or
+    // delete an entry; the blocked user can never read it. Enforced on invite create above.
+    // ===============================================================
+    match /blockedUsers/{blockId} {
+      allow get, list: if isAuthenticated() && resource.data.blockerUid == request.auth.uid;
+      allow create: if isAuthenticated() &&
+        request.resource.data.keys().hasOnly(['blockerUid', 'blockedUid', 'createdAt']) &&
+        request.resource.data.keys().hasAll(['blockerUid', 'blockedUid', 'createdAt']) &&
+        request.resource.data.blockerUid == request.auth.uid &&
+        request.resource.data.blockedUid is string &&
+        request.resource.data.blockedUid != request.auth.uid &&
+        blockId == request.auth.uid + '_' + request.resource.data.blockedUid;
+      allow update: if false;
+      allow delete: if isAuthenticated() && resource.data.blockerUid == request.auth.uid;
+    }
+
+    // Reports about another user: create-only, never readable by clients (reviewed server-side).
+    // reason carries one of spam | harassment | fake_account | other (InviteSafetyReason).
+    match /userReports/{reportId} {
+      allow create: if isAuthenticated() &&
+        request.resource.data.keys().hasOnly(['reporterUid', 'reportedUid', 'inviteId', 'reason', 'createdAt']) &&
+        request.resource.data.keys().hasAll(['reporterUid', 'reportedUid', 'reason']) &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.reportedUid is string &&
+        request.resource.data.reason is string &&
+        request.resource.data.reason.size() >= 1 &&
+        request.resource.data.reason.size() <= 20;
+      allow read, update, delete: if false;
     }
 
     // ===============================================================

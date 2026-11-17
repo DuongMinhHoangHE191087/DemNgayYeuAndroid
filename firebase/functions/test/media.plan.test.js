@@ -48,6 +48,19 @@ test('planReserve: từ chối người ngoài, cặp đôi không active, tệp
   assert.equal(full.error.code, 'resource-exhausted');
 });
 
+test('planReserve_vipTable_allowsMoreThanFree: cùng usage, free bị chặn còn vip qua; bậc lạ bị chặn như free', () => {
+  const table = {
+    free: { userDailyUploads: 2, relationshipDailyUploads: 4, relationshipStoredBytes: cfg.quotas.relationshipStoredBytes },
+    vip: { userDailyUploads: 200, relationshipDailyUploads: 400, relationshipStoredBytes: cfg.quotas.relationshipStoredBytes },
+  };
+  const usage = { ...noUsage, userCount: 2 };
+  const run = (tier) => media.planReserve({ rel: activeRel, uid: UID, input, existing: null, usage, nowMs: NOW, tier, table });
+  assert.equal(run('free').error.code, 'resource-exhausted');
+  assert.equal(run(undefined).error.code, 'resource-exhausted');
+  assert.equal(run('gold').error.code, 'resource-exhausted');
+  assert.ok(run('vip').asset);
+});
+
 test('planReserve: gọi lại đúng phiên còn hiệu lực thì ký lại, không cộng quota; khác chủ, khác loại, hết hạn thì từ chối', () => {
   const full = { ...noUsage, userCount: cfg.quotas.userDailyUploads };
   const again = media.planReserve({ rel: activeRel, uid: UID, input, existing: reserved({ kind: 'IMAGE', format: 'jpg' }), usage: full, nowMs: NOW });

@@ -68,6 +68,11 @@
     <string name="settings_notif_disabled_toast">Reminders disabled</string>
     <string name="settings_notif_sound_title">Sweet Melody Sound</string>
     <string name="settings_notif_sound_sub">Gentle romantic chime sound</string>
+    <string name="settings_exact_alarm_title">Allow exact alarms</string>
+    <string name="settings_exact_alarm_sub">Without it, reminders may arrive a few minutes late.</string>
+    <string name="settings_privacy_local_title">Your private memories stay on your phone</string>
+    <string name="settings_privacy_local_body">Memory photos, videos and notes are stored only on this phone. We do not store or read them on our servers, so your private memories are not exposed through us. If Android backup is on and your phone has a screen lock, a copy of your memories (up to about 25 MB; large videos may be left out) lives in your own Google account. Only your pairing info (name, birthday, anniversary date, love note, bio; your avatar only once avatar sync is on) travels through the pairing invite so your partner can see it. Your profile (name, birthday, gender, bio and interests; your avatar only once avatar sync is on) is saved with your account, so it comes back when you sign in on a new phone. Your email and password are used only to sign in and to recover your account. Apart from that Android backup, photos and memories never follow you to a new phone: that is how they stay private.</string>
+    <string name="settings_privacy_local_warning">Please do not clear the app data or delete InLove\'s folders on this phone: your memories would be lost and the app may show errors. When you change phones, memories come back only if Android backup is available.</string>
 
     <string name="settings_section_security">Security &amp; About</string>
     <string name="settings_lock_title">Private App Lock</string>
@@ -126,6 +131,10 @@
     <string name="btn_add_memory">Add New Memory</string>
     <string name="memory_empty_title">No memories saved yet</string>
     <string name="memory_empty_subtitle">Capture or pick your first photo to begin your love album together!</string>
+    <string name="memory_pick_multiple">Pick multiple photos (up to 10)</string>
+    <string name="memory_reorder_tip">Drag to reorder cover photo</string>
+    <string name="memory_cover_badge">Cover</string>
+    <string name="memory_loading_photos">Processing photos…</string>
     <string name="memory_filter_all">All</string>
     <string name="memory_filter_fav">Favorites</string>
     <string name="memory_delete_btn">Delete Photo</string>
@@ -155,14 +164,22 @@
     <string name="onboarding_counter_sub">Accurately count days together and celebrate memorable milestones: 100, 200, 365, 1000 days!</string>
     <string name="onboarding_memories_title">Memories &amp; Private Diary</string>
     <string name="onboarding_memories_sub">Capture photos, date spots and sweet thoughts safely preserved offline and synced across devices.</string>
-    <string name="onboarding_reminder_title">Smart Reminders &amp; AI Gifts</string>
-    <string name="onboarding_reminder_sub">Never forget important anniversaries with advance alerts (7d, 3d, 1d) plus AI romantic gift suggestions.</string>
+    <string name="onboarding_reminder_title">Smart Reminders &amp; Gift Ideas</string>
+    <string name="onboarding_reminder_sub">Never forget important anniversaries with advance alerts (7d, 3d, 1d) plus romantic gift ideas.</string>
     <string name="onboarding_start_title">Ready to Begin Your Journey</string>
     <string name="onboarding_start_sub">Personalize couple names, your anniversary start date, or start exploring immediately!</string>
     <string name="onboarding_btn_next">Continue</string>
     <string name="onboarding_btn_back">Back</string>
     <string name="onboarding_btn_skip">Skip</string>
     <string name="onboarding_btn_start">Get Started</string>
+    <string name="onboarding_counter_preview">💕 100 sweet days together and counting!</string>
+    <string name="onboarding_memories_card_title">First date • Walking Street 📸</string>
+    <string name="onboarding_memories_card_sub">Keep photos, places and sweet diary entries safe in one spot</string>
+    <string name="onboarding_reminder_ai_tip">Surprise gift ideas that fit your partner\'s likes</string>
+    <string name="onboarding_partner1_label">Partner 1 Name</string>
+    <string name="onboarding_partner2_label">Partner 2 Name</string>
+    <string name="onboarding_partner1_placeholder">e.g. Alex</string>
+    <string name="onboarding_partner2_placeholder">e.g. Mia</string>
 
     <!-- Calendar Screen -->
     <string name="calendar_title">Anniversary Calendar</string>
@@ -179,13 +196,6 @@
 
     <!-- Gift Screen -->
     <string name="gift_screen_title">Gift Suggestions</string>
-    <string name="gift_cat_all">All</string>
-    <string name="gift_cat_jewelry">Jewelry</string>
-    <string name="gift_cat_tech">Tech Gadgets</string>
-    <string name="gift_cat_flowers">Flowers &amp; Cards</string>
-    <string name="gift_cat_travel">Travel &amp; Date</string>
-    <string name="gift_cat_fashion">Fashion</string>
-    <string name="gift_cat_diy">Handmade &amp; DIY</string>
     <string name="gift_checklist_title">Preparation Checklist</string>
     <string name="gift_checklist_add">Add Checklist Item</string>
     <string name="gift_delete_reminder_title">Delete Gift Reminder?</string>

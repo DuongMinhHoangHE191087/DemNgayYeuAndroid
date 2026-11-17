@@ -1,7 +1,7 @@
 package com.example.domain.media
 
-import java.io.File
 import java.io.IOException
+import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -51,7 +51,7 @@ class MemoryMediaTest {
     val bigPhoto = validateMemoryMedia(MediaKind.IMAGE, "image/jpeg", 10 * mb + 1, 0)
     assert(bigPhoto == "Ảnh vượt quá 10 MB (10.0 MB). Vui lòng chọn ảnh nhẹ hơn.") { "got: $bigPhoto" }
     val avi = validateMemoryMedia(MediaKind.VIDEO, "video/avi", mb, 5)
-    assert(avi == "Định dạng video chưa được hỗ trợ (MP4, MOV, WEBM).") { "got: $avi" }
+    assert(avi == "Định dạng video chưa được hỗ trợ (MP4, MOV).") { "got: $avi" }
     val bigVideo = validateMemoryMedia(MediaKind.VIDEO, "video/mp4", 50 * mb + 1, 5)
     assert(bigVideo == "Video vượt quá 50 MB (50.0 MB).") { "got: $bigVideo" }
   }
@@ -64,7 +64,7 @@ class MemoryMediaTest {
     assert(formatExtensionOf("image/gif") == null)
   }
 
-  private val photo = MemoryMediaFile(File("a.jpg"), MediaKind.IMAGE, "image/jpeg", mb)
+  private val photo = MemoryMediaFile("a.jpg", MediaKind.IMAGE, "image/jpeg", mb)
 
   private class FakeRepository(
     private val uploadResult: () -> String = { "inlove_mem_m1" },
@@ -143,5 +143,57 @@ class MemoryMediaTest {
     val result = ResolveMemoryMediaUrlUseCase(FakeRepository(urlResult = { throw IOException("x") }))(currentRelationshipId = "rel", relationshipId = "rel", memoryId = "m1")
 
     assert(result.isFailure)
+  }
+
+  @Test
+  fun memoryMediaFile_exposesPathString() {
+    val media: String = MemoryMediaFile(path = "a.jpg", MediaKind.IMAGE, "image/jpeg", 1L).path
+    assert(media == "a.jpg") { "got: $media" }
+  }
+
+  @Test
+  fun formatBytes_oneDecimalForMbZeroDecimalForKb() {
+    val cases = listOf(
+      0L to "0 KB",
+      1023L to "1 KB",
+      1024L to "1 KB",
+      1572864L to "1.5 MB",
+      1048575L to "1024 KB",
+      1048576L to "1.0 MB",
+      1310720L to "1.3 MB",
+      2560L to "3 KB",
+      1536L to "2 KB",
+      1024L * 1024 * 10 to "10.0 MB",
+      -1L to "-0 KB",
+      -1024L to "-1 KB",
+      -1536L to "-2 KB",
+      -1048576L to "-1024 KB",
+      511L to "0 KB",
+      512L to "1 KB",
+      1535L to "1 KB",
+      -511L to "-0 KB",
+      -512L to "-1 KB",
+      1101004L to "1.0 MB",
+      1101005L to "1.1 MB",
+      52376371L to "49.9 MB",
+    )
+    for ((bytes, expected) in cases) {
+      val text = formatMediaSize(bytes)
+      assert(text == expected) { "$bytes bytes: expected $expected, got: $text" }
+    }
+  }
+
+  @Test
+  fun uploadFormats_uppercaseIsLocaleInvariant() {
+    val previous = Locale.getDefault()
+    Locale.setDefault(Locale.forLanguageTag("tr-TR"))
+    try {
+      val gif = validateMemoryMedia(MediaKind.IMAGE, "image/gif", mb, 0)
+      assert(gif == "Định dạng ảnh chưa được hỗ trợ (JPG, PNG, WEBP, HEIC).") { "got: $gif" }
+      assert(validateMemoryMedia(MediaKind.IMAGE, "IMAGE/JPEG", mb, 0) == null)
+      assert(formatExtensionOf("IMAGE/JPEG") == "jpg")
+    } finally {
+      Locale.setDefault(previous)
+    }
   }
 }

@@ -1,0 +1,266 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "cases": [
+    {
+      "id": "ascii-lowercase",
+      "input": {
+        "email": "alice@example.com"
+      },
+      "expected": {
+        "scope": "acct:alice@example.com",
+        "token": "a49314d1acc1492ab82cb587ea781238"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ascii-uppercase",
+      "input": {
+        "email": "BOB@EXAMPLE.COM"
+      },
+      "expected": {
+        "scope": "acct:bob@example.com",
+        "token": "9bfa1012ebe6ee3c3889cae7c4da5b5d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ascii-mixed-case-padded",
+      "input": {
+        "email": "  Alice.Smith@Example.COM  "
+      },
+      "expected": {
+        "scope": "acct:alice.smith@example.com",
+        "token": "6863546200411ea915e9e76aaeb7c820"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ascii-tab-newline-padded",
+      "input": {
+        "email": "\u0009carol@example.com\u000a"
+      },
+      "expected": {
+        "scope": "acct:carol@example.com",
+        "token": "24872c4ef6b8e36acb6b48e236233d15"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "nbsp-padded",
+      "input": {
+        "email": "\u00a0erin@example.com\u00a0"
+      },
+      "expected": {
+        "scope": "acct:erin@example.com",
+        "token": "abad3bd804608307a323c8e252654bfd"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "plus-tag-kept",
+      "input": {
+        "email": "alice+gift@example.com"
+      },
+      "expected": {
+        "scope": "acct:alice+gift@example.com",
+        "token": "183206517d4d5100405de874f2a6bbde"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dots-not-canonicalized",
+      "input": {
+        "email": "A.L.I.C.E@gmail.com"
+      },
+      "expected": {
+        "scope": "acct:a.l.i.c.e@gmail.com",
+        "token": "ac7a6eaec2c99f43a9cdbe99f108efbd"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "vietnamese-nfc",
+      "input": {
+        "email": "Nguy\u1ec5n.An@Example.vn"
+      },
+      "expected": {
+        "scope": "acct:nguy\u1ec5n.an@example.vn",
+        "token": "ba412dc36217ee7ffc5d5d5302abc15b"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "vietnamese-nfd",
+      "input": {
+        "email": "Nguye\u0302\u0303n.An@Example.vn"
+      },
+      "expected": {
+        "scope": "acct:nguye\u0302\u0303n.an@example.vn",
+        "token": "3d29e0cffda7c3ba6ab37eefa87bd6a3"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "vietnamese-nfc-uppercase",
+      "input": {
+        "email": "NGUY\u1ec4N@EXAMPLE.VN"
+      },
+      "expected": {
+        "scope": "acct:nguy\u1ec5n@example.vn",
+        "token": "1676cffbf45042546cc89c2a8fe19177"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "vietnamese-nfd-uppercase",
+      "input": {
+        "email": "NGUYE\u0302\u0303N@EXAMPLE.VN"
+      },
+      "expected": {
+        "scope": "acct:nguye\u0302\u0303n@example.vn",
+        "token": "42de1c7a96be406a02c728e53aefb7d3"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "turkish-dotted-capital-i-u0130",
+      "input": {
+        "email": "\u0130brahim@Example.TR"
+      },
+      "expected": {
+        "scope": "acct:i\u0307brahim@example.tr",
+        "token": "94baafab67e65c02a6f3cd016a4b1023"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "german-sharp-s",
+      "input": {
+        "email": "STRA\u00dfE@Example.de"
+      },
+      "expected": {
+        "scope": "acct:stra\u00dfe@example.de",
+        "token": "53445b31ab50637396aa959f394f6e48"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cyrillic-uppercase",
+      "input": {
+        "email": "\u0410\u043b\u0438\u0441@Example.ru"
+      },
+      "expected": {
+        "scope": "acct:\u0430\u043b\u0438\u0441@example.ru",
+        "token": "6458533708c03efe13842da971ee5af8"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "emoji-local-part",
+      "input": {
+        "email": "love\ud83d\udc96@Example.com"
+      },
+      "expected": {
+        "scope": "acct:love\ud83d\udc96@example.com",
+        "token": "0fea4bd93efd87c1831764f0ebc9c0c9"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zero-width-space-kept",
+      "input": {
+        "email": "\u200bfrank@example.com"
+      },
+      "expected": {
+        "scope": "acct:\u200bfrank@example.com",
+        "token": "e9fa3e0dd9b452f33b66a8fe6995b3f2"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty-string",
+      "input": {
+        "email": ""
+      },
+      "expected": {
+        "scope": "guest",
+        "token": "84983c60f7daadc1cb8698621f802c0d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "null-email",
+      "input": {
+        "email": null
+      },
+      "expected": {
+        "scope": "guest",
+        "token": "84983c60f7daadc1cb8698621f802c0d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank-only",
+      "input": {
+        "email": "   "
+      },
+      "expected": {
+        "scope": "guest",
+        "token": "84983c60f7daadc1cb8698621f802c0d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "whitespace-only-mixed",
+      "input": {
+        "email": "\u0009 \u00a0\u3000\u000a"
+      },
+      "expected": {
+        "scope": "guest",
+        "token": "84983c60f7daadc1cb8698621f802c0d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

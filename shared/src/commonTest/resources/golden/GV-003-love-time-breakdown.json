@@ -1,0 +1,1009 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "now-equals-start",
+      "input": {
+        "startText": "15/06/2024",
+        "nowMillis": 1718384400000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 1,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 1,
+        "totalHours": 24,
+        "totalMinutes": 1440,
+        "totalSeconds": 0,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 99,
+        "milestoneProgress": "0.010000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "one-second-before-start",
+      "input": {
+        "startText": "15/06/2024",
+        "nowMillis": 1718384399000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 0,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 0,
+        "totalHours": 0,
+        "totalMinutes": 0,
+        "totalSeconds": 0,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 100,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "future-start",
+      "input": {
+        "startText": "01/01/2099",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 0,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 0,
+        "totalHours": 0,
+        "totalMinutes": 0,
+        "totalSeconds": 0,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 100,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank",
+      "input": {
+        "startText": "",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 0,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 0,
+        "totalHours": 0,
+        "totalMinutes": 0,
+        "totalSeconds": 0,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 100,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "invalid-text",
+      "input": {
+        "startText": "not-a-date",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 0,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 0,
+        "totalHours": 0,
+        "totalMinutes": 0,
+        "totalSeconds": 0,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 100,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-31-01-now-01-03",
+      "input": {
+        "startText": "31/01/2024",
+        "nowMillis": 1709269200000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 31,
+        "years": 0,
+        "months": 1,
+        "days": 0,
+        "totalWeeks": 4,
+        "remainingDaysInWeek": 3,
+        "totalHours": 744,
+        "totalMinutes": 44640,
+        "totalSeconds": 2635200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 69,
+        "milestoneProgress": "0.310000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-29-02-leap",
+      "input": {
+        "startText": "29/02/2024",
+        "nowMillis": 1740718800000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 366,
+        "years": 0,
+        "months": 11,
+        "days": 30,
+        "totalWeeks": 52,
+        "remainingDaysInWeek": 2,
+        "totalHours": 8784,
+        "totalMinutes": 527040,
+        "totalSeconds": 31579200,
+        "nextMilestoneDays": 500,
+        "daysUntilMilestone": 134,
+        "milestoneProgress": "0.007407"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-one-year",
+      "input": {
+        "startText": "15/06/2023",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 367,
+        "years": 1,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 52,
+        "remainingDaysInWeek": 3,
+        "totalHours": 8808,
+        "totalMinutes": 528480,
+        "totalSeconds": 31665600,
+        "nextMilestoneDays": 500,
+        "daysUntilMilestone": 133,
+        "milestoneProgress": "0.014815"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-100-days",
+      "input": {
+        "startText": "08/03/2024",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 100,
+        "years": 0,
+        "months": 3,
+        "days": 7,
+        "totalWeeks": 14,
+        "remainingDaysInWeek": 2,
+        "totalHours": 2400,
+        "totalMinutes": 144000,
+        "totalSeconds": 8596800,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 100,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-23h-day",
+      "input": {
+        "startText": "10/03/2024",
+        "nowMillis": 1710142200000,
+        "zone": "America/Los_Angeles"
+      },
+      "expected": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 84600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "androidLegacy": {
+        "totalDays": 1,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 1,
+        "totalHours": 24,
+        "totalMinutes": 1440,
+        "totalSeconds": 84600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 99,
+        "milestoneProgress": "0.010000"
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "dst-25h-day",
+      "input": {
+        "startText": "03/11/2024",
+        "nowMillis": 1730705400000,
+        "zone": "America/Los_Angeles"
+      },
+      "expected": {
+        "totalDays": 1,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 1,
+        "totalHours": 24,
+        "totalMinutes": 1440,
+        "totalSeconds": 88200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 99,
+        "milestoneProgress": "0.010000"
+      },
+      "androidLegacy": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 88200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "year-end-rollover",
+      "input": {
+        "startText": "31/12/2023",
+        "nowMillis": 1704085200000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 129600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "month-borrow",
+      "input": {
+        "startText": "20/03/2024",
+        "nowMillis": 1717995600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 83,
+        "years": 0,
+        "months": 2,
+        "days": 21,
+        "totalWeeks": 11,
+        "remainingDaysInWeek": 6,
+        "totalHours": 1992,
+        "totalMinutes": 119520,
+        "totalSeconds": 7128000,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 17,
+        "milestoneProgress": "0.830000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "four-input-formats",
+      "input": {
+        "startText": "05/03/2024",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 103,
+        "years": 0,
+        "months": 3,
+        "days": 10,
+        "totalWeeks": 14,
+        "remainingDaysInWeek": 5,
+        "totalHours": 2472,
+        "totalMinutes": 148320,
+        "totalSeconds": 8856000,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zone-ho-chi-minh",
+      "input": {
+        "startText": "01/01/2024",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 167,
+        "years": 0,
+        "months": 5,
+        "days": 14,
+        "totalWeeks": 23,
+        "remainingDaysInWeek": 6,
+        "totalHours": 4008,
+        "totalMinutes": 240480,
+        "totalSeconds": 14385600,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 33,
+        "milestoneProgress": "0.670000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zone-los-angeles",
+      "input": {
+        "startText": "01/01/2024",
+        "nowMillis": 1718478000000,
+        "zone": "America/Los_Angeles"
+      },
+      "expected": {
+        "totalDays": 167,
+        "years": 0,
+        "months": 5,
+        "days": 14,
+        "totalWeeks": 23,
+        "remainingDaysInWeek": 6,
+        "totalHours": 4008,
+        "totalMinutes": 240480,
+        "totalSeconds": 14382000,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 33,
+        "milestoneProgress": "0.670000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "zone-auckland",
+      "input": {
+        "startText": "01/01/2024",
+        "nowMillis": 1718409600000,
+        "zone": "Pacific/Auckland"
+      },
+      "expected": {
+        "totalDays": 167,
+        "years": 0,
+        "months": 5,
+        "days": 14,
+        "totalWeeks": 23,
+        "remainingDaysInWeek": 6,
+        "totalHours": 4008,
+        "totalMinutes": 240480,
+        "totalSeconds": 14389200,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 33,
+        "milestoneProgress": "0.670000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "four-input-formats-d-m-yyyy",
+      "input": {
+        "startText": "5/3/2024",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 103,
+        "years": 0,
+        "months": 3,
+        "days": 10,
+        "totalWeeks": 14,
+        "remainingDaysInWeek": 5,
+        "totalHours": 2472,
+        "totalMinutes": 148320,
+        "totalSeconds": 8856000,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "four-input-formats-dd-mm-yyyy-dash",
+      "input": {
+        "startText": "05-03-2024",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 103,
+        "years": 0,
+        "months": 3,
+        "days": 10,
+        "totalWeeks": 14,
+        "remainingDaysInWeek": 5,
+        "totalHours": 2472,
+        "totalMinutes": 148320,
+        "totalSeconds": 8856000,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "four-input-formats-iso",
+      "input": {
+        "startText": "2024-03-05",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 103,
+        "years": 0,
+        "months": 3,
+        "days": 10,
+        "totalWeeks": 14,
+        "remainingDaysInWeek": 5,
+        "totalHours": 2472,
+        "totalMinutes": 148320,
+        "totalSeconds": 8856000,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-23h-day-outside-ghost-hour-agrees",
+      "input": {
+        "startText": "09/03/2024",
+        "nowMillis": 1710183600000,
+        "zone": "America/Los_Angeles"
+      },
+      "expected": {
+        "totalDays": 3,
+        "years": 0,
+        "months": 0,
+        "days": 2,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 3,
+        "totalHours": 72,
+        "totalMinutes": 4320,
+        "totalSeconds": 212400,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "dst-25h-day-outside-ghost-hour-agrees",
+      "input": {
+        "startText": "02/11/2024",
+        "nowMillis": 1730664000000,
+        "zone": "America/Los_Angeles"
+      },
+      "expected": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 133200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "la-year-end-rollover",
+      "input": {
+        "startText": "31/12/2023",
+        "nowMillis": 1704139200000,
+        "zone": "America/Los_Angeles"
+      },
+      "expected": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 129600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "auckland-dst-23h-day",
+      "input": {
+        "startText": "29/09/2024",
+        "nowMillis": 1727609400000,
+        "zone": "Pacific/Auckland"
+      },
+      "expected": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 84600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "androidLegacy": {
+        "totalDays": 1,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 1,
+        "totalHours": 24,
+        "totalMinutes": 1440,
+        "totalSeconds": 84600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 99,
+        "milestoneProgress": "0.010000"
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "auckland-dst-25h-day",
+      "input": {
+        "startText": "07/04/2024",
+        "nowMillis": 1712489400000,
+        "zone": "Pacific/Auckland"
+      },
+      "expected": {
+        "totalDays": 1,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 1,
+        "totalHours": 24,
+        "totalMinutes": 1440,
+        "totalSeconds": 88200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 99,
+        "milestoneProgress": "0.010000"
+      },
+      "androidLegacy": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 88200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "divergence": "calendar-day-count",
+      "optional": false
+    },
+    {
+      "id": "auckland-dst-23h-day-outside-ghost-hour-agrees",
+      "input": {
+        "startText": "28/09/2024",
+        "nowMillis": 1727650800000,
+        "zone": "Pacific/Auckland"
+      },
+      "expected": {
+        "totalDays": 3,
+        "years": 0,
+        "months": 0,
+        "days": 2,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 3,
+        "totalHours": 72,
+        "totalMinutes": 4320,
+        "totalSeconds": 212400,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "auckland-dst-25h-day-outside-ghost-hour-agrees",
+      "input": {
+        "startText": "06/04/2024",
+        "nowMillis": 1712448000000,
+        "zone": "Pacific/Auckland"
+      },
+      "expected": {
+        "totalDays": 2,
+        "years": 0,
+        "months": 0,
+        "days": 1,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 2,
+        "totalHours": 48,
+        "totalMinutes": 2880,
+        "totalSeconds": 133200,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 98,
+        "milestoneProgress": "0.020000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "auckland-month-borrow",
+      "input": {
+        "startText": "20/03/2024",
+        "nowMillis": 1717977600000,
+        "zone": "Pacific/Auckland"
+      },
+      "expected": {
+        "totalDays": 83,
+        "years": 0,
+        "months": 2,
+        "days": 21,
+        "totalWeeks": 11,
+        "remainingDaysInWeek": 6,
+        "totalHours": 1992,
+        "totalMinutes": 119520,
+        "totalSeconds": 7131600,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 17,
+        "milestoneProgress": "0.830000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-365-days",
+      "input": {
+        "startText": "17/06/2023",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 365,
+        "years": 0,
+        "months": 11,
+        "days": 29,
+        "totalWeeks": 52,
+        "remainingDaysInWeek": 1,
+        "totalHours": 8760,
+        "totalMinutes": 525600,
+        "totalSeconds": 31492800,
+        "nextMilestoneDays": 500,
+        "daysUntilMilestone": 135,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "milestone-range-730-1000",
+      "input": {
+        "startText": "01/01/2022",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 897,
+        "years": 2,
+        "months": 5,
+        "days": 14,
+        "totalWeeks": 128,
+        "remainingDaysInWeek": 1,
+        "totalHours": 21528,
+        "totalMinutes": 1291680,
+        "totalSeconds": 77457600,
+        "nextMilestoneDays": 1000,
+        "daysUntilMilestone": 103,
+        "milestoneProgress": "0.618519"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "milestone-range-1500-1825",
+      "input": {
+        "startText": "01/01/2020",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 1628,
+        "years": 4,
+        "months": 5,
+        "days": 14,
+        "totalWeeks": 232,
+        "remainingDaysInWeek": 4,
+        "totalHours": 39072,
+        "totalMinutes": 2344320,
+        "totalSeconds": 140616000,
+        "nextMilestoneDays": 1825,
+        "daysUntilMilestone": 197,
+        "milestoneProgress": "0.393846"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-5000-days",
+      "input": {
+        "startText": "08/10/2010",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 5000,
+        "years": 13,
+        "months": 8,
+        "days": 7,
+        "totalWeeks": 714,
+        "remainingDaysInWeek": 2,
+        "totalHours": 120000,
+        "totalMinutes": 7200000,
+        "totalSeconds": 431956800,
+        "nextMilestoneDays": 5500,
+        "daysUntilMilestone": 500,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "beyond-5000-multiples-of-500",
+      "input": {
+        "startText": "01/01/2010",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 5280,
+        "years": 14,
+        "months": 5,
+        "days": 14,
+        "totalWeeks": 754,
+        "remainingDaysInWeek": 2,
+        "totalHours": 126720,
+        "totalMinutes": 7603200,
+        "totalSeconds": 456148800,
+        "nextMilestoneDays": 5500,
+        "daysUntilMilestone": 220,
+        "milestoneProgress": "0.560000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-1349-days",
+      "input": {
+        "startText": "06/10/2020",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 1349,
+        "years": 3,
+        "months": 8,
+        "days": 9,
+        "totalWeeks": 192,
+        "remainingDaysInWeek": 5,
+        "totalHours": 32376,
+        "totalMinutes": 1942560,
+        "totalSeconds": 116510400,
+        "nextMilestoneDays": 1500,
+        "daysUntilMilestone": 151,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-2500-days",
+      "input": {
+        "startText": "12/08/2017",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 2500,
+        "years": 6,
+        "months": 10,
+        "days": 3,
+        "totalWeeks": 357,
+        "remainingDaysInWeek": 1,
+        "totalHours": 60000,
+        "totalMinutes": 3600000,
+        "totalSeconds": 215956800,
+        "nextMilestoneDays": 3000,
+        "daysUntilMilestone": 500,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "exactly-3650-days",
+      "input": {
+        "startText": "19/06/2014",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 3650,
+        "years": 9,
+        "months": 11,
+        "days": 27,
+        "totalWeeks": 521,
+        "remainingDaysInWeek": 3,
+        "totalHours": 87600,
+        "totalMinutes": 5256000,
+        "totalSeconds": 315316800,
+        "nextMilestoneDays": 5000,
+        "daysUntilMilestone": 1350,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "lenient-rejected-31-02",
+      "input": {
+        "startText": "31/02/2024",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 0,
+        "years": 0,
+        "months": 0,
+        "days": 0,
+        "totalWeeks": 0,
+        "remainingDaysInWeek": 0,
+        "totalHours": 0,
+        "totalMinutes": 0,
+        "totalSeconds": 0,
+        "nextMilestoneDays": 100,
+        "daysUntilMilestone": 100,
+        "milestoneProgress": "0.000000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "start-text-newline-wrapped",
+      "input": {
+        "startText": "\u000a05/03/2024\u000a",
+        "nowMillis": 1718427600000,
+        "zone": "Asia/Ho_Chi_Minh"
+      },
+      "expected": {
+        "totalDays": 103,
+        "years": 0,
+        "months": 3,
+        "days": 10,
+        "totalWeeks": 14,
+        "remainingDaysInWeek": 5,
+        "totalHours": 2472,
+        "totalMinutes": 148320,
+        "totalSeconds": 8856000,
+        "nextMilestoneDays": 200,
+        "daysUntilMilestone": 97,
+        "milestoneProgress": "0.030000"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

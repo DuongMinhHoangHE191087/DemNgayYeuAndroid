@@ -12,24 +12,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,6 +41,12 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import com.example.data.repository.UnlockResult
+import com.example.ui.components.AppDialog
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
+import com.example.ui.components.disabledLook
+import com.example.ui.theme.MinTouchBox
+import com.example.ui.theme.Primary
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.findActivity
 import com.example.ui.util.unlockFailureText
@@ -61,7 +68,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.example.data.model.UserAccountEntity
 import com.example.ui.viewmodel.InLoveViewModel
 import kotlinx.coroutines.launch
@@ -308,38 +314,35 @@ fun AppPinLockScreen(
         modifier = Modifier.padding(bottom = 12.dp)
       ) {
         if (canUseFacebook) {
-          Button(
+          val unlockFacebookEnabled = !isBusy
+          SecondaryButton(
+            text = if (isEnglish) "Unlock with Facebook" else "Mở khóa bằng Facebook",
             onClick = {
-              val activity = context.findActivity() ?: return@Button
-              isBusy = true
-              scope.launch {
-                val result = viewModel.authRepo.unlockWithFacebook(activity)
-                isBusy = false
-                if (result !is UnlockResult.Success) viewModel.showToast(unlockFailureText(result, isEnglish).orEmpty())
+              if (unlockFacebookEnabled) {
+                val activity = context.findActivity() ?: return@SecondaryButton
+                isBusy = true
+                scope.launch {
+                  val result = viewModel.authRepo.unlockWithFacebook(activity)
+                  isBusy = false
+                  if (result !is UnlockResult.Success) viewModel.showToast(unlockFailureText(result, isEnglish).orEmpty())
+                }
               }
             },
-            enabled = !isBusy,
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2)),
             modifier = Modifier
               .fillMaxWidth()
-              .height(48.dp)
-              .testTag("btn_pin_use_facebook")
-          ) {
-            Text(
-              text = if (isEnglish) "Unlock with Facebook" else "Mở khóa bằng Facebook",
-              fontWeight = FontWeight.SemiBold
-            )
-          }
+              .heightIn(min = MinTouchBox)
+              .disabledLook(unlockFacebookEnabled),
+            testTag = "btn_pin_use_facebook"
+          )
         }
 
         if (!viewModel.authRepo.isProviderOnly(account)) TextButton(
           onClick = { showPasswordFallbackDialog = true },
+          colors = ButtonDefaults.textButtonColors(contentColor = Primary),
           modifier = Modifier.testTag("btn_pin_use_password")
         ) {
           Text(
             text = "Quên PIN? Mở khóa bằng mật khẩu tài khoản",
-            color = Color(0xFFC2185B),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium
           )
@@ -351,12 +354,13 @@ fun AppPinLockScreen(
               viewModel.authRepo.logout()
               viewModel.showToast("Đã đăng xuất tài khoản!")
             }
-          }
+          },
+          colors = ButtonDefaults.textButtonColors(contentColor = Primary)
         ) {
           Text(
             text = "Đăng xuất tài khoản khác",
-            color = Color(0xFF757575),
-            fontSize = 12.sp
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
           )
         }
       }
@@ -368,7 +372,7 @@ fun AppPinLockScreen(
     var passwordInput by remember { mutableStateOf("") }
     var pwdError by remember { mutableStateOf<String?>(null) }
 
-    Dialog(onDismissRequest = { showPasswordFallbackDialog = false }) {
+    AppDialog(onDismissRequest = { showPasswordFallbackDialog = false }) {
       Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -377,7 +381,7 @@ fun AppPinLockScreen(
           .padding(16.dp)
       ) {
         Column(
-          modifier = Modifier.padding(20.dp),
+          modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState()),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           Text(
@@ -414,14 +418,14 @@ fun AppPinLockScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
-            OutlinedButton(
+            SecondaryButton(
+              text = "Đóng",
               onClick = { showPasswordFallbackDialog = false },
-              modifier = Modifier.weight(1f)
-            ) {
-              Text("Đóng")
-            }
+              modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+            )
 
-            androidx.compose.material3.Button(
+            PrimaryGradientButton(
+              text = "Mở khóa",
               onClick = {
                 scope.launch {
                   val result = viewModel.authRepo.unlockWithAccountPassword(passwordInput)
@@ -433,11 +437,8 @@ fun AppPinLockScreen(
                   }
                 }
               },
-              colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-              modifier = Modifier.weight(1f)
-            ) {
-              Text("Mở khóa")
-            }
+              modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+            )
           }
         }
       }

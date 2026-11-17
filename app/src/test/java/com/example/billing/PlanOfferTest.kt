@@ -1,20 +1,9 @@
 package com.example.billing
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.test.core.app.ApplicationProvider
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.Robolectric
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
 class PlanOfferTest {
 
   @Test
@@ -27,6 +16,19 @@ class PlanOfferTest {
   }
 
   @Test
+  fun multiDigitPeriodsAreWholeDays() {
+    assertEquals(10, isoPeriodToDays("P10D"))
+    assertEquals(84, isoPeriodToDays("P12W"))
+    assertEquals(6993, isoPeriodToDays("P999W"))
+  }
+
+  @Test
+  fun malformedPeriodsAreNullAndNeverThrow() {
+    listOf("", "P", "PD", "PW", "P1000D", "P99999999999D", "p3d", " P3D", "P3D ", "P1W2D", "PT3D", "P-1D", "3D")
+      .forEach { assertNull(isoPeriodToDays(it), "should reject: '$it'") }
+  }
+
+  @Test
   fun offerWithoutPriceIsNull() {
     assertNull(planOfferOf(null, "P7D", true))
   }
@@ -35,21 +37,8 @@ class PlanOfferTest {
   fun trialOfferKeepsLengthAndPaidOfferDropsIt() {
     assertEquals(PlanOffer("99.000đ", true, 7), planOfferOf("99.000đ", "P7D", true))
     assertEquals(PlanOffer("99.000đ", false, null), planOfferOf("99.000đ", "P7D", false))
-  }
-
-  @Test
-  fun explicitActivityWinsOverContext() {
-    val activity = Robolectric.buildActivity(Activity::class.java).get()
-    val other = ApplicationProvider.getApplicationContext<Context>()
-    assertSame(activity, resolveHostActivity(activity, other))
-  }
-
-  @Test
-  fun activityIsFoundThroughWrappersButNotThroughConfigurationContext() {
-    val activity = Robolectric.buildActivity(Activity::class.java).get()
-    assertSame(activity, resolveHostActivity(null, ContextWrapper(ContextWrapper(activity))))
-    // createConfigurationContext does not wrap the Activity: only the explicit one can be used
-    val cfg = activity.createConfigurationContext(activity.resources.configuration)
-    assertNull(resolveHostActivity(null, cfg))
+    // a trial whose length is not whole days still counts as a trial, just without a day count
+    assertEquals(PlanOffer("99.000đ", true, null), planOfferOf("99.000đ", "P1M", true))
+    assertEquals(PlanOffer("99.000đ", true, null), planOfferOf("99.000đ", null, true))
   }
 }

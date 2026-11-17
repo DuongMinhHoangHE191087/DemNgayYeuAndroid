@@ -8,8 +8,12 @@ import com.example.data.model.GiftReminderEntity
 import com.example.data.model.MilestoneEntity
 import com.example.data.model.ReminderCadenceEntity
 import com.example.data.model.SharedMemoryEntity
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -135,6 +139,128 @@ class AccountIsolationTest {
     assertEquals(emptyList<String>(), memories())
     vault.switchTo(AccountDataVault.GUEST)
     assertEquals(listOf("guest memory"), memories())
+  }
+
+  // A vault whose hooks record the scope token they run under: the cancel hook must see the outgoing scope, the resync hook the new one.
+  private fun recordingVault(calls: MutableList<String>): AccountDataVault {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    return AccountDataVault(
+      context, db,
+      beforeSwitch = { calls += "before:" + AccountDataVault.currentToken(context) },
+      afterSwitch = { calls += "after:" + AccountDataVault.currentToken(context) },
+      afterAdopt = { _, _ -> calls += "adopted:" + AccountDataVault.currentToken(context) }
+    )
+  }
+
+  // The process died right after the pending marker (guest -> scope) was written, before anything moved.
+  private fun interruptPendingGuestTo(scope: String) {
+    ApplicationProvider.getApplicationContext<Context>().getSharedPreferences("inlove_account_scope", Context.MODE_PRIVATE).edit()
+      .putString("pending", "${AccountDataVault.GUEST}|$scope|false").commit()
+  }
+
+  // Recovery changes the scope, so it runs the cancel hook before the scope write and the resync hook after it, even when it is all that is left to do.
+  @Test
+  fun recoveringAnInterruptedSwitchRunsTheHooksEvenWhenNothingElseChanges() = runBlocking {
+    val a = AccountDataVault.scopeOf("a@x.com")
+    dao.insertSharedMemory(memory("guest memory"))
+    interruptPendingGuestTo(a)
+    val calls = mutableListOf<String>()
+
+    recordingVault(calls).switchTo(a)
+
+    assertEquals(
+      listOf("before:" + AccountDataVault.tokenOf(AccountDataVault.GUEST), "after:" + AccountDataVault.tokenOf(a)),
+      calls
+    )
+    assertEquals(emptyList<String>(), memories())
+  }
+
+  // Recovery and then a real switch: each transition runs the cancel hook under its own outgoing scope, one resync follows at the end.
+  @Test
+  fun recoveringAnInterruptedSwitchAndThenSwitchingAgainRunsTheCancelHookForBoth() = runBlocking {
+    val a = AccountDataVault.scopeOf("a@x.com")
+    val b = AccountDataVault.scopeOf("b@x.com")
+    dao.insertSharedMemory(memory("guest memory"))
+    interruptPendingGuestTo(a)
+    val calls = mutableListOf<String>()
+
+    recordingVault(calls).switchTo(b)
+
+    assertEquals(
+      listOf(
+        "before:" + AccountDataVault.tokenOf(AccountDataVault.GUEST),
+        "before:" + AccountDataVault.tokenOf(a),
+        "after:" + AccountDataVault.tokenOf(b)
+      ),
+      calls
+    )
+  }
+
+  // Adopting after an interrupted switch: the recovery counts as a changed scope, the adoption itself runs no hook.
+  @Test
+  fun adoptingAfterAnInterruptedSwitchRunsTheHooksForTheRecoveryOnly() = runBlocking {
+    val a = AccountDataVault.scopeOf("a@x.com")
+    val fresh = AccountDataVault.scopeOf("new@x.com")
+    dao.insertSharedMemory(memory("guest memory"))
+    interruptPendingGuestTo(a)
+    val calls = mutableListOf<String>()
+
+    recordingVault(calls).adoptCurrentInto(fresh)
+
+    assertEquals(
+      listOf("before:" + AccountDataVault.tokenOf(AccountDataVault.GUEST), "after:" + AccountDataVault.tokenOf(fresh)),
+      calls
+    )
+  }
+
+  // A plain adoption moves no data and cancels nothing, but alarms armed under the guest token must be re-armed under the new one:
+  // only the adopt hook runs, after the scope write, and it is told the epoch before and after so a caller can tell stale state apart.
+  @Test
+  fun adoptingWithoutAnInterruptedSwitchRunsOnlyTheAdoptHook() = runBlocking {
+    val calls = mutableListOf<String>()
+    val fresh = AccountDataVault.scopeOf("new@x.com")
+
+    recordingVault(calls).adoptCurrentInto(fresh)
+
+    assertEquals(listOf("adopted:" + AccountDataVault.tokenOf(fresh)), calls)
+  }
+
+  @Test
+  fun theAdoptHookGetsTheEpochBeforeAndAfterTheAdoption() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val seen = mutableListOf<Pair<Long, Long>>()
+    val hooked = AccountDataVault(context, db, afterAdopt = { before, after -> seen += before to after })
+    val epochBefore = AccountDataVault.epoch.get()
+
+    hooked.adoptCurrentInto(AccountDataVault.scopeOf("new@x.com"))
+
+    assertEquals(listOf(epochBefore to AccountDataVault.epoch.get()), seen)
+    assertEquals(epochBefore + 1, seen.single().second)
+  }
+
+  // Two registrations can overlap: the second adoption must wait for the first hook, otherwise the hooks run in reverse order and a
+  // caller that carries a stamp from one epoch pair to the next (InLoveViewModel) skips a step and stays stale.
+  @Test
+  fun overlappingAdoptionsRunTheirHooksOneAtATimeInOrder() = runBlocking {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val seen = mutableListOf<Pair<Long, Long>>()
+    val gate = CompletableDeferred<Unit>()
+    val hooked = AccountDataVault(context, db, afterAdopt = { before, after ->
+      seen += before to after
+      if (seen.size == 1) gate.await()
+    })
+    val epochBefore = AccountDataVault.epoch.get()
+
+    val first = launch { hooked.adoptCurrentInto(AccountDataVault.scopeOf("a@x.com")) }
+    withTimeout(10_000) { while (seen.isEmpty()) delay(10) }
+    val second = launch { hooked.adoptCurrentInto(AccountDataVault.scopeOf("b@x.com")) }
+    delay(300)
+    assertEquals("the second adoption waits for the first hook", 1, seen.size)
+    gate.complete(Unit)
+    first.join()
+    second.join()
+
+    assertEquals(listOf(epochBefore to epochBefore + 1, epochBefore + 1 to epochBefore + 2), seen)
   }
 
   private suspend fun cadenceEnabled(key: String) = dao.getAllReminderCadences().first().single { it.key == key }.isEnabled

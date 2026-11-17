@@ -51,21 +51,17 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -103,8 +99,15 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.ui.components.AppAlertDialog
+import com.example.ui.components.AppDialog
+import com.example.ui.components.AppDropdownMenu
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
+import com.example.ui.components.disabledLook
+import com.example.ui.theme.MinTouchBox
+import com.example.ui.theme.Primary
 import com.example.ui.util.AuthSecurityManager
 import com.example.ui.util.PasswordStrengthLevel
 import com.example.ui.viewmodel.InLoveViewModel
@@ -221,27 +224,15 @@ fun AuthScreen(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        TextButton(
+        SecondaryButton(
+          text = "Quay lại chế độ Khách (Offline)",
+          icon = Icons.AutoMirrored.Filled.ArrowBack,
           onClick = {
             viewModel.closeAuthScreen()
             onBackToGuest()
           },
-          shape = RoundedCornerShape(12.dp)
-        ) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Quay lại",
-            tint = Color(0xFFC2185B),
-            modifier = Modifier.size(20.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = "Quay lại chế độ Khách (Offline)",
-            color = Color(0xFFC2185B),
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.5.sp
-          )
-        }
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       }
 
       Spacer(modifier = Modifier.height(4.dp))
@@ -503,12 +494,13 @@ fun AuthScreen(
 
               TextButton(
                 onClick = { showForgotPasswordDialog = true },
+                colors = ButtonDefaults.textButtonColors(contentColor = Primary),
                 modifier = Modifier.testTag("btn_forgot_password")
               ) {
                 Text(
                   text = "Quên mật khẩu?",
-                  color = Color(0xFFC2185B),
-                  style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                  fontSize = 13.sp,
+                  fontWeight = FontWeight.Medium
                 )
               }
             }
@@ -516,98 +508,82 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Primary Submit Button: Login
-            Button(
-              onClick = {
-                if (isLockedOut) {
-                  viewModel.showToast("Tài khoản đang bị tạm khóa còn ${lockoutCountdownSeconds}s!")
-                  return@Button
-                }
-                focusManager.clearFocus()
-                isLoggingIn = true
-                scope.launch {
-                  val result = viewModel.authRepo.login(loginEmail, loginPassword, rememberMe)
-                  isLoggingIn = false
-                  if (!result.first) {
-                    val msg = result.second
-                    viewModel.showToast(msg)
-                    if (msg.contains("tạm khóa") || msg.contains("5 lần")) {
-                      isLockedOut = true
-                      lockoutCountdownSeconds = 180L
-                    } else if (msg.contains("lần thử")) {
-                      failedAttemptNotice = msg
-                    }
-                  } else {
-                    viewModel.showToast(result.second)
-                    viewModel.closeAuthScreen()
-                    onBackToGuest()
-                  }
-                }
-              },
-              enabled = !isLoggingIn && !isLockedOut && loginEmail.isNotBlank() && loginPassword.isNotBlank(),
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFE91E63),
-                disabledContainerColor = Color(0xFFF8BBD0)
-              ),
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .testTag("btn_submit_login")
+            val loginEnabled = !isLoggingIn && !isLockedOut && loginEmail.isNotBlank() && loginPassword.isNotBlank()
+            Box(
+              modifier = Modifier.fillMaxWidth(),
+              contentAlignment = Alignment.Center
             ) {
+              PrimaryGradientButton(
+                text = if (isLoggingIn) "" else "Đăng Nhập",
+                icon = if (isLoggingIn) null else Icons.Default.Favorite,
+                onClick = {
+                  if (!loginEnabled) return@PrimaryGradientButton
+                  if (isLockedOut) {
+                    viewModel.showToast("Tài khoản đang bị tạm khóa còn ${lockoutCountdownSeconds}s!")
+                    return@PrimaryGradientButton
+                  }
+                  focusManager.clearFocus()
+                  isLoggingIn = true
+                  scope.launch {
+                    val result = viewModel.authRepo.login(loginEmail, loginPassword, rememberMe)
+                    isLoggingIn = false
+                    if (!result.first) {
+                      val msg = result.second
+                      viewModel.showToast(msg)
+                      if (msg.contains("tạm khóa") || msg.contains("5 lần")) {
+                        isLockedOut = true
+                        lockoutCountdownSeconds = 180L
+                      } else if (msg.contains("lần thử")) {
+                        failedAttemptNotice = msg
+                      }
+                    } else {
+                      viewModel.showToast(result.second)
+                      viewModel.closeAuthScreen()
+                      onBackToGuest()
+                    }
+                  }
+                },
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .heightIn(min = MinTouchBox)
+                  .disabledLook(loginEnabled),
+                testTag = "btn_submit_login"
+              )
               if (isLoggingIn) {
                 CircularProgressIndicator(
                   color = Color.White,
-                  modifier = Modifier.size(24.dp),
-                  strokeWidth = 2.dp
+                  strokeWidth = 2.dp,
+                  modifier = Modifier.size(20.dp)
                 )
-              } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                  Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                  )
-                  Spacer(modifier = Modifier.width(8.dp))
-                  Text(
-                    text = "Đăng Nhập",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                  )
-                }
               }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(
+            val fbLoginEnabled = !isLoggingIn
+            SecondaryButton(
+              text = "Tiếp tục với Facebook",
               onClick = {
-                val activity = authContext.findActivity() ?: return@OutlinedButton
-                focusManager.clearFocus()
-                isLoggingIn = true
-                scope.launch {
-                  val result = viewModel.authRepo.loginWithFacebook(activity, rememberMe)
-                  isLoggingIn = false
-                  viewModel.showToast(result.second)
-                  if (result.first) {
-                    viewModel.closeAuthScreen()
-                    onBackToGuest()
+                if (fbLoginEnabled) {
+                  val activity = authContext.findActivity() ?: return@SecondaryButton
+                  focusManager.clearFocus()
+                  isLoggingIn = true
+                  scope.launch {
+                    val result = viewModel.authRepo.loginWithFacebook(activity, rememberMe)
+                    isLoggingIn = false
+                    viewModel.showToast(result.second)
+                    if (result.first) {
+                      viewModel.closeAuthScreen()
+                      onBackToGuest()
+                    }
                   }
                 }
               },
-              enabled = !isLoggingIn,
-              shape = RoundedCornerShape(14.dp),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1877F2)),
               modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
-                .testTag("btn_login_facebook")
-            ) {
-              Text(
-                text = "Tiếp tục với Facebook",
-                color = Color(0xFF1877F2),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
-              )
-            }
+                .heightIn(min = MinTouchBox)
+                .disabledLook(fbLoginEnabled),
+              testTag = "btn_login_facebook"
+            )
 
             // Fast Test Login for QA / Developers only — must never reach a release build.
             // These buttons log in as fixed Firestore fixture accounts with NO credential
@@ -628,49 +604,53 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
               ) {
-                OutlinedButton(
+                val testerAEnabled = !isLoggingIn
+                SecondaryButton(
+                  text = "Tester A 👨",
                   onClick = {
-                    isLoggingIn = true
-                    scope.launch {
-                      val res = viewModel.authRepo.loginTestUser(isPartner = false)
-                      isLoggingIn = false
-                      viewModel.showToast(res.second)
-                      if (res.first) {
-                        viewModel.closeAuthScreen()
-                        onBackToGuest()
+                    if (testerAEnabled) {
+                      isLoggingIn = true
+                      scope.launch {
+                        val res = viewModel.authRepo.loginTestUser(isPartner = false)
+                        isLoggingIn = false
+                        viewModel.showToast(res.second)
+                        if (res.first) {
+                          viewModel.closeAuthScreen()
+                          onBackToGuest()
+                        }
                       }
                     }
                   },
-                  enabled = !isLoggingIn,
-                  shape = RoundedCornerShape(10.dp),
                   modifier = Modifier
                     .weight(1f)
-                    .testTag("btn_quick_login_tester_a")
-                ) {
-                  Text("Tester A 👨", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
+                    .heightIn(min = MinTouchBox)
+                    .disabledLook(testerAEnabled),
+                  testTag = "btn_quick_login_tester_a"
+                )
 
-                OutlinedButton(
+                val testerBEnabled = !isLoggingIn
+                SecondaryButton(
+                  text = "Tester B 👩",
                   onClick = {
-                    isLoggingIn = true
-                    scope.launch {
-                      val res = viewModel.authRepo.loginTestUser(isPartner = true)
-                      isLoggingIn = false
-                      viewModel.showToast(res.second)
-                      if (res.first) {
-                        viewModel.closeAuthScreen()
-                        onBackToGuest()
+                    if (testerBEnabled) {
+                      isLoggingIn = true
+                      scope.launch {
+                        val res = viewModel.authRepo.loginTestUser(isPartner = true)
+                        isLoggingIn = false
+                        viewModel.showToast(res.second)
+                        if (res.first) {
+                          viewModel.closeAuthScreen()
+                          onBackToGuest()
+                        }
                       }
                     }
                   },
-                  enabled = !isLoggingIn,
-                  shape = RoundedCornerShape(10.dp),
                   modifier = Modifier
                     .weight(1f)
-                    .testTag("btn_quick_login_tester_b")
-                ) {
-                  Text("Tester B 👩", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
+                    .heightIn(min = MinTouchBox)
+                    .disabledLook(testerBEnabled),
+                  testTag = "btn_quick_login_tester_b"
+                )
               }
             }
           } else {
@@ -691,7 +671,7 @@ fun AuthScreen(
                 )
               },
               singleLine = true,
-              keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+              keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false, imeAction = ImeAction.Next),
               keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
               shape = RoundedCornerShape(14.dp),
               colors = authTextFieldColors(),
@@ -897,7 +877,7 @@ fun AuthScreen(
                   )
                 }
               }
-              DropdownMenu(
+              AppDropdownMenu(
                 expanded = regQuestionExpanded,
                 onDismissRequest = { regQuestionExpanded = false },
                 modifier = Modifier.fillMaxWidth(0.88f)
@@ -905,6 +885,7 @@ fun AuthScreen(
                 AuthSecurityManager.SECURITY_QUESTIONS.forEach { question ->
                   DropdownMenuItem(
                     text = { Text(question, fontSize = 13.sp) },
+                    modifier = Modifier.heightIn(min = MinTouchBox),
                     onClick = {
                       regSecurityQuestion = question
                       regQuestionExpanded = false
@@ -965,66 +946,60 @@ fun AuthScreen(
             }
 
             if (askGuestData) {
-              AlertDialog(
+              AppAlertDialog(
                 onDismissRequest = { askGuestData = false },
+                scrollableText = true,
                 title = { Text("Dữ liệu đang có trên máy") },
                 text = {
                   Text("Máy này đang có kỷ niệm, nhắc hẹn hoặc việc cần làm bạn đã tạo khi chưa đăng nhập. Bạn muốn giữ chúng cho tài khoản mới hay bắt đầu một tài khoản trống? (Dữ liệu cũ vẫn được cất lại ở chế độ khách.)")
                 },
                 confirmButton = {
-                  TextButton(
+                  PrimaryGradientButton(
+                    text = "Giữ cho tài khoản mới",
                     onClick = { askGuestData = false; submitRegister(true) },
-                    modifier = Modifier.heightIn(min = 48.dp).testTag("btn_guest_data_keep")
-                  ) { Text("Giữ cho tài khoản mới") }
+                    modifier = Modifier.heightIn(min = MinTouchBox),
+                    testTag = "btn_guest_data_keep"
+                  )
                 },
                 dismissButton = {
-                  TextButton(
+                  SecondaryButton(
+                    text = "Bắt đầu mới",
                     onClick = { askGuestData = false; submitRegister(false) },
-                    modifier = Modifier.heightIn(min = 48.dp).testTag("btn_guest_data_fresh")
-                  ) { Text("Bắt đầu mới") }
+                    modifier = Modifier.heightIn(min = MinTouchBox),
+                    testTag = "btn_guest_data_fresh"
+                  )
                 }
               )
             }
 
-            Button(
-              onClick = {
-                focusManager.clearFocus()
-                // Chỉ hỏi khi khách thật sự có dữ liệu; không có thì đăng ký ngay như trước.
-                scope.launch {
-                  if (viewModel.authRepo.guestHasData()) askGuestData = true else submitRegister(true)
-                }
-              },
-              enabled = canRegister,
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFE91E63),
-                disabledContainerColor = Color(0xFFF8BBD0)
-              ),
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .testTag("btn_submit_register")
+            Box(
+              modifier = Modifier.fillMaxWidth(),
+              contentAlignment = Alignment.Center
             ) {
+              PrimaryGradientButton(
+                text = if (isRegistering) "" else "Đăng Ký Tài Khoản",
+                icon = if (isRegistering) null else Icons.Default.Favorite,
+                onClick = {
+                  if (canRegister) {
+                    focusManager.clearFocus()
+                    // Chỉ hỏi khi khách thật sự có dữ liệu; không có thì đăng ký ngay như trước.
+                    scope.launch {
+                      if (viewModel.authRepo.guestHasData()) askGuestData = true else submitRegister(true)
+                    }
+                  }
+                },
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .heightIn(min = MinTouchBox)
+                  .disabledLook(canRegister),
+                testTag = "btn_submit_register"
+              )
               if (isRegistering) {
                 CircularProgressIndicator(
                   color = Color.White,
-                  modifier = Modifier.size(24.dp),
-                  strokeWidth = 2.dp
+                  strokeWidth = 2.dp,
+                  modifier = Modifier.size(20.dp)
                 )
-              } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                  Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                  )
-                  Spacer(modifier = Modifier.width(8.dp))
-                  Text(
-                    text = "Đăng Ký Tài Khoản",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                  )
-                }
               }
             }
           }
@@ -1112,7 +1087,7 @@ fun ForgotPasswordDialog(
   var resultMessage by remember { mutableStateOf<String?>(null) }
   var resultOk by remember { mutableStateOf(false) }
 
-  Dialog(
+  AppDialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false)
   ) {
@@ -1185,31 +1160,39 @@ fun ForgotPasswordDialog(
 
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-          OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-            Text(if (isEnglish) "Close" else "Đóng")
-          }
-          Button(
-            onClick = {
-              isSending = true
-              resultMessage = null
-              scope.launch {
-                val res = viewModel.authRepo.requestPasswordResetOtp(emailInput)
-                isSending = false
-                resultOk = res.first
-                resultMessage = if (res.first) {
-                  if (isEnglish) "If an account exists for this email, a reset link has been sent. Check your inbox and spam folder."
-                  else "Nếu email này có tài khoản, liên kết đặt lại mật khẩu đã được gửi. Hãy kiểm tra hộp thư và thư rác."
-                } else res.second
-              }
-            },
-            enabled = !isSending && emailInput.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-            modifier = Modifier
-              .weight(1f)
-              .testTag("btn_forgot_send")
-          ) {
-            if (isSending) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            else Text(if (isEnglish) "Send link" else "Gửi liên kết")
+          SecondaryButton(
+            text = if (isEnglish) "Close" else "Đóng",
+            onClick = onDismiss,
+            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+          )
+          val sendEnabled = !isSending && emailInput.isNotBlank()
+          Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            PrimaryGradientButton(
+              text = if (isSending) "" else if (isEnglish) "Send link" else "Gửi liên kết",
+              onClick = {
+                if (sendEnabled) {
+                  isSending = true
+                  resultMessage = null
+                  scope.launch {
+                    val res = viewModel.authRepo.requestPasswordResetOtp(emailInput)
+                    isSending = false
+                    resultOk = res.first
+                    resultMessage = if (res.first) {
+                      if (isEnglish) "If an account exists for this email, a reset link has been sent. Check your inbox and spam folder."
+                      else "Nếu email này có tài khoản, liên kết đặt lại mật khẩu đã được gửi. Hãy kiểm tra hộp thư và thư rác."
+                    } else res.second
+                  }
+                }
+              },
+              modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = MinTouchBox)
+                .disabledLook(sendEnabled),
+              testTag = "btn_forgot_send"
+            )
+            if (isSending) {
+              CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+            }
           }
         }
       }

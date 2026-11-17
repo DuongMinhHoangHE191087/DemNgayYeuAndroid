@@ -1,5 +1,6 @@
 package com.example.domain.media
 
+import com.example.domain.DataResidencyPolicy
 import java.util.UUID
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -27,8 +28,12 @@ sealed interface SaveSharedMemoryOutcome {
 /**
  * Lưu kỷ niệm mới. Kỷ niệm riêng tư hoặc chưa ghép đôi không bao giờ được tải lên; kỷ niệm chia sẻ
  * chỉ được ghi khi ảnh/video đã tải lên xong, nên không có kỷ niệm nào trỏ tới ảnh chưa được xác nhận.
+ * Khi nội dung chỉ ở máy (DataResidencyPolicy.LOCAL_ONLY) thì không bao giờ tải lên và không đòi đăng nhập.
  */
-class SaveSharedMemoryUseCase(private val uploadMedia: UploadMemoryMediaUseCase) {
+class SaveSharedMemoryUseCase(
+  private val uploadMedia: UploadMemoryMediaUseCase,
+  private val cloudContent: Boolean = DataResidencyPolicy.cloudContent,
+) {
   suspend operator fun invoke(
     signedIn: Boolean,
     relationshipId: String?,
@@ -36,7 +41,7 @@ class SaveSharedMemoryUseCase(private val uploadMedia: UploadMemoryMediaUseCase)
     media: MemoryMediaFile?,
     store: suspend (memoryId: String, shareWithCouple: Boolean, publicId: String?) -> Unit,
   ): SaveSharedMemoryOutcome {
-    if (wantsShare && !signedIn) return SaveSharedMemoryOutcome.NotSignedIn
+    if (cloudContent && wantsShare && !signedIn) return SaveSharedMemoryOutcome.NotSignedIn
     // Chưa ghép đôi thì chưa có ai để chia sẻ: lưu riêng trên máy và báo cho người dùng biết.
     val unpaired = wantsShare && relationshipId.isNullOrBlank()
     val shareWithCouple = wantsShare && !unpaired
@@ -47,7 +52,7 @@ class SaveSharedMemoryUseCase(private val uploadMedia: UploadMemoryMediaUseCase)
     }
     // memoryId cũng là syncId: máy chủ chỉ chấp nhận publicId = tiền tố + memoryId.
     val memoryId = UUID.randomUUID().toString()
-    val publicId = uploadMedia(shareWithCouple, relationshipId, memoryId, media).getOrElse {
+    val publicId = if (!cloudContent) null else uploadMedia(shareWithCouple, relationshipId, memoryId, media).getOrElse {
       return SaveSharedMemoryOutcome.UploadFailed
     }
     return try {

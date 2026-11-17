@@ -3,6 +3,8 @@ package com.example.ui.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalContext
+import com.example.data.media.MediaPath
 
 /**
  * Ảnh hiển thị của kỷ niệm: ưu tiên bản trên máy; máy của người kia không có bản đó nên xin URL có hạn từ đám mây.
@@ -15,8 +17,9 @@ fun rememberMemoryUri(
   cloudPublicId: String?,
   resolve: suspend () -> String?,
 ): String? {
+  val filesDir = LocalContext.current.filesDir
   val remote by produceState<String?>(initialValue = null, memoryId, localUri, cloudPublicId) {
     value = if (localUri.isNullOrBlank() && !cloudPublicId.isNullOrBlank()) resolve() else null
   }
-  return if (localUri.isNullOrBlank()) remote else localUri
+  return if (localUri.isNullOrBlank()) remote else MediaPath.resolve(filesDir, localUri)
 }

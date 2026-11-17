@@ -6,10 +6,18 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.example.alarm.plan.ReminderKind
+import com.example.alarm.plan.ReminderTextArgs
+import com.example.alarm.plan.ReminderTexts
 import com.example.data.db.AccountDataVault
 import com.example.data.db.InLoveDao
+import com.example.data.repository.visibleAnniversaryDatesList
 import com.example.data.model.AnniversaryDateEntity
 import com.example.data.model.MilestoneEntity
+import com.example.data.model.RelationshipStatus
+import com.example.ui.util.AppLanguage
+import com.example.ui.util.LocaleManager
+import com.example.ui.util.ProfileUtils
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -75,7 +83,7 @@ object AlarmNotificationScheduler {
     )
     for (fmt in formats) {
       try {
-        val sdf = SimpleDateFormat(fmt, Locale.getDefault()).apply { isLenient = false }
+        val sdf = SimpleDateFormat(fmt, Locale.ROOT).apply { isLenient = false }
         val d = sdf.parse(cleanText)
         if (d != null) {
           val cal = Calendar.getInstance().apply { time = d }
@@ -288,11 +296,16 @@ object AlarmNotificationScheduler {
     val advanceOn = anniversary.reminderDaysBefore > 0 && (advanceKey == null || advanceKey !in disabledCadence)
     val advanceMillis = millisOn(date.minusDays(anniversary.reminderDaysBefore.toLong()))
     if (advanceOn && advanceMillis > now) {
+      val advanceText = ReminderTexts.of(
+        ReminderKind.ADVANCE,
+        isEnglish(context),
+        ReminderTextArgs(title = anniversary.title, dateText = anniversary.dateText, daysBefore = anniversary.reminderDaysBefore)
+      )
       val advanceScheduled = scheduleAlarm(
         context = context,
         reminderId = advanceAlarmId(anniversary.id),
-        title = "🔔 Sắp Đến: ${anniversary.title}",
-        message = "Còn ${anniversary.reminderDaysBefore} ngày nữa là đến ngày kỷ niệm '${anniversary.title}' (${anniversary.dateText}). Đừng quên chuẩn bị điều bất ngờ cho người ấy nhé! 💕",
+        title = advanceText.title,
+        message = advanceText.body,
         triggerAtMillis = advanceMillis,
         action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
         channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
@@ -306,7 +319,7 @@ object AlarmNotificationScheduler {
     // 2. Day-of notification (at 09:00 AM)
     val dayOfMillis = millisOn(date)
     if (CADENCE_EXACT_DAY !in disabledCadence && dayOfMillis > now) {
-      val (dayOfTitle, dayOfMessage) = dayOfTexts(anniversary.title, anniversary.dateText)
+      val (dayOfTitle, dayOfMessage) = dayOfTexts(anniversary.title, anniversary.dateText, isEnglish(context))
       val dayOfScheduled = scheduleAlarm(
         context = context,
         reminderId = dayOfAlarmId(anniversary.id),
@@ -326,8 +339,11 @@ object AlarmNotificationScheduler {
   }
 
   /** Day-of text. The morning check posts into the same notification slot, so both paths share it. */
-  internal fun dayOfTexts(title: String, dateText: String): Pair<String, String> =
-    "🎉 Hôm Nay: $title!" to "Hôm nay là ngày kỷ niệm đặc biệt '$title' ($dateText)! Chúc hai bạn một ngày ngập tràn ngọt ngào và yêu thương! ❤️✨"
+  internal fun dayOfTexts(title: String, dateText: String, isEnglish: Boolean): Pair<String, String> =
+    ReminderTexts.of(ReminderKind.DAY_OF, isEnglish, ReminderTextArgs(title = title, dateText = dateText)).let { it.title to it.body }
+
+  /** The language the app saved; alarm texts are rendered when they are armed, so they follow it. */
+  internal fun isEnglish(context: Context): Boolean = LocaleManager.getInitialLanguage(context) == AppLanguage.EN
 
   fun cancelAnniversaryNotification(context: Context, anniversaryId: Long) {
     cancelAlarm(context, advanceAlarmId(anniversaryId), ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM)
@@ -350,11 +366,16 @@ object AlarmNotificationScheduler {
 
     if (milestoneMillis > nowMillis()) {
       val milestoneId = (200000L + milestone.id)
+      val text = ReminderTexts.of(
+        ReminderKind.USER_MILESTONE,
+        isEnglish(context),
+        ReminderTextArgs(title = milestone.title, dateText = milestone.dateText)
+      )
       return scheduleAlarm(
         context = context,
         reminderId = milestoneId,
-        title = "⭐ Cột Mốc Tình Yêu: ${milestone.title}",
-        message = "Cột mốc ý nghĩa '${milestone.title}' (${milestone.dateText}) đang đến rất gần! Cùng người ấy lưu lại khoảnh khắc này nhé! 💖",
+        title = text.title,
+        message = text.body,
         triggerAtMillis = milestoneMillis,
         action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
         channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
@@ -420,7 +441,7 @@ object AlarmNotificationScheduler {
       scheduleDailyMorningCheck(context)
       val disabledCadence = disabledCadenceKeys(dao)
 
-      for (ann in dao.getAnniversaryDatesList()) {
+      for (ann in dao.visibleAnniversaryDatesList()) {
         if (scheduleAnniversaryNotification(context, ann, disabledCadence)) {
           scheduledCount++
         }
@@ -435,14 +456,29 @@ object AlarmNotificationScheduler {
       }
 
       // Couple anniversary: fixed id 400001. A missing or unreadable date cancels the alarm it left behind.
-      val profile = dao.getCoupleProfileSync()
+      // An ended couple (relationship rows exist and all are TERMINATED) counts as no profile, so unpairing cancels it too.
+      val coupleEnded = dao.getAllRelationshipsSync().let { rels -> rels.isNotEmpty() && rels.none { it.status != RelationshipStatus.TERMINATED } }
+      val profile = if (coupleEnded) null else dao.getCoupleProfileSync()
       val parsed = profile?.let { parseDateToMonthDayYear(it.anniversaryDate) }
-      val coupleScheduled = profile != null && parsed != null && scheduleAlarm(
+      val triggerAtMillis = parsed?.let { calculateNextOccurrenceMillis(it.first, it.second, it.third, isAnnual = true) }
+      val coupleText = if (profile != null && parsed != null && triggerAtMillis != null) {
+        ReminderTexts.of(
+          ReminderKind.COUPLE_ANNIVERSARY,
+          isEnglish(context),
+          ReminderTextArgs(
+            title = profile.loveTitle,
+            loveDays = ProfileUtils.loveDaysOn(profile.anniversaryDate, triggerAtMillis) ?: profile.loveDays
+          )
+        )
+      } else {
+        null
+      }
+      val coupleScheduled = coupleText != null && triggerAtMillis != null && scheduleAlarm(
         context = context,
         reminderId = 400001L,
-        title = "💑 Kỷ Niệm Ngày Yêu Nhau: ${profile.loveTitle} ❤️",
-        message = "Chúc mừng ngày kỷ niệm chính thức yêu nhau của hai bạn! Chặng đường ${profile.loveDays} ngày yêu thương ngọt ngào! 🎉🌹",
-        triggerAtMillis = calculateNextOccurrenceMillis(parsed.first, parsed.second, parsed.third, isAnnual = true),
+        title = coupleText.title,
+        message = coupleText.body,
+        triggerAtMillis = triggerAtMillis,
         action = ReminderAlarmReceiver.ACTION_ANNIVERSARY_ALARM,
         channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
         targetTab = "home"
@@ -494,7 +530,7 @@ object AlarmNotificationScheduler {
   }
 
   fun formatAlarmTime(millis: Long): String {
-    val formatter = SimpleDateFormat("HH:mm - dd/MM/yyyy", Locale.getDefault())
+    val formatter = SimpleDateFormat("HH:mm - dd/MM/yyyy", Locale.ROOT)
     return formatter.format(Date(millis))
   }
 }

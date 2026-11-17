@@ -1,0 +1,1 @@
+{"name":"entitlement-libs-spike","private":true,"version":"0.0.0","dependencies":{"@apple/app-store-server-library":"3.1.0","firebase-functions":"7.4.0","google-auth-library":"11.2.0"}}

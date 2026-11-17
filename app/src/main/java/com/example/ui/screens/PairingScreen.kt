@@ -1,10 +1,8 @@
 @file:Suppress("FunctionName")
 package com.example.ui.screens
 
-import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,7 +31,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.ui.components.InLoveDatePickerField
 import com.example.ui.components.DatePickerPresets
+import com.example.ui.components.ProfileAvatar
+import com.example.ui.components.AppAlertDialog
 import com.example.ui.components.animateDialogEntrance
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
+import com.example.ui.components.disabledLook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -51,9 +55,6 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,13 +65,11 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -82,24 +81,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.data.model.OnlineStatus
 import com.example.data.model.RelationshipStatus
 import androidx.compose.material.icons.filled.HeartBroken
 import com.example.data.repository.OnlineCoupleRepository
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.util.ProfileUtils
+import com.example.ui.util.copyCoupleCode
+import com.example.ui.util.displayPartnerName
+import com.example.ui.util.shareCoupleCode
 import com.example.ui.viewmodel.InLoveViewModel
 
 @Composable
@@ -139,11 +139,10 @@ fun PairingScreen(
   val searchedUser by viewModel.searchedUser.collectAsState()
   val isSearching by viewModel.isSearching.collectAsState()
   val selectedInviteForVerification by viewModel.selectedInviteForVerification.collectAsState()
-  val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsState()
 
-  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
+  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.ROOT).format(java.util.Date()) }
   var proposedStartDateText by remember { mutableStateOf(todayFormatted) }
-  var loveNoteInput by remember { mutableStateOf(if (isEnglish) "Let's build our sweet happiness together! 💕" else "Cùng anh/em xây dựng hạnh phúc Set Love nhé! 💕") }
+  var loveNoteInput by remember { mutableStateOf(if (isEnglish) "Let's build our sweet happiness together!" else com.example.ui.util.DEFAULT_LOVE_NOTE) }
 
   val calculatedDaysFromProposed by remember(proposedStartDateText) {
     derivedStateOf {
@@ -152,25 +151,9 @@ fun PairingScreen(
     }
   }
 
-  fun copyToClipboard(text: String, label: String = "Couple Code") {
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText(label, text)
-    @Suppress("UsePropertyAccessSyntax")
-    clipboard.setPrimaryClip(clip)
+  fun copyToClipboard(text: String) {
+    copyCoupleCode(context, text)
     viewModel.showToast(if (isEnglish) "Copied: $text" else "Đã sao chép: $text")
-  }
-
-  fun shareCoupleLink(code: String) {
-    val shareLink = ProfileUtils.createShareLink(code)
-    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-      type = "text/plain"
-      putExtra(
-        Intent.EXTRA_TEXT,
-        if (isEnglish) "Connect 1-1 with me on InLove! Open link or enter code:\n$shareLink\nCouple code: $code ❤️"
-        else "Cùng kết nối Set Love 1-1 với mình trên InLove nhé! Bấm vào link hoặc nhập mã:\n$shareLink\nMã ghép đôi: $code ❤️"
-      )
-    }
-    context.startActivity(Intent.createChooser(shareIntent, if (isEnglish) "Share couple code via" else "Chia sẻ mã/link ghép đôi qua"))
   }
 
   Scaffold(
@@ -243,16 +226,12 @@ fun PairingScreen(
 
               // Thông tin người đó: CHỈ ĐỌC, KHÔNG THỂ ĐIỀU CHỈNH
               Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                  model = invite.senderAvatar.ifEmpty {
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"
-                  },
-                  contentDescription = "Sender Avatar",
+                ProfileAvatar(
+                  url = invite.senderAvatar,
+                  contentDescription = if (isEnglish) "Sender avatar" else "Ảnh người gửi",
                   modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Color(0xFFFF80AB), CircleShape),
-                  contentScale = ContentScale.Crop
+                    .border(2.dp, Color(0xFFFF80AB), CircleShape)
                 )
 
                 Spacer(modifier = Modifier.width(14.dp))
@@ -265,7 +244,7 @@ fun PairingScreen(
                     color = Color(0xFF880E4F)
                   )
                   Text(
-                    text = "Mã: " + invite.senderCoupleCode,
+                    text = (if (isEnglish) "Code: " else "Mã: ") + invite.senderCoupleCode,
                     fontSize = 13.sp,
                     color = Color.Gray
                   )
@@ -330,26 +309,21 @@ fun PairingScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
               ) {
-                OutlinedButton(
+                SecondaryButton(
+                  text = "Từ chối",
+                  icon = Icons.Default.Close,
                   onClick = { viewModel.rejectSetLoveInvite(invite.inviteId) },
-                  shape = RoundedCornerShape(14.dp),
-                  modifier = Modifier.weight(1f).height(48.dp).testTag("reject_invite_button")
-                ) {
-                  Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text("Từ chối", fontSize = 14.sp)
-                }
+                  modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                  testTag = "reject_invite_button"
+                )
 
-                Button(
+                PrimaryGradientButton(
+                  text = if (isEnglish) "Accept" else "Đồng ý",
+                  icon = Icons.Default.Favorite,
                   onClick = { viewModel.acceptSetLoveInvite(invite.inviteId) },
-                  shape = RoundedCornerShape(14.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                  modifier = Modifier.weight(1.3f).height(48.dp).testTag("accept_invite_button")
-                ) {
-                  Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text(if (isEnglish) "Accept" else "Đồng ý", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                }
+                  modifier = Modifier.weight(1.3f).heightIn(min = MinTouchBox),
+                  testTag = "accept_invite_button"
+                )
               }
             }
           }
@@ -426,8 +400,8 @@ fun PairingScreen(
 
               Row {
                 IconButton(
-                  onClick = { copyToClipboard(currentUser.coupleCode, "Couple Code") },
-                  modifier = Modifier.size(48.dp).testTag("copy_couple_code_button")
+                  onClick = { copyToClipboard(currentUser.coupleCode) },
+                  modifier = Modifier.size(MinTouchBox).testTag("copy_couple_code_button")
                 ) {
                   Icon(
                     imageVector = Icons.Default.ContentCopy,
@@ -440,9 +414,9 @@ fun PairingScreen(
                 IconButton(
                   onClick = {
                     val link = ProfileUtils.createShareLink(currentUser.coupleCode)
-                    copyToClipboard(link, "Couple Link")
+                    copyToClipboard(link)
                   },
-                  modifier = Modifier.size(48.dp).testTag("copy_couple_link_button")
+                  modifier = Modifier.size(MinTouchBox).testTag("copy_couple_link_button")
                 ) {
                   Icon(
                     imageVector = Icons.Default.Link,
@@ -453,8 +427,8 @@ fun PairingScreen(
                 }
 
                 IconButton(
-                  onClick = { shareCoupleLink(currentUser.coupleCode) },
-                  modifier = Modifier.size(48.dp).testTag("share_couple_code_button")
+                  onClick = { shareCoupleCode(context, currentUser.coupleCode, isEnglish) },
+                  modifier = Modifier.size(MinTouchBox).testTag("share_couple_code_button")
                 ) {
                   Icon(
                     imageVector = Icons.Default.Share,
@@ -509,14 +483,11 @@ fun PairingScreen(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                  AsyncImage(
-                    model = partnerUser?.avatarUrl?.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" }
-                      ?: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
-                    contentDescription = "Partner Avatar",
-                    contentScale = ContentScale.Crop,
+                  ProfileAvatar(
+                    url = partnerUser?.avatarUrl,
+                    contentDescription = if (isEnglish) "Partner avatar" else "Ảnh đối tác",
                     modifier = Modifier
                       .size(68.dp)
-                      .clip(CircleShape)
                       .border(2.dp, Color(0xFFFF4081), CircleShape)
                   )
 
@@ -524,13 +495,13 @@ fun PairingScreen(
 
                   Column(modifier = Modifier.weight(1f)) {
                     Text(
-                      text = partnerUser?.effectiveDisplayName ?: "Người ấy",
+                      text = displayPartnerName(partnerUser?.effectiveDisplayName.orEmpty(), isEnglish),
                       fontWeight = FontWeight.Bold,
                       fontSize = 18.sp,
                       color = Color(0xFF880E4F)
                     )
                     Text(
-                      text = "Mã: " + (partnerUser?.coupleCode ?: ""),
+                      text = (if (isEnglish) "Code: " else "Mã: ") + (partnerUser?.coupleCode ?: ""),
                       fontSize = 13.sp,
                       color = Color.Gray
                     )
@@ -610,33 +581,26 @@ fun PairingScreen(
                       horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                       // Gửi nhịp đập yêu thương
-                      Button(
+                      PrimaryGradientButton(
+                        text = "Nhịp tim",
+                        icon = Icons.Default.Favorite,
                         onClick = {
                           viewModel.triggerFloatingHearts()
-                          viewModel.showToast("💖 Đã gửi nhịp đập yêu thương tới " + (partnerUser?.effectiveDisplayName ?: "người ấy") + "!")
+                          viewModel.showToast("💖 Đã gửi nhịp đập yêu thương tới " + displayPartnerName(partnerUser?.effectiveDisplayName.orEmpty(), isEnglish) + "!")
                         },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                        modifier = Modifier.weight(1.1f).height(44.dp)
-                      ) {
-                        Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Nhịp tim", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                      }
+                        modifier = Modifier.weight(1.1f).heightIn(min = MinTouchBox)
+                      )
 
                       // Mở tab Kỷ Niệm (album ảnh và video)
-                      OutlinedButton(
+                      SecondaryButton(
+                        text = "${memories.size}",
+                        icon = Icons.Default.AutoAwesome,
                         onClick = {
                           viewModel.setTab(1)
                           onNavigateBack()
                         },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1.1f).height(44.dp)
-                      ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = if (isEnglish) "Memories" else "Kỷ niệm", modifier = Modifier.size(15.dp), tint = Color(0xFF00897B))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("${memories.size}", fontSize = 12.sp)
-                      }
+                        modifier = Modifier.weight(1.1f).heightIn(min = MinTouchBox)
+                      )
                     }
                   }
                 }
@@ -645,18 +609,16 @@ fun PairingScreen(
                 val pendingBreakup = rel?.status == RelationshipStatus.PENDING_BREAKUP
                 val byMe = pendingBreakup && rel?.breakupRequestedBy == currentUser.uid
                 var confirmBreakup by remember { mutableStateOf(false) }
-                val dangerColors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
 
                 if (!pendingBreakup) {
-                  TextButton(
+                  SecondaryButton(
+                    text = if (isEnglish) "End Set Love" else "Hủy Set Love",
+                    icon = Icons.Default.HeartBroken,
+                    isDestructive = true,
                     onClick = { confirmBreakup = true },
-                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFC62828)),
-                    modifier = Modifier.fillMaxWidth().testTag("request_breakup_button")
-                  ) {
-                    Icon(Icons.Default.HeartBroken, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(if (isEnglish) "End Set Love" else "Hủy Set Love", fontSize = 13.sp)
-                  }
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox),
+                    testTag = "request_breakup_button"
+                  )
                 } else {
                   Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -675,34 +637,50 @@ fun PairingScreen(
                         color = Color(0xFFB71C1C)
                       )
                       Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(
+                        SecondaryButton(
+                          text = if (byMe) "Rút lại" else "Từ chối",
                           onClick = { viewModel.rejectBreakup() },
-                          shape = RoundedCornerShape(10.dp),
-                          modifier = Modifier.weight(1f).testTag("reject_breakup_button")
-                        ) { Text(if (byMe) "Rút lại" else "Từ chối", fontSize = 12.sp) }
-                        Button(
+                          modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                          testTag = "reject_breakup_button"
+                        )
+                        SecondaryButton(
+                          text = if (byMe) "Hủy ngay" else "Xác nhận",
+                          isDestructive = true,
+                          filled = true,
                           onClick = { if (byMe) viewModel.forceBreakup() else viewModel.confirmBreakup() },
-                          colors = dangerColors,
-                          shape = RoundedCornerShape(10.dp),
-                          modifier = Modifier.weight(1f).testTag("confirm_breakup_button")
-                        ) { Text(if (byMe) "Hủy ngay" else "Xác nhận", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                          modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                          testTag = "confirm_breakup_button"
+                        )
                       }
                     }
                   }
                 }
 
                 if (confirmBreakup) {
-                  AlertDialog(
+                  AppAlertDialog(
                     onDismissRequest = { confirmBreakup = false },
+                    scrollableText = true,
                     modifier = Modifier.animateDialogEntrance(),
                     shape = RoundedCornerShape(28.dp),
                     containerColor = Color.White,
                     title = { Text(if (isEnglish) "Request to end Set Love?" else "Gửi yêu cầu hủy Set Love?", fontWeight = FontWeight.Bold) },
                     text = { Text(if (isEnglish) "If partner agrees, both return to Single and shared memories are locked." else "Nếu người ấy đồng ý, hai bạn trở về Độc thân và kỷ niệm chung bị khóa.") },
                     confirmButton = {
-                      Button(onClick = { confirmBreakup = false; viewModel.requestBreakup() }, colors = dangerColors) { Text(if (isEnglish) "Send Request" else "Gửi yêu cầu") }
+                      SecondaryButton(
+                        text = if (isEnglish) "Send Request" else "Gửi yêu cầu",
+                        isDestructive = true,
+                        filled = true,
+                        onClick = { confirmBreakup = false; viewModel.requestBreakup() },
+                        modifier = Modifier.heightIn(min = MinTouchBox)
+                      )
                     },
-                    dismissButton = { OutlinedButton(onClick = { confirmBreakup = false }) { Text(if (isEnglish) "Cancel" else "Hủy bỏ") } }
+                    dismissButton = {
+                      SecondaryButton(
+                        text = if (isEnglish) "Cancel" else "Hủy bỏ",
+                        onClick = { confirmBreakup = false },
+                        modifier = Modifier.heightIn(min = MinTouchBox)
+                      )
+                    }
                   )
                 }
               }
@@ -752,17 +730,13 @@ fun PairingScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedButton(
+                SecondaryButton(
+                  text = "",
+                  icon = Icons.Default.Close,
                   onClick = { viewModel.cancelSentInvite() },
-                  shape = RoundedCornerShape(12.dp),
-                  modifier = Modifier.height(48.dp).testTag("cancel_sent_invite_button")
-                ) {
-                  Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = if (isEnglish) "Cancel invite" else "Hủy lời mời",
-                    modifier = Modifier.size(18.dp)
-                  )
-                }
+                  modifier = Modifier.heightIn(min = MinTouchBox),
+                  testTag = "cancel_sent_invite_button"
+                )
               }
             }
           }
@@ -807,7 +781,7 @@ fun PairingScreen(
                             viewModel.updateSearchQuery("")
                             viewModel.clearSearch()
                           },
-                          modifier = Modifier.size(28.dp)
+                          modifier = Modifier.size(MinTouchBox)
                         ) {
                           Icon(
                             imageVector = Icons.Default.Close,
@@ -859,24 +833,19 @@ fun PairingScreen(
                       .testTag("input_search_code_or_link")
                   )
 
-                  Button(
-                    onClick = { viewModel.performSearch() },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                    modifier = Modifier
-                      .height(52.dp)
-                      .testTag("btn_perform_search")
-                  ) {
+                  val searchEnabled = !isSearching
+                  Box(contentAlignment = Alignment.Center) {
+                    PrimaryGradientButton(
+                      text = if (isSearching) "" else if (isEnglish) "Search" else "Tìm",
+                      icon = if (isSearching) null else Icons.Default.Search,
+                      onClick = { if (searchEnabled) viewModel.performSearch() },
+                      modifier = Modifier
+                        .heightIn(min = MinTouchBox)
+                        .disabledLook(searchEnabled),
+                      testTag = "btn_perform_search"
+                    )
                     if (isSearching) {
-                      CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                    } else {
-                      Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                      ) {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "Tìm", modifier = Modifier.size(18.dp))
-                        Text(if (isEnglish) "Search" else "Tìm", fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
-                      }
+                      CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
                     }
                   }
                 }
@@ -914,20 +883,18 @@ fun PairingScreen(
 
                         IconButton(
                           onClick = { viewModel.clearSearch() },
-                          modifier = Modifier.size(48.dp)
+                          modifier = Modifier.size(MinTouchBox)
                         ) {
                           Icon(imageVector = Icons.Default.Close, contentDescription = if (isEnglish) "Deselect" else "Bỏ chọn", tint = Color.Gray)
                         }
                       }
 
                       Row(verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                          model = target.avatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
-                          contentDescription = "Found user avatar",
-                          contentScale = ContentScale.Crop,
+                        ProfileAvatar(
+                          url = target.avatarUrl,
+                          contentDescription = if (isEnglish) "Found user avatar" else "Ảnh người tìm thấy",
                           modifier = Modifier
                             .size(68.dp)
-                            .clip(CircleShape)
                             .border(2.dp, Color(0xFFFF4081), CircleShape)
                         )
 
@@ -1018,7 +985,9 @@ fun PairingScreen(
                       )
 
                       // Nút Gửi Lời Mời Set Love
-                      Button(
+                      PrimaryGradientButton(
+                        text = if (isEnglish) "Send invite" else "Gửi lời mời",
+                        icon = Icons.Default.Favorite,
                         onClick = {
                           val parsedDate = ProfileUtils.parseDateToMillis(proposedStartDateText)
                           viewModel.sendSetLoveInvite(
@@ -1027,21 +996,11 @@ fun PairingScreen(
                             loveNote = loveNoteInput
                           )
                         },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
                         modifier = Modifier
                           .fillMaxWidth()
-                          .height(50.dp)
-                          .testTag("send_set_love_to_target_button")
-                      ) {
-                        Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                          text = if (isEnglish) "Send invite" else "Gửi lời mời",
-                          fontWeight = FontWeight.Bold,
-                          fontSize = 15.sp
-                        )
-                      }
+                          .heightIn(min = MinTouchBox),
+                        testTag = "send_set_love_to_target_button"
+                      )
                     }
                   }
                 }
@@ -1197,24 +1156,7 @@ fun PairingScreen(
   }
 
   // DIALOGS:
-  // 1. Edit My Profile Dialog
-  val dynamicPresetAvatars by viewModel.presetAvatars.collectAsState()
-  if (showEditProfileDialog) {
-    EditMyProfileDialog(
-      currentUser = currentUser,
-      presetAvatars = dynamicPresetAvatars,
-      isEnglish = isEnglish,
-      canEditPhoto = currentUser.uid.isNotBlank(),
-      onPhotoPicked = { viewModel.saveLocalAvatar(it, false) },
-      onPhotoDiscarded = { viewModel.deleteUnsavedAvatar(it) },
-      onDismiss = { viewModel.closeEditProfileDialog() },
-      onSave = { name, birthDate, avatarUrl, gender, bio ->
-        viewModel.updateMyProfile(name, birthDate, avatarUrl, gender, bio)
-      }
-    )
-  }
-
-  // 2. Identity & Date Verification Dialog for Incoming Invite
+  // Identity & Date Verification Dialog for Incoming Invite
   selectedInviteForVerification?.let { inv ->
     VerifyInviteDialog(
       invite = inv,

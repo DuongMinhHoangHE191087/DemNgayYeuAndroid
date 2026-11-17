@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,7 +47,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.VolunteerActivism
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,8 +73,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
-import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
 import com.example.ui.util.AppLanguage
@@ -196,13 +197,13 @@ fun OnboardingScreen(
           onClick = {
             viewModel.completeFirstLaunch()
             onFinishOnboarding()
-          }
+          },
+          colors = ButtonDefaults.textButtonColors(contentColor = Primary)
         ) {
           Text(
             text = strings.onboardingBtnSkip,
-            color = Color(0xFF8A2E5B),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
           )
         }
       }
@@ -267,71 +268,27 @@ fun OnboardingScreen(
       Spacer(modifier = Modifier.height(16.dp))
 
       // Bottom Action Button
-      Button(
+      PrimaryGradientButton(
+        text = if (currentStep == totalSteps - 1) strings.onboardingBtnStart else strings.onboardingBtnNext,
         onClick = {
           if (currentStep < totalSteps - 1) {
             currentStep++
           } else {
             // Save initial couple names if entered
             if (boyNameInput.isNotBlank() || girlNameInput.isNotBlank()) {
-              val boy = if (boyNameInput.isNotBlank()) boyNameInput else "Anh"
-              val girl = if (girlNameInput.isNotBlank()) girlNameInput else "Em"
-              viewModel.saveCoupleProfile(
-                boy = boy,
-                boyBirth = "01/01/2000",
-                boyAvatar = "",
-                boyA = 25,
-                boyZod = "Bạch Dương",
-                girl = girl,
-                girlBirth = "01/01/2002",
-                girlAvatar = "",
-                girlA = 23,
-                girlZod = "Kim Ngưu",
-                title = "Bên Nhau Trọn Đời",
-                days = 1,
-                anniversary = "14/02/2024"
-              )
+              // Empty title -> ViewModel falls back to the app-wide DEFAULT_LOVE_TITLE,
+              // same as every other save path (was a duplicate, Vietnamese-only literal here).
+              viewModel.completeOnboardingProfile(boyNameInput.trim(), girlNameInput.trim(), "")
             }
             viewModel.completeFirstLaunch()
             onFinishOnboarding()
           }
         },
+        icon = if (currentStep == totalSteps - 1) Icons.Filled.AutoAwesome else Icons.AutoMirrored.Filled.ArrowForward,
         modifier = Modifier
           .fillMaxWidth()
-          .height(56.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
-      ) {
-        Box(
-          modifier = Modifier
-            .fillMaxSize()
-            .background(
-              Brush.horizontalGradient(listOf(RoseGradientStart, RoseGradientMid, RoseGradientEnd)),
-              shape = RoundedCornerShape(18.dp)
-            ),
-          contentAlignment = Alignment.Center
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            Text(
-              text = if (currentStep == totalSteps - 1) strings.onboardingBtnStart else strings.onboardingBtnNext,
-              color = Color.White,
-              fontSize = 16.sp,
-              fontWeight = FontWeight.ExtraBold,
-              letterSpacing = 0.5.sp
-            )
-            Icon(
-              imageVector = if (currentStep == totalSteps - 1) Icons.Filled.AutoAwesome else Icons.AutoMirrored.Filled.ArrowForward,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(20.dp)
-            )
-          }
-        }
-      }
+          .heightIn(min = MinTouchBox)
+      )
     }
   }
 }
@@ -505,7 +462,7 @@ private fun OnboardingStepCounter(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-          text = "💕 Cùng nhau đi qua 100 ngày ngọt ngào!",
+          text = strings.onboardingCounterPreview,
           fontSize = 13.sp,
           color = Color(0xFF4A1934),
           textAlign = TextAlign.Center
@@ -554,14 +511,14 @@ private fun OnboardingStepMemories(
         }
         Column {
           Text(
-            text = "Lần đầu gặp gỡ • Phố Đi Bộ 📸",
+            text = strings.onboardingMemoriesCardTitle,
             fontSize = 13.5.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF26071B)
           )
           Spacer(modifier = Modifier.height(4.dp))
           Text(
-            text = "Lưu trọn vẹn hình ảnh, địa điểm và dòng nhật ký yêu thương an toàn",
+            text = strings.onboardingMemoriesCardSub,
             fontSize = 12.sp,
             color = Color(0xFF7A2955),
             lineHeight = 17.sp
@@ -605,7 +562,7 @@ private fun OnboardingStepReminders(
             modifier = Modifier.size(18.dp)
           )
           Text(
-            text = "Nhắc nhở trước 7 ngày, 3 ngày & 1 ngày",
+            text = strings.settingsNotifAnniversarySub,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF26071B)
@@ -622,7 +579,7 @@ private fun OnboardingStepReminders(
             modifier = Modifier.size(18.dp)
           )
           Text(
-            text = "AI đề xuất món quà bất ngờ & thư tình ngọt ngào",
+            text = strings.onboardingReminderAiTip,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF26071B)
@@ -694,9 +651,10 @@ private fun OnboardingStepStart(
     OutlinedTextField(
       value = boyName,
       onValueChange = onBoyNameChange,
-      label = { Text("Tên Bạn Trai / Partner 1") },
-      placeholder = { Text("Ví dụ: Hoàng") },
+      label = { Text(strings.onboardingPartner1Label) },
+      placeholder = { Text(strings.onboardingPartner1Placeholder) },
       singleLine = true,
+      keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false),
       modifier = Modifier.fillMaxWidth(),
       shape = RoundedCornerShape(12.dp),
       colors = OutlinedTextFieldDefaults.colors(
@@ -708,9 +666,10 @@ private fun OnboardingStepStart(
     OutlinedTextField(
       value = girlName,
       onValueChange = onGirlNameChange,
-      label = { Text("Tên Bạn Gái / Partner 2") },
-      placeholder = { Text("Ví dụ: Mai") },
+      label = { Text(strings.onboardingPartner2Label) },
+      placeholder = { Text(strings.onboardingPartner2Placeholder) },
       singleLine = true,
+      keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false),
       modifier = Modifier.fillMaxWidth(),
       shape = RoundedCornerShape(12.dp),
       colors = OutlinedTextFieldDefaults.colors(

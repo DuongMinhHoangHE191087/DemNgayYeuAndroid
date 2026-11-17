@@ -1,0 +1,25 @@
+{
+  "gates": [
+    {
+      "id": "RULES-USERS-ENTITLEMENT",
+      "runner": "backend",
+      "sourceGlob": "scripts/rules-tests/users-entitlements.rules.test.js",
+      "classGlob": "users/{uid} entitlement protection (T2)",
+      "minCases": 12,
+      "tests": [
+        "denies create with isVip",
+        "denies update that adds isVip",
+        "denies update that modifies isVip",
+        "denies update that deletes isVip",
+        "denies create with subscriptionTier",
+        "denies update that adds subscriptionTier",
+        "denies update that modifies subscriptionTier",
+        "denies update that deletes subscriptionTier",
+        "denies create with role",
+        "denies update that adds role",
+        "denies update that modifies role",
+        "denies update that deletes role"
+      ]
+    }
+  ]
+}

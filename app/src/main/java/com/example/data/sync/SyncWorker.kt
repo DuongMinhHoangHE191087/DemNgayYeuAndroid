@@ -1,6 +1,7 @@
 package com.example.data.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.WorkManager
@@ -18,13 +19,16 @@ import com.example.data.model.SharedMemoryEntity
 import com.example.data.model.SyncOutboxEntity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
@@ -39,10 +43,13 @@ class SyncWorker(
   private val dao: InLoveDao,
   private val push: suspend (path: String, data: Map<String, Any?>) -> Unit = { path, data ->
     FirebaseFirestore.getInstance().document(path).set(data).await()
-  }
+  },
+  private val cloudContent: () -> Boolean = { com.example.domain.DataResidencyPolicy.cloudContent }
 ) : CoroutineWorker(context, params) {
 
-  override suspend fun doWork(): Result = drainLock.withLock { drain() }
+  // Local-only: an old scheduled run must not touch the network or the outbox.
+  override suspend fun doWork(): Result =
+    if (!cloudContent()) Result.success() else drainLock.withLock { drain() }
 
   private suspend fun drain(): Result = withContext(Dispatchers.IO) {
     // Session fence: outbox rows belong to whichever account scope is live. If the scope switches
@@ -57,9 +64,13 @@ class SyncWorker(
     for (entry in pending) {
       if (epoch != com.example.data.db.AccountDataVault.epoch.get()) return@withContext Result.retry()
       try {
-        pushOne(entry)
+        // Parked: the relationship is over, so the server would deny the write forever. Keep the row (it comes back
+        // into play only if the data is ever re-keyed) but don't count it as a failure or retry it.
+        if (!pushOne(entry)) continue
         if (epoch != com.example.data.db.AccountDataVault.epoch.get()) return@withContext Result.retry()
         dao.deleteOutboxEntry(entry.id)
+      } catch (e: CancellationException) {
+        throw e
       } catch (e: Exception) {
         anyFailure = true
         if (epoch == com.example.data.db.AccountDataVault.epoch.get()) {
@@ -70,28 +81,38 @@ class SyncWorker(
     if (anyFailure) Result.retry() else Result.success()
   }
 
-  // ponytail: dòng không đẩy được (payload rỗng, thiếu relationshipId, loại lạ) bị ném lỗi và giữ lại trong outbox.
-  // attemptCount tăng nên nó xếp sau dòng mới; không tự xoá để khỏi mất dữ liệu. Ngưỡng: outbox phình to thì thêm dọn theo số lần thử.
-  private suspend fun pushOne(entry: SyncOutboxEntity) {
+  // ponytail: dòng không bao giờ đẩy được (payload JSON hỏng hoặc rỗng, thiếu relationshipId, loại lạ, quan hệ đã kết thúc)
+  // được "đỗ": trả false + Log.w, KHÔNG markOutboxAttemptFailed, không tính là lỗi nên không retry mãi. Dòng luôn được giữ lại
+  // trong outbox, không bao giờ tự xoá, để khỏi mất dữ liệu. Chỉ lỗi thật khi gọi push (mạng, quyền) mới ném lỗi và retry.
+  // Ngưỡng: outbox phình to vì dòng đỗ thì thêm dọn theo tuổi.
+  private suspend fun pushOne(entry: SyncOutboxEntity): Boolean {
+    suspend fun ended(relationshipId: String) =
+      dao.getOnlineRelationshipSync(relationshipId)?.status?.let { it != com.example.data.model.RelationshipStatus.ACTIVE } == true
+    fun park(why: String): Boolean {
+      Log.w("SyncWorker", "outbox ${entry.id} (${entry.entityType}) parked: $why")
+      return false
+    }
+    // Chỉ bọc phần giải mã payload; lỗi IOException của push phải vẫn là lỗi thật để retry.
+    fun <T : Any> decode(adapter: JsonAdapter<T>): T? =
+      try { adapter.fromJson(entry.payloadJson) } catch (e: JsonDataException) { null } catch (e: IOException) { null }
     when (entry.entityType) {
       MemorySyncAdapter.entityType -> {
-        val entity = moshiAdapterFor<SharedMemoryEntity>().fromJson(entry.payloadJson)
-          ?: error("outbox ${entry.id}: memory payload is null")
-        val relationshipId = entity.relationshipId
-          ?: error("outbox ${entry.id}: memory has no relationshipId")
+        val entity = decode(moshiAdapterFor<SharedMemoryEntity>()) ?: return park("memory payload invalid")
+        val relationshipId = entity.relationshipId ?: return park("memory has no relationshipId")
+        if (ended(relationshipId)) return false
         val path = "${MemorySyncAdapter.collectionPath(relationshipId)}/${entity.syncId}"
         push(path, MemorySyncAdapter.toFirestoreMap(entity))
       }
       AnniversarySyncAdapter.entityType -> {
-        val entity = moshiAdapterFor<AnniversaryDateEntity>().fromJson(entry.payloadJson)
-          ?: error("outbox ${entry.id}: anniversary payload is null")
-        val relationshipId = entity.relationshipId
-          ?: error("outbox ${entry.id}: anniversary has no relationshipId")
+        val entity = decode(moshiAdapterFor<AnniversaryDateEntity>()) ?: return park("anniversary payload invalid")
+        val relationshipId = entity.relationshipId ?: return park("anniversary has no relationshipId")
+        if (ended(relationshipId)) return false
         val path = "${AnniversarySyncAdapter.collectionPath(relationshipId)}/${entity.syncId}"
         push(path, AnniversarySyncAdapter.toFirestoreMap(entity))
       }
-      else -> error("outbox ${entry.id}: unknown entityType '${entry.entityType}'")
+      else -> return park("unknown entityType '${entry.entityType}'")
     }
+    return true
   }
 
   companion object {
@@ -111,6 +132,14 @@ class SyncWorker(
     private const val UNIQUE_IMMEDIATE_NAME = "sync_outbox_immediate"
 
     fun enqueuePeriodic(context: Context) {
+      // Chế độ local-only: huỷ cả việc đã lên lịch từ bản cũ (KEEP sống mãi), rồi thoát.
+      if (!com.example.domain.DataResidencyPolicy.cloudContent) {
+        WorkManager.getInstance(context).run {
+          cancelUniqueWork(UNIQUE_PERIODIC_NAME)
+          cancelUniqueWork(UNIQUE_IMMEDIATE_NAME)
+        }
+        return
+      }
       val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
       val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
         .setConstraints(constraints)
@@ -121,6 +150,7 @@ class SyncWorker(
     }
 
     fun enqueueImmediate(context: Context) {
+      if (!com.example.domain.DataResidencyPolicy.cloudContent) return
       val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
       val request = OneTimeWorkRequestBuilder<SyncWorker>()
         .setConstraints(constraints)
@@ -134,7 +164,8 @@ class SyncWorker(
 
 class SyncWorkerFactory(
   private val dao: InLoveDao,
-  private val fakeFirestorePush: (suspend (String, Map<String, Any?>) -> Unit)? = null
+  private val fakeFirestorePush: (suspend (String, Map<String, Any?>) -> Unit)? = null,
+  private val cloudContent: () -> Boolean = { com.example.domain.DataResidencyPolicy.cloudContent }
 ) : androidx.work.WorkerFactory() {
   override fun createWorker(
     appContext: Context,
@@ -142,8 +173,8 @@ class SyncWorkerFactory(
     workerParameters: WorkerParameters
   ): androidx.work.ListenableWorker? {
     return if (workerClassName == SyncWorker::class.java.name) {
-      if (fakeFirestorePush != null) SyncWorker(appContext, workerParameters, dao, fakeFirestorePush)
-      else SyncWorker(appContext, workerParameters, dao)
+      if (fakeFirestorePush != null) SyncWorker(appContext, workerParameters, dao, fakeFirestorePush, cloudContent)
+      else SyncWorker(appContext, workerParameters, dao, cloudContent = cloudContent)
     } else null
   }
 }

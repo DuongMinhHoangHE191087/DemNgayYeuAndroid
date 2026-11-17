@@ -1,0 +1,439 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "cases": [
+    {
+      "id": "bronze-upper",
+      "input": {
+        "tier": "BRONZE"
+      },
+      "expected": {
+        "primaryColor": "FF8D6E63",
+        "secondaryColor": "FFD7CCC8",
+        "gradient": [
+          "FFFFCCBC",
+          "FFD7CCC8",
+          "FFBCAAA4"
+        ],
+        "ribbonColor": "FFA1887F",
+        "glowColor": "66FFAB91",
+        "tierNameVi": "Huy Hi\u1ec7u \u0110\u1ed3ng",
+        "tierNameEn": "Bronze Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "bronze-lower",
+      "input": {
+        "tier": "bronze"
+      },
+      "expected": {
+        "primaryColor": "FF8D6E63",
+        "secondaryColor": "FFD7CCC8",
+        "gradient": [
+          "FFFFCCBC",
+          "FFD7CCC8",
+          "FFBCAAA4"
+        ],
+        "ribbonColor": "FFA1887F",
+        "glowColor": "66FFAB91",
+        "tierNameVi": "Huy Hi\u1ec7u \u0110\u1ed3ng",
+        "tierNameEn": "Bronze Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "silver-upper",
+      "input": {
+        "tier": "SILVER"
+      },
+      "expected": {
+        "primaryColor": "FF546E7A",
+        "secondaryColor": "FFECEFF1",
+        "gradient": [
+          "FFCFD8DC",
+          "FFECEFF1",
+          "FF90A4AE"
+        ],
+        "ribbonColor": "FF78909C",
+        "glowColor": "66B0BEC5",
+        "tierNameVi": "Huy Hi\u1ec7u B\u1ea1c",
+        "tierNameEn": "Silver Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "silver-lower",
+      "input": {
+        "tier": "silver"
+      },
+      "expected": {
+        "primaryColor": "FF546E7A",
+        "secondaryColor": "FFECEFF1",
+        "gradient": [
+          "FFCFD8DC",
+          "FFECEFF1",
+          "FF90A4AE"
+        ],
+        "ribbonColor": "FF78909C",
+        "glowColor": "66B0BEC5",
+        "tierNameVi": "Huy Hi\u1ec7u B\u1ea1c",
+        "tierNameEn": "Silver Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "gold-upper",
+      "input": {
+        "tier": "GOLD"
+      },
+      "expected": {
+        "primaryColor": "FFFFA000",
+        "secondaryColor": "FFFFF8E1",
+        "gradient": [
+          "FFFFD54F",
+          "FFFFF9C4",
+          "FFFFB300"
+        ],
+        "ribbonColor": "FFFF8F00",
+        "glowColor": "80FFD54F",
+        "tierNameVi": "Huy Hi\u1ec7u V\u00e0ng",
+        "tierNameEn": "Gold Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "gold-lower",
+      "input": {
+        "tier": "gold"
+      },
+      "expected": {
+        "primaryColor": "FFFFA000",
+        "secondaryColor": "FFFFF8E1",
+        "gradient": [
+          "FFFFD54F",
+          "FFFFF9C4",
+          "FFFFB300"
+        ],
+        "ribbonColor": "FFFF8F00",
+        "glowColor": "80FFD54F",
+        "tierNameVi": "Huy Hi\u1ec7u V\u00e0ng",
+        "tierNameEn": "Gold Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ruby-upper",
+      "input": {
+        "tier": "RUBY"
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFCE4EC",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB",
+          "FFC2185B"
+        ],
+        "ribbonColor": "FFAD1457",
+        "glowColor": "80FF4081",
+        "tierNameVi": "Huy Hi\u1ec7u H\u1ed3ng Ng\u1ecdc",
+        "tierNameEn": "Ruby Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ruby-lower",
+      "input": {
+        "tier": "ruby"
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFCE4EC",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB",
+          "FFC2185B"
+        ],
+        "ribbonColor": "FFAD1457",
+        "glowColor": "80FF4081",
+        "tierNameVi": "Huy Hi\u1ec7u H\u1ed3ng Ng\u1ecdc",
+        "tierNameEn": "Ruby Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "diamond-upper",
+      "input": {
+        "tier": "DIAMOND"
+      },
+      "expected": {
+        "primaryColor": "FF00ACC1",
+        "secondaryColor": "FFE0F7FA",
+        "gradient": [
+          "FF26C6DA",
+          "FFE0F7FA",
+          "FF0097A7"
+        ],
+        "ribbonColor": "FF00838F",
+        "glowColor": "8000E5FF",
+        "tierNameVi": "Huy Hi\u1ec7u Kim C\u01b0\u01a1ng",
+        "tierNameEn": "Diamond Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "diamond-lower",
+      "input": {
+        "tier": "diamond"
+      },
+      "expected": {
+        "primaryColor": "FF00ACC1",
+        "secondaryColor": "FFE0F7FA",
+        "gradient": [
+          "FF26C6DA",
+          "FFE0F7FA",
+          "FF0097A7"
+        ],
+        "ribbonColor": "FF00838F",
+        "glowColor": "8000E5FF",
+        "tierNameVi": "Huy Hi\u1ec7u Kim C\u01b0\u01a1ng",
+        "tierNameEn": "Diamond Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cosmic-upper",
+      "input": {
+        "tier": "COSMIC"
+      },
+      "expected": {
+        "primaryColor": "FF8E24AA",
+        "secondaryColor": "FFF3E5F5",
+        "gradient": [
+          "FFAB47BC",
+          "FFEA80FC",
+          "FF6A1B9A"
+        ],
+        "ribbonColor": "FF4A148C",
+        "glowColor": "99E040FB",
+        "tierNameVi": "Huy Hi\u1ec7u V\u0169 Tr\u1ee5",
+        "tierNameEn": "Cosmic Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cosmic-lower",
+      "input": {
+        "tier": "cosmic"
+      },
+      "expected": {
+        "primaryColor": "FF8E24AA",
+        "secondaryColor": "FFF3E5F5",
+        "gradient": [
+          "FFAB47BC",
+          "FFEA80FC",
+          "FF6A1B9A"
+        ],
+        "ribbonColor": "FF4A148C",
+        "glowColor": "99E040FB",
+        "tierNameVi": "Huy Hi\u1ec7u V\u0169 Tr\u1ee5",
+        "tierNameEn": "Cosmic Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "mixed-case",
+      "input": {
+        "tier": "GoLd"
+      },
+      "expected": {
+        "primaryColor": "FFFFA000",
+        "secondaryColor": "FFFFF8E1",
+        "gradient": [
+          "FFFFD54F",
+          "FFFFF9C4",
+          "FFFFB300"
+        ],
+        "ribbonColor": "FFFF8F00",
+        "glowColor": "80FFD54F",
+        "tierNameVi": "Huy Hi\u1ec7u V\u00e0ng",
+        "tierNameEn": "Gold Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "unknown",
+      "input": {
+        "tier": "PLATINUM"
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty",
+      "input": {
+        "tier": ""
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "whitespace",
+      "input": {
+        "tier": "   "
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "trailing-space",
+      "input": {
+        "tier": "GOLD "
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "diacritics-in-name",
+      "input": {
+        "tier": "\u0110\u1ed3ng"
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "very-long-name",
+      "input": {
+        "tier": "SILVERSILVERSILVERSILVERSILVERSILVERSILVERSILVERSILVERSILVERSILVER"
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "null-like-text",
+      "input": {
+        "tier": "null"
+      },
+      "expected": {
+        "primaryColor": "FFE91E63",
+        "secondaryColor": "FFFF2D75",
+        "gradient": [
+          "FFFF4081",
+          "FFFF80AB"
+        ],
+        "ribbonColor": "FFE91E63",
+        "glowColor": "66E91E63",
+        "tierNameVi": "Huy Hi\u1ec7u Tr\u00e1i Tim",
+        "tierNameEn": "Heart Badge"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

@@ -1,0 +1,926 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "valid-dd-MM-yyyy",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-day-2024",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1709139600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "non-leap-29-02-2023",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/2023",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "day-31-in-30-day-month",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "31/04/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "month-13",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/13/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "single-digit-d-M-yyyy",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "5/3/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1709596800000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "surrounding-spaces-trim",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "  15/06/2024  ",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "iso-yyyy-MM-dd",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "2024-06-15",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "two-digit-year-24",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/24",
+        "millis": null
+      },
+      "expected": {
+        "millis": -61395494400000
+      },
+      "androidLegacy": {
+        "millis": -61395667200000
+      },
+      "divergence": "julian-gregorian-cutover",
+      "optional": false
+    },
+    {
+      "id": "year-1582-cutover",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "04/10/1582",
+        "millis": null
+      },
+      "expected": {
+        "millis": -12220243200000
+      },
+      "androidLegacy": {
+        "millis": -12219379200000
+      },
+      "divergence": "julian-gregorian-cutover",
+      "optional": false
+    },
+    {
+      "id": "locale-th-TH-buddhist",
+      "input": {
+        "op": "format",
+        "convention": "device",
+        "locale": "th-TH",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": 1718384400000
+      },
+      "expected": {
+        "text": "15/06/2024"
+      },
+      "androidLegacy": {
+        "text": "15/06/2567"
+      },
+      "divergence": "locale-calendar-digits",
+      "optional": true
+    },
+    {
+      "id": "locale-ja-JP-japanese-calendar",
+      "input": {
+        "op": "format",
+        "convention": "device",
+        "locale": "ja-JP-u-ca-japanese",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": 1718384400000
+      },
+      "expected": {
+        "text": "15/06/2024"
+      },
+      "androidLegacy": {
+        "text": "15/06/6"
+      },
+      "divergence": "locale-calendar-digits",
+      "optional": true
+    },
+    {
+      "id": "utc-midnight-vs-device-zone-shift",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "format-roundtrip",
+      "input": {
+        "op": "roundtrip",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/2024",
+        "millis": null
+      },
+      "expected": {
+        "text": "29/02/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-1582-cutover-10-10",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "10/10/1582",
+        "millis": null
+      },
+      "expected": {
+        "millis": -12219724800000
+      },
+      "androidLegacy": {
+        "millis": null
+      },
+      "divergence": "julian-gregorian-cutover",
+      "optional": false
+    },
+    {
+      "id": "year-1582-cutover-15-10",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/10/1582",
+        "millis": null
+      },
+      "expected": {
+        "millis": -12219292800000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "locale-th-TH-buddhist-parse",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "th-TH",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": {
+        "millis": -15416290800000
+      },
+      "divergence": "locale-calendar-digits",
+      "optional": true
+    },
+    {
+      "id": "locale-ja-JP-japanese-calendar-parse",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "ja-JP-u-ca-japanese",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": {
+        "millis": 65400282000000
+      },
+      "divergence": "locale-calendar-digits",
+      "optional": true
+    },
+    {
+      "id": "locale-ar-EG-arabic-indic-digits",
+      "input": {
+        "op": "format",
+        "convention": "device",
+        "locale": "ar-EG-u-nu-arab",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": 1718384400000
+      },
+      "expected": {
+        "text": "15/06/2024"
+      },
+      "androidLegacy": {
+        "text": "\u0661\u0665/\u0660\u0666/\u0662\u0660\u0662\u0664"
+      },
+      "divergence": "locale-calendar-digits",
+      "optional": true
+    },
+    {
+      "id": "locale-ar-EG-arabic-indic-digits-parse",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "ar-EG-u-nu-arab",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "locale-ja-JP-gregorian-agrees",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "ja-JP",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "locale-en-US-valid",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "en-US",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "locale-tr-TR-valid",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "tr-TR",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-midnight-vs-device-zone-shift-device-hcm",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-midnight-vs-device-zone-shift-device-los-angeles",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "America/Los_Angeles",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718434800000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-midnight-vs-device-zone-shift-device-auckland",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Pacific/Auckland",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718366400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-midnight-vs-device-zone-shift-utc-los-angeles",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "America/Los_Angeles",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-midnight-vs-device-zone-shift-utc-auckland",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Pacific/Auckland",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "format-late-evening-device-hcm",
+      "input": {
+        "op": "format",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": 1718494200000
+      },
+      "expected": {
+        "text": "16/06/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "format-late-evening-device-los-angeles",
+      "input": {
+        "op": "format",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "America/Los_Angeles",
+        "text": null,
+        "millis": 1718494200000
+      },
+      "expected": {
+        "text": "15/06/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "format-late-evening-device-auckland",
+      "input": {
+        "op": "format",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Pacific/Auckland",
+        "text": null,
+        "millis": 1718494200000
+      },
+      "expected": {
+        "text": "16/06/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "format-late-evening-utc",
+      "input": {
+        "op": "format",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": 1718494200000
+      },
+      "expected": {
+        "text": "15/06/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-1900-01-01",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "01/01/1900",
+        "millis": null
+      },
+      "expected": {
+        "millis": -2208988800000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-1900-02-29-rejected",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/1900",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-2000-02-29-accepted",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/2000",
+        "millis": null
+      },
+      "expected": {
+        "millis": 951782400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "epoch-eve-31-12-1969",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "31/12/1969",
+        "millis": null
+      },
+      "expected": {
+        "millis": -86400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "epoch-01-01-1970",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "01/01/1970",
+        "millis": null
+      },
+      "expected": {
+        "millis": 0
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "epoch-01-01-1970-device-utc-zone",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "UTC",
+        "text": "01/01/1970",
+        "millis": null
+      },
+      "expected": {
+        "millis": 0
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-format-epoch-0",
+      "input": {
+        "op": "format",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": 0
+      },
+      "expected": {
+        "text": "01/01/1970"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-format-minus-1ms",
+      "input": {
+        "op": "format",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": null,
+        "millis": -1
+      },
+      "expected": {
+        "text": "31/12/1969"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-1900-hcm-lmt-roundtrip",
+      "input": {
+        "op": "roundtrip",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "01/01/1900",
+        "millis": null
+      },
+      "expected": {
+        "text": "01/01/1900"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "device-single-digit-accepted",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "5/3/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1709571600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "device-rejects-iso",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "2024-06-15",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "device-rejects-blank",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-dash-dd-MM-yyyy",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15-06-2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "surrounding-newline-trim-device",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "\u000a15/06/2024\u000a",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718384400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "surrounding-newline-trim-utc",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "\u000a15/06/2024\u000a",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "iso-invalid-day-30-feb",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "2024-02-30",
+        "millis": null
+      },
+      "expected": {
+        "millis": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "locale-th-TH-buddhist-parse-utc",
+      "input": {
+        "op": "parse",
+        "convention": "utc",
+        "locale": "th-TH",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "15/06/2024",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1718409600000
+      },
+      "androidLegacy": {
+        "millis": -15416265600000
+      },
+      "divergence": "locale-calendar-digits",
+      "optional": true
+    },
+    {
+      "id": "roundtrip-single-digit-normalised",
+      "input": {
+        "op": "roundtrip",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "5/3/2024",
+        "millis": null
+      },
+      "expected": {
+        "text": "05/03/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "roundtrip-invalid-gives-null",
+      "input": {
+        "op": "roundtrip",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/2023",
+        "millis": null
+      },
+      "expected": {
+        "text": null
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "device-dst-gap-midnight-sao-paulo",
+      "input": {
+        "op": "parse",
+        "convention": "device",
+        "locale": "vi-VN",
+        "zone": "America/Sao_Paulo",
+        "text": "04/11/2018",
+        "millis": null
+      },
+      "expected": {
+        "millis": 1541300400000
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "utc-roundtrip-29-02-2024",
+      "input": {
+        "op": "roundtrip",
+        "convention": "utc",
+        "locale": "vi-VN",
+        "zone": "Asia/Ho_Chi_Minh",
+        "text": "29/02/2024",
+        "millis": null
+      },
+      "expected": {
+        "text": "29/02/2024"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

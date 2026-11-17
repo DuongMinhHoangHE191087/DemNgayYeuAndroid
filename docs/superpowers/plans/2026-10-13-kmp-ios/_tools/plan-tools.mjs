@@ -104,6 +104,11 @@ function analyse(tasks, errors) {
     if (!byId.has(x.id) || !byId.has(y.id)) continue;
     if (!ancestors(x.id).has(y.id) && !ancestors(y.id).has(x.id)) errors.push(`file ${p} owned by ${x.id} and ${y.id} with no ordering (add depends-on or shared-file:)`);
   }
+  // F-12 coverage: every task outside P0, except F-12 itself, must reach F-12 through depends-on edges (P0 is exempt)
+  const F12_LEVEL = 'ERROR'; // routing finished 2026-10-14: 0 uncovered tasks, so an uncovered task is now a lint error
+  const noF12 = tasks.filter((t) => t.phase !== 'P0' && t.id !== 'F-12' && !ancestors(t.id).has('F-12')).map((t) => t.id);
+  // unshift, not push: lint prints only the first 40 warnings and this merged line must stay visible
+  if (noF12.length) (F12_LEVEL === 'ERROR' ? errors : warns).unshift(`F-12 coverage: ${noF12.length} task(s) without a path to F-12 (e.g. ${noF12.slice(0, 10).join(', ')}${noF12.length > 10 ? ', ...' : ''})`);
   // waves = DAG levels, pushed later while another task already holds one of the same files (`shared-file:` pairs that lint leaves unordered must still never run in the same wave)
   const wave = new Map(), lastWave = new Map();
   const fileKeys = (t) => t.files.replace(/shared-file:/gi, ' ').split(/[,;]|<br\s*\/?>/i).map((raw) => raw.replace(/`/g, '').trim().replace(/\s*\(.*\)$/, '').replace(/\\/g, '/')).filter((p) => p && !/^(—|-|new|none)$/i.test(p));

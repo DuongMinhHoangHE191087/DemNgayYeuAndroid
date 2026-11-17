@@ -354,7 +354,8 @@ class ReminderSchedulingTest {
     val tet = VietnameseHolidays.lunarHolidays.first { it.titleVi == "Tết Nguyên Đán" }
     val vuLan = VietnameseHolidays.lunarHolidays.first { it.titleVi == "Lễ Vu Lan" }
     assertEquals(LocalDate.of(2027, 2, 6), HolidayDates.nextLunar(tet, LocalDate.of(2026, 10, 9)))
-    assertNull(HolidayDates.nextLunar(vuLan, LocalDate.of(2026, 10, 9)))
+    assertEquals(LocalDate.of(2027, 8, 16), HolidayDates.nextLunar(vuLan, LocalDate.of(2026, 10, 9)))
+    assertNull(HolidayDates.nextLunar(vuLan, LocalDate.of(2041, 1, 1)))
   }
 
   @Test

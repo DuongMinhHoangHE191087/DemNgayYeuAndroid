@@ -33,20 +33,33 @@ class AccountDataVault(
   context: Context,
   private val db: RoomDatabase,
   private val beforeSwitch: suspend () -> Unit = {},
-  private val afterSwitch: suspend () -> Unit = {}
+  private val afterSwitch: suspend () -> Unit = {},
+  private val afterAdopt: suspend (epochBefore: Long, epochAfter: Long) -> Unit = { _, _ -> }
 ) {
   private val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
   private val dir = File(context.applicationContext.filesDir, "vault")
   private val mutex = Mutex()
+  private val adoptMutex = Mutex()
 
   val currentScope: String get() = prefs.getString(KEY_SCOPE, null) ?: GUEST
 
-  /** Guest data becomes [scope]'s data without being moved (used right after registering). */
-  suspend fun adoptCurrentInto(scope: String) = mutex.withLock {
-    recoverPending()
-    epoch.incrementAndGet()
-    file(scope).delete()
-    prefs.edit().putString(KEY_SCOPE, scope).commit()
+  /**
+   * Guest data becomes [scope]'s data without being moved (used right after registering), so there is nothing to cancel:
+   * [afterAdopt] runs after the scope write and gets the epoch before and after it, which lets a caller that stamped its
+   * state with the old epoch carry that state over. An interrupted switch finished first counts as a scope change and
+   * gets [beforeSwitch] and [afterSwitch] instead. Adoptions run one at a time through their hooks, so the epoch pairs
+   * reach [afterAdopt] in order; the hook runs outside [mutex], which the other operations keep using meanwhile.
+   */
+  suspend fun adoptCurrentInto(scope: String) = adoptMutex.withLock {
+    var recovered = false
+    var epochAfter = 0L
+    mutex.withLock {
+      recovered = recoverPending()
+      epochAfter = epoch.incrementAndGet()
+      file(scope).delete()
+      prefs.edit().putString(KEY_SCOPE, scope).commit() // last on purpose: lint flags a commit whose result is unused
+    }
+    if (recovered) afterSwitch() else afterAdopt(epochAfter - 1, epochAfter)
   }
 
   /**
@@ -61,30 +74,44 @@ class AccountDataVault(
     ).any { t -> sdb.query("SELECT 1 FROM $t LIMIT 1").use { it.moveToFirst() } }
   }
 
-  /** Moves live data to the old scope's stash and restores [scope]'s stash. No-op if unchanged. */
+  /**
+   * Moves live data to the old scope's stash and restores [scope]'s stash. No-op if unchanged, except that an interrupted
+   * switch finished first counts as a change. The cancel hook and the scope write run inside the transition fence.
+   */
   suspend fun switchTo(scope: String, discardCurrent: Boolean = false) {
     val changed = mutex.withLock {
-      recoverPending()
+      val recovered = recoverPending()
       val from = prefs.getString(KEY_SCOPE, null)
       if (from == null) {
         prefs.edit().putString(KEY_SCOPE, scope).commit()
-        return@withLock false
+        return@withLock recovered
       }
-      if (from == scope && !discardCurrent) return@withLock false
-      epoch.incrementAndGet()
-      beforeSwitch()
-      file(from).delete() // a stale stash of the live scope must never be mistaken for a finished one
-      prefs.edit().putString(KEY_PENDING, "$from|$scope|$discardCurrent").commit()
-      complete(from, scope, discardCurrent)
+      if (from == scope && !discardCurrent) return@withLock recovered
+      fenced {
+        epoch.incrementAndGet()
+        beforeSwitch()
+        file(from).delete() // a stale stash of the live scope must never be mistaken for a finished one
+        prefs.edit().putString(KEY_PENDING, "$from|$scope|$discardCurrent").commit()
+        complete(from, scope, discardCurrent)
+      }
       true
     }
     if (changed) afterSwitch()
   }
 
-  private fun recoverPending() {
-    val p = prefs.getString(KEY_PENDING, null)?.split("|") ?: return
-    if (p.size == 3) complete(p[0], p[1], p[2].toBoolean())
-    else prefs.edit().remove(KEY_PENDING).commit()
+  /** Finishes an interrupted switch: cancel hook first, inside the fence, then the idempotent move. True if it ran. */
+  private suspend fun recoverPending(): Boolean {
+    val p = prefs.getString(KEY_PENDING, null)?.split("|") ?: return false
+    if (p.size != 3) {
+      prefs.edit().remove(KEY_PENDING).commit()
+      return false
+    }
+    fenced {
+      epoch.incrementAndGet()
+      beforeSwitch()
+      complete(p[0], p[1], p[2].toBoolean())
+    }
+    return true
   }
 
   /** Idempotent: safe to re-run from any point after the pending marker was written. */
@@ -223,6 +250,28 @@ class AccountDataVault(
 
     /** Bumped before and after every scope switch; background work captures it to detect a stale session. */
     val epoch = java.util.concurrent.atomic.AtomicLong()
+
+    // Low 32 bits: transitions running. Upper bits: transitions started. Lock-free on purpose: the cancel hook waits for the
+    // milestone scheduler's lock, so a replay holding that lock must never have to wait on the vault.
+    private val fence = java.util.concurrent.atomic.AtomicLong()
+    private const val RUNNING = 1L
+    private const val STARTED = 1L shl 32
+
+    /** -1 while a scope switch or recovery is running; otherwise a value that changes whenever one begins. */
+    fun transitionStamp(): Long {
+      val v = fence.get()
+      return if ((v and 0xFFFFFFFFL) != 0L) -1L else v
+    }
+
+    private inline fun <T> fenced(block: () -> T): T {
+      fence.addAndGet(STARTED + RUNNING)
+      try {
+        return block()
+      } finally {
+        fence.addAndGet(-RUNNING)
+      }
+    }
+
     private const val PREFS = "inlove_account_scope"
     private const val KEY_SCOPE = "scope"
     private const val KEY_PENDING = "pending"

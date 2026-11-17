@@ -29,6 +29,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
+import com.example.ui.testing.TALL_PIXEL8
 import com.example.ui.theme.MyApplicationTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -129,7 +130,11 @@ class InLoveTopBarTest {
     }
   }
 
+  // The tall window (see TALL_PIXEL8) holds all 100 rows: swipeUp collapses the bar through the nested scroll and never flings through the list.
+  // In the normal window that fling runs about 60 s under Robolectric and the idle wait fails with AppNotIdleException.
+  // ponytail: if the list outgrows the window the fling comes back; then drag without a fling (down, moveBy, advanceEventTime, up).
   @Test
+  @Config(qualifiers = TALL_PIXEL8)
   fun scrollUp_collapses() {
     rule.setContent {
       MyApplicationTheme {

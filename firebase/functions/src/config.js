@@ -1,7 +1,7 @@
 'use strict';
 
 // Các giá trị hay thay đổi nằm ở một chỗ này. Đổi giới hạn, quota, định dạng hay region
-// thì chỉ sửa file này rồi deploy lại functions (xem docs/architecture/MEDIA_CLOUDINARY.md).
+// thì chỉ sửa file này rồi deploy lại functions.
 const MB = 1024 * 1024;
 const GB = 1024 * MB;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -13,10 +13,11 @@ module.exports = Object.freeze({
     imageMaxBytes: 10 * MB,
     videoMaxBytes: 50 * MB,
     videoMaxSeconds: 60,
+    avatarMaxBytes: 1 * MB,
   }),
 
-  // MIME mà app được phép khai báo -> định dạng Cloudinary. Upload chỉ cho phép đúng một định dạng
-  // (allowed_formats) và kết quả phải khớp định dạng đó, nên tệp khác loại bị từ chối.
+  // MIME mà app được phép khai báo -> định dạng nội bộ. Server ký đúng một content-type cho định dạng đó,
+  // rồi confirm kiểm lại content-type, dung lượng và byte đầu tệp, nên tệp khác loại bị từ chối.
   mimeFormats: Object.freeze({
     IMAGE: Object.freeze({
       'image/jpeg': 'jpg',
@@ -29,7 +30,6 @@ module.exports = Object.freeze({
     VIDEO: Object.freeze({
       'video/mp4': 'mp4',
       'video/quicktime': 'mov',
-      'video/webm': 'webm',
     }),
   }),
 
@@ -38,8 +38,9 @@ module.exports = Object.freeze({
     relationshipDailyUploads: 40,
     globalDailyUploads: 5000,
     relationshipStoredBytes: 2 * GB,
-    // Trần dung lượng đã xác nhận của cả hệ thống. Đề xuất 100 GB; đặt thấp hơn gói lưu trữ Cloudinary để có đệm.
-    globalStoredBytes: 100 * GB,
+    // Trần dung lượng đã xác nhận của cả hệ thống: 8 GB, thấp hơn 10 GB-tháng miễn phí của Cloudflare R2 để còn đệm.
+    // Khi chuyển sang gói trả phí thì nâng lên.
+    globalStoredBytes: 8 * GB,
   }),
 
   timing: Object.freeze({
@@ -68,8 +69,14 @@ module.exports = Object.freeze({
     signMemoryUpload: Object.freeze({ max: 30, windowMs: 60 * 1000 }),
     confirmMemoryUpload: Object.freeze({ max: 60, windowMs: 60 * 1000 }),
     getMemoryMediaUrl: Object.freeze({ max: 300, windowMs: 60 * 1000 }),
+    getAccountToken: Object.freeze({ max: 20, windowMs: 60 * 60 * 1000 }),
+    claimPurchase: Object.freeze({ max: 30, windowMs: 60 * 60 * 1000 }),
+    getEntitlement: Object.freeze({ max: 60, windowMs: 60 * 60 * 1000 }),
+    signAvatarUpload: Object.freeze({ max: 10, windowMs: 60 * 60 * 1000 }),
   }),
 
-  // Tiền tố public_id trên Cloudinary: inlove_mem_<memoryId>. Không có thư mục, không có tên người dùng.
+  // Khoá đối tượng trên R2: inlove_mem_<memoryId>. Không có thư mục, không có tên người dùng.
   publicIdPrefix: 'inlove_mem_',
+  // Avatar: một tệp cố định theo uid trong bucket công khai riêng (khoá inlove_avt_<uid>).
+  avatarPublicIdPrefix: 'inlove_avt_',
 });

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="2" failures="0">
+  <testsuite name="InLoveUITests.xctest" tests="2" failures="0">
+    <testcase classname="InLoveUITests.SmokeLaunchTests" name="testLaunch()" time="3.2"/>
+    <testcase classname="InLoveUITests.SmokeLaunchTests" name="testRelaunch()" time="2.9"/>
+  </testsuite>
+</testsuites>

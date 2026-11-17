@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Robolectric's createComposeRule() launches this activity; no INTERNET permission on purpose
+       (keeps Coil's AsyncImage from loading anything, so renders are deterministic). -->
+  <application android:label="ui-drift" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <activity android:name="androidx.activity.ComponentActivity" android:exported="true" />
+  </application>
+</manifest>

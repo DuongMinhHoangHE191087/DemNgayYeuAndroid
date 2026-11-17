@@ -24,11 +24,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.animation.animateContentSize
+import com.example.ui.components.AppDialog
 import com.example.ui.components.animateDialogEntrance
 import com.example.ui.components.DatePickerPresets
 import com.example.ui.components.InLoveDatePickerField
@@ -67,8 +69,6 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -79,7 +79,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -106,7 +105,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.data.media.LocalMediaStore
 import com.example.data.model.OnlineStatus
@@ -115,7 +113,11 @@ import com.example.data.model.SharedMemoryEntity
 import com.example.domain.media.MediaKind
 import com.example.domain.media.MemoryMediaFile
 import com.example.domain.media.formatMediaSize
+import com.example.ui.components.PrimaryGradientButton
 import com.example.ui.components.rememberMemoryUri
+import com.example.ui.components.SecondaryButton
+import com.example.ui.components.disabledLook
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
 import com.example.ui.viewmodel.InLoveViewModel
@@ -623,7 +625,7 @@ fun AddMemoryDialog(
   val isEnglish = currentLanguage == AppLanguage.EN
 
   val todayFormatted = remember {
-    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+    SimpleDateFormat("dd/MM/yyyy", Locale.ROOT).format(Date())
   }
 
   var title by remember { mutableStateOf("") }
@@ -652,6 +654,7 @@ fun AddMemoryDialog(
   ) { uris: List<Uri> ->
     if (uris.isNotEmpty()) {
       isLoadingMedia = true
+      validationError = null
       coroutineScope.launch {
         try {
           val preparedList = withContext(Dispatchers.IO) {
@@ -663,14 +666,13 @@ fun AddMemoryDialog(
               if (pickedMedia == null && pick.media != null) {
                 pickedMedia = pick.media
               }
-              pick.coverUri ?: pick.media?.let { Uri.fromFile(it.file).toString() } ?: picked.toString()
+              pick.coverUri ?: pick.media?.let { Uri.fromFile(java.io.File(it.path)).toString() }
             }
           }
           if (preparedList.isNotEmpty()) {
-            val combined = (selectedPhotos + preparedList).distinct().take(10)
+            val combined = withPickedMedia(selectedPhotos, preparedList)
             selectedPhotos = combined
             selectedMediaUri = combined.firstOrNull().orEmpty()
-            validationError = null
           }
         } finally {
           isLoadingMedia = false
@@ -679,7 +681,7 @@ fun AddMemoryDialog(
     }
   }
 
-  Dialog(onDismissRequest = { if (!isSaving) onDismiss() }) {
+  AppDialog(onDismissRequest = { if (!isSaving) onDismiss() }) {
     Surface(
       shape = RoundedCornerShape(28.dp),
       color = Color.White,
@@ -738,7 +740,7 @@ fun AddMemoryDialog(
           if (!isSaving) {
             IconButton(
               onClick = onDismiss,
-              modifier = Modifier.size(32.dp)
+              modifier = Modifier.size(MinTouchBox)
             ) {
               Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.Gray, modifier = Modifier.size(20.dp))
             }
@@ -836,7 +838,7 @@ fun AddMemoryDialog(
               val isSelected = selectedMediaUri == url
               Box(
                 modifier = Modifier
-                  .size(46.dp)
+                  .size(MinTouchBox)
                   .clip(RoundedCornerShape(12.dp))
                   .border(
                     width = if (isSelected) 2.2.dp else 1.dp,
@@ -993,66 +995,54 @@ fun AddMemoryDialog(
           horizontalArrangement = Arrangement.spacedBy(10.dp),
           modifier = Modifier.fillMaxWidth()
         ) {
-          OutlinedButton(
-            onClick = onDismiss,
-            enabled = !isSaving,
-            shape = RoundedCornerShape(16.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFDDE6)),
+          val cancelEnabled = !isSaving
+
+          SecondaryButton(
+            text = if (isEnglish) "Cancel" else "Hủy",
+            onClick = { if (cancelEnabled) onDismiss() },
             modifier = Modifier
               .weight(1f)
-              .height(46.dp)
-          ) {
-            Text(
-              text = if (isEnglish) "Cancel" else "Hủy",
-              fontWeight = FontWeight.SemiBold,
-              fontSize = 14.sp
-            )
-          }
+              .heightIn(min = MinTouchBox)
+              .disabledLook(cancelEnabled)
+          )
 
-          val canSave = !isSaving && validationError == null && !isLoadingMedia
+          val canSave = !isSaving && !isLoadingMedia
 
-          Button(
+          PrimaryGradientButton(
+            text = if (isEnglish) "Save" else "Lưu",
             onClick = {
-              isSaving = true
-              coroutineScope.launch {
-                val finalTitle = title.ifBlank {
-                  if (!isEnglish) "Khoảnh Khắc Kỷ Niệm" else "Special Moment"
+              if (canSave) {
+                isSaving = true
+                coroutineScope.launch {
+                  val finalTitle = title.ifBlank {
+                    if (!isEnglish) "Khoảnh Khắc Kỷ Niệm" else "Special Moment"
+                  }
+                  val coverPhoto = selectedPhotos.firstOrNull() ?: selectedMediaUri
+                  val saved = try {
+                    onSaveMemory(
+                      finalTitle,
+                      dateText,
+                      coverPhoto,
+                      note,
+                      location,
+                      pickedMedia,
+                      if (pickedMedia != null) coverPhoto else null,
+                      privacyLevel
+                    )
+                  } finally {
+                    isSaving = false
+                  }
+                  if (saved) onDismiss()
                 }
-                val coverPhoto = selectedPhotos.firstOrNull() ?: selectedMediaUri
-                val saved = try {
-                  onSaveMemory(
-                    finalTitle,
-                    dateText,
-                    coverPhoto,
-                    note,
-                    location,
-                    pickedMedia,
-                    if (pickedMedia != null) coverPhoto else null,
-                    privacyLevel
-                  )
-                } finally {
-                  isSaving = false
-                }
-                if (saved) onDismiss()
               }
             },
-            enabled = canSave,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
-            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
               .weight(1.2f)
-              .height(46.dp)
-              .testTag("btn_save_memory_submit")
-          ) {
-            Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-              text = if (isEnglish) "Save" else "Lưu",
-              fontWeight = FontWeight.Bold,
-              fontSize = 14.5.sp,
-              maxLines = 1
-            )
-          }
+              .heightIn(min = MinTouchBox)
+              .disabledLook(canSave),
+            icon = Icons.Default.Favorite,
+            testTag = "btn_save_memory_submit"
+          )
         }
       }
     }
@@ -1075,7 +1065,7 @@ private fun EditMemoryDialog(
   var note by remember { mutableStateOf(memory.note) }
   var privacyLevel by remember { mutableStateOf(memory.privacyLevel) }
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(26.dp),
       color = Color.White,
@@ -1187,10 +1177,15 @@ private fun EditMemoryDialog(
           horizontalArrangement = Arrangement.spacedBy(10.dp),
           modifier = Modifier.fillMaxWidth()
         ) {
-          OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-            Text(if (isEnglish) "Cancel" else "Hủy")
-          }
-          Button(
+          SecondaryButton(
+            text = if (isEnglish) "Cancel" else "Hủy",
+            onClick = onDismiss,
+            modifier = Modifier
+              .weight(1f)
+              .heightIn(min = MinTouchBox)
+          )
+          PrimaryGradientButton(
+            text = if (isEnglish) "Save Changes" else "Lưu cập nhật",
             onClick = {
               onSave(
                 memory.copy(
@@ -1202,11 +1197,10 @@ private fun EditMemoryDialog(
                 )
               )
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA)),
-            modifier = Modifier.weight(1f)
-          ) {
-            Text(if (isEnglish) "Save Changes" else "Lưu cập nhật")
-          }
+            modifier = Modifier
+              .weight(1f)
+              .heightIn(min = MinTouchBox)
+          )
         }
       }
     }
@@ -1240,7 +1234,7 @@ private fun MemoryDetailDialog(
   )
   var showDeleteConfirm by remember { mutableStateOf(false) }
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(26.dp),
       color = Color.White,
@@ -1305,7 +1299,7 @@ private fun MemoryDetailDialog(
             IconButton(
               onClick = onDismiss,
               modifier = Modifier
-                .size(48.dp)
+                .size(MinTouchBox)
                 .background(Color.Black.copy(alpha = 0.45f), CircleShape)
             ) {
               Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.White)
@@ -1314,7 +1308,7 @@ private fun MemoryDetailDialog(
             IconButton(
               onClick = onToggleFavorite,
               modifier = Modifier
-                .size(48.dp)
+                .size(MinTouchBox)
                 .background(Color.Black.copy(alpha = 0.45f), CircleShape)
             ) {
               Icon(
@@ -1492,29 +1486,29 @@ private fun MemoryDetailDialog(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxWidth()
           ) {
-            OutlinedButton(
+            SecondaryButton(
+              text = if (currentLanguage == AppLanguage.EN) "Cancel" else strings.btnCancel,
               onClick = { showDeleteConfirm = false },
-              shape = RoundedCornerShape(14.dp),
-              modifier = Modifier.weight(1f)
-            ) {
-              Text(if (currentLanguage == AppLanguage.EN) "Cancel" else strings.btnCancel)
-            }
+              modifier = Modifier
+                .weight(1f)
+                .heightIn(min = MinTouchBox)
+            )
 
-            Button(
+            SecondaryButton(
+              text = if (currentLanguage == AppLanguage.EN) "Confirm Delete" else "Xác nhận xóa",
               onClick = {
                 onDelete()
                 onDismiss()
               },
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-              shape = RoundedCornerShape(14.dp),
-              modifier = Modifier.weight(1f)
-            ) {
-              Text(if (currentLanguage == AppLanguage.EN) "Confirm Delete" else "Xác nhận xóa")
-            }
+              modifier = Modifier
+                .weight(1f)
+                .heightIn(min = MinTouchBox),
+              isDestructive = true,
+              filled = true
+            )
           }
         } else {
           // Equal-weight, single-line buttons: natural widths overflowed and wrapped "Got It" onto two lines.
-          val buttonPadding = PaddingValues(horizontal = 8.dp)
           Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -1522,40 +1516,33 @@ private fun MemoryDetailDialog(
           ) {
             // Partner view: only the Got It button.
             if (isAuthor) {
-              OutlinedButton(
+              SecondaryButton(
+                text = if (currentLanguage == AppLanguage.EN) "Delete" else "Xóa",
                 onClick = { showDeleteConfirm = true },
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
-                contentPadding = buttonPadding,
-                modifier = Modifier.weight(1f)
-              ) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(15.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(if (currentLanguage == AppLanguage.EN) "Delete" else "Xóa", maxLines = 1)
-              }
+                modifier = Modifier
+                  .weight(1f)
+                  .heightIn(min = MinTouchBox),
+                icon = Icons.Default.Delete,
+                isDestructive = true
+              )
 
-              Button(
+              SecondaryButton(
+                text = if (currentLanguage == AppLanguage.EN) "Edit" else "Sửa",
                 onClick = onEdit,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8E24AA)),
-                contentPadding = buttonPadding,
-                modifier = Modifier.weight(1f)
-              ) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(if (currentLanguage == AppLanguage.EN) "Edit" else "Sửa", maxLines = 1)
-              }
+                modifier = Modifier
+                  .weight(1f)
+                  .heightIn(min = MinTouchBox),
+                icon = Icons.Default.Edit
+              )
             }
 
-            Button(
+            PrimaryGradientButton(
+              text = if (currentLanguage == AppLanguage.EN) "Got It" else strings.btnGotIt,
               onClick = onDismiss,
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
-              contentPadding = buttonPadding,
-              modifier = Modifier.weight(1f)
-            ) {
-              Text(if (currentLanguage == AppLanguage.EN) "Got It" else strings.btnGotIt, maxLines = 1)
-            }
+              modifier = Modifier
+                .weight(1f)
+                .heightIn(min = MinTouchBox)
+            )
           }
         }
       }

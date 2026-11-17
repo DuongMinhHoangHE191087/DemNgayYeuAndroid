@@ -24,22 +24,26 @@ object AnniversarySyncAdapter : EntitySyncAdapter<AnniversaryDateEntity> {
     "deleted" to entity.deleted
   )
 
-  override fun fromFirestoreDoc(doc: DocumentSnapshot): AnniversaryDateEntity? {
-    val syncId = doc.getString("syncId") ?: return null
-    val title = doc.getString("title") ?: return null
+  override fun fromFirestoreDoc(doc: DocumentSnapshot): AnniversaryDateEntity? =
+    doc.data?.let { fromFirestoreMap(it) }
+
+  /** Map thuần (từ `doc.data`) -> entity; ép kiểu an toàn, sai kiểu = mặc định của trường thiếu (xem MemorySyncAdapter.fromFirestoreMap). */
+  internal fun fromFirestoreMap(data: Map<String, Any?>, now: Long = System.currentTimeMillis()): AnniversaryDateEntity? {
+    val syncId = data.optString("syncId") ?: return null
+    val title = data.optString("title") ?: return null
     return AnniversaryDateEntity(
       syncId = syncId,
       title = title,
-      dateText = doc.getString("dateText") ?: "",
-      type = doc.getString("type") ?: "LOVE",
-      description = doc.getString("description") ?: "",
-      isAnnual = doc.getBoolean("isAnnual") ?: true,
-      notificationEnabled = doc.getBoolean("notificationEnabled") ?: true,
-      reminderDaysBefore = (doc.getLong("reminderDaysBefore") ?: 3L).toInt(),
-      createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
-      relationshipId = doc.getString("relationshipId"),
-      updatedAt = doc.getLong("updatedAt") ?: 0L,
-      deleted = doc.getBoolean("deleted") ?: false,
+      dateText = data.optString("dateText") ?: "",
+      type = data.optString("type") ?: "LOVE",
+      description = data.optString("description") ?: "",
+      isAnnual = data.optBool("isAnnual") ?: true,
+      notificationEnabled = data.optBool("notificationEnabled") ?: true,
+      reminderDaysBefore = (data.optLong("reminderDaysBefore") ?: 3L).toInt(),
+      createdAt = data.optLong("createdAt") ?: now,
+      relationshipId = data.optString("relationshipId"),
+      updatedAt = data.optLong("updatedAt") ?: 0L,
+      deleted = data.optBool("deleted") ?: false,
       pendingSync = false
     )
   }

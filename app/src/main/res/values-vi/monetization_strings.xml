@@ -1,0 +1,8 @@
+<resources>
+    <string name="monetization_play_not_ready">Đang kết nối Google Play, vui lòng thử lại.</string>
+    <string name="monetization_play_offer_unavailable">Gói này hiện chưa khả dụng. Vui lòng thử lại sau.</string>
+    <string name="monetization_play_launch_failed">Không mở được Google Play (mã %1$d). Vui lòng thử lại.</string>
+    <string name="monetization_play_payment_failed">Thanh toán thất bại: %1$s</string>
+    <string name="monetization_play_error_code">Mã lỗi %1$d</string>
+    <string name="monetization_play_subscription_suspended">Gói đăng ký của bạn đang bị tạm dừng. Vui lòng cập nhật phương thức thanh toán trên Google Play.</string>
+</resources>

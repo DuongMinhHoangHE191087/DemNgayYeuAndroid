@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -49,6 +51,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,9 +65,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.layout.layout
 import com.example.ui.theme.MinTouchBox
 import kotlin.math.roundToInt
@@ -76,7 +82,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.CardBorder
@@ -86,11 +92,10 @@ import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
 import com.example.ui.theme.SurfaceContainerHighest
+import com.example.ui.theme.TextDarkPlum
+import com.example.ui.util.displayAvatarUrl
 
 import androidx.compose.ui.text.style.TextOverflow
-
-const val COUPLE_AVATAR_URL =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuA7FGhAVlT3aua6tzpkBgh-_XXVsY-hCGooIPxOJ0acYyvZV9FZpASsMTgGO0vBFJLrLojRgwwnQEjfWAniwj2FAiKNpUjSRFNIQgmOhVN8fFSYwpOqLF8hAnWk3UM0dWxSVT1FwaK9ovXMP7Jwi-gjfRbUm2ISX1qyUY6bpBKBZnBYk7YIorizTPWI5c6w9XUdTTsMLFWT3c5ns8lYQooC0eEvt6S5zJNNobW_pn1PTJOb0K2REgdfTQ"
 
 /**
  * Clean & romantic top bar: Title, bell notification, and profile avatar are strictly aligned
@@ -214,9 +219,10 @@ private fun NotificationStrip(item: NotificationItem, isEnglish: Boolean, onSeeA
       TextButton(
         onClick = onSeeAll,
         interactionSource = seeAllSource,
+        colors = ButtonDefaults.textButtonColors(contentColor = Primary),
         modifier = Modifier.pressScale(seeAllSource).testTag("topbar_see_all")
       ) {
-        Text(if (isEnglish) "See all" else "Xem tất cả", color = Primary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        Text(if (isEnglish) "See all" else "Xem tất cả", fontSize = 13.sp, fontWeight = FontWeight.Medium)
       }
     }
   }
@@ -255,7 +261,49 @@ fun NotificationBellButton(
   }
 }
 
-/** Single profile entry point of the top bar; a blank [avatarUrl] shows the default couple image. */
+/** Round profile photo; a blank or stock-placeholder [url] shows a Person icon instead of a made-up picture, and so does a real photo while it loads or fails. */
+@Composable
+fun ProfileAvatar(url: String?, contentDescription: String?, modifier: Modifier = Modifier) {
+  val shown = displayAvatarUrl(url)
+  Box(
+    contentAlignment = Alignment.Center,
+    modifier = modifier.clip(CircleShape).background(PrimaryFixed)
+  ) {
+    if (shown.isEmpty()) {
+      Icon(
+        imageVector = Icons.Default.Person,
+        contentDescription = contentDescription,
+        tint = Primary,
+        modifier = Modifier.fillMaxSize(0.6f).testTag("profile_avatar_placeholder")
+      )
+    } else {
+      SubcomposeAsyncImage(
+        model = shown,
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Crop,
+        loading = { AvatarFallbackIcon(contentDescription) },
+        error = { AvatarFallbackIcon(contentDescription) },
+        modifier = Modifier.fillMaxSize()
+      )
+    }
+  }
+}
+
+// SubcomposeAsyncImage hands its slots min == max constraints, so the inner Box is what lets the icon be 60% of the circle.
+// Deliberately NO "profile_avatar_placeholder" tag here: that tag means "no real photo url" (see ProfileAvatarTest).
+@Composable
+private fun AvatarFallbackIcon(contentDescription: String?) {
+  Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+    Icon(
+      imageVector = Icons.Default.Person,
+      contentDescription = contentDescription,
+      tint = Primary,
+      modifier = Modifier.fillMaxSize(0.6f)
+    )
+  }
+}
+
+/** Single profile entry point of the top bar; a blank [avatarUrl] shows the Person placeholder. */
 @Composable
 fun ProfileAvatarButton(
   avatarUrl: String,
@@ -271,14 +319,12 @@ fun ProfileAvatarButton(
       .pressClickable(onClick = onClick)
       .testTag("topbar_profile_avatar")
   ) {
-    AsyncImage(
-      model = avatarUrl.ifBlank { COUPLE_AVATAR_URL },
+    ProfileAvatar(
+      url = avatarUrl,
       contentDescription = contentDescription,
-      contentScale = ContentScale.Crop,
       modifier = Modifier
         .size(36.dp)
         .shadow(4.dp, CircleShape)
-        .clip(CircleShape)
         .border(1.5.dp, Primary.copy(alpha = 0.6f), CircleShape)
     )
   }
@@ -423,6 +469,67 @@ fun PrimaryGradientButton(
     }
   }
 }
+
+/**
+ * Outline/solid counterpart to [PrimaryGradientButton]: same shape, padding, icon size and font
+ * so the two read as one matched family, minus the shadow. Three looks chosen by
+ * [isDestructive]/[filled]: neutral outline (default), red outline (`isDestructive = true`), or
+ * solid red (`isDestructive = true, filled = true`). `filled` alone is a no-op.
+ */
+@Composable
+fun SecondaryButton(
+  text: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  icon: ImageVector? = null,
+  isDestructive: Boolean = false,
+  filled: Boolean = false,
+  testTag: String = "secondary_btn"
+) {
+  val solid = isDestructive && filled
+  val borderColor = if (isDestructive) MaterialTheme.colorScheme.error else CardBorder
+  val fill = if (solid) MaterialTheme.colorScheme.error else Color.White
+  val contentColor = when {
+    solid -> MaterialTheme.colorScheme.onError
+    isDestructive -> MaterialTheme.colorScheme.error
+    else -> TextDarkPlum
+  }
+  Box(
+    modifier = modifier
+      .clip(RoundedCornerShape(50.dp))
+      .background(fill)
+      .then(if (solid) Modifier else Modifier.border(1.2.dp, borderColor, RoundedCornerShape(50.dp)))
+      .pressClickable(onClick = onClick)
+      .padding(horizontal = 20.dp, vertical = 13.dp)
+      .testTag(testTag),
+    contentAlignment = Alignment.Center
+  ) {
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.Center
+    ) {
+      if (icon != null) {
+        Icon(
+          imageVector = icon,
+          contentDescription = null,
+          tint = contentColor,
+          modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+      }
+      Text(
+        text = text,
+        color = contentColor,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp
+      )
+    }
+  }
+}
+
+/** Dims [this] and marks the node accessibility-disabled when [enabled] is false; a no-op when true. */
+fun Modifier.disabledLook(enabled: Boolean): Modifier =
+  if (enabled) this else this.alpha(0.5f).semantics { disabled() }
 
 /**
  * Modifier extension to give popup dialogs a smooth, romantic spring-entrance animation.

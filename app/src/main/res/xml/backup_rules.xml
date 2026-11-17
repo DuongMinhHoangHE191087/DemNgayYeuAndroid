@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <exclude domain="database" path="inlove_database" />
-    <exclude domain="sharedpref" path="inlove_auth_prefs.xml" />
+    <!-- Chỉ ảnh/video kỷ niệm và bản kê memories_backup.json (nằm trong files/media) được sao lưu; DB và khóa đăng nhập không bao giờ.
+         Đã có include thì mọi thứ ngoài nó tự bị loại, nên không khai báo exclude (lint FullBackupContent báo lỗi exclude nằm ngoài include). -->
+    <include domain="file" path="media" requireFlags="clientSideEncryption" />
 </full-backup-content>

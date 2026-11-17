@@ -1,0 +1,256 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "cases": [
+    {
+      "id": "raw-code",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "LOVE-9966"
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "query-code-param",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair?code=LOVE-9966"
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "custom-scheme-inlove-pair",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "inlove://pair/LOVE-9966"
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "percent-encoded-code",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair?code=LOVE%2D9966"
+      },
+      "expected": "LOVE",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "garbage-gives-empty",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "!!! ??? ###"
+      },
+      "expected": "",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "full-width-letters",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "\uff2c\uff2f\uff36\uff25-9966"
+      },
+      "expected": "-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "share-link-equals-pair-link",
+      "input": {
+        "fn": "createShareLink",
+        "code": "LOVE-9966"
+      },
+      "expected": {
+        "shareLink": "https://inlove.app/pair?code=LOVE-9966",
+        "pairLink": "https://inlove.app/pair?code=LOVE-9966",
+        "equal": true
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "kelvin-sign-u212a",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair?code=LOVE-\u212a9"
+      },
+      "expected": "LOVE-\u212a9",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "long-s-u017f",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair?code=LOVE-\u017f9"
+      },
+      "expected": "LOVE-S9",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": true
+    },
+    {
+      "id": "lowercase-code",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "love-ab12"
+      },
+      "expected": "LOVE-AB12",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "whitespace-around",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "  \u0009LOVE-9966\u000a "
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": ""
+      },
+      "expected": "",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "only-whitespace",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": " \u0009\u000a  "
+      },
+      "expected": "",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "second-param-ampersand",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair?ref=share&code=love-ab12&x=1"
+      },
+      "expected": "LOVE-AB12",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "mixed-case-host-and-param",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "HTTPS://InLove.App/Pair?CODE=love-Ab12"
+      },
+      "expected": "LOVE-AB12",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "path-with-trailing-junk",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair/love-9966/extra?x=1"
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "path-mixed-case-pair-segment",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "inlove://PAIR/love-9966"
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "code-equals-without-query-marker",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "code=LOVE-9966"
+      },
+      "expected": "CODELOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "query-before-path-precedence",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair/AAAA?code=BBBB"
+      },
+      "expected": "BBBB",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "underscore-hyphen-code",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "my_code-12"
+      },
+      "expected": "MY_CODE-12",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "pair-link-with-code",
+      "input": {
+        "fn": "extractCoupleCode",
+        "input": "https://inlove.app/pair?code=LOVE-9966"
+      },
+      "expected": "LOVE-9966",
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "random-code-format-1000-samples",
+      "input": {
+        "fn": "generateRandomCoupleCode",
+        "samples": 1000
+      },
+      "expected": {
+        "pattern": "^LOVE-[A-HJ-NP-Z2-9]{4}$",
+        "samples": 1000,
+        "allMatch": true
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

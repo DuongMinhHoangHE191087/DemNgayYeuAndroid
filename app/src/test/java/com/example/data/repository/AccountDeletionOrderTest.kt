@@ -3,6 +3,8 @@ package com.example.data.repository
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.example.data.auth.SessionHooks
+import com.example.data.auth.fakes.FakeAuthGateway
 import com.example.data.db.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -15,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,9 +68,16 @@ class AccountDeletionOrderTest {
     db.close()
   }
 
-  private fun repoWith(cleanup: RemoteAccountCleanup): AuthRepository {
+  private fun repoWith(cleanup: RemoteAccountCleanup, hooks: SessionHooks = RecordingSessionHooks()): AuthRepository {
     val onlineRepo = OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
-    return AuthRepository(db.inLoveDao(), onlineRepo, context, scope, isTestMode = true, remoteCleanup = cleanup)
+    return AuthRepository(db.inLoveDao(), onlineRepo, context, scope, FakeAuthGateway(), hooks, remoteCleanup = cleanup)
+  }
+
+  /** Hook cục bộ: chỉ ghi "deleting" vào cùng danh sách sự kiện với bản dọn đám mây để kiểm thứ tự. */
+  private fun deletingHookInto(cleanup: RecordingCleanup) = object : SessionHooks {
+    override fun onSessionStarted(uid: String) {}
+    override fun onSessionEnded() {}
+    override fun onAccountDeleting() { cleanup.events += "deleting" }
   }
 
   /** Đăng ký một tài khoản đang đăng nhập; trả về (email, uid). */
@@ -114,6 +124,24 @@ class AccountDeletionOrderTest {
   }
 
   @Test
+  fun deleteAccount_cancelledCloudStep_propagatesAndKeepsAccount() = runBlocking {
+    val cleanup = RecordingCleanup(cloudError = kotlinx.coroutines.CancellationException("cancelled"))
+    val repo = repoWith(cleanup)
+    val (email, uid) = repo.registerTestAccount()
+
+    try {
+      repo.deleteCurrentAccount()
+      fail("Huỷ coroutine phải được ném lại, không đổi thành Result.failure")
+    } catch (_: kotlinx.coroutines.CancellationException) {
+      // đúng kỳ vọng
+    }
+
+    assertEquals(listOf("cloud:$uid"), cleanup.events)
+    assertNotNull(db.inLoveDao().getUserAccountByEmail(email))
+    assertTrue(repo.authState.value is AuthState.Authenticated)
+  }
+
+  @Test
   fun deleteAccount_recentLoginRequired_keepsLocalAccount_thenRetrySucceeds() = runBlocking {
     val cleanup = RecordingCleanup(authNeedsRecentLoginOnce = true)
     val repo = repoWith(cleanup)
@@ -130,6 +158,32 @@ class AccountDeletionOrderTest {
     assertTrue("Lần thử lại phải thành công: ${second.exceptionOrNull()?.message}", second.isSuccess)
     assertEquals(listOf("cloud:$uid", "auth", "cloud:$uid", "auth"), cleanup.events)
     assertNull(db.inLoveDao().getUserAccountByEmail(email))
+  }
+
+  @Test
+  fun deleteAccount_stopsProfileSyncBeforeCloudWipe() = runBlocking {
+    val cleanup = RecordingCleanup()
+    val repo = repoWith(cleanup, deletingHookInto(cleanup))
+    val (_, uid) = repo.registerTestAccount()
+
+    val result = repo.deleteCurrentAccount()
+
+    assertTrue("Xoá phải thành công: ${result.exceptionOrNull()?.message}", result.isSuccess)
+    assertEquals(listOf("deleting", "cloud:$uid", "auth"), cleanup.events)
+  }
+
+  @Test
+  fun deleteAccount_cloudFailure_stillCalledDeletingHook_andKeepsAccount() = runBlocking {
+    val cleanup = RecordingCleanup(cloudError = IllegalStateException("PERMISSION_DENIED"))
+    val repo = repoWith(cleanup, deletingHookInto(cleanup))
+    val (email, uid) = repo.registerTestAccount()
+
+    val result = repo.deleteCurrentAccount()
+
+    assertTrue(result.isFailure)
+    assertEquals(listOf("deleting", "cloud:$uid"), cleanup.events)
+    assertNotNull(db.inLoveDao().getUserAccountByEmail(email))
+    assertTrue(repo.authState.value is AuthState.Authenticated)
   }
 
   private companion object {

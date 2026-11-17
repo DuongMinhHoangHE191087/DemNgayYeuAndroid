@@ -1,0 +1,22 @@
+{
+  "0": [
+    "app/src/main/java/com/example/ui/util/ProfileUtils.kt",
+    "app/src/main/java/com/example/ui/util/TextFormat.kt"
+  ],
+  "1": [
+    "app/src/main/java/com/example/ui/theme/Color.kt",
+    "app/src/main/java/com/example/ui/theme/Motion.kt",
+    "app/src/main/java/com/example/ui/theme/Theme.kt",
+    "app/src/main/java/com/example/ui/theme/Type.kt",
+    "app/src/main/java/com/example/ui/components/PressScale.kt",
+    "app/src/main/java/com/example/ui/components/MemoryMediaModel.kt",
+    "app/src/main/java/com/example/ui/components/FloatingHeartsOverlay.kt",
+    "app/src/main/java/com/example/ui/components/AppOpeningSplashScreen.kt"
+  ],
+  "stay": [
+    "app/src/main/java/com/example/ui/components/AdBannerPlaceholder.kt",
+    "app/src/main/java/com/example/ui/util/Localization.kt",
+    "app/src/main/java/com/example/ui/viewmodel/InLoveViewModelFactory.kt"
+  ],
+  "others": []
+}

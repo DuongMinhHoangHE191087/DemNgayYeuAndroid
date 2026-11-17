@@ -1,0 +1,9 @@
+(no completion marker found; raw tail follows)
+(node:2808) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[codex] Starting Codex task thread.
+[codex] Thread ready (01a13987-204a-7a81-b918-aa3cbeba58fc).
+[codex] Turn started (01a13987-2384-7a80-8ec9-bd0191aeaa59).
+[codex] Codex error: Your workspace is out of credits. Add credits to continue.
+[codex] Turn failed.
+Your workspace is out of credits. Add credits to continue.

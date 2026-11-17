@@ -1,0 +1,1147 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "table-dump-9-fixed-and-4-rule",
+      "input": {
+        "sources": [
+          "WesternHolidays.fixedHolidays",
+          "WesternHolidays.ruleBasedHolidays"
+        ],
+        "years": [
+          2022,
+          2023,
+          2024,
+          2025,
+          2026,
+          2027,
+          2028,
+          2029,
+          2030
+        ]
+      },
+      "expected": {
+        "fixed": [
+          {
+            "emoji": "\ud83c\udf89",
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "titleEn": "New Year's Day",
+            "month": 1,
+            "day": 1,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc9d",
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n",
+            "titleEn": "Valentine's Day",
+            "month": 2,
+            "day": 14,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf40",
+            "titleVi": "Ng\u00e0y Th\u00e1nh Patrick",
+            "titleEn": "St. Patrick's Day",
+            "month": 3,
+            "day": 17,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc99",
+            "titleVi": "Ng\u00e0y B\u1ea1n Trai Qu\u1ed1c Gia",
+            "titleEn": "National Boyfriend Day",
+            "month": 10,
+            "day": 3,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf86",
+            "titleVi": "Ng\u00e0y Qu\u1ed1c Kh\u00e1nh M\u1ef9",
+            "titleEn": "Independence Day",
+            "month": 7,
+            "day": 4,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf83",
+            "titleVi": "L\u1ec5 H\u1ed9i Ma Halloween",
+            "titleEn": "Halloween",
+            "month": 10,
+            "day": 31,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf1f",
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "titleEn": "Christmas Eve",
+            "month": 12,
+            "day": 24,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf84",
+            "titleVi": "Gi\u00e1ng Sinh",
+            "titleEn": "Christmas Day",
+            "month": 12,
+            "day": 25,
+            "suggestedGiftCategory": "Meaningful",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83e\udd42",
+            "titleVi": "Giao Th\u1eeba D\u01b0\u01a1ng L\u1ecbch",
+            "titleEn": "New Year's Eve",
+            "month": 12,
+            "day": 31,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          }
+        ],
+        "rule": [
+          {
+            "emoji": "\ud83d\udc90",
+            "titleVi": "Ng\u00e0y C\u1ee7a M\u1eb9",
+            "titleEn": "Mother's Day",
+            "suggestedGiftCategory": "Meaningful",
+            "isCoupleRelevant": false,
+            "resolvedByYear": {
+              "2022": "2022-05-08",
+              "2023": "2023-05-14",
+              "2024": "2024-05-12",
+              "2025": "2025-05-11",
+              "2026": "2026-05-10",
+              "2027": "2027-05-09",
+              "2028": "2028-05-14",
+              "2029": "2029-05-13",
+              "2030": "2030-05-12"
+            }
+          },
+          {
+            "emoji": "\ud83d\udc54",
+            "titleVi": "Ng\u00e0y C\u1ee7a Cha",
+            "titleEn": "Father's Day",
+            "suggestedGiftCategory": "Meaningful",
+            "isCoupleRelevant": false,
+            "resolvedByYear": {
+              "2022": "2022-06-19",
+              "2023": "2023-06-18",
+              "2024": "2024-06-16",
+              "2025": "2025-06-15",
+              "2026": "2026-06-21",
+              "2027": "2027-06-20",
+              "2028": "2028-06-18",
+              "2029": "2029-06-17",
+              "2030": "2030-06-16"
+            }
+          },
+          {
+            "emoji": "\ud83e\udd83",
+            "titleVi": "L\u1ec5 T\u1ea1 \u01a0n",
+            "titleEn": "Thanksgiving",
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false,
+            "resolvedByYear": {
+              "2022": "2022-11-24",
+              "2023": "2023-11-23",
+              "2024": "2024-11-28",
+              "2025": "2025-11-27",
+              "2026": "2026-11-26",
+              "2027": "2027-11-25",
+              "2028": "2028-11-23",
+              "2029": "2029-11-22",
+              "2030": "2030-11-28"
+            }
+          },
+          {
+            "emoji": "\ud83c\udf6c",
+            "titleVi": "Ng\u00e0y Ng\u1ecdt Ng\u00e0o (Sweetest Day)",
+            "titleEn": "Sweetest Day",
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true,
+            "resolvedByYear": {
+              "2022": "2022-10-15",
+              "2023": "2023-10-21",
+              "2024": "2024-10-19",
+              "2025": "2025-10-18",
+              "2026": "2026-10-17",
+              "2027": "2027-10-16",
+              "2028": "2028-10-21",
+              "2029": "2029-10-20",
+              "2030": "2030-10-19"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "fixed": [
+          {
+            "emoji": "\ud83c\udf89",
+            "titleVi": "T\u1ebft D\u01b0\u01a1ng L\u1ecbch",
+            "titleEn": "New Year's Day",
+            "month": 1,
+            "day": 1,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc9d",
+            "titleVi": "L\u1ec5 T\u00ecnh Nh\u00e2n",
+            "titleEn": "Valentine's Day",
+            "month": 2,
+            "day": 14,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf40",
+            "titleVi": "Ng\u00e0y Th\u00e1nh Patrick",
+            "titleEn": "St. Patrick's Day",
+            "month": 3,
+            "day": 17,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83d\udc99",
+            "titleVi": "Ng\u00e0y B\u1ea1n Trai Qu\u1ed1c Gia",
+            "titleEn": "National Boyfriend Day",
+            "month": 10,
+            "day": 3,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf86",
+            "titleVi": "Ng\u00e0y Qu\u1ed1c Kh\u00e1nh M\u1ef9",
+            "titleEn": "Independence Day",
+            "month": 7,
+            "day": 4,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf83",
+            "titleVi": "L\u1ec5 H\u1ed9i Ma Halloween",
+            "titleEn": "Halloween",
+            "month": 10,
+            "day": 31,
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false
+          },
+          {
+            "emoji": "\ud83c\udf1f",
+            "titleVi": "\u0110\u00eam Gi\u00e1ng Sinh",
+            "titleEn": "Christmas Eve",
+            "month": 12,
+            "day": 24,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83c\udf84",
+            "titleVi": "Gi\u00e1ng Sinh",
+            "titleEn": "Christmas Day",
+            "month": 12,
+            "day": 25,
+            "suggestedGiftCategory": "Meaningful",
+            "isCoupleRelevant": true
+          },
+          {
+            "emoji": "\ud83e\udd42",
+            "titleVi": "Giao Th\u1eeba D\u01b0\u01a1ng L\u1ecbch",
+            "titleEn": "New Year's Eve",
+            "month": 12,
+            "day": 31,
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true
+          }
+        ],
+        "rule": [
+          {
+            "emoji": "\ud83d\udc90",
+            "titleVi": "Ng\u00e0y C\u1ee7a M\u1eb9",
+            "titleEn": "Mother's Day",
+            "suggestedGiftCategory": "Meaningful",
+            "isCoupleRelevant": false,
+            "resolvedByYear": {
+              "2022": "2022-05-08",
+              "2023": "2023-05-14",
+              "2024": "2024-05-12",
+              "2025": "2025-05-11",
+              "2026": "2026-05-10",
+              "2027": "2027-05-09",
+              "2028": "2028-05-14",
+              "2029": "2029-05-13",
+              "2030": "2030-05-12"
+            }
+          },
+          {
+            "emoji": "\ud83d\udc54",
+            "titleVi": "Ng\u00e0y C\u1ee7a Cha",
+            "titleEn": "Father's Day",
+            "suggestedGiftCategory": "Meaningful",
+            "isCoupleRelevant": false,
+            "resolvedByYear": {
+              "2022": "2022-06-19",
+              "2023": "2023-06-18",
+              "2024": "2024-06-16",
+              "2025": "2025-06-15",
+              "2026": "2026-06-21",
+              "2027": "2027-06-20",
+              "2028": "2028-06-18",
+              "2029": "2029-06-17",
+              "2030": "2030-06-16"
+            }
+          },
+          {
+            "emoji": "\ud83e\udd83",
+            "titleVi": "L\u1ec5 T\u1ea1 \u01a0n",
+            "titleEn": "Thanksgiving",
+            "suggestedGiftCategory": "Experience",
+            "isCoupleRelevant": false,
+            "resolvedByYear": {
+              "2022": "2022-11-24",
+              "2023": "2023-11-23",
+              "2024": "2024-11-28",
+              "2025": "2025-11-27",
+              "2026": "2026-11-26",
+              "2027": "2027-11-25",
+              "2028": "2028-11-23",
+              "2029": "2029-11-22",
+              "2030": "2030-11-28"
+            }
+          },
+          {
+            "emoji": "\ud83c\udf6c",
+            "titleVi": "Ng\u00e0y Ng\u1ecdt Ng\u00e0o (Sweetest Day)",
+            "titleEn": "Sweetest Day",
+            "suggestedGiftCategory": "Romantic",
+            "isCoupleRelevant": true,
+            "resolvedByYear": {
+              "2022": "2022-10-15",
+              "2023": "2023-10-21",
+              "2024": "2024-10-19",
+              "2025": "2025-10-18",
+              "2026": "2026-10-17",
+              "2027": "2027-10-16",
+              "2028": "2028-10-21",
+              "2029": "2029-10-20",
+              "2030": "2030-10-19"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "mothers-day-month-starts-on-sunday-2022",
+      "input": {
+        "years": [
+          2022
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "year": 2022,
+            "dates": {
+              "Mother's Day": "2022-05-08",
+              "Father's Day": "2022-06-19",
+              "Thanksgiving": "2022-11-24",
+              "Sweetest Day": "2022-10-15"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "year": 2022,
+            "dates": {
+              "Mother's Day": "2022-05-08",
+              "Father's Day": "2022-06-19",
+              "Thanksgiving": "2022-11-24",
+              "Sweetest Day": "2022-10-15"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "mothers-day-2026-05-10",
+      "input": {
+        "years": [
+          2026
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "year": 2026,
+            "dates": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "year": 2026,
+            "dates": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "fathers-day-five-sundays-month",
+      "input": {
+        "years": [
+          2025
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "year": 2025,
+            "dates": {
+              "Mother's Day": "2025-05-11",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "year": 2025,
+            "dates": {
+              "Mother's Day": "2025-05-11",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "thanksgiving-fourth-thursday",
+      "input": {
+        "years": [
+          2025,
+          2026
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "year": 2025,
+            "dates": {
+              "Mother's Day": "2025-05-11",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          },
+          {
+            "year": 2026,
+            "dates": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "year": 2025,
+            "dates": {
+              "Mother's Day": "2025-05-11",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          },
+          {
+            "year": 2026,
+            "dates": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweetest-day-third-saturday",
+      "input": {
+        "years": [
+          2025
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "year": 2025,
+            "dates": {
+              "Mother's Day": "2025-05-11",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "year": 2025,
+            "dates": {
+              "Mother's Day": "2025-05-11",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-year-2028",
+      "input": {
+        "years": [
+          2028
+        ],
+        "todays": [
+          "2028-02-29"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "year": 2028,
+            "dates": {
+              "Mother's Day": "2028-05-14",
+              "Father's Day": "2028-06-18",
+              "Thanksgiving": "2028-11-23",
+              "Sweetest Day": "2028-10-21"
+            }
+          }
+        ],
+        "next": [
+          {
+            "today": "2028-02-29",
+            "next": {
+              "Mother's Day": "2028-05-14",
+              "Father's Day": "2028-06-18",
+              "Thanksgiving": "2028-11-23",
+              "Sweetest Day": "2028-10-21"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "year": 2028,
+            "dates": {
+              "Mother's Day": "2028-05-14",
+              "Father's Day": "2028-06-18",
+              "Thanksgiving": "2028-11-23",
+              "Sweetest Day": "2028-10-21"
+            }
+          }
+        ],
+        "next": [
+          {
+            "today": "2028-02-29",
+            "next": {
+              "Mother's Day": "2028-05-14",
+              "Father's Day": "2028-06-18",
+              "Thanksgiving": "2028-11-23",
+              "Sweetest Day": "2028-10-21"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "today-equals-rule-date",
+      "input": {
+        "todays": [
+          "2026-05-10"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2026-05-10",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2026-05-10",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "day-after-rule-date-next-year",
+      "input": {
+        "todays": [
+          "2026-05-11"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2026-05-11",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2026-05-11",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "year-rollover-dec-31",
+      "input": {
+        "todays": [
+          "2026-12-31"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2026-12-31",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2027-11-25",
+              "Sweetest Day": "2027-10-16"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2026-12-31",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2027-11-25",
+              "Sweetest Day": "2027-10-16"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "from-jan-1",
+      "input": {
+        "todays": [
+          "2027-01-01"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2027-01-01",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2027-11-25",
+              "Sweetest Day": "2027-10-16"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2027-01-01",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2027-11-25",
+              "Sweetest Day": "2027-10-16"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2024-01-01",
+      "input": {
+        "todays": [
+          "2024-01-01"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2024-01-01",
+            "next": {
+              "Mother's Day": "2024-05-12",
+              "Father's Day": "2024-06-16",
+              "Thanksgiving": "2024-11-28",
+              "Sweetest Day": "2024-10-19"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2024-01-01",
+            "next": {
+              "Mother's Day": "2024-05-12",
+              "Father's Day": "2024-06-16",
+              "Thanksgiving": "2024-11-28",
+              "Sweetest Day": "2024-10-19"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2024-05-12",
+      "input": {
+        "todays": [
+          "2024-05-12"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2024-05-12",
+            "next": {
+              "Mother's Day": "2024-05-12",
+              "Father's Day": "2024-06-16",
+              "Thanksgiving": "2024-11-28",
+              "Sweetest Day": "2024-10-19"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2024-05-12",
+            "next": {
+              "Mother's Day": "2024-05-12",
+              "Father's Day": "2024-06-16",
+              "Thanksgiving": "2024-11-28",
+              "Sweetest Day": "2024-10-19"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2025-06-15",
+      "input": {
+        "todays": [
+          "2025-06-15"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2025-06-15",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2025-06-15",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2025-06-15",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2025-10-18"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2025-11-27",
+      "input": {
+        "todays": [
+          "2025-11-27"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2025-11-27",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2025-11-27",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2025-11-27",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2026-01-01",
+      "input": {
+        "todays": [
+          "2026-01-01"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2026-01-01",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2026-01-01",
+            "next": {
+              "Mother's Day": "2026-05-10",
+              "Father's Day": "2026-06-21",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2026-10-17",
+      "input": {
+        "todays": [
+          "2026-10-17"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2026-10-17",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2026-10-17",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2026-11-26",
+              "Sweetest Day": "2026-10-17"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2027-05-09",
+      "input": {
+        "todays": [
+          "2027-05-09"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2027-05-09",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2027-11-25",
+              "Sweetest Day": "2027-10-16"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2027-05-09",
+            "next": {
+              "Mother's Day": "2027-05-09",
+              "Father's Day": "2027-06-20",
+              "Thanksgiving": "2027-11-25",
+              "Sweetest Day": "2027-10-16"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2028-12-31",
+      "input": {
+        "todays": [
+          "2028-12-31"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2028-12-31",
+            "next": {
+              "Mother's Day": "2029-05-13",
+              "Father's Day": "2029-06-17",
+              "Thanksgiving": "2029-11-22",
+              "Sweetest Day": "2029-10-20"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2028-12-31",
+            "next": {
+              "Mother's Day": "2029-05-13",
+              "Father's Day": "2029-06-17",
+              "Thanksgiving": "2029-11-22",
+              "Sweetest Day": "2029-10-20"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2029-06-17",
+      "input": {
+        "todays": [
+          "2029-06-17"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2029-06-17",
+            "next": {
+              "Mother's Day": "2030-05-12",
+              "Father's Day": "2029-06-17",
+              "Thanksgiving": "2029-11-22",
+              "Sweetest Day": "2029-10-20"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2029-06-17",
+            "next": {
+              "Mother's Day": "2030-05-12",
+              "Father's Day": "2029-06-17",
+              "Thanksgiving": "2029-11-22",
+              "Sweetest Day": "2029-10-20"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2029-11-22",
+      "input": {
+        "todays": [
+          "2029-11-22"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2029-11-22",
+            "next": {
+              "Mother's Day": "2030-05-12",
+              "Father's Day": "2030-06-16",
+              "Thanksgiving": "2029-11-22",
+              "Sweetest Day": "2030-10-19"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2029-11-22",
+            "next": {
+              "Mother's Day": "2030-05-12",
+              "Father's Day": "2030-06-16",
+              "Thanksgiving": "2029-11-22",
+              "Sweetest Day": "2030-10-19"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sweep-today-2030-12-31",
+      "input": {
+        "todays": [
+          "2030-12-31"
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "today": "2030-12-31",
+            "next": {
+              "Mother's Day": "2031-05-11",
+              "Father's Day": "2031-06-15",
+              "Thanksgiving": "2031-11-27",
+              "Sweetest Day": "2031-10-18"
+            }
+          }
+        ]
+      },
+      "androidLegacy": {
+        "results": [
+          {
+            "today": "2030-12-31",
+            "next": {
+              "Mother's Day": "2031-05-11",
+              "Father's Day": "2031-06-15",
+              "Thanksgiving": "2031-11-27",
+              "Sweetest Day": "2031-10-18"
+            }
+          }
+        ]
+      },
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

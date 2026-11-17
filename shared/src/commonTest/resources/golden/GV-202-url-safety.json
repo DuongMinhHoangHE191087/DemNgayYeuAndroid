@@ -1,0 +1,399 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "zone": "Asia/Ho_Chi_Minh",
+  "cases": [
+    {
+      "id": "https-basic-ok",
+      "input": "https://a.b/c?d=e",
+      "expected": {
+        "host": "a.b",
+        "exported": true
+      },
+      "androidLegacy": {
+        "host": "a.b",
+        "exported": true
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "http-uppercase-scheme-and-host",
+      "input": "HTTP://EXAMPLE.com",
+      "expected": {
+        "host": "example.com",
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "example.com",
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "javascript-scheme",
+      "input": "javascript:alert(1)",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "file-scheme",
+      "input": "file:///x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "content-scheme",
+      "input": "content://x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "userinfo-in-authority",
+      "input": "https://user:pw@host/",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "host",
+        "exported": true
+      },
+      "divergence": "url-userinfo-dropped",
+      "optional": false
+    },
+    {
+      "id": "port-zero",
+      "input": "https://host:0/",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "port-65536",
+      "input": "https://host:65536/",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "trailing-dot-host",
+      "input": "https://host./",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "host.",
+        "exported": true
+      },
+      "divergence": "url-odd-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "triple-slash-no-host",
+      "input": "https:///path",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "path",
+        "exported": true
+      },
+      "divergence": "url-odd-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "ipv6-literal-host",
+      "input": "https://[::1]/",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "::1",
+        "exported": true
+      },
+      "divergence": "url-odd-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "scheme-relative",
+      "input": "//cdn.example.com/x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "empty-string",
+      "input": "",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "ftp-scheme",
+      "input": "ftp://x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-res-host",
+      "input": "https://res.cloudinary.com/x/y.jpg",
+      "expected": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-uppercase-host",
+      "input": "https://RES.CLOUDINARY.COM/x",
+      "expected": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-trailing-dot",
+      "input": "https://res.cloudinary.com./x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com.",
+        "exported": true
+      },
+      "divergence": "url-odd-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "cloudinary-backslash-userinfo-trick",
+      "input": "https://res.cloudinary.com\\@evil.com/x",
+      "expected": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-percent-encoded-dot",
+      "input": "https://res.cloudinary.com%2eevil.com/x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com.evil.com",
+        "exported": true
+      },
+      "divergence": "url-odd-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "evilcloudinary-suffix-lookalike",
+      "input": "https://evilcloudinary.com/x",
+      "expected": {
+        "host": "evilcloudinary.com",
+        "exported": true
+      },
+      "androidLegacy": {
+        "host": "evilcloudinary.com",
+        "exported": true
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-as-subdomain-of-evil",
+      "input": "https://cloudinary.com.evil.com/x",
+      "expected": {
+        "host": "cloudinary.com.evil.com",
+        "exported": true
+      },
+      "androidLegacy": {
+        "host": "cloudinary.com.evil.com",
+        "exported": true
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-port-443",
+      "input": "https://res.cloudinary.com:443/x",
+      "expected": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-port-99999",
+      "input": "https://res.cloudinary.com:99999/x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": null,
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "punycode-lookalike-host",
+      "input": "https://xn--clodinary-9ya.com/x",
+      "expected": {
+        "host": "xn--clodinary-9ya.com",
+        "exported": true
+      },
+      "androidLegacy": {
+        "host": "xn--clodinary-9ya.com",
+        "exported": true
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cloudinary-apex-host",
+      "input": "https://cloudinary.com/x",
+      "expected": {
+        "host": "cloudinary.com",
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "cloudinary.com",
+        "exported": false
+      },
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "underscore-host",
+      "input": "https://a_b.example.com/x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "a_b.example.com",
+        "exported": true
+      },
+      "divergence": "url-odd-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "kelvin-sign-host",
+      "input": "https://\u212aelvin.example.com/x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "kelvin.example.com",
+        "exported": true
+      },
+      "divergence": "url-idn-host-dropped",
+      "optional": false
+    },
+    {
+      "id": "fullwidth-c-cloudinary-host",
+      "input": "https://res.\uff43loudinary.com/x",
+      "expected": {
+        "host": null,
+        "exported": false
+      },
+      "androidLegacy": {
+        "host": "res.cloudinary.com",
+        "exported": false
+      },
+      "divergence": "url-idn-host-dropped",
+      "optional": false
+    }
+  ]
+}

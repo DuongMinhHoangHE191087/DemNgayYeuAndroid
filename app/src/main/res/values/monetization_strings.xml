@@ -1,0 +1,8 @@
+<resources>
+    <string name="monetization_play_not_ready">Connecting to Google Play, please try again.</string>
+    <string name="monetization_play_offer_unavailable">This plan is not available right now. Please try again later.</string>
+    <string name="monetization_play_launch_failed">Could not open Google Play (code %1$d). Please try again.</string>
+    <string name="monetization_play_payment_failed">Payment failed: %1$s</string>
+    <string name="monetization_play_error_code">Error code %1$d</string>
+    <string name="monetization_play_subscription_suspended">Your subscription is on hold. Please update your payment method on Google Play.</string>
+</resources>

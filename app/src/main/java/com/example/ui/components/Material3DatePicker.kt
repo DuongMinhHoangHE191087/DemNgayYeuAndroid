@@ -16,6 +16,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,8 +36,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -42,8 +47,6 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePickerDefaults
@@ -51,13 +54,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -69,13 +72,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.Primary
@@ -92,7 +96,7 @@ import java.util.TimeZone
 object DatePickerUtils {
 
   fun formatUtcMillisToDate(utcMillis: Long, pattern: String = "dd/MM/yyyy"): String {
-    val sdf = SimpleDateFormat(pattern, Locale.getDefault()).apply {
+    val sdf = SimpleDateFormat(pattern, Locale.ROOT).apply {
       timeZone = TimeZone.getTimeZone("UTC")
     }
     return sdf.format(Date(utcMillis))
@@ -102,7 +106,7 @@ object DatePickerUtils {
     val formats = listOf("dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "yyyy-MM-dd")
     for (fmt in formats) {
       try {
-        val sdf = SimpleDateFormat(fmt, Locale.getDefault()).apply {
+        val sdf = SimpleDateFormat(fmt, Locale.ROOT).apply {
           timeZone = TimeZone.getTimeZone("UTC")
           isLenient = false
         }
@@ -447,6 +451,9 @@ fun InLoveDatePickerDialog(
   confirmButtonText: String? = null,
   dismissButtonText: String? = null,
   isEnglish: Boolean = false,
+  yearRange: IntRange = 1950..2040,
+  minMillis: Long? = null,
+  maxDateMillis: Long? = null,
   onDateSelected: (utcMillis: Long, formattedDate: String) -> Unit,
   onDismiss: () -> Unit
 ) {
@@ -454,12 +461,14 @@ fun InLoveDatePickerDialog(
   val resolvedConfirm = confirmButtonText ?: if (isEnglish) "Confirm" else "Xác nhận"
   val resolvedDismiss = dismissButtonText ?: if (isEnglish) "Cancel" else "Hủy"
 
-  val initialMillis = remember(initialDateStr, initialDateMillis) {
-    when {
+  val initialMillis = remember(initialDateStr, initialDateMillis, minMillis, maxDateMillis) {
+    val raw = when {
       initialDateMillis != null -> initialDateMillis
       !initialDateStr.isNullOrBlank() -> DatePickerUtils.parseDateToUtcMillis(initialDateStr) ?: System.currentTimeMillis()
       else -> System.currentTimeMillis()
     }
+    // Bounds only: keep the unbounded dialog exactly as it was.
+    if (minMillis != null || maxDateMillis != null) DatePickerRules.clampInitial(raw, minMillis, maxDateMillis) else raw
   }
 
   var selectedDateMillis by remember { mutableLongStateOf(initialMillis) }
@@ -471,7 +480,7 @@ fun InLoveDatePickerDialog(
   var displayMonth by remember { mutableIntStateOf(initialCal.get(Calendar.MONTH)) }
   var navDirection by remember { mutableIntStateOf(1) } // 1: next, -1: prev
 
-  var isYearPickerOpen by remember { mutableStateOf(false) }
+  var mode by remember { mutableStateOf(PickerMode.DAY) }
 
   val formattedCurrentDate = remember(selectedDateMillis) {
     DatePickerUtils.formatUtcMillisToDate(selectedDateMillis)
@@ -503,6 +512,10 @@ fun InLoveDatePickerDialog(
     }
   }
 
+  val monthShortEn = remember {
+    listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  }
+
   // Standard day-of-week abbreviations (T2 -> CN or Mon -> Sun)
   val weekdayNames = remember(isEnglish) {
     if (isEnglish) {
@@ -512,7 +525,7 @@ fun InLoveDatePickerDialog(
     }
   }
 
-  Dialog(
+  AppDialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false)
   ) {
@@ -528,7 +541,9 @@ fun InLoveDatePickerDialog(
       Column(
         modifier = Modifier
           .fillMaxWidth()
+          .heightIn(max = (LocalConfiguration.current.screenHeightDp * 0.9f).dp)
           .padding(horizontal = 16.dp, vertical = 14.dp)
+          .verticalScroll(rememberScrollState())
       ) {
         // 1. Header: Left = Icon + Title, Right = Formatted Selected Date + Day of Week
         Row(
@@ -591,6 +606,7 @@ fun InLoveDatePickerDialog(
             quickPresets.forEach { (label, presetMillis) ->
               val isSelected = DatePickerUtils.formatUtcMillisToDate(selectedDateMillis) ==
                 DatePickerUtils.formatUtcMillisToDate(presetMillis)
+              val presetEnabled = DatePickerRules.isSelectable(presetMillis, minMillis, maxDateMillis)
 
               val chipScale by animateFloatAsState(
                 targetValue = if (isSelected) 1.04f else 1f,
@@ -611,8 +627,9 @@ fun InLoveDatePickerDialog(
                   .graphicsLayer {
                     scaleX = chipScale
                     scaleY = chipScale
+                    alpha = if (presetEnabled) 1f else 0.4f
                   }
-                  .clickable {
+                  .clickable(enabled = presetEnabled) {
                     selectedDateMillis = presetMillis
                     val presetCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = presetMillis }
                     navDirection = if (presetCal.get(Calendar.YEAR) > displayYear || (presetCal.get(Calendar.YEAR) == displayYear && presetCal.get(Calendar.MONTH) > displayMonth)) 1 else -1
@@ -644,9 +661,9 @@ fun InLoveDatePickerDialog(
           // Month/Year Title button with dropdown indicator
           Surface(
             shape = RoundedCornerShape(8.dp),
-            color = if (isYearPickerOpen) Color(0xFFFFF0F5) else Color.Transparent,
+            color = if (mode != PickerMode.DAY) Color(0xFFFFF0F5) else Color.Transparent,
             modifier = Modifier
-              .clickable { isYearPickerOpen = !isYearPickerOpen }
+              .clickable { mode = DatePickerRules.onHeaderTap(mode) }
               .testTag("btn_select_year_month")
           ) {
             Row(
@@ -681,7 +698,13 @@ fun InLoveDatePickerDialog(
                   displayMonth -= 1
                 }
               },
-              modifier = Modifier.size(32.dp).testTag("btn_calendar_prev")
+              enabled = DatePickerRules.monthHasSelectableDay(
+                if (displayMonth == 0) displayYear - 1 else displayYear,
+                if (displayMonth == 0) 11 else displayMonth - 1,
+                minMillis,
+                maxDateMillis
+              ),
+              modifier = Modifier.size(MinTouchBox).testTag("btn_calendar_prev")
             ) {
               Icon(
                 imageVector = Icons.Filled.ChevronLeft,
@@ -701,7 +724,13 @@ fun InLoveDatePickerDialog(
                   displayMonth += 1
                 }
               },
-              modifier = Modifier.size(32.dp).testTag("btn_calendar_next")
+              enabled = DatePickerRules.monthHasSelectableDay(
+                if (displayMonth == 11) displayYear + 1 else displayYear,
+                if (displayMonth == 11) 0 else displayMonth + 1,
+                minMillis,
+                maxDateMillis
+              ),
+              modifier = Modifier.size(MinTouchBox).testTag("btn_calendar_next")
             ) {
               Icon(
                 imageVector = Icons.Filled.ChevronRight,
@@ -717,16 +746,17 @@ fun InLoveDatePickerDialog(
 
         // 4. Calendar Body OR Year Picker Grid with smooth AnimatedContent
         AnimatedContent(
-          targetState = isYearPickerOpen,
+          targetState = mode,
           transitionSpec = {
             fadeIn(tween(180)) togetherWith fadeOut(tween(150))
           },
           label = "year_picker_toggle_anim"
-        ) { yearPickerActive ->
-          if (yearPickerActive) {
-            // --- YEAR & MONTH SELECTOR VIEW ---
+        ) { pickerMode ->
+          when (pickerMode) {
+          PickerMode.YEAR -> {
+            // --- YEAR SELECTOR VIEW ---
             val currentSelectedYear = displayYear
-            val yearsList = remember { (1950..2040).toList() }
+            val yearsList = remember(yearRange) { yearRange.toList() }
             val gridState = rememberLazyGridState(
               initialFirstVisibleItemIndex = maxOf(0, yearsList.indexOf(currentSelectedYear) - 4)
             )
@@ -748,7 +778,8 @@ fun InLoveDatePickerDialog(
                 state = gridState,
                 modifier = Modifier
                   .weight(1f)
-                  .fillMaxWidth(),
+                  .fillMaxWidth()
+                  .testTag("year_grid"),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
               ) {
@@ -760,7 +791,7 @@ fun InLoveDatePickerDialog(
                     modifier = Modifier
                       .clickable {
                         displayYear = y
-                        isYearPickerOpen = false
+                        mode = DatePickerRules.afterYearPicked()
                       }
                       .testTag("year_item_$y")
                   ) {
@@ -776,7 +807,62 @@ fun InLoveDatePickerDialog(
                 }
               }
             }
-          } else {
+          }
+          PickerMode.MONTH -> {
+            // --- MONTH SELECTOR VIEW (after a year was picked) ---
+            Column(
+              modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
+            ) {
+              Text(
+                text = if (isEnglish) "Select month, $displayYear:" else "Chọn tháng, năm $displayYear:",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Primary,
+                modifier = Modifier.padding(bottom = 6.dp)
+              )
+              LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                modifier = Modifier
+                  .weight(1f)
+                  .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+              ) {
+                items(12) { m ->
+                  val isThisMonth = m == displayMonth
+                  val monthEnabled = DatePickerRules.monthHasSelectableDay(displayYear, m, minMillis, maxDateMillis)
+                  Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isThisMonth) Primary else Color(0xFFF5F5F7),
+                    modifier = Modifier
+                      .heightIn(min = MinTouchBox)
+                      .clickable(enabled = monthEnabled) {
+                        displayMonth = m
+                        mode = DatePickerRules.afterMonthPicked()
+                      }
+                      .testTag("month_item_$m")
+                  ) {
+                    Box(contentAlignment = Alignment.Center) {
+                      Text(
+                        text = if (isEnglish) monthShortEn[m] else "Th${m + 1}",
+                        fontSize = 12.5.sp,
+                        fontWeight = if (isThisMonth) FontWeight.Bold else FontWeight.Medium,
+                        color = when {
+                          !monthEnabled -> Color(0xFFBDBDBD)
+                          isThisMonth -> Color.White
+                          else -> Color(0xFF333333)
+                        },
+                        textAlign = TextAlign.Center
+                      )
+                    }
+                  }
+                }
+              }
+            }
+          }
+          PickerMode.DAY -> {
             // --- STANDARD CALENDAR DAY VIEW ---
             Column(modifier = Modifier.fillMaxWidth()) {
               // 4.1. Standard Vietnamese Weekday Names: T2, T3, T4, T5, T6, T7, CN
@@ -858,6 +944,17 @@ fun InLoveDatePickerDialog(
                           label = "day_cell_bg"
                         )
 
+                        val dayUtc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                          set(Calendar.YEAR, cellCal.get(Calendar.YEAR))
+                          set(Calendar.MONTH, cellCal.get(Calendar.MONTH))
+                          set(Calendar.DAY_OF_MONTH, cellCal.get(Calendar.DAY_OF_MONTH))
+                          set(Calendar.HOUR_OF_DAY, 0)
+                          set(Calendar.MINUTE, 0)
+                          set(Calendar.SECOND, 0)
+                          set(Calendar.MILLISECOND, 0)
+                        }.timeInMillis
+                        val daySelectable = DatePickerRules.isSelectable(dayUtc, minMillis, maxDateMillis)
+
                         val cellModifier = Modifier
                           .size(36.dp)
                           .graphicsLayer {
@@ -869,17 +966,8 @@ fun InLoveDatePickerDialog(
                           .let { mod ->
                             if (isToday && !isSelected) mod.border(1.dp, Primary, CircleShape) else mod
                           }
-                          .clickable {
-                            val utcDay = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-                              set(Calendar.YEAR, cellCal.get(Calendar.YEAR))
-                              set(Calendar.MONTH, cellCal.get(Calendar.MONTH))
-                              set(Calendar.DAY_OF_MONTH, cellCal.get(Calendar.DAY_OF_MONTH))
-                              set(Calendar.HOUR_OF_DAY, 0)
-                              set(Calendar.MINUTE, 0)
-                              set(Calendar.SECOND, 0)
-                              set(Calendar.MILLISECOND, 0)
-                            }
-                            selectedDateMillis = utcDay.timeInMillis
+                          .clickable(enabled = daySelectable) {
+                            selectedDateMillis = dayUtc
                             if (!isCurrentMonth) {
                               displayYear = cellCal.get(Calendar.YEAR)
                               displayMonth = cellCal.get(Calendar.MONTH)
@@ -897,7 +985,7 @@ fun InLoveDatePickerDialog(
                             fontWeight = if (isSelected || (isToday && isCurrentMonth)) FontWeight.Bold else FontWeight.Normal,
                             color = when {
                               isSelected -> Color.White
-                              !isCurrentMonth -> Color(0xFFBDBDBD)
+                              !isCurrentMonth || !daySelectable -> Color(0xFFBDBDBD)
                               isToday -> Primary
                               else -> Color(0xFF212121)
                             }
@@ -910,6 +998,7 @@ fun InLoveDatePickerDialog(
               }
             }
           }
+          }
         }
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -919,39 +1008,32 @@ fun InLoveDatePickerDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          OutlinedButton(
+          SecondaryButton(
+            text = resolvedDismiss,
             onClick = onDismiss,
-            shape = RoundedCornerShape(12.dp),
             modifier = Modifier
               .weight(1f)
-              .height(42.dp)
-              .testTag("date_picker_dismiss_btn")
-          ) {
-            Text(resolvedDismiss, color = OnSurfaceVariant, fontSize = 13.sp)
-          }
+              .heightIn(min = MinTouchBox),
+            testTag = "date_picker_dismiss_btn"
+          )
 
-          Button(
+          val dateConfirmEnabled = DatePickerRules.isSelectable(selectedDateMillis, minMillis, maxDateMillis)
+          PrimaryGradientButton(
+            text = resolvedConfirm,
             onClick = {
-              val formatted = DatePickerUtils.formatUtcMillisToDate(selectedDateMillis)
-              onDateSelected(selectedDateMillis, formatted)
-              onDismiss()
+              if (dateConfirmEnabled) {
+                val formatted = DatePickerUtils.formatUtcMillisToDate(selectedDateMillis)
+                onDateSelected(selectedDateMillis, formatted)
+                onDismiss()
+              }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Primary),
-            shape = RoundedCornerShape(12.dp),
+            icon = Icons.Filled.Favorite,
             modifier = Modifier
               .weight(1.3f)
-              .height(42.dp)
-              .testTag("date_picker_confirm_btn")
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Favorite,
-              contentDescription = null,
-              modifier = Modifier.size(15.dp),
-              tint = Color.White
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(resolvedConfirm, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
-          }
+              .heightIn(min = MinTouchBox)
+              .disabledLook(dateConfirmEnabled),
+            testTag = "date_picker_confirm_btn"
+          )
         }
       }
     }
@@ -974,27 +1056,56 @@ fun InLoveDatePickerField(
   helperText: String? = null,
   singleLine: Boolean = true,
   isEnglish: Boolean = false,
-  testTag: String = "date_picker_field"
+  testTag: String = "date_picker_field",
+  pickerOnly: Boolean = false,
+  yearRange: IntRange = 1950..2040,
+  minMillis: Long? = null,
+  maxDateMillis: Long? = null,
+  onClear: (() -> Unit)? = null
 ) {
   var showDatePicker by remember { mutableStateOf(false) }
+  val interactionSource = remember { MutableInteractionSource() }
+  if (pickerOnly) {
+    // A read-only text field swallows clickable, so a tap on the whole field is read from its press interactions.
+    LaunchedEffect(interactionSource) {
+      interactionSource.interactions.collect { if (it is PressInteraction.Release) showDatePicker = true }
+    }
+  }
 
   Column(modifier = modifier) {
     OutlinedTextField(
       value = value,
-      onValueChange = onValueChange,
+      onValueChange = if (pickerOnly) ({}) else onValueChange,
+      readOnly = pickerOnly,
+      interactionSource = interactionSource,
       label = { Text(label) },
       placeholder = { Text(placeholder) },
       singleLine = singleLine,
       trailingIcon = {
-        IconButton(
-          onClick = { showDatePicker = true },
-          modifier = Modifier.testTag("${testTag}_calendar_btn")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.CalendarMonth,
-            contentDescription = if (isEnglish) "Open calendar" else "Mở lịch chọn ngày",
-            tint = Primary
-          )
+        Row {
+          if (onClear != null && value.isNotBlank()) {
+            IconButton(
+              onClick = onClear,
+              modifier = Modifier.size(MinTouchBox).testTag("${testTag}_clear_btn")
+            ) {
+              Icon(
+                imageVector = Icons.Filled.Clear,
+                contentDescription = if (isEnglish) "Clear date" else "Xóa ngày",
+                modifier = Modifier.size(18.dp),
+                tint = OnSurfaceVariant
+              )
+            }
+          }
+          IconButton(
+            onClick = { showDatePicker = true },
+            modifier = Modifier.size(MinTouchBox).testTag("${testTag}_calendar_btn")
+          ) {
+            Icon(
+              imageVector = Icons.Filled.CalendarMonth,
+              contentDescription = if (isEnglish) "Open calendar" else "Mở lịch chọn ngày",
+              tint = Primary
+            )
+          }
         }
       },
       colors = OutlinedTextFieldDefaults.colors(
@@ -1033,6 +1144,9 @@ fun InLoveDatePickerField(
       initialDateStr = value,
       quickPresets = quickPresets,
       isEnglish = isEnglish,
+      yearRange = yearRange,
+      minMillis = minMillis,
+      maxDateMillis = maxDateMillis,
       onDateSelected = { _, formattedDate ->
         onValueChange(formattedDate)
       },

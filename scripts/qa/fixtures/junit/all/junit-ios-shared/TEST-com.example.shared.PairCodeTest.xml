@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.shared.PairCodeTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-14T00:00:00" hostname="mac" time="0.001">
+  <testcase name="rejects short code" classname="com.example.shared.PairCodeTest" time="0.001"/>
+</testsuite>

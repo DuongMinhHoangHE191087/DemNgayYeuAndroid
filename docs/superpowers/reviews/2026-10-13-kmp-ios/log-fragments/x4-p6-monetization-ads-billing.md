@@ -1,0 +1,2 @@
+| 4x | plan | [p6] [MINOR] B-50 là id cha treo ở dòng ngừng ghi isVip/subscriptionTier (raised by master 12.4) | accept: các câu nói về gỡ updateUserSubscription và DEC-72 là việc của B-50b (đã đọc hàng B-50b ở p3) | thay B-50 thành B-50b ở 4 chỗ: phần hợp đồng, mục M-51, mục M-102 và bảng phụ thuộc cuối file |
+| 4x | plan | [p6] [MINOR] M-54 và M-86 còn trơ (raised by master 12.6) | accept: các mention là giải thích tách M-54 cũ và M-86 cũ, giữ làm lịch sử | none |

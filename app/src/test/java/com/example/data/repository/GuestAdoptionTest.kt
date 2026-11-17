@@ -3,6 +3,7 @@ package com.example.data.repository
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.example.data.auth.fakes.FakeAuthGateway
 import com.example.data.db.AccountDataVault
 import com.example.data.db.AppDatabase
 import com.example.data.model.MilestoneEntity
@@ -46,7 +47,7 @@ class GuestAdoptionTest {
     val vault = AccountDataVault(context, db)
     runBlocking { vault.switchTo(AccountDataVault.GUEST) }
     val online = OnlineCoupleRepository(dao, context, scope, useFirestore = false)
-    repo = AuthRepository(dao, online, context, scope, isTestMode = true, vault = vault)
+    repo = AuthRepository(dao, online, context, scope, FakeAuthGateway(), RecordingSessionHooks(), vault = vault)
   }
 
   @After

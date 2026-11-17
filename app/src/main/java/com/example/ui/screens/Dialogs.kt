@@ -4,6 +4,7 @@ package com.example.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -57,10 +60,8 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
-import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -72,9 +73,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -112,7 +111,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import com.example.ui.components.pressClickable
-import com.example.ui.theme.AppDensity
 import com.example.ui.theme.MinTouchBox
 import androidx.compose.material.icons.filled.Search
 import kotlinx.coroutines.launch
@@ -142,9 +140,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.data.model.GiftIdeaEntity
 import com.example.domain.content.GiftCatalog
@@ -160,12 +158,25 @@ import com.example.ui.theme.Secondary
 import com.example.ui.theme.SurfaceContainerHigh
 import com.example.ui.theme.SurfaceContainerLowest
 import com.example.ui.theme.Tertiary
+import com.example.ui.components.AppAlertDialog
+import com.example.ui.components.AppDialog
+import com.example.ui.components.BirthdayField
 import com.example.ui.components.DatePickerPresets
 import com.example.ui.components.DatePickerUtils
 import com.example.ui.components.InLoveDatePickerDialog
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.example.ui.components.InLoveDatePickerField
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.ProfileAvatar
+import com.example.ui.components.SecondaryButton
 import com.example.ui.components.animateDialogEntrance
+import com.example.ui.components.disabledLook
+import com.example.ui.util.Birthday
 import com.example.ui.util.ProfileUtils
+import com.example.ui.util.copyCoupleCode
+import com.example.ui.util.displayPartnerName
+import com.example.ui.util.shareCoupleCode
 
 @Composable
 fun dialogTextFieldColors() = OutlinedTextFieldDefaults.colors(
@@ -193,8 +204,9 @@ fun AddReminderDialog(
   var dateText by remember { mutableStateOf(if (isEnglish) "Saturday, 7:30 PM" else "Thứ Bảy, 19:30") }
   var note by remember { mutableStateOf("") }
 
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = true,
     modifier = Modifier.animateDialogEntrance(),
     title = {
       Row(
@@ -250,18 +262,19 @@ fun AddReminderDialog(
       }
     },
     confirmButton = {
-      Button(
+      PrimaryGradientButton(
+        text = if (isEnglish) "Save" else "Lưu lời nhắc",
         onClick = { onConfirm(title, dateText, note) },
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        modifier = Modifier.testTag("btn_save_reminder")
-      ) {
-        Text(if (isEnglish) "Save" else "Lưu lời nhắc", fontWeight = FontWeight.Bold)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_save_reminder"
+      )
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
-      }
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy",
+        onClick = onDismiss,
+        modifier = Modifier.heightIn(min = MinTouchBox)
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp)
@@ -292,65 +305,59 @@ fun AddMilestoneDialog(
     form.imageUrl = presetPhotos.firstOrNull() ?: DEFAULT_MILESTONE_IMAGE_URL
   }
 
-  // The dialog window resets LocalDensity, so every slot re-applies the app's 0.85 scale.
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = false,
     modifier = Modifier.animateDialogEntrance(),
     containerColor = Color.White,
     shape = MaterialTheme.shapes.extraLarge,
     title = {
-      AppDensity {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.CalendarMonth,
-            contentDescription = null,
-            tint = Primary
-          )
-          Text(
-            text = if (isEnglish) "New milestone" else "Kỷ niệm mới",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-          )
-        }
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        Icon(
+          imageVector = Icons.Filled.CalendarMonth,
+          contentDescription = null,
+          tint = Primary
+        )
+        Text(
+          text = if (isEnglish) "New milestone" else "Kỷ niệm mới",
+          fontWeight = FontWeight.Bold,
+          fontSize = 18.sp
+        )
       }
     },
-    text = { AppDensity { AddMilestoneFormBody(form, presetPhotos, isEnglish) } },
+    text = { AddMilestoneFormBody(form, presetPhotos, isEnglish) },
     confirmButton = {
-      AppDensity {
-        Button(
-          onClick = {
-            val days = DatePickerUtils.daysUntil(form.dateText) ?: 30
-            // Derived from the actual picked date, not a hardcoded "Chủ Nhật" that used to be
-            // wrong for every date except an actual Sunday.
-            val subtitle = if (isEnglish) (DatePickerUtils.getDayOfWeek(form.dateText, true) ?: "Milestone") else (DatePickerUtils.getVietnameseDayOfWeek(form.dateText) ?: "Kỷ Niệm")
-            onConfirm(
-              form.title,
-              form.dateText,
-              subtitle,
-              form.categoryTag,
-              if (isEnglish) "New milestone" else "Cột mốc mới",
-              form.imageUrl,
-              days,
-              form.isImportant
-            )
-          },
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
-          shape = RoundedCornerShape(14.dp),
-          modifier = Modifier.testTag("btn_submit_milestone")
-        ) {
-          Text(if (isEnglish) "Create" else "Tạo", fontWeight = FontWeight.Bold)
-        }
-      }
+      PrimaryGradientButton(
+        text = if (isEnglish) "Create" else "Tạo",
+        onClick = {
+          val days = DatePickerUtils.daysUntil(form.dateText) ?: 30
+          // Derived from the actual picked date, not a hardcoded "Chủ Nhật" that used to be
+          // wrong for every date except an actual Sunday.
+          val subtitle = if (isEnglish) (DatePickerUtils.getDayOfWeek(form.dateText, true) ?: "Milestone") else (DatePickerUtils.getVietnameseDayOfWeek(form.dateText) ?: "Kỷ Niệm")
+          onConfirm(
+            form.title,
+            form.dateText,
+            subtitle,
+            form.categoryTag,
+            if (isEnglish) "New milestone" else "Cột mốc mới",
+            form.imageUrl,
+            days,
+            form.isImportant
+          )
+        },
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_submit_milestone"
+      )
     },
     dismissButton = {
-      AppDensity {
-        TextButton(onClick = onDismiss) {
-          Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
-        }
-      }
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy",
+        onClick = onDismiss,
+        modifier = Modifier.heightIn(min = MinTouchBox)
+      )
     }
   )
 }
@@ -479,7 +486,7 @@ internal fun AddMilestoneFormBody(
         items(presetPhotos) { url ->
           Box(
             modifier = Modifier
-              .size(44.dp)
+              .size(MinTouchBox)
               .clip(RoundedCornerShape(8.dp))
               .border(
                 width = if (form.imageUrl == url) 2.dp else 1.dp,
@@ -529,8 +536,9 @@ fun AddChecklistDialog(
 ) {
   var text by remember { mutableStateOf("") }
 
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = true,
     modifier = Modifier.animateDialogEntrance(),
     title = {
       Text(
@@ -552,18 +560,19 @@ fun AddChecklistDialog(
       )
     },
     confirmButton = {
-      Button(
+      PrimaryGradientButton(
+        text = if (isEnglish) "Add" else "Thêm",
         onClick = { onConfirm(text) },
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        modifier = Modifier.testTag("btn_save_checklist_task")
-      ) {
-        Text(if (isEnglish) "Add" else "Thêm", fontWeight = FontWeight.Bold)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_save_checklist_task"
+      )
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
-      }
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy",
+        onClick = onDismiss,
+        modifier = Modifier.heightIn(min = MinTouchBox)
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp)
@@ -578,7 +587,7 @@ fun GiftDetailDialog(
   isEnglish: Boolean = false
 ) {
   val localized = GiftCatalog.localized(gift, isEnglish)
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Card(
       shape = RoundedCornerShape(24.dp),
       colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -622,13 +631,13 @@ fun GiftDetailDialog(
             modifier = Modifier
               .align(Alignment.TopEnd)
               .padding(4.dp)
-              .size(48.dp)
+              .size(MinTouchBox)
               .clip(CircleShape)
               .background(Color.Black.copy(alpha = 0.5f))
           ) {
             Icon(
               imageVector = Icons.Filled.Close,
-              contentDescription = "Close",
+              contentDescription = if (isEnglish) "Close" else "Đóng",
               tint = Color.White,
               modifier = Modifier.size(18.dp)
             )
@@ -743,14 +752,11 @@ fun GiftDetailDialog(
             }
           }
 
-          Button(
+          PrimaryGradientButton(
+            text = if (isEnglish) "Got it" else "Đã rõ",
             onClick = onDismiss,
-            shape = RoundedCornerShape(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Primary),
-            modifier = Modifier.weight(1f)
-          ) {
-            Text(if (isEnglish) "Got it" else "Đã rõ", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-          }
+            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+          )
         }
       }
     }
@@ -762,7 +768,7 @@ fun VipProposalDialog(
   onDismiss: () -> Unit,
   isEnglish: Boolean = false
 ) {
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Card(
       shape = RoundedCornerShape(26.dp),
       colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -811,13 +817,13 @@ fun VipProposalDialog(
           IconButton(
             onClick = onDismiss,
             modifier = Modifier
-              .size(48.dp)
+              .size(MinTouchBox)
               .clip(CircleShape)
               .background(SurfaceContainerHigh)
           ) {
             Icon(
               imageVector = Icons.Filled.Close,
-              contentDescription = "Close",
+              contentDescription = if (isEnglish) "Close" else "Đóng",
               tint = OnSurfaceVariant,
               modifier = Modifier.size(18.dp)
             )
@@ -907,14 +913,11 @@ fun VipProposalDialog(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Button(
+        PrimaryGradientButton(
+          text = if (isEnglish) "Got it" else "Đã rõ",
           onClick = onDismiss,
-          shape = RoundedCornerShape(50.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Text(if (isEnglish) "Got it" else "Đã rõ", fontWeight = FontWeight.Bold)
-        }
+          modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox)
+        )
       }
     }
   }
@@ -922,6 +925,60 @@ fun VipProposalDialog(
 
 @Composable
 fun EditCoupleDialog(
+  viewModel: InLoveViewModel,
+  onDismiss: () -> Unit
+) {
+  AppDialog(
+    onDismissRequest = onDismiss,
+    properties = DialogProperties(usePlatformDefaultWidth = false)
+  ) {
+    EditCoupleDialogContent(viewModel, onDismiss)
+  }
+}
+
+@Composable
+internal fun CoupledProfileSummary(
+  partnerName: String,
+  partnerBirthday: String,
+  partnerAvatarUrl: String,
+  anniversary: String,
+  isEnglish: Boolean
+) {
+  Card(
+    shape = RoundedCornerShape(20.dp),
+    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7F9)),
+    border = BorderStroke(1.dp, Color(0xFFFFC0D3)),
+    modifier = Modifier.fillMaxWidth().testTag("coupled_profile_summary")
+  ) {
+    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileAvatar(
+          url = partnerAvatarUrl,
+          contentDescription = partnerName,
+          modifier = Modifier.size(56.dp).border(2.dp, Color(0xFFE91E63), CircleShape)
+        )
+        Column {
+          Text(partnerName, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF880E4F))
+          if (partnerBirthday.isNotBlank()) {
+            Text(if (isEnglish) "Birthday: $partnerBirthday" else "Ngày sinh: $partnerBirthday", fontSize = 12.sp, color = Color(0xFF757575))
+          }
+          if (anniversary.isNotBlank()) {
+            Text(if (isEnglish) "Together since: $anniversary" else "Yêu nhau từ: $anniversary", fontSize = 12.sp, color = Color(0xFF757575))
+          }
+        }
+      }
+      Text(
+        if (isEnglish) "Your partner updates their own info; it syncs automatically." else "Thông tin người ấy do người ấy tự cập nhật và được đồng bộ tự động.",
+        fontSize = 12.sp,
+        color = Color(0xFF757575)
+      )
+    }
+  }
+}
+
+// Content split from the Dialog window so Robolectric can compose it directly.
+@Composable
+internal fun EditCoupleDialogContent(
   viewModel: InLoveViewModel,
   onDismiss: () -> Unit
 ) {
@@ -934,7 +991,6 @@ fun EditCoupleDialog(
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
   val incomingInvite by viewModel.incomingInvite.collectAsState()
   val outgoingInvite by viewModel.outgoingInvite.collectAsState()
-  val loveDays by viewModel.loveDays.collectAsState()
   val anniversaryDate by viewModel.anniversaryDate.collectAsState()
 
   val boyName by viewModel.boyName.collectAsState()
@@ -945,24 +1001,24 @@ fun EditCoupleDialog(
   val girlAvatarUrl by viewModel.girlAvatarUrl.collectAsState()
   val loveTitle by viewModel.loveTitle.collectAsState()
 
-  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
+  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.ROOT).format(java.util.Date()) }
 
   val appLanguage by viewModel.appLanguage.collectAsState()
   val isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN
 
   // Partner & Couple editable states
-  var currentGirlName by remember(girlName) { mutableStateOf(girlName.ifEmpty { "Người thương" }) }
-  var currentGirlBirth by remember(girlBirthDate) { mutableStateOf(girlBirthDate.ifEmpty { "20/11/2004" }) }
+  val activeRel by viewModel.activeRelationship.collectAsState()
+  val isCoupled = activeRel != null || relationshipStatus == OnlineStatus.COUPLED
+  var currentGirlName by remember(girlName) { mutableStateOf(girlName) }
+  var currentGirlBirth by remember(girlBirthDate) { mutableStateOf(Birthday.normalize(girlBirthDate)) }
   var currentGirlAvatar by remember(girlAvatarUrl) { mutableStateOf(girlAvatarUrl) }
 
-  var currentLoveTitle by remember(loveTitle) { mutableStateOf(loveTitle.ifEmpty { "Hành Trình Yêu Thương" }) }
-  var currentAnniversary by remember(anniversaryDate) { mutableStateOf(anniversaryDate.ifEmpty { todayFormatted }) }
-
-  val boyAge by remember(boyBirthDate) { derivedStateOf { ProfileUtils.calculateAge(boyBirthDate) } }
-  val boyZodiac by remember(boyBirthDate) { derivedStateOf { ProfileUtils.calculateZodiac(boyBirthDate).first } }
+  var currentLoveTitle by remember(loveTitle) { mutableStateOf(loveTitle) }
+  // "Hôm nay" is the ViewModel's stand-in for "no date yet", not a date the user typed: start blank so an untouched field cannot make Save refuse.
+  var currentAnniversary by remember(anniversaryDate) { mutableStateOf(anniversaryDate.takeUnless { it == "Hôm nay" }.orEmpty()) }
 
   val girlAge by remember(currentGirlBirth) { derivedStateOf { ProfileUtils.calculateAge(currentGirlBirth) } }
-  val girlZodiac by remember(currentGirlBirth) { derivedStateOf { ProfileUtils.calculateZodiac(currentGirlBirth).first } }
+  val girlZodiac by remember(currentGirlBirth) { derivedStateOf { if (currentGirlBirth.isBlank()) "" else ProfileUtils.calculateZodiac(currentGirlBirth).first } }
 
   val calculatedOfflineDays by remember(currentAnniversary) {
     derivedStateOf { ProfileUtils.calculateLoveDays(currentAnniversary) }
@@ -989,30 +1045,12 @@ fun EditCoupleDialog(
   var selectedPartner by remember { mutableStateOf<OnlineUserEntity?>(null) }
   var proposedStartDateText by remember { mutableStateOf(anniversaryDate.ifEmpty { todayFormatted }) }
   var loveNote by remember { mutableStateOf("") }
-  val calculatedOnlineDays by remember(proposedStartDateText) {
-    derivedStateOf { ProfileUtils.calculateLoveDays(proposedStartDateText) }
-  }
 
   var activeTab by remember { mutableIntStateOf(0) } // 0: Offline, 1: Online
 
-  fun copyToClipboard(text: String, label: String = "Couple Code") {
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText(label, text)
-    @Suppress("UsePropertyAccessSyntax")
-    clipboard.setPrimaryClip(clip)
-    viewModel.showToast("Đã sao chép: $text")
-  }
-
-  fun shareCoupleLink(code: String) {
-    val shareLink = ProfileUtils.createShareLink(code)
-    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-      type = "text/plain"
-      putExtra(
-        Intent.EXTRA_TEXT,
-        "Cùng kết nối Set Love 1-1 với mình trên InLove nhé! Bấm vào link hoặc nhập mã:\n$shareLink\nMã ghép đôi: $code ❤️"
-      )
-    }
-    context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ mã ghép đôi qua"))
+  fun copyToClipboard(text: String) {
+    copyCoupleCode(context, text)
+    viewModel.showToast(if (isEnglish) "Copied: $text" else "Đã sao chép: $text")
   }
 
   val infiniteHeart = rememberInfiniteTransition(label = "couple_header_heart")
@@ -1028,10 +1066,6 @@ fun EditCoupleDialog(
 
   var showPartnerPhotoActionPicker by remember { mutableStateOf(false) }
 
-  Dialog(
-    onDismissRequest = onDismiss,
-    properties = DialogProperties(usePlatformDefaultWidth = false)
-  ) {
     Card(
       shape = RoundedCornerShape(24.dp),
       colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -1063,7 +1097,7 @@ fun EditCoupleDialog(
           ) {
             Box(
               modifier = Modifier
-                .size(38.dp)
+                .size(32.dp)
                 .graphicsLayer {
                   scaleX = headerHeartScale
                   scaleY = headerHeartScale
@@ -1080,20 +1114,24 @@ fun EditCoupleDialog(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(19.dp)
+                modifier = Modifier.size(16.dp)
               )
             }
             Text(
               text = if (isEnglish) "Couple" else "Cặp đôi",
-              fontSize = 18.sp,
+              fontSize = 17.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF880E4F)
             )
           }
 
-          IconButton(
-            onClick = onDismiss,
-            modifier = Modifier.size(40.dp)
+          Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+              .size(MinTouchBox)
+              .clip(CircleShape)
+              .pressClickable(onClick = onDismiss)
+              .testTag("btn_close_edit_couple")
           ) {
             Icon(
               imageVector = Icons.Default.Close,
@@ -1121,7 +1159,7 @@ fun EditCoupleDialog(
                 .clip(RoundedCornerShape(12.dp))
                 .background(tab0Bg)
                 .clickable { activeTab = 0 }
-                .padding(vertical = 9.dp),
+                .heightIn(min = MinTouchBox),
               contentAlignment = Alignment.Center
             ) {
               Row(
@@ -1151,7 +1189,7 @@ fun EditCoupleDialog(
                 .clip(RoundedCornerShape(12.dp))
                 .background(tab1Bg)
                 .clickable { activeTab = 1 }
-                .padding(vertical = 9.dp),
+                .heightIn(min = MinTouchBox),
               contentAlignment = Alignment.Center
             ) {
               Row(
@@ -1186,8 +1224,15 @@ fun EditCoupleDialog(
           if (currentTab == 0) {
             // --- TAB 0: HỒ SƠ & NGÀY YÊU ---
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+              if (isCoupled) CoupledProfileSummary(
+                partnerName = displayPartnerName(partnerUser?.effectiveDisplayName.orEmpty().ifBlank { girlName }, isEnglish),
+                partnerBirthday = partnerUser?.birthDate.orEmpty().ifBlank { girlBirthDate },
+                partnerAvatarUrl = partnerUser?.avatarUrl.orEmpty().ifBlank { girlAvatarUrl },
+                anniversary = anniversaryDate,
+                isEnglish = isEnglish
+              )
               // THẺ ĐỐI TÁC (Người ấy)
-              Card(
+              if (!isCoupled) Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7F9)),
                 border = BorderStroke(1.dp, Color(0xFFFFC0D3)),
@@ -1205,18 +1250,18 @@ fun EditCoupleDialog(
                   }
                   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(
-                      modifier = Modifier.size(68.dp),
+                      modifier = Modifier
+                        .size(68.dp)
+                        .clickable { showPartnerPhotoActionPicker = !showPartnerPhotoActionPicker }
+                        .testTag("btn_partner_pencil"),
                       contentAlignment = Alignment.Center
                     ) {
-                      AsyncImage(
-                        model = currentGirlAvatar.ifEmpty { "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" },
+                      ProfileAvatar(
+                        url = currentGirlAvatar,
                         contentDescription = "Avatar Đối tác",
-                        contentScale = ContentScale.Crop,
                         modifier = Modifier
                           .size(62.dp)
-                          .clip(CircleShape)
                           .border(2.dp, Color(0xFFE91E63), CircleShape)
-                          .clickable { showPartnerPhotoActionPicker = !showPartnerPhotoActionPicker }
                       )
                       Surface(
                         shape = CircleShape,
@@ -1225,8 +1270,6 @@ fun EditCoupleDialog(
                         modifier = Modifier
                           .size(24.dp)
                           .align(Alignment.BottomEnd)
-                          .clickable { showPartnerPhotoActionPicker = !showPartnerPhotoActionPicker }
-                          .testTag("btn_partner_pencil")
                       ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                           Icon(Icons.Default.Edit, contentDescription = "Đổi ảnh", tint = Color.White, modifier = Modifier.size(13.dp))
@@ -1240,6 +1283,7 @@ fun EditCoupleDialog(
                         onValueChange = { currentGirlName = it },
                         label = { Text(if (isEnglish) "Name" else "Tên") },
                         placeholder = { Text(if (isEnglish) "Partner name" else "Tên người ấy") },
+                        keyboardOptions = KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         colors = dialogTextFieldColors(),
@@ -1275,7 +1319,7 @@ fun EditCoupleDialog(
                           }
                           IconButton(
                             onClick = { showPartnerPhotoActionPicker = false },
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(MinTouchBox)
                           ) {
                             Icon(Icons.Default.Close, contentDescription = "Đóng", tint = Color.Gray, modifier = Modifier.size(14.dp))
                           }
@@ -1286,210 +1330,111 @@ fun EditCoupleDialog(
                           horizontalArrangement = Arrangement.spacedBy(6.dp),
                           verticalAlignment = Alignment.CenterVertically
                         ) {
-                          Button(
+                          SecondaryButton(
+                            text = if (isEnglish) "Camera" else "Chụp ảnh",
                             onClick = {
                               showPartnerPhotoActionPicker = false
                               partnerCaptureFile.parentFile?.mkdirs()
                               girlCameraLauncher.launch(FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", partnerCaptureFile))
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFE91E63)),
-                            border = BorderStroke(1.dp, Color(0xFFFFB6C1)),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f).height(36.dp).testTag("btn_partner_camera")
-                          ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                              Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(13.dp))
-                              Text(if (isEnglish) "Camera" else "Chụp ảnh", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                            }
-                          }
+                            icon = Icons.Default.CameraAlt,
+                            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                            testTag = "btn_partner_camera"
+                          )
 
-                          Button(
+                          SecondaryButton(
+                            text = if (isEnglish) "Gallery" else "Thư viện",
                             onClick = {
                               showPartnerPhotoActionPicker = false
                               girlLauncher.launch("image/*")
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFFE91E63)),
-                            border = BorderStroke(1.dp, Color(0xFFFFB6C1)),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f).height(36.dp).testTag("btn_partner_gallery")
-                          ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                              Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(13.dp))
-                              Text(if (isEnglish) "Gallery" else "Thư viện", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                            }
-                          }
+                            icon = Icons.Default.PhotoLibrary,
+                            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                            testTag = "btn_partner_gallery"
+                          )
 
                           if (currentGirlAvatar.isNotBlank()) {
-                            Button(
+                            SecondaryButton(
+                              text = if (isEnglish) "Delete" else "Xoá",
                               onClick = {
                                 showPartnerPhotoActionPicker = false
                                 currentGirlAvatar = ""
                               },
-                              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE), contentColor = Color(0xFFD32F2F)),
-                              border = BorderStroke(1.dp, Color(0xFFFFCDD2)),
-                              shape = RoundedCornerShape(10.dp),
-                              modifier = Modifier.weight(1f).height(36.dp).testTag("btn_partner_remove")
-                            ) {
-                              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                Icon(Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(13.dp))
-                                Text(if (isEnglish) "Delete" else "Xoá", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                              }
-                            }
+                              icon = Icons.Default.DeleteOutline,
+                              isDestructive = true,
+                              modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+                              testTag = "btn_partner_remove"
+                            )
                           }
                         }
                       }
                     }
                   }
 
-                  InLoveDatePickerField(
+                  BirthdayField(
+                    label = if (isEnglish) "Birthday" else "Ngày sinh",
                     value = currentGirlBirth,
                     onValueChange = { currentGirlBirth = it },
-                    label = if (isEnglish) "Birthday" else "Ngày sinh",
+                    modifier = Modifier.fillMaxWidth(),
                     dialogTitle = if (isEnglish) "Select birthday" else "Chọn ngày sinh",
-                    quickPresets = DatePickerPresets.birthDatePresets(isEnglish),
                     isEnglish = isEnglish,
-                    modifier = Modifier.fillMaxWidth()
+                    testTag = "input_partner_birth"
                   )
-
-                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (girlAge > 0) {
-                      Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFFFEBEE),
-                        border = BorderStroke(0.8.dp, Color(0xFFFFCDD2))
-                      ) {
-                        Text(
-                          text = ProfileUtils.formatAgeDisplay(girlAge, isEnglish),
-                          fontSize = 11.5.sp,
-                          fontWeight = FontWeight.SemiBold,
-                          color = Color(0xFFC2185B),
-                          modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                      }
-                    }
-                    if (girlZodiac.isNotBlank()) {
-                      Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFFFEBEE),
-                        border = BorderStroke(0.8.dp, Color(0xFFFFCDD2))
-                      ) {
-                        Text(
-                          text = ProfileUtils.formatZodiacDisplay(girlZodiac, isEnglish),
-                          fontSize = 11.5.sp,
-                          fontWeight = FontWeight.SemiBold,
-                          color = Color(0xFFC2185B),
-                          modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                      }
-                    }
-                  }
                 }
               }
 
               // KỶ NIỆM NGÀY YÊU & TÍNH NGÀY
-              Card(
+              if (!isCoupled) Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF5FF)),
                 border = BorderStroke(1.dp, Color(0xFFE1BEE7)),
                 modifier = Modifier.fillMaxWidth()
               ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Color(0xFF7B1FA2), modifier = Modifier.size(16.dp))
-                    Text(
-                      text = if (isEnglish) "Anniversary" else "Ngày yêu",
-                      fontWeight = FontWeight.Bold,
-                      fontSize = 13.5.sp,
-                      color = Color(0xFF5E35B1)
-                    )
-                  }
-
                   InLoveDatePickerField(
                     value = currentAnniversary,
                     onValueChange = { currentAnniversary = it },
-                    label = if (isEnglish) "Start date" else "Bắt đầu yêu",
+                    label = if (isEnglish) "Love start date" else "Ngày bắt đầu yêu",
                     dialogTitle = if (isEnglish) "Select start date" else "Chọn ngày bắt đầu yêu",
                     quickPresets = DatePickerPresets.relationshipStartDatePresets(isEnglish),
                     isEnglish = isEnglish,
                     modifier = Modifier.fillMaxWidth(),
-                    testTag = "input_anniversary_date"
+                    testTag = "input_anniversary_date",
+                    helperText = if (currentAnniversary.isNotBlank()) {
+                      if (isEnglish) "✨ $calculatedOfflineDays days together 💕" else "✨ $calculatedOfflineDays ngày bên nhau 💕"
+                    } else null
                   )
-
-                  Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFFFEBEE),
-                    modifier = Modifier.fillMaxWidth()
-                  ) {
-                    Row(
-                      modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                      verticalAlignment = Alignment.CenterVertically
-                    ) {
-                      Icon(Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE91E63), modifier = Modifier.size(16.dp))
-                      Spacer(modifier = Modifier.width(8.dp))
-                      Text(
-                        text = if (isEnglish) "✨ $calculatedOfflineDays days together 💕" else "✨ $calculatedOfflineDays ngày bên nhau 💕",
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFD81B60)
-                      )
-                    }
-                  }
                 }
               }
 
-              // HÀNG NÚT: ĐÓNG & LƯU THAY ĐỔI
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-              ) {
-                OutlinedButton(
-                  onClick = onDismiss,
-                  shape = RoundedCornerShape(14.dp),
-                  modifier = Modifier
-                    .weight(1f)
-                    .height(46.dp)
-                ) {
-                  Text(if (isEnglish) "Close" else "Đóng", fontSize = 14.5.sp, color = OnSurfaceVariant)
-                }
-
-                Button(
-                  onClick = {
-                    viewModel.saveCoupleProfile(
-                      boy = boyName,
-                      boyBirth = boyBirthDate,
-                      boyAvatar = boyAvatarUrl,
-                      boyA = boyAge,
-                      boyZod = boyZodiac,
-                      girl = currentGirlName,
-                      girlBirth = currentGirlBirth,
-                      girlAvatar = currentGirlAvatar,
-                      girlA = girlAge,
-                      girlZod = girlZodiac,
-                      title = currentLoveTitle,
-                      days = calculatedOfflineDays,
-                      anniversary = currentAnniversary
-                    )
-                    viewModel.triggerFloatingHearts()
-                    viewModel.showToast(if (isEnglish) "Profile saved! 💕" else "Đã lưu hồ sơ thành công! 💕")
-                    onDismiss()
-                  },
-                  shape = RoundedCornerShape(14.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                  modifier = Modifier
-                    .weight(1.2f)
-                    .height(46.dp)
-                    .testTag("btn_save_couple_offline")
-                ) {
-                  Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(17.dp))
-                  Spacer(modifier = Modifier.width(6.dp))
-                  Text(if (isEnglish) "Save" else "Lưu", fontWeight = FontWeight.Bold, fontSize = 14.5.sp)
-                }
-              }
+              // LƯU THAY ĐỔI (dialog đã có nút đóng ở tiêu đề)
+              if (!isCoupled) PrimaryGradientButton(
+                text = if (isEnglish) "Save" else "Lưu",
+                onClick = {
+                  viewModel.saveCoupleProfile(
+                    girl = currentGirlName,
+                    // unchanged -> hand back the stored text verbatim (it may be an old, unparseable value we must not blank)
+                    girlBirth = if (currentGirlBirth == Birthday.normalize(girlBirthDate)) girlBirthDate else currentGirlBirth,
+                    girlAvatar = currentGirlAvatar,
+                    girlA = girlAge,
+                    girlZod = girlZodiac,
+                    title = currentLoveTitle,
+                    days = if (currentAnniversary.isBlank()) 0 else calculatedOfflineDays,
+                    anniversary = currentAnniversary
+                  )
+                  // The ViewModel closes the dialog itself once the save succeeds; on a refusal it must stay open so the user can fix the input.
+                },
+                icon = Icons.Default.Favorite,
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .heightIn(min = MinTouchBox),
+                testTag = "btn_save_couple_offline"
+              )
             }
 
           } else {
             // --- TAB 1: GHÉP ĐÔI (ONLINE) ---
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
               // 1. INCOMING INVITE (NẾU CÓ)
               incomingInvite?.let { invite ->
                 Card(
@@ -1499,8 +1444,8 @@ fun EditCoupleDialog(
                   modifier = Modifier.fillMaxWidth().testTag("dialog_incoming_invite_card")
                 ) {
                   Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                   ) {
                     Row(
                       verticalAlignment = Alignment.CenterVertically,
@@ -1511,16 +1456,15 @@ fun EditCoupleDialog(
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                      AsyncImage(
-                        model = invite.senderAvatar.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
+                      ProfileAvatar(
+                        url = invite.senderAvatar,
                         contentDescription = "Sender Avatar",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(54.dp).clip(CircleShape).border(2.dp, Color(0xFFFF80AB), CircleShape)
+                        modifier = Modifier.size(44.dp).border(2.dp, Color(0xFFFF80AB), CircleShape)
                       )
                       Spacer(modifier = Modifier.width(12.dp))
                       Column(modifier = Modifier.weight(1f)) {
                         Text(text = invite.effectiveSenderName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF880E4F))
-                        Text(text = "Mã: " + invite.senderCoupleCode, fontSize = 12.sp, color = Color.Gray)
+                        Text(text = (if (isEnglish) "Code: " else "Mã: ") + invite.senderCoupleCode, fontSize = 12.sp, color = Color.Gray)
                       }
                     }
 
@@ -1540,24 +1484,19 @@ fun EditCoupleDialog(
                     }
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                      OutlinedButton(
+                      SecondaryButton(
+                        text = if (isEnglish) "Decline" else "Từ chối",
                         onClick = { viewModel.rejectSetLoveInvite(invite.inviteId) },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                      ) {
-                        Text(if (isEnglish) "Decline" else "Từ chối")
-                      }
-                      Button(
+                        modifier = Modifier.weight(1f).heightIn(min = MinTouchBox)
+                      )
+                      PrimaryGradientButton(
+                        text = if (isEnglish) "Accept ❤️" else "Đồng ý ❤️",
                         onClick = {
                           viewModel.acceptSetLoveInvite(invite.inviteId)
                           onDismiss()
                         },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                        modifier = Modifier.weight(1.2f)
-                      ) {
-                        Text(if (isEnglish) "Accept ❤️" else "Đồng ý ❤️", fontWeight = FontWeight.Bold)
-                      }
+                        modifier = Modifier.weight(1.2f).heightIn(min = MinTouchBox)
+                      )
                     }
                   }
                 }
@@ -1571,7 +1510,7 @@ fun EditCoupleDialog(
                   border = BorderStroke(1.2.dp, Color(0xFFFFB74D)),
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                  Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(if (isEnglish) "Waiting for response..." else "Chờ xác nhận...", fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = Color(0xFFE65100))
                     val outDays = ProfileUtils.calculateLoveDays(out.proposedStartDate)
                     Text(
@@ -1579,13 +1518,11 @@ fun EditCoupleDialog(
                       fontSize = 12.5.sp,
                       color = Color.DarkGray
                     )
-                    OutlinedButton(
+                    SecondaryButton(
+                      text = if (isEnglish) "Cancel request" else "Hủy lời mời",
                       onClick = { viewModel.cancelSentInvite() },
-                      shape = RoundedCornerShape(10.dp),
-                      modifier = Modifier.fillMaxWidth()
-                    ) {
-                      Text(if (isEnglish) "Cancel request" else "Hủy lời mời")
-                    }
+                      modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox)
+                    )
                   }
                 }
               }
@@ -1599,19 +1536,18 @@ fun EditCoupleDialog(
                   border = BorderStroke(1.2.dp, Color(0xFFFF80AB)),
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                  Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(if (isEnglish) "Coupled ❤️" else "Đã kết đôi ❤️", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF880E4F))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                      AsyncImage(
-                        model = partner?.avatarUrl?.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" } ?: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200",
+                      ProfileAvatar(
+                        url = partner?.avatarUrl.orEmpty().ifBlank { girlAvatarUrl },
                         contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(50.dp).clip(CircleShape).border(2.dp, Color(0xFFFF4081), CircleShape)
+                        modifier = Modifier.size(44.dp).border(2.dp, Color(0xFFFF4081), CircleShape)
                       )
                       Spacer(modifier = Modifier.width(12.dp))
                       Column {
-                        Text(partner?.effectiveDisplayName ?: "Người ấy", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Mã: ${partner?.coupleCode ?: ""}", fontSize = 12.sp, color = Color.Gray)
+                        Text(displayPartnerName(partner?.effectiveDisplayName.orEmpty().ifBlank { girlName }, isEnglish), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(if (isEnglish) "Code: ${partner?.coupleCode ?: ""}" else "Mã: ${partner?.coupleCode ?: ""}", fontSize = 12.sp, color = Color.Gray)
                       }
                     }
                   }
@@ -1627,7 +1563,7 @@ fun EditCoupleDialog(
                   border = BorderStroke(1.dp, Color(0xFFFFB6C1)),
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                  Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                       text = if (isEnglish) "Your Code" else "Mã của bạn",
                       fontSize = 12.5.sp,
@@ -1638,22 +1574,28 @@ fun EditCoupleDialog(
                       modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
                       verticalAlignment = Alignment.CenterVertically,
                       horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                       Text(
                         text = currentUser.coupleCode,
-                        fontSize = 19.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFFD81B60),
                         letterSpacing = 1.sp
                       )
                       Row {
-                        IconButton(onClick = { copyToClipboard(currentUser.coupleCode) }) {
+                        IconButton(
+                          onClick = { copyToClipboard(currentUser.coupleCode) },
+                          modifier = Modifier.size(MinTouchBox)
+                        ) {
                           Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFFD81B60), modifier = Modifier.size(18.dp))
                         }
-                        IconButton(onClick = { shareCoupleLink(currentUser.coupleCode) }) {
+                        IconButton(
+                          onClick = { shareCoupleCode(context, currentUser.coupleCode, isEnglish) },
+                          modifier = Modifier.size(MinTouchBox)
+                        ) {
                           Icon(Icons.Default.Share, contentDescription = "Share", tint = Color(0xFFD81B60), modifier = Modifier.size(18.dp))
                         }
                       }
@@ -1662,19 +1604,46 @@ fun EditCoupleDialog(
                 }
 
                 // Thẻ tìm kiếm & gửi lời mời
-                Card(
+                if (outgoingInvite == null) Card(
                   shape = RoundedCornerShape(20.dp),
                   colors = CardDefaults.cardColors(containerColor = Color.White),
                   border = BorderStroke(1.dp, Color(0xFFFFCDD2)),
                   modifier = Modifier.fillMaxWidth()
                 ) {
-                  Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                  Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                       text = if (isEnglish) "Connect" else "Kết nối",
                       fontWeight = FontWeight.Bold,
                       fontSize = 13.sp,
                       color = Color(0xFF880E4F)
                     )
+
+                    val runSearch: () -> Unit = {
+                      val q = searchQuery.trim()
+                      if (q.isNotBlank() && !isSearching) {
+                        coroutineScope.launch {
+                          isSearching = true
+                          searchError = null
+                          val res = try {
+                            viewModel.searchPartnerForSetLove(q)
+                          } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                          } catch (e: Exception) {
+                            null
+                          } finally {
+                            isSearching = false
+                          }
+                          if (q != searchQuery.trim()) return@launch
+                          if (res == null) {
+                            searchError = if (isEnglish) "No user found with this code" else "Không tìm thấy người dùng với mã này"
+                          } else if (res.uid == currentUser.uid) {
+                            searchError = if (isEnglish) "You can't send a request to yourself" else "Không thể gửi lời mời cho chính mình"
+                          } else {
+                            selectedPartner = res
+                          }
+                        }
+                      }
+                    }
 
                     Row(
                       modifier = Modifier.fillMaxWidth(),
@@ -1686,9 +1655,12 @@ fun EditCoupleDialog(
                         onValueChange = {
                           searchQuery = it.uppercase()
                           searchError = null
+                          selectedPartner = null
                         },
                         placeholder = { Text(if (isEnglish) "Enter code..." else "Nhập mã ghép đôi...", fontSize = 13.sp) },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { runSearch() }),
                         shape = RoundedCornerShape(12.dp),
                         colors = dialogTextFieldColors(),
                         trailingIcon = {
@@ -1697,50 +1669,60 @@ fun EditCoupleDialog(
                               onClick = {
                                 searchQuery = ""
                                 searchError = null
+                                selectedPartner = null
                               },
-                              modifier = Modifier.size(26.dp)
+                              modifier = Modifier.size(MinTouchBox).testTag("dialog_btn_clear")
                             ) {
                               Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = if (isEnglish) "Clear" else "Xóa",
                                 tint = Color.Gray,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(18.dp)
                               )
                             }
                           } else {
-                            Surface(
-                              shape = RoundedCornerShape(8.dp),
-                              color = Color(0xFFFFF0F5),
+                            // Touch target stays MinTouchBox; the pink chip is drawn smaller inside it.
+                            Box(
+                              contentAlignment = Alignment.Center,
                               modifier = Modifier
-                                .padding(end = 6.dp)
+                                .widthIn(min = MinTouchBox)
+                                .heightIn(min = MinTouchBox)
+                                .testTag("dialog_btn_paste")
                                 .clickable {
                                   val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                   val clipText = clipboard.primaryClip?.getItemAt(0)?.text?.toString()?.trim() ?: ""
                                   if (clipText.isNotEmpty()) {
-                                    searchQuery = clipText.uppercase()
+                                    searchQuery = ProfileUtils.extractCoupleCode(clipText).ifBlank { clipText.uppercase() }
                                     searchError = null
+                                    selectedPartner = null
                                   } else {
                                     viewModel.showToast(if (isEnglish) "Clipboard is empty" else "Bộ nhớ tạm trống")
                                   }
                                 }
                             ) {
-                              Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                              Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFFFF0F5),
+                                modifier = Modifier.padding(end = 6.dp)
                               ) {
-                                Icon(
-                                  imageVector = Icons.Default.ContentCopy,
-                                  contentDescription = null,
-                                  tint = Color(0xFFE91E63),
-                                  modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(3.dp))
-                                Text(
-                                  text = if (isEnglish) "Paste" else "Dán mã",
-                                  fontSize = 10.5.sp,
-                                  fontWeight = FontWeight.Bold,
-                                  color = Color(0xFFE91E63)
-                                )
+                                Row(
+                                  verticalAlignment = Alignment.CenterVertically,
+                                  modifier = Modifier.padding(horizontal = 7.dp, vertical = 6.dp)
+                                ) {
+                                  Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = null,
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.size(12.dp)
+                                  )
+                                  Spacer(modifier = Modifier.width(3.dp))
+                                  Text(
+                                    text = if (isEnglish) "Paste" else "Dán mã",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFE91E63)
+                                  )
+                                }
                               }
                             }
                           }
@@ -1748,33 +1730,23 @@ fun EditCoupleDialog(
                         modifier = Modifier.weight(1f).testTag("dialog_search_input")
                       )
 
-                      Button(
-                        onClick = {
-                          val q = searchQuery.trim()
-                          if (q.isNotBlank()) {
-                            coroutineScope.launch {
-                              isSearching = true
-                              searchError = null
-                              val res = viewModel.searchPartnerForSetLove(q)
-                              isSearching = false
-                              if (res == null) {
-                                searchError = "Không tìm thấy người dùng với mã này"
-                              } else if (res.uid == currentUser.uid) {
-                                searchError = "Không thể gửi lời mời cho chính mình"
-                              } else {
-                                selectedPartner = res
-                              }
-                            }
-                          }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                        modifier = Modifier.height(50.dp).testTag("dialog_btn_search")
+                      Box(
+                        modifier = Modifier.heightIn(min = MinTouchBox),
+                        contentAlignment = Alignment.Center
                       ) {
+                        val searchEnabled = searchQuery.isNotBlank() && !isSearching
+                        PrimaryGradientButton(
+                          text = "",
+                          icon = if (isSearching) null else Icons.Default.Search,
+                          modifier = Modifier
+                            .heightIn(min = MinTouchBox)
+                            .disabledLook(searchEnabled)
+                            .semantics { contentDescription = if (isEnglish) "Search" else "Tìm" },
+                          testTag = "dialog_btn_search",
+                          onClick = { if (searchEnabled) runSearch() }
+                        )
                         if (isSearching) {
-                          CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                        } else {
-                          Icon(Icons.Default.Search, contentDescription = "Tìm")
+                          CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
                         }
                       }
                     }
@@ -1792,11 +1764,10 @@ fun EditCoupleDialog(
                       ) {
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                           Row(verticalAlignment = Alignment.CenterVertically) {
-                            AsyncImage(
-                              model = partner.avatarUrl.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
+                            ProfileAvatar(
+                              url = partner.avatarUrl,
                               contentDescription = null,
-                              contentScale = ContentScale.Crop,
-                              modifier = Modifier.size(50.dp).clip(CircleShape).border(2.dp, Color(0xFFFF4081), CircleShape)
+                              modifier = Modifier.size(44.dp).border(2.dp, Color(0xFFFF4081), CircleShape)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
@@ -1825,7 +1796,8 @@ fun EditCoupleDialog(
                             modifier = Modifier.fillMaxWidth()
                           )
 
-                          Button(
+                          PrimaryGradientButton(
+                            text = if (isEnglish) "Send request ❤️" else "Gửi lời mời ❤️",
                             onClick = {
                               val parsedMillis = ProfileUtils.parseDateToMillis(proposedStartDateText)
                               viewModel.sendSetLoveInvite(
@@ -1835,35 +1807,30 @@ fun EditCoupleDialog(
                               )
                               onDismiss()
                             },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                            modifier = Modifier.fillMaxWidth()
-                          ) {
-                            Text(if (isEnglish) "Send request ❤️" else "Gửi lời mời ❤️", fontWeight = FontWeight.Bold)
-                          }
+                            modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox)
+                          )
                         }
                       }
                     }
                   }
                 }
 
-                // Nút Đóng Dialog cho Tab Ghép đôi
-                OutlinedButton(
-                  onClick = onDismiss,
-                  shape = RoundedCornerShape(14.dp),
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp)
-                ) {
-                  Text(if (isEnglish) "Close" else "Đóng", fontSize = 14.sp, color = OnSurfaceVariant)
-                }
               }
+
+              // Nút Đóng Dialog cho Tab Ghép đôi (mọi trạng thái)
+              SecondaryButton(
+                text = if (isEnglish) "Close" else "Đóng",
+                onClick = onDismiss,
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .heightIn(min = MinTouchBox),
+                testTag = "btn_close_pairing_tab"
+              )
             }
           }
         }
       }
     }
-  }
 }
 
 @Composable
@@ -1875,8 +1842,9 @@ fun DeleteConfirmationDialog(
   onConfirm: () -> Unit,
   onDismiss: () -> Unit
 ) {
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = true,
     icon = {
       Box(
         modifier = Modifier
@@ -1941,33 +1909,23 @@ fun DeleteConfirmationDialog(
       }
     },
     confirmButton = {
-      Button(
+      SecondaryButton(
+        text = if (isEnglish) "Delete" else "Xóa Vĩnh Viễn",
         onClick = onConfirm,
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.testTag("btn_confirm_delete")
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.DeleteForever,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = Color.White
-          )
-          Text(if (isEnglish) "Delete" else "Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold, color = Color.White)
-        }
-      }
+        icon = Icons.Filled.DeleteForever,
+        isDestructive = true,
+        filled = true,
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_confirm_delete"
+      )
     },
     dismissButton = {
-      TextButton(
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy bỏ",
         onClick = onDismiss,
-        modifier = Modifier.testTag("btn_cancel_delete")
-      ) {
-        Text(if (isEnglish) "Cancel" else "Hủy bỏ", color = OnSurfaceVariant, fontWeight = FontWeight.Medium)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_cancel_delete"
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp),
@@ -2023,8 +1981,9 @@ fun SetAlarmReminderDialog(
     }
   }
 
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = false,
     icon = {
       Box(
         modifier = Modifier
@@ -2160,12 +2119,12 @@ fun SetAlarmReminderDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   IconButton(
                     onClick = { customHour = (customHour - 1 + 24) % 24 },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(MinTouchBox)
                   ) {
                     Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
                   Text(
-                    text = String.format("%02d", customHour),
+                    text = String.format(java.util.Locale.ROOT, "%02d", customHour),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color(0xFF26071B),
@@ -2173,7 +2132,7 @@ fun SetAlarmReminderDialog(
                   )
                   IconButton(
                     onClick = { customHour = (customHour + 1) % 24 },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(MinTouchBox)
                   ) {
                     Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
@@ -2188,12 +2147,12 @@ fun SetAlarmReminderDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                   IconButton(
                     onClick = { customMinute = (customMinute - 5 + 60) % 60 },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(MinTouchBox)
                   ) {
                     Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
                   Text(
-                    text = String.format("%02d", customMinute),
+                    text = String.format(java.util.Locale.ROOT, "%02d", customMinute),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color(0xFF26071B),
@@ -2201,7 +2160,7 @@ fun SetAlarmReminderDialog(
                   )
                   IconButton(
                     onClick = { customMinute = (customMinute + 5) % 60 },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(MinTouchBox)
                   ) {
                     Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Primary)
                   }
@@ -2243,36 +2202,24 @@ fun SetAlarmReminderDialog(
       }
     },
     confirmButton = {
-      Button(
+      PrimaryGradientButton(
+        text = if (isEnglish) "Set Alarm" else "Đặt Báo Thức",
         onClick = {
           val trigger = calculateTriggerMillis(selectedPreset, customHour, customMinute)
           onSchedule(title, message, trigger, reminderId)
         },
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.testTag("btn_confirm_schedule_alarm")
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.AlarmOn,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = Color.White
-          )
-          Text(if (isEnglish) "Set Alarm" else "Đặt Báo Thức", fontWeight = FontWeight.Bold, color = Color.White)
-        }
-      }
+        icon = Icons.Filled.AlarmOn,
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_confirm_schedule_alarm"
+      )
     },
     dismissButton = {
-      TextButton(
+      SecondaryButton(
+        text = if (isEnglish) "Close" else "Đóng",
         onClick = onDismiss,
-        modifier = Modifier.testTag("btn_cancel_schedule_alarm")
-      ) {
-        Text(if (isEnglish) "Close" else "Đóng", color = OnSurfaceVariant)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_cancel_schedule_alarm"
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp),
@@ -2307,8 +2254,9 @@ fun EditLoveTitleDialog(
     )
   }
 
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = true,
     modifier = Modifier.animateDialogEntrance(),
     title = {
       Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2381,29 +2329,29 @@ fun EditLoveTitleDialog(
       }
     },
     confirmButton = {
-      Button(
+      PrimaryGradientButton(
+        text = if (isEnglish) "Save" else "Lưu Lại",
         onClick = {
           val clean = titleInput.trim().ifEmpty { if (isEnglish) "Our Love Journey" else "Hành Trình Yêu Thương" }
           onConfirm(clean)
         },
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
-        shape = RoundedCornerShape(14.dp)
-      ) {
-        Text(if (isEnglish) "Save" else "Lưu Lại", fontWeight = FontWeight.Bold)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox)
+      )
     },
     dismissButton = {
-      OutlinedButton(
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy",
         onClick = onDismiss,
-        shape = RoundedCornerShape(14.dp)
-      ) {
-        Text(if (isEnglish) "Cancel" else "Hủy")
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox)
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp)
   )
 }
+
+/** Days before the date at which the reminder can fire. */
+internal val REMINDER_DAYS_BEFORE_OPTIONS = listOf(0, 1, 3, 7, 14)
 
 @Composable
 fun AddAnniversaryDateDialog(
@@ -2421,7 +2369,7 @@ fun AddAnniversaryDateDialog(
   ) -> Unit
 ) {
   var title by remember { mutableStateOf("") }
-  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date()) }
+  val todayFormatted = remember { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.ROOT).format(java.util.Date()) }
   var dateText by remember(initialDateText) { mutableStateOf(initialDateText ?: todayFormatted) }
   var selectedType by remember { mutableStateOf("LOVE") }
   var description by remember { mutableStateOf("") }
@@ -2449,8 +2397,9 @@ fun AddAnniversaryDateDialog(
     )
   }
 
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = false,
     title = {
       Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -2602,13 +2551,23 @@ fun AddAnniversaryDateDialog(
         }
 
         if (notificationEnabled) {
-          val reminderOptions = if (isEnglish) {
-            listOf(0 to "Same Day", 1 to "1 Day", 3 to "3 Days", 7 to "7 Days")
-          } else {
-            listOf(0 to "Đúng ngày", 1 to "1 ngày", 3 to "3 ngày", 7 to "7 ngày")
+          val reminderOptions = REMINDER_DAYS_BEFORE_OPTIONS.map { days ->
+            val label = if (isEnglish) {
+              when (days) {
+                0 -> "Same Day"
+                1 -> "1 Day"
+                else -> "$days Days"
+              }
+            } else {
+              when (days) {
+                0 -> "Đúng ngày"
+                else -> "$days ngày"
+              }
+            }
+            days to label
           }
           Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
           ) {
             reminderOptions.forEach { (days, label) ->
@@ -2617,7 +2576,6 @@ fun AddAnniversaryDateDialog(
                 shape = RoundedCornerShape(12.dp),
                 color = if (isSelected) Primary else SurfaceContainerHigh,
                 modifier = Modifier
-                  .weight(1f)
                   .clickable { reminderDaysBefore = days }
               ) {
                 Text(
@@ -2625,7 +2583,7 @@ fun AddAnniversaryDateDialog(
                   fontSize = 10.sp,
                   fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                   color = if (isSelected) Color.White else OnSurface,
-                  modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp),
+                  modifier = Modifier.padding(vertical = 7.dp, horizontal = 8.dp),
                   textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                   maxLines = 1
                 )
@@ -2636,23 +2594,22 @@ fun AddAnniversaryDateDialog(
       }
     },
     confirmButton = {
-      Button(
+      PrimaryGradientButton(
+        text = if (isEnglish) "Save" else "Lưu",
         onClick = {
           onConfirm(title, dateText, selectedType, description, isAnnual, notificationEnabled, reminderDaysBefore)
         },
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        modifier = Modifier.testTag("btn_save_anniversary_date")
-      ) {
-        Text(if (isEnglish) "Save" else "Lưu", fontWeight = FontWeight.Bold)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_save_anniversary_date"
+      )
     },
     dismissButton = {
-      TextButton(
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy",
         onClick = onDismiss,
-        modifier = Modifier.testTag("btn_cancel_anniversary_date")
-      ) {
-        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_cancel_anniversary_date"
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp),
@@ -2682,8 +2639,9 @@ fun AddGiftReminderDialog(
   var estimatedBudget by remember { mutableStateOf("500.000đ") }
   var notes by remember { mutableStateOf("") }
 
-  AlertDialog(
+  AppAlertDialog(
     onDismissRequest = onDismiss,
+    scrollableText = false,
     title = {
       Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -2726,7 +2684,7 @@ fun AddGiftReminderDialog(
             value = recipient,
             onValueChange = { recipient = it },
             label = { Text(if (isEnglish) "For" else "Tặng cho") },
-            placeholder = { Text(if (isEnglish) "My love" else "Người thương") },
+            placeholder = { Text(if (isEnglish) "My love" else "Người ấy") },
             modifier = Modifier
               .weight(1f)
               .testTag("input_gift_reminder_recipient"),
@@ -2781,20 +2739,21 @@ fun AddGiftReminderDialog(
       }
     },
     confirmButton = {
-      Button(
+      PrimaryGradientButton(
+        text = if (isEnglish) "Save" else "Lưu Nhắc Nhở",
         onClick = {
           onConfirm(title, recipient, occasion, dueDateText, estimatedBudget, notes)
         },
-        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-        modifier = Modifier.testTag("btn_save_gift_reminder")
-      ) {
-        Text(if (isEnglish) "Save" else "Lưu Nhắc Nhở", fontWeight = FontWeight.Bold)
-      }
+        modifier = Modifier.heightIn(min = MinTouchBox),
+        testTag = "btn_save_gift_reminder"
+      )
     },
     dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text(if (isEnglish) "Cancel" else "Hủy", color = OnSurfaceVariant)
-      }
+      SecondaryButton(
+        text = if (isEnglish) "Cancel" else "Hủy",
+        onClick = onDismiss,
+        modifier = Modifier.heightIn(min = MinTouchBox)
+      )
     },
     containerColor = Color.White,
     shape = RoundedCornerShape(24.dp),

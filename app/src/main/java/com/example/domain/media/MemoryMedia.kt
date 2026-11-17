@@ -1,34 +1,33 @@
 package com.example.domain.media
 
-import java.io.File
-import java.util.Locale
-
 // Phải khớp firebase/functions/src/config.js. Máy chủ vẫn kiểm tra lại mọi giới hạn này.
 const val MEMORY_PUBLIC_ID_PREFIX = "inlove_mem_"
+const val AVATAR_PUBLIC_ID_PREFIX = "inlove_avt_"
+const val AVATAR_MAX_BYTES = 1L * 1024 * 1024
 private const val IMAGE_MAX_BYTES = 10L * 1024 * 1024
 private const val VIDEO_MAX_BYTES = 50L * 1024 * 1024
 private const val VIDEO_MAX_SECONDS = 60
-// MIME -> định dạng Cloudinary (cũng là đuôi tệp trên máy), khớp mimeFormats trong config.js.
+// MIME -> định dạng (cũng là đuôi tệp trên máy), khớp mimeFormats trong config.js.
 private val IMAGE_FORMATS = mapOf(
   "image/jpeg" to "jpg", "image/jpg" to "jpg", "image/png" to "png",
   "image/webp" to "webp", "image/heic" to "heic", "image/heif" to "heic",
 )
-private val VIDEO_FORMATS = mapOf("video/mp4" to "mp4", "video/quicktime" to "mov", "video/webm" to "webm")
+private val VIDEO_FORMATS = mapOf("video/mp4" to "mp4", "video/quicktime" to "mov")
 // Danh sách định dạng trong thông báo lỗi lấy từ bảng trên, để thông báo không lệch khỏi quy tắc thật.
 private fun formatList(formats: Map<String, String>): String =
-  formats.values.distinct().joinToString(", ") { it.uppercase(Locale.ROOT) }
+  formats.values.distinct().joinToString(", ") { it.uppercase() }
 
 enum class MediaKind { IMAGE, VIDEO }
 
 data class MemoryMediaFile(
-  val file: File,
+  val path: String,
   val kind: MediaKind,
   val mimeType: String,
   val sizeBytes: Long,
   val durationSeconds: Int = 0,
 )
 
-/** Tải lên qua đường ký số: máy chủ cấp chỗ, app gửi thẳng lên Cloudinary, rồi máy chủ xác nhận. */
+/** Tải lên qua đường ký số: máy chủ cấp chỗ, app gửi thẳng lên kho lưu trữ, rồi máy chủ xác nhận. */
 interface MemoryMediaRepository {
   /** Trả về publicId đã được máy chủ xác nhận. */
   suspend fun upload(relationshipId: String, memoryId: String, media: MemoryMediaFile): String
@@ -39,7 +38,7 @@ interface MemoryMediaRepository {
 
 /** Thông báo lỗi (tiếng Việt), hoặc null khi tệp được phép tải lên. */
 fun validateMemoryMedia(kind: MediaKind, mimeType: String, sizeBytes: Long, durationSeconds: Int): String? {
-  val mime = mimeType.lowercase(Locale.ROOT)
+  val mime = mimeType.lowercase()
   return when (kind) {
     MediaKind.IMAGE -> when {
       mime !in IMAGE_FORMATS -> "Định dạng ảnh chưa được hỗ trợ (${formatList(IMAGE_FORMATS)})."
@@ -57,10 +56,16 @@ fun validateMemoryMedia(kind: MediaKind, mimeType: String, sizeBytes: Long, dura
 
 /** Đuôi tệp trên máy cho một MIME được hỗ trợ, hoặc null. */
 fun formatExtensionOf(mimeType: String): String? {
-  val mime = mimeType.lowercase(Locale.ROOT)
+  val mime = mimeType.lowercase()
   return IMAGE_FORMATS[mime] ?: VIDEO_FORMATS[mime]
 }
 
-fun formatMediaSize(bytes: Long): String =
-  if (bytes >= 1024L * 1024) String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
-  else String.format(Locale.US, "%.0f KB", bytes / 1024.0)
+fun formatMediaSize(bytes: Long): String {
+  // Làm tròn nửa ra xa 0 bằng số nguyên; số âm giữ dấu (-1 byte -> "-0 KB").
+  if (bytes >= 1024L * 1024) {
+    val tenths = (bytes * 10 + 524288) / 1048576
+    return "${tenths / 10}.${tenths % 10} MB"
+  }
+  val magnitude = if (bytes < 0) -bytes else bytes
+  return (if (bytes < 0) "-" else "") + "${(magnitude + 512) / 1024} KB"
+}

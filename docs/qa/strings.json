@@ -1,0 +1,5 @@
+{
+  "pairs": [
+    { "base": "app/src/main/res/values", "vi": "app/src/main/res/values-vi" }
+  ]
+}

@@ -1,0 +1,609 @@
+{
+  "generatedBy": "GoldenWriter",
+  "schema": 1,
+  "cases": [
+    {
+      "id": "capricorn-last-19-01",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "19/01/2000"
+      },
+      "expected": {
+        "name": "Ma K\u1ebft",
+        "symbol": "\u2651"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "aquarius-first-20-01",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "20/01/2000"
+      },
+      "expected": {
+        "name": "B\u1ea3o B\u00ecnh",
+        "symbol": "\u2652"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "aquarius-last-18-02",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "18/02/2000"
+      },
+      "expected": {
+        "name": "B\u1ea3o B\u00ecnh",
+        "symbol": "\u2652"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "pisces-first-19-02",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "19/02/2000"
+      },
+      "expected": {
+        "name": "Song Ng\u01b0",
+        "symbol": "\u2653"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "pisces-last-20-03",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "20/03/2000"
+      },
+      "expected": {
+        "name": "Song Ng\u01b0",
+        "symbol": "\u2653"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "aries-first-21-03",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21/03/2000"
+      },
+      "expected": {
+        "name": "B\u1ea1ch D\u01b0\u01a1ng",
+        "symbol": "\u2648"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "aries-last-19-04",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "19/04/2000"
+      },
+      "expected": {
+        "name": "B\u1ea1ch D\u01b0\u01a1ng",
+        "symbol": "\u2648"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "taurus-first-20-04",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "20/04/2000"
+      },
+      "expected": {
+        "name": "Kim Ng\u01b0u",
+        "symbol": "\u2649"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "taurus-last-20-05",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "20/05/2000"
+      },
+      "expected": {
+        "name": "Kim Ng\u01b0u",
+        "symbol": "\u2649"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "gemini-first-21-05",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21/05/2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "gemini-last-21-06",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21/06/2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cancer-first-22-06",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "22/06/2000"
+      },
+      "expected": {
+        "name": "C\u1ef1 Gi\u1ea3i",
+        "symbol": "\u264b"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "cancer-last-22-07",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "22/07/2000"
+      },
+      "expected": {
+        "name": "C\u1ef1 Gi\u1ea3i",
+        "symbol": "\u264b"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leo-first-23-07",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "23/07/2000"
+      },
+      "expected": {
+        "name": "S\u01b0 T\u1eed",
+        "symbol": "\u264c"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leo-last-22-08",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "22/08/2000"
+      },
+      "expected": {
+        "name": "S\u01b0 T\u1eed",
+        "symbol": "\u264c"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "virgo-first-23-08",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "23/08/2000"
+      },
+      "expected": {
+        "name": "X\u1eed N\u1eef",
+        "symbol": "\u264d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "virgo-last-22-09",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "22/09/2000"
+      },
+      "expected": {
+        "name": "X\u1eed N\u1eef",
+        "symbol": "\u264d"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "libra-first-23-09",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "23/09/2000"
+      },
+      "expected": {
+        "name": "Thi\u00ean B\u00ecnh",
+        "symbol": "\u264e"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "libra-last-23-10",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "23/10/2000"
+      },
+      "expected": {
+        "name": "Thi\u00ean B\u00ecnh",
+        "symbol": "\u264e"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "scorpio-first-24-10",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "24/10/2000"
+      },
+      "expected": {
+        "name": "B\u1ecd C\u1ea1p",
+        "symbol": "\u264f"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "scorpio-last-22-11",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "22/11/2000"
+      },
+      "expected": {
+        "name": "B\u1ecd C\u1ea1p",
+        "symbol": "\u264f"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sagittarius-first-23-11",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "23/11/2000"
+      },
+      "expected": {
+        "name": "Nh\u00e2n M\u00e3",
+        "symbol": "\u2650"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "sagittarius-last-21-12",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21/12/2000"
+      },
+      "expected": {
+        "name": "Nh\u00e2n M\u00e3",
+        "symbol": "\u2650"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "capricorn-first-22-12",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "22/12/2000"
+      },
+      "expected": {
+        "name": "Ma K\u1ebft",
+        "symbol": "\u2651"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leap-29-02",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "29/02/2000"
+      },
+      "expected": {
+        "name": "Song Ng\u01b0",
+        "symbol": "\u2653"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "month-0",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "15/00/2000"
+      },
+      "expected": {
+        "name": "Ch\u01b0a r\u00f5",
+        "symbol": "\u2728"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "month-13",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "15/13/2000"
+      },
+      "expected": {
+        "name": "Ch\u01b0a r\u00f5",
+        "symbol": "\u2728"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "day-0",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "00/01/2000"
+      },
+      "expected": {
+        "name": "Ma K\u1ebft",
+        "symbol": "\u2651"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "day-32",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "32/01/2000"
+      },
+      "expected": {
+        "name": "B\u1ea3o B\u00ecnh",
+        "symbol": "\u2652"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "blank",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": ""
+      },
+      "expected": {
+        "name": "Ch\u01b0a r\u00f5",
+        "symbol": "\u2728"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "no-separator",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "15062000"
+      },
+      "expected": {
+        "name": "Ch\u01b0a r\u00f5",
+        "symbol": "\u2728"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "separator-slash",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21/06/2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "separator-dash",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21-06-2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "separator-dot",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "21.06.2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "iso-yyyy-MM-dd-misparsed",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "2000-06-15"
+      },
+      "expected": {
+        "name": "C\u1ef1 Gi\u1ea3i",
+        "symbol": "\u264b"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "non-numeric-gives-1-1",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "ab/cd/2000"
+      },
+      "expected": {
+        "name": "Ma K\u1ebft",
+        "symbol": "\u2651"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "nbsp-inside",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "15/\u00a006/2000"
+      },
+      "expected": {
+        "name": "Ma K\u1ebft",
+        "symbol": "\u2651"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "unicode-digits",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "\u0661\u0665/\u0660\u0666/2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "direct-day-month-31-12",
+      "input": {
+        "fn": "calculateZodiacFromDayMonth",
+        "day": 31,
+        "month": 12
+      },
+      "expected": {
+        "name": "Ma K\u1ebft",
+        "symbol": "\u2651"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "single-digit-day-month",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "5/6/2000"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "two-parts-15-06",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "15/06"
+      },
+      "expected": {
+        "name": "Song T\u1eed",
+        "symbol": "\u264a"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "four-parts-extra-ignored",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "25/06/2000/9"
+      },
+      "expected": {
+        "name": "C\u1ef1 Gi\u1ea3i",
+        "symbol": "\u264b"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    },
+    {
+      "id": "leading-whitespace-trimmed",
+      "input": {
+        "fn": "calculateZodiac",
+        "birth": "  25/06/2000  "
+      },
+      "expected": {
+        "name": "C\u1ef1 Gi\u1ea3i",
+        "symbol": "\u264b"
+      },
+      "androidLegacy": null,
+      "divergence": null,
+      "optional": false
+    }
+  ]
+}

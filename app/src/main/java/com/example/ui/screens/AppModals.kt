@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,9 +41,7 @@ import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wallpaper
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -73,10 +72,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.ui.theme.HotPink
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
 import com.example.ui.theme.PrimaryFixed
 import com.example.ui.theme.RoseGradientEnd
@@ -89,6 +88,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import com.example.data.media.LocalMediaStore
+import com.example.ui.components.AppDialog
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
 import com.example.ui.components.animateDialogEntrance
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
@@ -108,7 +110,7 @@ fun LanguageSelectionDialog(
   var selectedLang by remember { mutableStateOf(currentLanguage) }
   val strings = LocalizedStrings.get(selectedLang)
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(28.dp),
       color = Color.White.copy(alpha = 0.98f),
@@ -125,7 +127,8 @@ fun LanguageSelectionDialog(
       Column(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(22.dp),
+          .padding(22.dp)
+          .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
       ) {
         // Icon header
@@ -197,37 +200,25 @@ fun LanguageSelectionDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          TextButton(
+          SecondaryButton(
+            text = strings.btnCancel,
             onClick = onDismiss,
             modifier = Modifier
               .weight(1f)
-              .height(44.dp)
-          ) {
-            Text(
-              text = strings.btnCancel,
-              color = Color(0xFF6B2B50),
-              fontWeight = FontWeight.SemiBold
-            )
-          }
+              .heightIn(min = MinTouchBox)
+          )
 
-          Button(
+          PrimaryGradientButton(
+            text = strings.btnConfirm,
             onClick = {
               onLanguageSelected(selectedLang)
               onDismiss()
             },
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Primary),
             modifier = Modifier
               .weight(1.2f)
-              .height(44.dp)
-              .testTag("btn_confirm_language")
-          ) {
-            Text(
-              text = strings.btnConfirm,
-              fontWeight = FontWeight.Bold,
-              color = Color.White
-            )
-          }
+              .heightIn(min = MinTouchBox),
+            testTag = "btn_confirm_language"
+          )
         }
       }
     }
@@ -326,7 +317,7 @@ fun UserGuideDialog(
     Pair(strings.guideTabSettings, Icons.Filled.Settings)
   )
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(28.dp),
       color = Color.White.copy(alpha = 0.98f),
@@ -381,7 +372,7 @@ fun UserGuideDialog(
 
           IconButton(
             onClick = onDismiss,
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier.size(MinTouchBox)
           ) {
             Icon(
               imageVector = Icons.Filled.Close,
@@ -570,21 +561,14 @@ fun UserGuideDialog(
         Spacer(modifier = Modifier.height(14.dp))
 
         // Confirm Button
-        Button(
+        PrimaryGradientButton(
+          text = strings.btnGotIt,
           onClick = onDismiss,
-          shape = RoundedCornerShape(16.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
           modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
-            .testTag("btn_close_guide")
-        ) {
-          Text(
-            text = strings.btnGotIt,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-          )
-        }
+            .heightIn(min = MinTouchBox),
+          testTag = "btn_close_guide"
+        )
       }
     }
   }
@@ -760,7 +744,7 @@ fun WallpaperPickerDialog(
     }
   }
 
-  Dialog(onDismissRequest = onDismiss) {
+  AppDialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(28.dp),
       color = Color.White.copy(alpha = 0.98f),
@@ -814,41 +798,27 @@ fun WallpaperPickerDialog(
             )
           }
 
-          IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) {
+          IconButton(onClick = onDismiss, modifier = Modifier.size(MinTouchBox)) {
             Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color(0xFF6B2B50))
           }
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Button: Upload from Device (Primary custom option per user request)
-        Button(
+        // Button: Upload from Device (custom option offered alongside presets)
+        SecondaryButton(
+          text = if (language == AppLanguage.VI) "Tải ảnh từ thư viện máy" else "Choose Photo from Device",
           onClick = {
             photoPickerLauncher.launch(
               PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
             )
           },
-          shape = RoundedCornerShape(16.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF2D75)),
+          icon = Icons.Filled.AddPhotoAlternate,
           modifier = Modifier
             .fillMaxWidth()
-            .height(46.dp)
-            .testTag("btn_upload_wallpaper_device")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.AddPhotoAlternate,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(20.dp)
-          )
-          Spacer(modifier = Modifier.width(8.dp))
-          Text(
-            text = if (language == AppLanguage.VI) "Tải ảnh từ thư viện máy" else "Choose Photo from Device",
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.5.sp,
-            color = Color.White
-          )
-        }
+            .heightIn(min = MinTouchBox),
+          testTag = "btn_upload_wallpaper_device"
+        )
 
         // Custom image preview if picked from device
         if (selectedUrl.startsWith("/") || selectedUrl.startsWith("file:") || selectedUrl.startsWith("content:")) {
@@ -927,24 +897,17 @@ fun WallpaperPickerDialog(
         Spacer(modifier = Modifier.height(14.dp))
 
         // Apply Button
-        Button(
+        PrimaryGradientButton(
+          text = strings.btnApplyWallpaper,
           onClick = {
             onApplyWallpaper(selectedUrl)
             onDismiss()
           },
-          shape = RoundedCornerShape(16.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Primary),
           modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
-            .testTag("btn_apply_wallpaper")
-        ) {
-          Text(
-            text = strings.btnApplyWallpaper,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-          )
-        }
+            .heightIn(min = MinTouchBox),
+          testTag = "btn_apply_wallpaper"
+        )
       }
     }
   }

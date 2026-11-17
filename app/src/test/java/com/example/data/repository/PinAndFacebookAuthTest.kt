@@ -8,6 +8,7 @@ import com.example.data.auth.FacebookAuthGateway
 import com.example.data.auth.SocialAuthException
 import com.example.data.auth.SocialProfile
 import com.example.data.auth.UnlockAttemptStore
+import com.example.data.auth.fakes.FakeAuthGateway
 import com.example.data.db.AppDatabase
 import com.example.ui.util.AuthSecurityManager
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +51,7 @@ class PinAndFacebookAuthTest {
   private lateinit var scope: CoroutineScope
   private lateinit var activity: Activity
   private val fb = FakeFacebook()
+  private val gateway = FakeAuthGateway()
 
   @Before
   fun setUp() {
@@ -60,7 +62,7 @@ class PinAndFacebookAuthTest {
     db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
     scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
     val online =OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false)
-    repo = AuthRepository(db.inLoveDao(), online, context, scope, isTestMode = true, facebook = fb)
+    repo = AuthRepository(db.inLoveDao(), online, context, scope, gateway, RecordingSessionHooks(), facebook = fb)
     activity = Robolectric.buildActivity(Activity::class.java).setup().get()
   }
 
@@ -91,7 +93,7 @@ class PinAndFacebookAuthTest {
   fun lockoutSurvivesANewRepositoryInstance() = runBlocking {
     registerWithPin()
     repeat(5) { repo.unlockWithPin("0000") }
-    val again =AuthRepository(db.inLoveDao(), OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false), context, scope, isTestMode = true, facebook = fb)
+    val again =AuthRepository(db.inLoveDao(), OnlineCoupleRepository(db.inLoveDao(), context, scope, useFirestore = false), context, scope, gateway, RecordingSessionHooks(), facebook = fb)
     again.login("pin@inlove.app", "SecurePassword@123", false)
     again.lockApp()
     assertTrue(again.unlockWithPin("4321") is UnlockResult.Locked)

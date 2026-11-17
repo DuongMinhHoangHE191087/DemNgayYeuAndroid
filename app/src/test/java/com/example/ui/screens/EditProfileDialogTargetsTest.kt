@@ -6,10 +6,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import com.example.data.model.OnlineUserEntity
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.util.withCardFallback
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,7 +37,7 @@ class EditProfileDialogTargetsTest {
           presetAvatars = listOf("a", "b"),
           isEnglish = false,
           onDismiss = {},
-          onSave = { _, _, _, _, _ -> }
+          onSave = { _, _, _, _, _, _ -> }
         )
       }
     }
@@ -59,15 +62,101 @@ class EditProfileDialogTargetsTest {
           isEnglish = false,
           canEditPhoto = true,
           onDismiss = {},
-          onSave = { _, _, _, _, _ -> }
+          onSave = { _, _, _, _, _, _ -> }
         )
       }
     }
 
-    composeTestRule.onNodeWithTag("btn_photo_pencil").assertExists()
+    // MinTouchBox (57.dp) renders at about 48.45.dp here (see the first test).
+    composeTestRule.onNodeWithTag("btn_photo_pencil")
+      .assertWidthIsAtLeast(48.dp)
+      .assertHeightIsAtLeast(48.dp)
     composeTestRule.onNodeWithTag("btn_photo_pencil").performClick()
     composeTestRule.onNodeWithTag("btn_photo_library").assertExists()
     composeTestRule.onNodeWithTag("btn_photo_camera").assertExists()
     composeTestRule.onNodeWithTag("btn_photo_remove").assertExists()
+    composeTestRule.onNodeWithTag("btn_photo_cancel")
+      .assertWidthIsAtLeast(48.dp)
+      .assertHeightIsAtLeast(48.dp)
+    listOf("btn_photo_library", "btn_photo_camera", "btn_photo_remove").forEach { tag ->
+      composeTestRule.onNodeWithTag(tag).assertHeightIsAtLeast(48.dp)
+    }
+  }
+
+  @Test
+  fun birthdayField_usesDatePickerWithMinTouchTarget() {
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        EditMyProfileDialogContent(
+          currentUser = OnlineUserEntity(uid = "me", coupleCode = ""),
+          isEnglish = true,
+          onDismiss = {},
+          onSave = { _, _, _, _, _, _ -> }
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithTag("input_my_profile_birth").assertExists()
+    // Unmerged tree: the text field merges its trailing icon into its own node.
+    // Only the size is checked here; MyProfileBirthdayTest clicks it (the picker window does open under Robolectric).
+    composeTestRule.onNodeWithTag("input_my_profile_birth_calendar_btn", useUnmergedTree = true)
+      .assertWidthIsAtLeast(48.dp)
+      .assertHeightIsAtLeast(48.dp)
+  }
+
+  @Test
+  fun blankBirthDate_staysBlankWhenSaved() {
+    var savedName: String? = null
+    var savedBirth: String? = null
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        EditMyProfileDialogContent(
+          currentUser = OnlineUserEntity(uid = "me", coupleCode = "", displayName = "Smoke A", isProfileSetup = true),
+          isEnglish = true,
+          onDismiss = {},
+          onSave = { name, birth, _, _, _, _ -> savedName = name; savedBirth = birth }
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithTag("btn_save_my_profile").performScrollTo().performClick()
+    assertEquals("", savedBirth)
+    assertEquals("Smoke A", savedName)
+  }
+
+  @Test
+  fun cardFallbackName_isPrefilledAndSaved() {
+    var savedName: String? = null
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        EditMyProfileDialogContent(
+          currentUser = OnlineUserEntity(uid = "me", coupleCode = "").withCardFallback("An", "", ""),
+          isEnglish = true,
+          onDismiss = {},
+          onSave = { name, _, _, _, _, _ -> savedName = name }
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithTag("btn_save_my_profile").performScrollTo().performClick()
+    assertEquals("An", savedName)
+  }
+
+  @Test
+  fun placeholderName_isNotPrefilled() {
+    var savedName: String? = null
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        EditMyProfileDialogContent(
+          currentUser = OnlineUserEntity(uid = "me", coupleCode = "", displayName = "Vô danh", isProfileSetup = true),
+          isEnglish = true,
+          onDismiss = {},
+          onSave = { name, _, _, _, _, _ -> savedName = name }
+        )
+      }
+    }
+
+    composeTestRule.onNodeWithTag("btn_save_my_profile").performScrollTo().performClick()
+    assertEquals("", savedName)
   }
 }

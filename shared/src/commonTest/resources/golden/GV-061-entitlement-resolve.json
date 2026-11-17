@@ -1,0 +1,120 @@
+{
+  "policy": {
+    "graceMaxDays": 16,
+    "sandboxTtlMs": 86400000,
+    "maxStaleMs": 345600000
+  },
+  "nowMs": 2000000000000,
+  "cases": [
+    {
+      "name": "active_isVip",
+      "purchases": [
+        {"store": "apple", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": 2000086400000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": true, "planId": "monthly", "state": "active", "expiresAtMs": 2000086400000, "source": "apple", "environment": "Production", "verifiedAtMs": 1999996400000}
+    },
+    {
+      "name": "expiresAtEqualsNow_notVip",
+      "purchases": [
+        {"store": "apple", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": 2000000000000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "expired", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    },
+    {
+      "name": "apple_grace_capped",
+      "purchases": [
+        {"store": "apple", "planId": "yearly", "kind": "subscription", "environment": "Production", "status": "grace", "expiresAtMs": 1999913600000, "graceExpiresAtMs": 2001728000000, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": true, "planId": "yearly", "state": "grace", "expiresAtMs": 2001296000000, "source": "apple", "environment": "Production", "verifiedAtMs": 1999996400000}
+    },
+    {
+      "name": "apple_grace_nullGraceExpires_notVip",
+      "purchases": [
+        {"store": "apple", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "grace", "expiresAtMs": 1999913600000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "retry", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    },
+    {
+      "name": "google_grace_untilExpiryTime",
+      "purchases": [
+        {"store": "google", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "grace", "expiresAtMs": 2000003600000, "graceExpiresAtMs": 2001728000000, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": true, "planId": "monthly", "state": "grace", "expiresAtMs": 2000003600000, "source": "google", "environment": "Production", "verifiedAtMs": 1999996400000}
+    },
+    {
+      "name": "lifetime_beatsSubscription",
+      "purchases": [
+        {"store": "google", "planId": "yearly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": 2002592000000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null},
+        {"store": "apple", "planId": "lifetime", "kind": "lifetime", "environment": "Production", "status": "active", "expiresAtMs": null, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999990000000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": true, "planId": "lifetime", "state": "active", "expiresAtMs": null, "source": "apple", "environment": "Production", "verifiedAtMs": 1999990000000}
+    },
+    {
+      "name": "lifetimeRevoked_notVip",
+      "purchases": [
+        {"store": "apple", "planId": "lifetime", "kind": "lifetime", "environment": "Production", "status": "revoked", "expiresAtMs": null, "graceExpiresAtMs": null, "revokedAtMs": 1999913600000, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "revoked", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    },
+    {
+      "name": "subscriptionWithNullExpiry_notVip",
+      "purchases": [
+        {"store": "apple", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": null, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "expired", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    },
+    {
+      "name": "sandbox_cappedBySandboxTtl",
+      "purchases": [
+        {"store": "apple", "planId": "monthly", "kind": "subscription", "environment": "Sandbox", "status": "active", "expiresAtMs": 2002592000000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999917200000, "verifiedAtMs": 1999996400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": true, "planId": "monthly", "state": "active", "expiresAtMs": 2000003600000, "source": "apple", "environment": "Sandbox", "verifiedAtMs": 1999996400000}
+    },
+    {
+      "name": "sandbox_losesToProduction",
+      "purchases": [
+        {"store": "apple", "planId": "lifetime", "kind": "lifetime", "environment": "Sandbox", "status": "active", "expiresAtMs": null, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999917200000, "verifiedAtMs": 1999996400000, "supersededBy": null},
+        {"store": "google", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": 2000000600000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999990000000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": true, "planId": "monthly", "state": "active", "expiresAtMs": 2000000600000, "source": "google", "environment": "Production", "verifiedAtMs": 1999990000000}
+    },
+    {
+      "name": "purchaseOlderThanMaxStale_notVipStale",
+      "purchases": [
+        {"store": "apple", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": 2000086400000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999654400000, "supersededBy": null}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "stale", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    },
+    {
+      "name": "superseded_isIgnored",
+      "purchases": [
+        {"store": "google", "planId": "monthly", "kind": "subscription", "environment": "Production", "status": "active", "expiresAtMs": 2000086400000, "graceExpiresAtMs": null, "revokedAtMs": null, "firstSeenAtMs": 1999136000000, "verifiedAtMs": 1999996400000, "supersededBy": "google_new"}
+      ],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "none", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    },
+    {
+      "name": "adminGrant_untilNull_isVip",
+      "purchases": [],
+      "adminGrant": {"untilMs": null},
+      "expected": {"vip": true, "planId": "admin", "state": "active", "expiresAtMs": null, "source": "admin", "environment": "Production", "verifiedAtMs": null}
+    },
+    {
+      "name": "noPurchases_noGrant",
+      "purchases": [],
+      "adminGrant": null,
+      "expected": {"vip": false, "planId": null, "state": "none", "expiresAtMs": null, "source": null, "environment": null, "verifiedAtMs": null}
+    }
+  ]
+}

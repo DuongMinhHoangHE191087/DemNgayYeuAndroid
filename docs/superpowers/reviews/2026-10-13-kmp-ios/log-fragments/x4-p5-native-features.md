@@ -1,0 +1,1 @@
+| 4x | plan | [p5] [MINOR] GV-001 và GV-002 ghi "do P2 D-05 sinh" (raised by master 12.4) | accept: D-05a (LegacyDateOracle) sinh GV-001, D-53 sinh GV-002, D-05b sinh GV-003 (đã đọc ba hàng ở p2) | sửa hai câu ở mục golden: dòng cam kết golden và bảng cuối; không còn B-50, U-107, U-124, M-54 trong p5 |

@@ -1,0 +1,16 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+jobs:
+  ios-release:
+    runs-on: macos-14
+    timeout-minutes: 90
+    environment: production
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Sign
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: ./scripts/release.sh

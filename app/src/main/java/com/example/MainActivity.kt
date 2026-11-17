@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.repository.AuthState
 import com.example.ui.components.AppOpeningSplashScreen
@@ -65,7 +66,6 @@ import com.example.ui.screens.LoveHomeScreen
 import com.example.ui.screens.MemoriesGridScreen
 import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.PairingScreen
-import com.example.ui.screens.ReminderScreen
 import com.example.ui.screens.SetAlarmReminderDialog
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.UserGuideDialog
@@ -78,6 +78,7 @@ import com.example.ui.util.AppLanguage
 import com.example.ui.components.ComposeBannerAd
 import com.example.ui.screens.PaywallScreen
 import com.example.ui.util.LocalizedStrings
+import com.example.ui.util.withCardFallback
 import com.example.ui.viewmodel.InLoveViewModel
 
 class MainActivity : ComponentActivity() {
@@ -274,6 +275,11 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       topBarState.contentOffset = 0f
     }
     val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
+    val cardUser = currentOnlineUser.withCardFallback(boyName, boyBirthDate, boyAvatarUrl)
+    LifecycleResumeEffect(Unit) {
+      viewModel.refreshLoveDays()
+      onPauseOrDispose {}
+    }
 
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState()
     var showAppOpening by rememberSaveable { mutableStateOf(true) }
@@ -326,7 +332,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
           InLoveTopBar(
             title = screenTitle,
-            avatarUrl = currentOnlineUser.avatarUrl,
+            avatarUrl = cardUser.avatarUrl,
             latest = null,
             isEnglish = appLanguage == AppLanguage.EN,
             scrollBehavior = topBarScroll,
@@ -555,7 +561,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       )
     }
 
-    // viewModel.openSetAlarmDialog() is called from ReminderScreen/CalendarScreen/GiftScreen,
+    // viewModel.openSetAlarmDialog() is called from CalendarScreen/GiftScreen,
     // but until this block was added nothing ever collected showSetAlarmDialog or rendered the
     // dialog — tapping the alarm icon flipped the StateFlow with no visible effect at all.
     if (showSetAlarmDialog) {
@@ -602,19 +608,17 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
 
     val showPairingScreen by viewModel.showPairingScreen.collectAsState()
     if (showPairingScreen) {
-      androidx.compose.ui.window.Dialog(
+      com.example.ui.components.AppDialog(
         onDismissRequest = { viewModel.closePairingScreen() },
         properties = androidx.compose.ui.window.DialogProperties(
           usePlatformDefaultWidth = false,
           dismissOnBackPress = true
         )
       ) {
-        com.example.ui.theme.AppDensity {
-          PairingScreen(
-            viewModel = viewModel,
-            onNavigateBack = { viewModel.closePairingScreen() }
-          )
-        }
+        PairingScreen(
+          viewModel = viewModel,
+          onNavigateBack = { viewModel.closePairingScreen() }
+        )
       }
     }
 
@@ -622,21 +626,21 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     val dynamicPresetAvatars by viewModel.presetAvatars.collectAsState()
     if (showEditProfileDialog) {
       EditMyProfileDialog(
-        currentUser = currentOnlineUser,
+        currentUser = cardUser,
         presetAvatars = dynamicPresetAvatars,
         isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
         canEditPhoto = true,
         onPhotoPicked = { viewModel.saveLocalAvatar(it, false) },
         onPhotoDiscarded = { viewModel.deleteUnsavedAvatar(it) },
         onDismiss = { viewModel.closeEditProfileDialog() },
-        onSave = { name, birth, avatar, gender, bio ->
-          viewModel.updateMyProfile(name, birth, avatar, gender, bio)
+        onSave = { name, birth, avatar, gender, bio, clearBirthday ->
+          viewModel.updateMyProfile(name, birth, avatar, gender, bio, clearBirthday)
         }
       )
     }
 
     if (showVipDialog) {
-      androidx.compose.ui.window.Dialog(
+      com.example.ui.components.AppDialog(
         onDismissRequest = { viewModel.setVipDialogVisible(false) },
         properties = androidx.compose.ui.window.DialogProperties(
           usePlatformDefaultWidth = false,
@@ -646,14 +650,12 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         // A Dialog window re-provides LocalContext/LocalConfiguration from its own view, dropping the
         // in-app locale override, so re-apply it or stringResource() follows the device language.
         androidx.compose.runtime.CompositionLocalProvider(*compositionLocals) {
-          com.example.ui.theme.AppDensity {
-            PaywallScreen(
-              billingManager = com.example.di.AppServiceLocator.billingManager,
-              adsManager = com.example.di.AppServiceLocator.adsManager,
-              onDismiss = { viewModel.setVipDialogVisible(false) },
-              hostActivity = registryOwner as? android.app.Activity
-            )
-          }
+          PaywallScreen(
+            billingManager = com.example.di.AppServiceLocator.billingManager,
+            adsManager = com.example.di.AppServiceLocator.adsManager,
+            onDismiss = { viewModel.setVipDialogVisible(false) },
+            hostActivity = registryOwner as? android.app.Activity
+          )
         }
       }
     }

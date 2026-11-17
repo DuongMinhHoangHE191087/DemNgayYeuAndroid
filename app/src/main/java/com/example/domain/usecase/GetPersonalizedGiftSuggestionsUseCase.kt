@@ -27,7 +27,7 @@ data class PersonalizedGiftSuggestion(
 /**
  * Chọn tối đa 3 quà hợp sở thích chung, ngân sách và dịp trong 30 ngày tới. Thuần JVM, không ghi Room, không cần mạng.
  *
- * ponytail: catalog seed chưa có tag sở thích nên khớp theo chữ (bảng [interestKeywords]); thêm tag vào seed khi cần chính xác hơn.
+ * ponytail: seed đã gắn khoá sở thích (interestKeys); bảng [interestKeywords] vẫn phục vụ chữ tự do và quà chưa có khoá.
  * ponytail: ngân sách `null` = không giới hạn (hồ sơ chưa nhập); chỉ lọc theo sàn của khoảng giá, không so giá thật.
  * ponytail: vùng dịp lễ chỉ có VN/INTL; rỗng = giữ mọi dịp lễ cố định như trước.
  */
@@ -70,10 +70,12 @@ object GetPersonalizedGiftSuggestionsUseCase {
         "gaming" to listOf("gaming", "chơi game", "board game"),
     )
 
-    /** Mỗi khoá sở thích nở thành từ khoá VI + EN; khoá lạ giữ nguyên. */
+    /** Mỗi khoá sở thích nở thành từ khoá VI + EN; một từ khoá (vd "du lịch") nở kèm khoá của nó; khoá lạ giữ nguyên. */
     fun interestKeywords(keys: Set<String>): Set<String> = keys.flatMap { key ->
         val k = key.trim().lowercase()
-        keywordsByInterest[k] ?: listOf(k)
+        keywordsByInterest[k]
+            ?: keywordsByInterest.entries.firstOrNull { k in it.value }?.let { it.value + it.key }
+            ?: listOf(k)
     }.filter { it.isNotEmpty() }.toSet()
 
     /** Mức giá sàn của khoảng giá; khoảng lạ hoặc trống trả null (giữ lại). */
@@ -153,6 +155,7 @@ object GetPersonalizedGiftSuggestionsUseCase {
             .map { it to Pair(GiftRanker.matchesAnyInterest(it, keywords), GiftRanker.fitsOccasion(it, occasionName)) }
             .filter { (_, fit) -> fit.first || fit.second }
             .take(MAX_RESULTS)
+            .ifEmpty { affordable.filter { GiftRanker.fitsOccasion(it, "any") }.take(2).map { it to Pair(false, false) } }
             .map { (idea, fit) ->
                 PersonalizedGiftSuggestion(
                     idea = idea,
@@ -169,7 +172,8 @@ object GetPersonalizedGiftSuggestionsUseCase {
     private fun reasonText(interest: Boolean, occasion: Boolean, isEnglish: Boolean): String = when {
         interest && occasion -> if (isEnglish) "Fits your shared interests and the coming occasion." else "Hợp sở thích chung của hai bạn và dịp sắp tới."
         interest -> if (isEnglish) "Fits your shared interests." else "Hợp sở thích chung của hai bạn."
-        else -> if (isEnglish) "Fits the coming occasion." else "Hợp dịp sắp tới của hai bạn."
+        occasion -> if (isEnglish) "Fits the coming occasion." else "Hợp dịp sắp tới của hai bạn."
+        else -> if (isEnglish) "A gift that fits any occasion and is easy to prepare." else "Món quà hợp với mọi dịp, dễ chuẩn bị."
     }
 
     private fun preparationText(daysUntil: Int?, isEnglish: Boolean): String = when {

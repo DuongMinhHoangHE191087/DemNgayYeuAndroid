@@ -10,9 +10,15 @@ object GiftRanker {
 
   private fun text(g: GiftIdeaEntity) = "${g.title} ${g.tag} ${g.category} ${g.description}".lowercase()
 
+  /** Phải khớp ANNIVERSARY và FIRST_ANNIVERSARY trong GetPersonalizedGiftSuggestionsUseCase; gói nội dung (U-20) sẽ thay cầu nối này. */
+  private const val ANNIVERSARY = "kỷ niệm ngày yêu"
+  private const val FIRST_ANNIVERSARY = "kỷ niệm 1 năm"
+
   /** Dịp trùng tên hoặc quà dùng được cho "bất kỳ dịp nào". */
   private fun occasionFits(g: GiftIdeaEntity, occ: String): Boolean =
-    occ.isNotEmpty() && g.suggestedOccasion.lowercase().let { it == occ || it.contains("bất kỳ") || it.contains("any") }
+    occ.isNotEmpty() && g.suggestedOccasion.lowercase().let {
+      it == occ || it.contains("bất kỳ") || it.contains("any") || (occ == FIRST_ANNIVERSARY && it == ANNIVERSARY)
+    }
 
   /** Có ít nhất một khoá sở thích nằm trong nhãn đối tượng hoặc nội dung quà. */
   fun matchesAnyInterest(g: GiftIdeaEntity, interests: Set<String>): Boolean {
@@ -32,7 +38,6 @@ object GiftRanker {
       val text = text(g)
       var s = keys.sumOf { k -> (if (k in target) 3 else 0) + (if (text.contains(k)) 1 else 0) }
       if (occasionFits(g, occ)) s += 2
-      if (g.isAiGenerated) s += 1
       return s
     }
     return ideas.sortedByDescending { score(it) } // sortedBy ổn định

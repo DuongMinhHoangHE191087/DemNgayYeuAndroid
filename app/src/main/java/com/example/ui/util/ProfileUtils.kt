@@ -10,7 +10,7 @@ object ProfileUtils {
 
   // ponytail: new instance per access, SimpleDateFormat is not thread-safe. ThreadLocal if allocation shows in profiles.
   private val dateFormat
-    get() = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+    get() = SimpleDateFormat("dd/MM/yyyy", Locale.ROOT).apply {
       isLenient = false
     }
 
@@ -134,17 +134,19 @@ object ProfileUtils {
   }
 
   /**
-   * Calculates age accurately from birth date string ("dd/MM/yyyy")
+   * Calculates age accurately from birth date string ("dd/MM/yyyy"); [todayMillis] lets tests pin "today"
    */
-  fun calculateAge(birthDateStr: String): Int {
+  fun calculateAge(birthDateStr: String, todayMillis: Long = System.currentTimeMillis()): Int {
     if (birthDateStr.isBlank()) return 0
     return try {
       val date = dateFormat.parse(birthDateStr.trim()) ?: return 0
       val dob = Calendar.getInstance().apply { time = date }
-      val today = Calendar.getInstance()
+      val today = Calendar.getInstance().apply { timeInMillis = todayMillis }
 
       var age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR)
-      if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+      // Compare (month, day), not DAY_OF_YEAR: after 29 Feb the Nth day of a leap and of a normal year are different dates.
+      val monthDiff = today.get(Calendar.MONTH) - dob.get(Calendar.MONTH)
+      if (monthDiff < 0 || (monthDiff == 0 && today.get(Calendar.DAY_OF_MONTH) < dob.get(Calendar.DAY_OF_MONTH))) {
         age--
       }
       age.coerceAtLeast(0)
@@ -153,7 +155,7 @@ object ProfileUtils {
       val parts = birthDateStr.trim().split("/", "-", ".")
       if (parts.size == 3) {
         val year = parts[2].toIntOrNull() ?: 2000
-        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val currentYear = Calendar.getInstance().apply { timeInMillis = todayMillis }.get(Calendar.YEAR)
         (currentYear - year).coerceAtLeast(0)
       } else 0
     }
@@ -199,6 +201,65 @@ object ProfileUtils {
     } catch (e: Exception) {
       System.currentTimeMillis()
     }
+  }
+
+  /**
+   * Parse ngày kỷ niệm theo 4 pattern của VM (non-lenient), cả chuỗi phải khớp và năm >= 1900.
+   * Formatter tạo mới mỗi lần gọi vì SimpleDateFormat không thread-safe.
+   */
+  private fun parseAnniversaryMillis(text: String): Long? {
+    val s = text.trim()
+    if (s.isEmpty()) return null
+    for (pattern in listOf("dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "yyyy-MM-dd")) {
+      val sdf = SimpleDateFormat(pattern, Locale.ROOT)
+      sdf.isLenient = false
+      val pos = java.text.ParsePosition(0)
+      val date = sdf.parse(s, pos) ?: continue
+      if (pos.index != s.length) continue
+      val year = Calendar.getInstance().apply { time = date }.get(Calendar.YEAR)
+      if (year >= 1900) return date.time
+    }
+    return null
+  }
+
+  /**
+   * Số ngày yêu tại [nowMillis] (ngày bắt đầu tính là ngày 1), cùng số với [calculateLoveDays].
+   * Null khi trống, không parse được hoặc ở tương lai.
+   */
+  fun loveDaysOn(anniversaryDate: String, nowMillis: Long = System.currentTimeMillis()): Int? {
+    val start = parseAnniversaryMillis(anniversaryDate) ?: return null
+    if (start > nowMillis) return null
+    return (TimeUnit.MILLISECONDS.toDays(nowMillis - start).toInt() + 1).coerceAtLeast(1)
+  }
+
+  /**
+   * Chuẩn hoá ngày kỷ niệm nhập tay: d{1,2}[/-]d{1,2}[/-]d{4} hoặc yyyy-M-d thành "dd/MM/yyyy".
+   * Null khi trống, sai, năm < 1900 hoặc sau hôm nay (so theo ngày).
+   */
+  fun normalizeAnniversaryInput(text: String, nowMillis: Long = System.currentTimeMillis()): String? {
+    val s = text.trim()
+    val dmy = Regex("""(\d{1,2})[/-](\d{1,2})[/-](\d{4})""").matchEntire(s)
+    val ymd = Regex("""(\d{4})-(\d{1,2})-(\d{1,2})""").matchEntire(s)
+    val (d, m, y) = when {
+      dmy != null -> dmy.destructured.let { (a, b, c) -> Triple(a.toInt(), b.toInt(), c.toInt()) }
+      ymd != null -> ymd.destructured.let { (a, b, c) -> Triple(c.toInt(), b.toInt(), a.toInt()) }
+      else -> return null
+    }
+    if (y < 1900) return null
+    val cal = Calendar.getInstance().apply {
+      isLenient = false
+      clear()
+      set(y, m - 1, d)
+    }
+    try {
+      cal.timeInMillis // non-lenient: ngày/tháng sai (31/02) ném IllegalArgumentException
+    } catch (e: IllegalArgumentException) {
+      return null
+    }
+    val today = Calendar.getInstance().apply { timeInMillis = nowMillis }
+    val todayKey = today.get(Calendar.YEAR) * 10000 + (today.get(Calendar.MONTH) + 1) * 100 + today.get(Calendar.DAY_OF_MONTH)
+    if (y * 10000 + m * 100 + d > todayKey) return null
+    return String.format(Locale.ROOT, "%02d/%02d/%04d", d, m, y)
   }
 
   /**

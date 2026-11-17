@@ -17,11 +17,12 @@ import com.example.ui.util.AppLanguage
  *
  * ═══ ẢNH MINH HOẠ ═══
  *
- * Dùng Lorem Picsum (`picsum.photos/seed/...`) thay vì tự đoán ID ảnh Unsplash cụ thể — không có
- * cách nào kiểm chứng một ID ảnh Unsplash bịa ra có tồn tại/còn hợp lệ hay không tại thời điểm
- * viết file này (không có kết nối build để test), và ảnh vỡ (broken image) trên Gift Screen tệ
- * hơn nhiều so với ảnh placeholder trung tính nhưng LUÔN load được. Khi có pipeline ảnh thật
- * (Task A5 — Cloudinary ký upload), thay các URL này bằng ảnh biên tập thật.
+ * 19/20 món đã có [GiftSeed.curatedImageUrl] — ảnh Pexels thật, đúng chủ đề, được fetch-verify
+ * (HTTP 200, image/jpeg) trước khi đưa vào đây (2026-10-26). Món còn lại ("Đèn Ngủ Khắc Ảnh 3D")
+ * không tìm được ảnh stock thật khớp chủ đề (crystal khắc ảnh 3D cá nhân hoá là sản phẩm hiếm trên
+ * kho ảnh miễn phí) nên giữ `curatedImageUrl = null`: ảnh vỡ tệ hơn placeholder trung tính luôn
+ * load được, nên KHÔNG đoán URL chưa kiểm chứng. Khi có pipeline ảnh thật (Task A5 — Cloudinary
+ * ký upload), thay `curatedImageUrl` bằng ảnh biên tập thật cho từng món.
  */
 object GiftIdeasSeed {
 
@@ -40,11 +41,15 @@ object GiftIdeasSeed {
         val actionTextVi: String,
         val actionTextEn: String,
         val suggestedOccasion: String,
-        val priceRange: String
+        val priceRange: String,
+        /** Ảnh thật đã fetch-verify (Pexels), đúng chủ đề món quà; null = chưa tìm được ảnh phù hợp, dùng picsum. */
+        val curatedImageUrl: String? = null,
+        /** Khoá sở thích (phân tách bằng dấu phẩy, khớp bảng từ khoá của GetPersonalizedGiftSuggestionsUseCase); rỗng = chỉ khớp theo chữ. */
+        val interestKeys: String = ""
     ) {
         /** Khoá nhận diện ổn định trong Room; giá trị không đổi để dữ liệu đã cài vẫn khớp. */
         val remoteId: String get() = "seed_$imageSeed"
-        val imageUrl: String get() = "https://picsum.photos/seed/$imageSeed/800/600"
+        val imageUrl: String get() = curatedImageUrl ?: "https://picsum.photos/seed/$imageSeed/800/600"
 
         fun toEntity(lang: AppLanguage): GiftIdeaEntity = GiftIdeaEntity(
             remoteId = remoteId,
@@ -58,7 +63,8 @@ object GiftIdeasSeed {
             actionText = if (lang == AppLanguage.EN) actionTextEn else actionTextVi,
             isAiGenerated = false,
             suggestedOccasion = suggestedOccasion,
-            priceRange = priceRange
+            priceRange = priceRange,
+            targetInterests = interestKeys
         )
     }
 
@@ -86,7 +92,8 @@ object GiftIdeasSeed {
             actionTextVi = "Xem gợi ý chi tiết",
             actionTextEn = "See details",
             suggestedOccasion = "Valentine",
-            priceRange = PriceRange.RANGE_200_500K
+            priceRange = PriceRange.RANGE_200_500K,
+            curatedImageUrl = "https://images.pexels.com/photos/30891127/pexels-photo-30891127.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Bữa Tối Nến Lãng Mạn Tự Nấu",
@@ -103,7 +110,8 @@ object GiftIdeasSeed {
             actionTextVi = "Lên thực đơn yêu thương",
             actionTextEn = "Plan the menu",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/37731521/pexels-photo-37731521.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Album Ảnh Kỷ Niệm In Thủ Công",
@@ -120,7 +128,8 @@ object GiftIdeasSeed {
             actionTextVi = "Chọn ảnh để in",
             actionTextEn = "Pick photos to print",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.RANGE_200_500K
+            priceRange = PriceRange.RANGE_200_500K,
+            curatedImageUrl = "https://images.pexels.com/photos/8057039/pexels-photo-8057039.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Vòng Tay Khắc Tên Đôi",
@@ -132,12 +141,14 @@ object GiftIdeasSeed {
             descriptionVi = "Cặp vòng tay khắc tên hoặc ngày đặc biệt, đeo cùng nhau mỗi ngày.",
             descriptionEn = "A matching bracelet pair engraved with names or a special date.",
             imageSeed = "gift-couple-bracelet",
+            interestKeys = "fashion",
             detailsSnippetVi = "Thiết kế đơn giản, dễ đeo hằng ngày",
             detailsSnippetEn = "Simple design, easy to wear every day",
             actionTextVi = "Khắc tên ngay",
             actionTextEn = "Engrave now",
             suggestedOccasion = "20/10",
-            priceRange = PriceRange.RANGE_200_500K
+            priceRange = PriceRange.RANGE_200_500K,
+            curatedImageUrl = "https://images.pexels.com/photos/38591770/pexels-photo-38591770.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Chuyến Dã Ngoại Cắm Trại Cuối Tuần",
@@ -149,12 +160,14 @@ object GiftIdeasSeed {
             descriptionVi = "Rời xa phố thị, cùng nhau ngắm sao và nướng marshmallow bên đống lửa trại.",
             descriptionEn = "Escape the city, stargaze together and roast marshmallows by the campfire.",
             imageSeed = "gift-camping-trip",
+            interestKeys = "travel",
             detailsSnippetVi = "Phù hợp cặp đôi yêu thiên nhiên",
             detailsSnippetEn = "Perfect for nature-loving couples",
             actionTextVi = "Lên kế hoạch chuyến đi",
             actionTextEn = "Plan the trip",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.RANGE_500K_1M
+            priceRange = PriceRange.RANGE_500K_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/6324165/pexels-photo-6324165.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Nước Hoa Đôi Cặp",
@@ -166,12 +179,14 @@ object GiftIdeasSeed {
             descriptionVi = "Bộ đôi hương thơm hoà quyện, mang dấu ấn riêng của cả hai người.",
             descriptionEn = "A matched fragrance duo that blends into a scent uniquely yours.",
             imageSeed = "gift-perfume-set",
+            interestKeys = "fashion",
             detailsSnippetVi = "Hai mùi hương hợp nhau, dễ chọn cho cả hai",
             detailsSnippetEn = "Two complementary scents, easy to choose together",
             actionTextVi = "Chọn mùi hương",
             actionTextEn = "Choose a scent",
             suggestedOccasion = "Sinh nhật",
-            priceRange = PriceRange.OVER_1M
+            priceRange = PriceRange.OVER_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/18656841/pexels-photo-18656841.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Bộ Board Game Cho Cặp Đôi",
@@ -183,12 +198,14 @@ object GiftIdeasSeed {
             descriptionVi = "Buổi tối cuối tuần thêm rộn ràng tiếng cười với những ván cờ đối kháng ngọt ngào.",
             descriptionEn = "Turn a quiet weekend night into laughter-filled friendly competition.",
             imageSeed = "gift-board-game",
+            interestKeys = "gaming",
             detailsSnippetVi = "Dễ chơi, không cần kinh nghiệm",
             detailsSnippetEn = "Easy to learn, no experience needed",
             actionTextVi = "Xem luật chơi",
             actionTextEn = "See the rules",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/8111328/pexels-photo-8111328.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Đồng Hồ Đôi Phong Cách Tối Giản",
@@ -200,12 +217,14 @@ object GiftIdeasSeed {
             descriptionVi = "Thiết kế tối giản, sang trọng, hợp cả đi làm lẫn đi chơi.",
             descriptionEn = "Sleek minimalist design that fits both work and weekend outings.",
             imageSeed = "gift-couple-watch",
+            interestKeys = "fashion",
             detailsSnippetVi = "Dễ phối cùng trang phục đi làm và đi chơi",
             detailsSnippetEn = "Easy to pair with work and weekend outfits",
             actionTextVi = "Xem bộ sưu tập",
             actionTextEn = "View collection",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.OVER_1M
+            priceRange = PriceRange.OVER_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/1697570/pexels-photo-1697570.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Đèn Ngủ Khắc Ảnh 3D",
@@ -234,12 +253,14 @@ object GiftIdeasSeed {
             descriptionVi = "Cùng nhau xem bộ phim đang chờ đợi, tay trong tay giữa rạp tối.",
             descriptionEn = "Watch the movie you've both been waiting for, hand in hand.",
             imageSeed = "gift-movie-tickets",
+            interestKeys = "cinema",
             detailsSnippetVi = "Chọn suất chiếu và chỗ ngồi cạnh nhau",
             detailsSnippetEn = "Pick a showtime and seats side by side",
             actionTextVi = "Đặt vé ngay",
             actionTextEn = "Book tickets",
             suggestedOccasion = "Hẹn hò cuối tuần",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/8261585/pexels-photo-8261585.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Sổ Tay Viết Cho Nhau Mỗi Ngày",
@@ -251,12 +272,14 @@ object GiftIdeasSeed {
             descriptionVi = "Cuốn sổ hai người thay nhau viết một câu mỗi ngày — nhỏ bé nhưng bền lâu.",
             descriptionEn = "A shared journal where you each write one line a day — small but lasting.",
             imageSeed = "gift-love-journal",
+            interestKeys = "books",
             detailsSnippetVi = "Mỗi ngày một dòng, cùng nhau viết tiếp",
             detailsSnippetEn = "One line a day, written together",
             actionTextVi = "Bắt đầu viết",
             actionTextEn = "Start writing",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/4639031/pexels-photo-4639031.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Gấu Bông Ôm Khổng Lồ",
@@ -273,7 +296,8 @@ object GiftIdeasSeed {
             actionTextVi = "Chọn màu yêu thích",
             actionTextEn = "Choose a color",
             suggestedOccasion = "Sinh nhật",
-            priceRange = PriceRange.RANGE_500K_1M
+            priceRange = PriceRange.RANGE_500K_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/19849143/pexels-photo-19849143.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Lớp Học Nấu Ăn Cho Cặp Đôi",
@@ -285,12 +309,14 @@ object GiftIdeasSeed {
             descriptionVi = "Cùng đầu bếp chuyên nghiệp học làm một món ăn mới, vừa vui vừa ý nghĩa.",
             descriptionEn = "Learn a new dish together with a professional chef — fun and meaningful.",
             imageSeed = "gift-cooking-class",
+            interestKeys = "cooking",
             detailsSnippetVi = "Cùng nấu một món mới trong buổi học",
             detailsSnippetEn = "Cook a new dish together in the session",
             actionTextVi = "Đăng ký lớp học",
             actionTextEn = "Book the class",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.RANGE_500K_1M
+            priceRange = PriceRange.RANGE_500K_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/6248808/pexels-photo-6248808.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Tranh Chân Dung Đôi Vẽ Tay",
@@ -307,7 +333,8 @@ object GiftIdeasSeed {
             actionTextVi = "Gửi ảnh mẫu",
             actionTextEn = "Send a reference photo",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.RANGE_500K_1M
+            priceRange = PriceRange.RANGE_500K_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/22690792/pexels-photo-22690792.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Voucher Spa Đôi Thư Giãn",
@@ -324,7 +351,8 @@ object GiftIdeasSeed {
             actionTextVi = "Đặt lịch spa",
             actionTextEn = "Book a session",
             suggestedOccasion = "8/3",
-            priceRange = PriceRange.OVER_1M
+            priceRange = PriceRange.OVER_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/19695981/pexels-photo-19695981.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Cây Cảnh Mini Để Bàn",
@@ -341,7 +369,8 @@ object GiftIdeasSeed {
             actionTextVi = "Viết lời chúc",
             actionTextEn = "Write a note",
             suggestedOccasion = "Bất kỳ dịp nào",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/30682994/pexels-photo-30682994.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Chuyến Du Lịch Ngắn Ngày Hai Người",
@@ -353,12 +382,14 @@ object GiftIdeasSeed {
             descriptionVi = "Rời khỏi guồng quay quen thuộc, khám phá một nơi mới cùng nhau.",
             descriptionEn = "Step away from routine and explore somewhere new together.",
             imageSeed = "gift-weekend-trip",
+            interestKeys = "travel",
             detailsSnippetVi = "Chọn điểm đến mà hai bạn đều yêu thích",
             detailsSnippetEn = "Pick a destination you both love",
             actionTextVi = "Lên lịch trình",
             actionTextEn = "Plan the itinerary",
             suggestedOccasion = "Kỷ niệm ngày yêu",
-            priceRange = PriceRange.OVER_1M
+            priceRange = PriceRange.OVER_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/7446972/pexels-photo-7446972.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Bộ Cốc Đôi In Tên Theo Yêu Cầu",
@@ -370,12 +401,14 @@ object GiftIdeasSeed {
             descriptionVi = "Cùng nhâm nhi cà phê mỗi sáng với cặp cốc in tên hoặc hình ảnh của hai bạn.",
             descriptionEn = "Sip coffee together each morning with mugs personalized with your names or photo.",
             imageSeed = "gift-couple-mugs",
+            interestKeys = "coffee",
             detailsSnippetVi = "Tên hoặc ảnh in trên từng chiếc cốc",
             detailsSnippetEn = "Your names or a photo printed on each mug",
             actionTextVi = "Tuỳ chỉnh ngay",
             actionTextEn = "Customize now",
             suggestedOccasion = "Giáng Sinh",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/3867002/pexels-photo-3867002.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Trải Nghiệm Khinh Khí Cầu Ngắm Bình Minh",
@@ -387,12 +420,14 @@ object GiftIdeasSeed {
             descriptionVi = "Ngắm bình minh từ trên cao — một kỷ niệm khó quên cho dịp thật đặc biệt.",
             descriptionEn = "Watch the sunrise from above — an unforgettable memory for a big occasion.",
             imageSeed = "gift-hot-air-balloon",
+            interestKeys = "travel",
             detailsSnippetVi = "Chọn một buổi sáng thật đặc biệt",
             detailsSnippetEn = "Choose a special morning for the flight",
             actionTextVi = "Kiểm tra lịch trống",
             actionTextEn = "Check availability",
             suggestedOccasion = "Kỷ niệm 1 năm",
-            priceRange = PriceRange.OVER_1M
+            priceRange = PriceRange.OVER_1M,
+            curatedImageUrl = "https://images.pexels.com/photos/9873509/pexels-photo-9873509.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         ),
         GiftSeed(
             titleVi = "Playlist Nhạc Riêng Tặng Người Ấy",
@@ -404,12 +439,14 @@ object GiftIdeasSeed {
             descriptionVi = "Tổng hợp những bài hát gắn với kỷ niệm hai người, mỗi bài một câu chuyện riêng.",
             descriptionEn = "A curated playlist of songs tied to your memories, each with its own story.",
             imageSeed = "gift-playlist",
+            interestKeys = "music",
             detailsSnippetVi = "Không tốn chi phí, chỉ cần sự chân thành",
             detailsSnippetEn = "Costs nothing but thoughtfulness",
             actionTextVi = "Bắt đầu tạo playlist",
             actionTextEn = "Start the playlist",
             suggestedOccasion = "Bất kỳ dịp nào",
-            priceRange = PriceRange.UNDER_200K
+            priceRange = PriceRange.UNDER_200K,
+            curatedImageUrl = "https://images.pexels.com/photos/7054718/pexels-photo-7054718.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
         )
     )
 

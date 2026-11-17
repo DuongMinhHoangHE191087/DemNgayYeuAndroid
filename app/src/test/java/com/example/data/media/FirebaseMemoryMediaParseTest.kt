@@ -7,13 +7,15 @@ class FirebaseMemoryMediaParseTest {
 
   private val publicId = "inlove_mem_11111111-2222-3333-4444-555555555555"
 
+  private val goodUploadUrl = "https://acc.r2.cloudflarestorage.com/inlove-media/$publicId?X-Amz-Signature=abc"
+
   private fun signed(
-    uploadUrl: String = "https://api.cloudinary.com/v1_1/demo/image/upload",
+    uploadUrl: String = goodUploadUrl,
     publicIdValue: Any? = publicId,
   ): Map<String, Any?> = mapOf(
     "publicId" to publicIdValue,
     "uploadUrl" to uploadUrl,
-    "fields" to mapOf("public_id" to publicId, "timestamp" to "1700000000", "signature" to "abc", "api_key" to "123"),
+    "headers" to mapOf("content-type" to "image/jpeg", "content-length" to 2048, "if-none-match" to "*"),
     "expiresAtMillis" to 1_700_000_000_000L,
   )
 
@@ -27,25 +29,50 @@ class FirebaseMemoryMediaParseTest {
   }
 
   @Test
-  fun parseSignedUpload_readsFieldsAsStrings() {
+  fun parseSignedUpload_readsHeadersAsStrings() {
     val parsed = parseSignedUpload(signed(), publicId)
 
-    assert(parsed.uploadUrl == "https://api.cloudinary.com/v1_1/demo/image/upload")
-    assert(parsed.fields["timestamp"] == "1700000000")
-    assert(parsed.fields["public_id"] == publicId)
+    assert(parsed.uploadUrl == goodUploadUrl)
+    assert(parsed.headers["content-length"] == "2048")
+    assert(parsed.headers["if-none-match"] == "*")
+    assert(parsed.headers["content-type"] == "image/jpeg")
   }
 
   @Test
-  fun parseSignedUpload_rejectsOtherHostsAndPlainHttp() {
-    assertRejected { parseSignedUpload(signed(uploadUrl = "http://api.cloudinary.com/v1_1/demo/image/upload"), publicId) }
-    assertRejected { parseSignedUpload(signed(uploadUrl = "https://evil.example.com/upload"), publicId) }
-    assertRejected { parseSignedUpload(signed(uploadUrl = "https://api.cloudinary.com.evil.example/upload"), publicId) }
+  fun parseSignedUpload_acceptsUppercaseHostAndReturnsItUnchanged() {
+    val upper = "https://ACC.R2.CLOUDFLARESTORAGE.COM/inlove-media/$publicId?X-Amz-Signature=abc"
+
+    val parsed = parseSignedUpload(signed(uploadUrl = upper), publicId)
+
+    assert(parsed.uploadUrl == upper)
   }
 
   @Test
-  fun parseSignedUpload_rejectsPublicIdMismatchAndMissingFields() {
+  fun parseSignedUpload_rejectsNonR2HostsPlainHttpAndTrickyUrls() {
+    listOf(
+      "https://api.cloudinary.com/v1_1/demo/image/upload",
+      "http://acc.r2.cloudflarestorage.com/inlove-media/x?X-Amz-Signature=abc",
+      "https://evil.example.com/upload",
+      "https://evil.com\\@acc.r2.cloudflarestorage.com/x",
+      "https://acc.r2.cloudflarestorage.com.evil.example/x",
+      "https://acc.r2.cloudflarestorage.com./x",
+      "https://acc.r2.cloudflarestorage.com:8443/x",
+      "https://r2.cloudflarestorage.com/x",
+    ).forEach { url ->
+      assertRejected { parseSignedUpload(signed(uploadUrl = url), publicId) }
+    }
+  }
+
+  @Test
+  fun parseSignedUpload_rejectsPublicIdMismatchMissingHeadersAndOldFields() {
     assertRejected { parseSignedUpload(signed(publicIdValue = "inlove_mem_other"), publicId) }
-    assertRejected { parseSignedUpload(signed().filterKeys { it != "fields" }, publicId) }
+    assertRejected { parseSignedUpload(signed().filterKeys { it != "headers" }, publicId) }
+    assertRejected {
+      parseSignedUpload(
+        signed().filterKeys { it != "headers" } + ("fields" to mapOf("signature" to "abc")),
+        publicId,
+      )
+    }
   }
 
   @Test
@@ -55,21 +82,26 @@ class FirebaseMemoryMediaParseTest {
   }
 
   @Test
-  fun parseDelivery_acceptsCloudinaryHostsOnly() {
-    val parsed = parseDelivery(
-      mapOf("url" to "https://res.cloudinary.com/demo/image/authenticated/x.jpg", "expiresAtMillis" to 1_700_000_900_000L),
-    )
+  fun parseDelivery_acceptsR2HostsOnly() {
+    val url = "https://acc.r2.cloudflarestorage.com/inlove-media/x.jpg?X-Amz-Expires=900&X-Amz-Signature=abc"
+    val parsed = parseDelivery(mapOf("url" to url, "expiresAtMillis" to 1_700_000_900_000L))
 
+    assert(parsed.url == url)
     assert(parsed.expiresAtMillis == 1_700_000_900_000L)
-    assertRejected { parseDelivery(mapOf("url" to "http://res.cloudinary.com/x", "expiresAtMillis" to 1L)) }
-    assertRejected { parseDelivery(mapOf("url" to "https://cloudinary.com.evil.example/x", "expiresAtMillis" to 1L)) }
-    assertRejected { parseDelivery(mapOf("url" to "https://res.cloudinary.com/x")) }
-    assertRejected { parseDelivery(mapOf("url" to "https://res.cloudinary.com/x", "expiresAtMillis" to "soon")) }
+    assertRejected { parseDelivery(mapOf("url" to "http://acc.r2.cloudflarestorage.com/x", "expiresAtMillis" to 1L)) }
+    assertRejected {
+      parseDelivery(mapOf("url" to "https://res.cloudinary.com/demo/image/authenticated/x.jpg", "expiresAtMillis" to 1L))
+    }
+    assertRejected { parseDelivery(mapOf("url" to "https://acc.r2.cloudflarestorage.com.evil.example/x", "expiresAtMillis" to 1L)) }
+    assertRejected { parseDelivery(mapOf("url" to url)) }
+    assertRejected { parseDelivery(mapOf("url" to url, "expiresAtMillis" to "soon")) }
   }
 
   @Test
   fun parseDelivery_acceptsNumericExpiryFromAnySdkNumberType() {
-    val parsed = parseDelivery(mapOf("url" to "https://res.cloudinary.com/x", "expiresAtMillis" to 1_700_000_900_000.0))
+    val parsed = parseDelivery(
+      mapOf("url" to "https://acc.r2.cloudflarestorage.com/inlove-media/x.jpg?X-Amz-Signature=abc", "expiresAtMillis" to 1_700_000_900_000.0),
+    )
 
     assert(parsed.expiresAtMillis == 1_700_000_900_000L)
   }

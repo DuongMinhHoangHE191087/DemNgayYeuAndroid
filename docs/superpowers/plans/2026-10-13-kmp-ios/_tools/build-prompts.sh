@@ -27,10 +27,11 @@ FOCUS[00-master]="CROSS-CUTTING: phase/wave ordering and critical path across al
 KEYS=("$@"); [ ${#KEYS[@]} -gt 0 ] || KEYS=("${!FOCUS[@]}")
 
 for key in "${KEYS[@]}"; do
+  tag=${key%%-*}; [ "$key" = 00-master ] && tag=master   # log rows tag the master review as [master], not [00]
   if [ "$ROUND" = 1 ]; then
     prior="This is round 1: there are no earlier findings for this part."
   else
-    prior="This is round 2. Round-1 raw findings: $REV/r1-$key.md. Claude's dispositions (accept/reject + reason, one row per finding, the finding text starts with [${key%%-*}]): docs/superpowers/reviews/2026-10-13-kmp-ios-log.md. Do the following in addition to the checks: (a) for each accepted BLOCKER/MAJOR confirm the plan really changed, otherwise report it again; (b) challenge a rejected finding only with NEW evidence; (c) hunt for problems introduced by the round-1 edits and for what round 1 missed."
+    prior="This is round 2. Round-1 raw findings: $REV/r1-$key.md. Claude's dispositions (accept/reject + reason, one row per finding, the finding text starts with [$tag]; rows whose first cell is 1x, 2x or 3x are CROSS-PART routing edits, not Codex findings): docs/superpowers/reviews/2026-10-13-kmp-ios-log.md. Do the following in addition to the checks: (a) for each accepted BLOCKER/MAJOR confirm the plan really changed, otherwise report it again; (b) challenge a rejected finding only with NEW evidence; (c) hunt for problems introduced by the round-1 edits and for what round 1 missed."
   fi
   p="$tpl"
   p="${p//\{\{ROUND\}\}/$ROUND}"

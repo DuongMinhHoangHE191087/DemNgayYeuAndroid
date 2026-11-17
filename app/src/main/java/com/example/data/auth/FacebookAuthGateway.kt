@@ -5,19 +5,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.OAuthProvider
 import kotlinx.coroutines.tasks.await
 
-/** Identity returned by a successful Facebook sign-in (through Firebase Auth). */
-data class SocialProfile(
-  val uid: String,
-  val email: String?,
-  val displayName: String?,
-  val photoUrl: String?
-)
-
-/** Thrown for failures the UI can show as-is; [reason] is a stable code for localisation. */
-class SocialAuthException(val reason: Reason, cause: Throwable? = null) : Exception(reason.name, cause) {
-  enum class Reason { CANCELLED, NETWORK, ACCOUNT_EXISTS, NOT_CONFIGURED, MISMATCH, NO_SESSION, OTHER }
-}
-
 /**
  * Facebook login without the Facebook SDK: Firebase's generic OAuth provider runs the web flow in
  * a Custom Tab, so the Facebook App ID/secret live only in the Firebase console (never in the APK).

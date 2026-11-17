@@ -4,20 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import com.example.ui.components.AppDialog
 import com.example.ui.components.animateDialogEntrance
 import com.example.ui.components.InLoveDatePickerField
 import com.example.ui.components.DatePickerPresets
+import com.example.ui.components.ProfileAvatar
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,15 +33,12 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -53,17 +51,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import coil.compose.AsyncImage
 import com.example.data.model.OnlineInviteEntity
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.util.ProfileUtils
 
 @Composable
@@ -89,7 +86,7 @@ fun VerifyInviteDialog(
     }
   }
 
-  Dialog(
+  AppDialog(
     onDismissRequest = onDismiss,
     properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
   ) {
@@ -135,7 +132,7 @@ fun VerifyInviteDialog(
 
           IconButton(
             onClick = onDismiss,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(MinTouchBox)
           ) {
             Icon(
               imageVector = Icons.Default.Close,
@@ -161,17 +158,11 @@ fun VerifyInviteDialog(
         ) {
           Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-              Box(modifier = Modifier.size(64.dp)) {
-                AsyncImage(
-                  model = invite.senderAvatar.ifEmpty { "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" },
-                  contentDescription = "Sender Avatar",
-                  contentScale = ContentScale.Crop,
-                  modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .border(2.dp, Color(0xFFE91E63), CircleShape)
-                )
-              }
+              ProfileAvatar(
+                url = invite.senderAvatar,
+                contentDescription = if (isEnglish) "Sender avatar" else "Ảnh đại diện người gửi",
+                modifier = Modifier.size(64.dp).border(2.dp, Color(0xFFE91E63), CircleShape)
+              )
 
               Spacer(modifier = Modifier.width(12.dp))
 
@@ -369,30 +360,24 @@ fun VerifyInviteDialog(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-          OutlinedButton(
+          SecondaryButton(
+            text = if (isEnglish) "Decline" else "Từ chối",
             onClick = onReject,
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
-            modifier = Modifier.weight(1f).testTag("btn_verify_reject")
-          ) {
-            Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(if (isEnglish) "Decline" else "Từ chối")
-          }
+            icon = Icons.Default.Close,
+            modifier = Modifier.weight(1f).heightIn(min = MinTouchBox),
+            testTag = "btn_verify_reject"
+          )
 
-          Button(
+          PrimaryGradientButton(
+            text = if (isEnglish) "Accept Set Love ❤️" else "Đồng ý Set Love ❤️",
             onClick = {
               val confirmedMillis = ProfileUtils.parseDateToMillis(confirmedDateText)
               onAccept(confirmedMillis)
             },
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-            modifier = Modifier.weight(1.3f).testTag("btn_verify_accept")
-          ) {
-            Icon(imageVector = Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(if (isEnglish) "Accept Set Love ❤️" else "Đồng ý Set Love ❤️", fontWeight = FontWeight.Bold)
-          }
+            icon = Icons.Default.Favorite,
+            modifier = Modifier.weight(1.3f).heightIn(min = MinTouchBox),
+            testTag = "btn_verify_accept"
+          )
         }
       }
     }

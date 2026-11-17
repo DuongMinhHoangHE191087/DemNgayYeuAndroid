@@ -1,0 +1,27 @@
+{
+  "subscriptionGroup": "InLove VIP",
+  "stores": [
+    "apple",
+    "google"
+  ],
+  "products": [
+    {
+      "productId": "vip_monthly",
+      "planId": "monthly",
+      "kind": "subscription",
+      "trialDays": 0
+    },
+    {
+      "productId": "vip_yearly",
+      "planId": "yearly",
+      "kind": "subscription",
+      "trialDays": 3
+    },
+    {
+      "productId": "vip_lifetime",
+      "planId": "lifetime",
+      "kind": "lifetime",
+      "trialDays": 0
+    }
+  ]
+}

@@ -65,6 +65,30 @@ class PaywallFooterTest {
   }
 
   @Test
+  fun paywallCta_disabled_clickDoesNothing() {
+    var purchases = 0
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        PaywallFooter(
+          ctaText = "Start free trial",
+          canPurchase = false,
+          priceUnavailable = false,
+          disclosure = "Free for 7 days, then 99.000 d per year. Renews automatically. Cancel anytime in Google Play.",
+          onPurchase = { purchases++ },
+          onRetryPrices = {},
+          onRestore = {},
+          onManage = {},
+          onTerms = {},
+          onPrivacy = {},
+        )
+      }
+    }
+    composeTestRule.onNodeWithTag("paywall_cta").performClick()
+    assertEquals(0, purchases)
+    composeTestRule.onNodeWithTag("paywall_cta").assertIsNotEnabled()
+  }
+
+  @Test
   fun footer_screenshot() {
     setFooter()
     composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/paywall_footer.png")

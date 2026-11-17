@@ -8,6 +8,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import androidx.core.net.toUri
+import com.example.alarm.AlarmNotificationScheduler
 import com.example.ui.util.findActivity
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Box
@@ -18,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,21 +63,24 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material3.AlertDialog
 import com.example.ui.components.animateDialogEntrance
-import androidx.compose.material3.Button
+import com.example.ui.components.AppAlertDialog
+import com.example.ui.components.ProfileAvatar
+import com.example.ui.components.MemoryPrivacyNotice
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.SecondaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -90,10 +100,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.model.OnlineStatus
 import com.example.data.model.RelationshipStatus
+import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.Primary
@@ -129,9 +141,16 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
   val isEnglish = appLanguage == AppLanguage.EN
   val context = LocalContext.current
   val uriHandler = LocalUriHandler.current
+  // The permission is granted on a system screen, so it is read again each time the app comes back to the front.
+  var exactGranted by remember { mutableStateOf(AlarmNotificationScheduler.exactAlarmsGranted(context)) }
+  LifecycleResumeEffect(Unit) {
+    exactGranted = AlarmNotificationScheduler.exactAlarmsGranted(context)
+    onPauseOrDispose {}
+  }
 
   // Online 1-1 Set Love States
   val currentUser by viewModel.currentOnlineUser.collectAsState()
+  val boyAvatarUrl by viewModel.boyAvatarUrl.collectAsState()
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
   val isVip by viewModel.isVip.collectAsState()
 
@@ -195,11 +214,17 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         }
       )
       Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        TextButton(onClick = { uriHandler.openUri(com.example.config.LegalLinks.privacyPolicy) }) {
-          Text(stringResource(R.string.settings_legal_privacy), fontSize = 12.sp)
+        TextButton(
+          onClick = { uriHandler.openUri(com.example.config.LegalLinks.privacyPolicy) },
+          colors = ButtonDefaults.textButtonColors(contentColor = Primary)
+        ) {
+          Text(stringResource(R.string.settings_legal_privacy), fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
-        TextButton(onClick = { uriHandler.openUri(com.example.config.LegalLinks.termsOfService) }) {
-          Text(stringResource(R.string.settings_legal_terms), fontSize = 12.sp)
+        TextButton(
+          onClick = { uriHandler.openUri(com.example.config.LegalLinks.termsOfService) },
+          colors = ButtonDefaults.textButtonColors(contentColor = Primary)
+        ) {
+          Text(stringResource(R.string.settings_legal_terms), fontSize = 13.sp, fontWeight = FontWeight.Medium)
         }
       }
     }
@@ -360,6 +385,60 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+          if (!exactGranted) {
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = MinTouchBox)
+                .clickable {
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    try {
+                      context.findActivity()?.startActivity(
+                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:${context.packageName}".toUri())
+                      )
+                    } catch (e: ActivityNotFoundException) {
+                    }
+                  }
+                },
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+              Box(
+                modifier = Modifier
+                  .size(36.dp)
+                  .clip(CircleShape)
+                  .background(SurfaceContainerHigh),
+                contentAlignment = Alignment.Center
+              ) {
+                Icon(
+                  imageVector = Icons.Filled.Notifications,
+                  contentDescription = null,
+                  tint = Primary,
+                  modifier = Modifier.size(18.dp)
+                )
+              }
+              Column(modifier = Modifier.weight(1f)) {
+                Text(
+                  text = stringResource(R.string.settings_exact_alarm_title),
+                  fontSize = 13.sp,
+                  fontWeight = FontWeight.SemiBold,
+                  color = OnSurface
+                )
+                Text(
+                  text = stringResource(R.string.settings_exact_alarm_sub),
+                  fontSize = 11.sp,
+                  color = OnSurfaceVariant
+                )
+              }
+              Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = OnSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+              )
+            }
+          }
+
           SettingSwitchRow(
             icon = Icons.Filled.Notifications,
             title = stringResource(R.string.settings_notif_anniversary_title),
@@ -381,6 +460,9 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         }
       }
     }
+
+    // Thông báo riêng tư kỷ niệm (T17): chỉ hiện khi kỷ niệm ở lại trên máy
+    item { MemoryPrivacyNotice() }
 
     // 6. Settings Group: Dữ Liệu & Bảo Mật Nâng Cao (Security & Privacy Center)
     item {
@@ -408,34 +490,25 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
           if (currentAccount != null) {
             Row(
               verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.fillMaxWidth()
+              modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox).clickable(onClickLabel = if (isEnglish) "Edit profile" else "Sửa hồ sơ", role = Role.Button) { viewModel.openEditProfileDialog() }.testTag("settings_profile_row")
             ) {
-              Box(
-                modifier = Modifier
-                  .size(44.dp)
-                  .clip(CircleShape)
-                  .background(Color(0xFFFCE4EC)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Person,
-                  contentDescription = null,
-                  tint = Color(0xFFE91E63),
-                  modifier = Modifier.size(24.dp)
-                )
-              }
+              ProfileAvatar(url = currentUser.avatarUrl.ifBlank { boyAvatarUrl }, contentDescription = null, modifier = Modifier.size(44.dp))
               Spacer(modifier = Modifier.width(12.dp))
               Column(modifier = Modifier.weight(1f)) {
                 Text(
-                  text = currentAccount.displayName,
+                  text = currentUser.effectiveDisplayName.ifBlank { currentAccount.displayName },
                   fontWeight = FontWeight.Bold,
                   fontSize = 15.sp,
-                  color = Color(0xFF212121)
+                  color = Color(0xFF212121),
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis
                 )
                 Text(
                   text = currentAccount.email,
                   fontSize = 12.sp,
-                  color = Color(0xFF757575)
+                  color = Color(0xFF757575),
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis
                 )
               }
               Icon(
@@ -443,6 +516,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                 contentDescription = if (isEnglish) "Verified" else "Đã xác thực",
                 tint = Color(0xFF2E7D32),
                 modifier = Modifier.size(20.dp)
+              )
+              Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = OnSurfaceVariant,
+                modifier = Modifier.size(18.dp)
               )
             }
 
@@ -473,20 +552,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                     color = Color(0xFF880E4F)
                   )
                 }
-                Button(
+                PrimaryGradientButton(
+                  text = if (isEnglish) "Sign In to Sync" else "Đăng nhập để đồng bộ",
                   onClick = { viewModel.openAuthScreen() },
-                  shape = RoundedCornerShape(12.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63)),
-                  modifier = Modifier.fillMaxWidth()
-                ) {
-                  Icon(imageVector = Icons.Filled.CloudSync, contentDescription = null, modifier = Modifier.size(18.dp))
-                  Spacer(modifier = Modifier.width(8.dp))
-                  Text(
-                    text = if (isEnglish) "Sign In to Sync" else "Đăng nhập để đồng bộ",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.5.sp
-                  )
-                }
+                  icon = Icons.Filled.CloudSync,
+                  modifier = Modifier.fillMaxWidth().heightIn(min = MinTouchBox)
+                )
               }
             }
           }
@@ -586,50 +657,29 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Spacer(modifier = Modifier.height(14.dp))
 
             // Logout Button
-            OutlinedButton(
+            SecondaryButton(
+              text = if (isEnglish) "Sign out" else "Đăng xuất",
               onClick = { showLogoutConfirmDialog = true },
-              colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
-              shape = RoundedCornerShape(12.dp),
+              icon = Icons.AutoMirrored.Filled.ExitToApp,
+              isDestructive = true,
               modifier = Modifier
                 .fillMaxWidth()
-                .testTag("btn_logout")
-            ) {
-              Icon(
-                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-              )
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                text = if (isEnglish) "Sign out" else "Đăng xuất",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              testTag = "btn_logout"
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            OutlinedButton(
+            SecondaryButton(
+              text = if (isEnglish) "Delete account" else "Xóa tài khoản",
               onClick = { showDeleteAccountConfirmDialog = true },
-              colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828)),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF9A9A)),
-              shape = RoundedCornerShape(12.dp),
+              icon = Icons.Default.DeleteForever,
+              isDestructive = true,
               modifier = Modifier
                 .fillMaxWidth()
-                .testTag("btn_delete_account")
-            ) {
-              Icon(
-                imageVector = Icons.Default.DeleteForever,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-              )
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                text = if (isEnglish) "Delete account" else "Xóa tài khoản",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              testTag = "btn_delete_account"
+            )
           }
         }
       }
@@ -660,8 +710,9 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
 
   // Logout Confirmation Dialog
   if (showLogoutConfirmDialog) {
-    AlertDialog(
+    AppAlertDialog(
       onDismissRequest = { showLogoutConfirmDialog = false },
+      scrollableText = true,
       modifier = Modifier.animateDialogEntrance(),
       icon = {
         Icon(
@@ -678,28 +729,32 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         Text(if (isEnglish) "You'll need to sign in again." else "Bạn sẽ cần đăng nhập lại.")
       },
       confirmButton = {
-        Button(
+        SecondaryButton(
+          text = if (isEnglish) "Sign Out" else "Đăng xuất",
           onClick = {
             showLogoutConfirmDialog = false
             viewModel.logout()
           },
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-        ) {
-          Text(if (isEnglish) "Sign Out" else "Đăng xuất")
-        }
+          isDestructive = true,
+          filled = true,
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       },
       dismissButton = {
-        OutlinedButton(onClick = { showLogoutConfirmDialog = false }) {
-          Text(if (isEnglish) "Cancel" else "Hủy")
-        }
+        SecondaryButton(
+          text = if (isEnglish) "Cancel" else "Hủy",
+          onClick = { showLogoutConfirmDialog = false },
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       }
     )
   }
 
   // Delete Account Confirmation Dialog (Google Play Policy Compliance)
   if (showDeleteAccountConfirmDialog) {
-    AlertDialog(
+    AppAlertDialog(
       onDismissRequest = { showDeleteAccountConfirmDialog = false },
+      scrollableText = true,
       modifier = Modifier.animateDialogEntrance(),
       icon = {
         Icon(
@@ -729,27 +784,31 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             onClick = {
               uriHandler.openUri(com.example.config.LegalLinks.accountDeletion)
             },
-            contentPadding = PaddingValues(0.dp)
+            contentPadding = PaddingValues(0.dp),
+            colors = ButtonDefaults.textButtonColors(contentColor = Primary)
           ) {
-            Text(com.example.config.LegalLinks.accountDeletion, fontSize = 12.sp, color = Color(0xFF1976D2))
+            Text(com.example.config.LegalLinks.accountDeletion, fontSize = 13.sp, fontWeight = FontWeight.Medium)
           }
         }
       },
       confirmButton = {
-        Button(
+        SecondaryButton(
+          text = if (isEnglish) "Permanently Delete" else "Xóa Vĩnh Viễn",
           onClick = {
             showDeleteAccountConfirmDialog = false
             viewModel.deleteAccountAndData()
           },
-          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
-        ) {
-          Text(if (isEnglish) "Permanently Delete" else "Xóa Vĩnh Viễn", fontWeight = FontWeight.Bold)
-        }
+          isDestructive = true,
+          filled = true,
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       },
       dismissButton = {
-        OutlinedButton(onClick = { showDeleteAccountConfirmDialog = false }) {
-          Text(if (isEnglish) "Cancel" else "Hủy Bỏ")
-        }
+        SecondaryButton(
+          text = if (isEnglish) "Cancel" else "Hủy Bỏ",
+          onClick = { showDeleteAccountConfirmDialog = false },
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
       }
     )
   }

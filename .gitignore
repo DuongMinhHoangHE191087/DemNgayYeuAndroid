@@ -46,3 +46,11 @@ pubsub-debug*.log
 /.superpowers
 /appplugin/DOC/testing
 /appplugin
+
+# iOS / KMP build output and per-user Xcode data (unanchored on purpose)
+build/
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata/
+iosApp/Config/Secrets.xcconfig
+*.bundle

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,7 +53,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
@@ -67,10 +67,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.ui.components.AnniversaryMemoriesWidget
 import com.example.ui.components.LoveDaysCalculatorWidget
 import com.example.ui.components.MilestoneBadgeDashboardCard
+import com.example.ui.components.PartnerCard
+import com.example.ui.components.PrimaryGradientButton
+import com.example.ui.components.ProfileAvatar
+import com.example.ui.components.SecondaryButton
 import com.example.ui.components.pressClickable
 import com.example.ui.theme.MinTouchBox
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.LocalizedStrings
+import com.example.ui.util.ProfileUtils
+import com.example.ui.util.displayMeName
+import com.example.ui.util.displayPartnerName
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -99,9 +106,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -110,6 +117,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.delay
 import coil.compose.AsyncImage
 import com.example.ui.theme.HotPink
 import com.example.ui.theme.Primary
@@ -155,6 +164,7 @@ fun LoveHomeScreen(
   val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
   val partnerUser by viewModel.partnerOnlineUser.collectAsState()
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
+  val coupleLoaded by viewModel.coupleLoaded.collectAsState()
   val incomingInvite by viewModel.incomingInvite.collectAsState()
 
   val selectedWallpaperUrl by viewModel.selectedWallpaperUrl.collectAsState()
@@ -162,6 +172,8 @@ fun LoveHomeScreen(
   val appLanguage by viewModel.appLanguage.collectAsState()
   val strings = LocalizedStrings.get(appLanguage)
   val isEnglish = appLanguage == AppLanguage.EN
+  val meLabel = displayMeName(boyName, isEnglish)
+  val partnerLabel = displayPartnerName(girlName, isEnglish)
 
   val scrollState = rememberScrollState()
   var showEditLoveTitleDialog by remember { mutableStateOf(false) }
@@ -291,6 +303,14 @@ fun LoveHomeScreen(
   LaunchedEffect(loveDays) {
     if (isMilestoneReached) {
       viewModel.celebrateMilestoneAnniversary(loveDays)
+    }
+  }
+
+  // The home counter is otherwise refreshed only on resume: re-read the clock each minute so it rolls over after midnight
+  LaunchedEffect(Unit) {
+    while (true) {
+      delay(1.minutes)
+      viewModel.refreshLoveDays()
     }
   }
 
@@ -532,8 +552,8 @@ fun LoveHomeScreen(
             }
           }
         }
-      } else if (relationshipStatus != com.example.data.model.OnlineStatus.COUPLED) {
-        // Dynamic Banner 3: Prompt to Pair 1-1
+      } else if (shouldShowPairBanner(relationshipStatus, girlName, coupleLoaded)) {
+        // Dynamic Banner 3: Prompt to Pair 1-1 (not once a partner is set up)
         Surface(
           shape = RoundedCornerShape(16.dp),
           color = Color.White.copy(alpha = 0.95f),
@@ -721,7 +741,7 @@ fun LoveHomeScreen(
               .testTag("current_user_profile_col")
           ) {
             Box(
-              modifier = Modifier.size(avatarOuterSize),
+              modifier = Modifier.size(avatarOuterSize).clickable(onClickLabel = if (isEnglish) "Edit profile" else "Chỉnh sửa hồ sơ", role = Role.Button) { viewModel.openEditProfileDialog() }.testTag("home_my_avatar"),
               contentAlignment = Alignment.Center
             ) {
               Box(
@@ -729,15 +749,12 @@ fun LoveHomeScreen(
                   .size(avatarInnerSize)
                   .clip(CircleShape)
                   .border(2.dp, Color(0xFF81D4FA), CircleShape)
-                  .shadow(3.dp, CircleShape)
-                  .background(Color(0xFFE1F5FE)),
+                  .shadow(3.dp, CircleShape),
                 contentAlignment = Alignment.Center
               ) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF81D4FA), modifier = Modifier.size(avatarInnerSize / 2))
-                AsyncImage(
-                  model = currentOnlineUser.avatarUrl.ifEmpty { boyAvatarUrl },
+                ProfileAvatar(
+                  url = currentOnlineUser.avatarUrl.ifEmpty { boyAvatarUrl },
                   contentDescription = currentOnlineUser.effectiveDisplayName,
-                  contentScale = ContentScale.Crop,
                   modifier = Modifier.fillMaxSize()
                 )
               }
@@ -745,17 +762,19 @@ fun LoveHomeScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            val displayedUserName = currentOnlineUser.effectiveDisplayName.ifBlank {
-              boyName.ifEmpty { if (isEnglish) "You" else "Bạn" }
-            }
+            val displayedUserName = currentOnlineUser.effectiveDisplayName.ifBlank { meLabel }
             Text(
               text = displayedUserName,
               fontSize = 14.sp,
               fontWeight = FontWeight.Bold,
-              color = TextDarkPlum
+              color = TextDarkPlum,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(3.dp))
+
+            val myBirth = currentOnlineUser.birthDate.ifBlank { boyBirthDate }
 
             // Badges: Soft Pastel Age & Zodiac (Auto calculated)
             Row(
@@ -776,7 +795,7 @@ fun LoveHomeScreen(
                   )
                 }
               } else {
-                val myAge = if (currentOnlineUser.age > 0) currentOnlineUser.age else boyAge
+                val myAge = ProfileUtils.calculateAge(myBirth).takeIf { it > 0 } ?: (if (currentOnlineUser.age > 0) currentOnlineUser.age else boyAge)
                 if (myAge > 0) {
                   Surface(
                     shape = RoundedCornerShape(50.dp),
@@ -792,17 +811,20 @@ fun LoveHomeScreen(
                   }
                 }
 
-                val myZodiac = currentOnlineUser.zodiac.ifEmpty { boyZodiac }
+                val myZodiac = ProfileUtils.formatZodiacDisplay(currentOnlineUser.zodiac.ifEmpty { boyZodiac }, isEnglish)
                 if (myZodiac.isNotBlank()) {
                   Surface(
                     shape = RoundedCornerShape(50.dp),
-                    color = Color(0xFFF3E5F5)
+                    color = Color(0xFFF3E5F5),
+                    modifier = Modifier.weight(1f, fill = false)
                   ) {
                     Text(
                       text = myZodiac,
                       color = Color(0xFF7B1FA2),
                       fontSize = 10.sp,
                       fontWeight = FontWeight.SemiBold,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis,
                       modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                   }
@@ -810,7 +832,6 @@ fun LoveHomeScreen(
               }
             }
 
-            val myBirth = currentOnlineUser.birthDate.ifBlank { boyBirthDate }
             if (myBirth.isNotBlank()) {
               Spacer(modifier = Modifier.height(2.dp))
               Text(
@@ -858,9 +879,9 @@ fun LoveHomeScreen(
                 .clickable {
                   viewModel.triggerFloatingHearts()
                   if (isCoupled) {
-                    viewModel.showToast(if (isEnglish) "Heart connection: ${currentOnlineUser.effectiveDisplayName} & ${partnerUser?.displayName} ❤️" else "Trái tim kết nối ${currentOnlineUser.effectiveDisplayName} & ${partnerUser?.displayName} ❤️")
+                    viewModel.showToast(if (isEnglish) "Heart connection: $meLabel & $partnerLabel ❤️" else "Trái tim kết nối $meLabel & $partnerLabel ❤️")
                   } else {
-                    viewModel.showToast(if (isEnglish) "Sweet love of $boyName & $girlName! ❤️" else "Hai bạn $boyName & $girlName luôn ngọt ngào bên nhau! ❤️")
+                    viewModel.showToast(if (isEnglish) "Sweet love of $meLabel & $partnerLabel! ❤️" else "Hai bạn $meLabel & $partnerLabel luôn ngọt ngào bên nhau! ❤️")
                   }
                 }
                 .testTag("btn_center_heart"),
@@ -877,201 +898,35 @@ fun LoveHomeScreen(
 
           // Right: Partner Profile (if online coupled: partnerUser, if offline: girl profile)
           if (isCoupled && partnerUser != null) {
-            Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier
-                .weight(1f)
-                .clickable { viewModel.openPairingScreen() }
-                .testTag("partner_user_profile_col")
-            ) {
-              Box(
-                modifier = Modifier.size(avatarOuterSize),
-                contentAlignment = Alignment.Center
-              ) {
-                Box(
-                  modifier = Modifier
-                    .size(avatarInnerSize)
-                    .clip(CircleShape)
-                    .border(2.dp, Color(0xFFFF80AB), CircleShape)
-                    .shadow(3.dp, CircleShape)
-                ) {
-                  AsyncImage(
-                    model = partnerUser?.avatarUrl.orEmpty().ifEmpty { girlAvatarUrl },
-                    contentDescription = partnerUser?.displayName.orEmpty(),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                  )
-                }
-                // Mini floating heart badge
-                Box(
-                  modifier = Modifier
-                    .size(20.dp)
-                    .align(Alignment.BottomEnd)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFCE4EC))
-                    .border(1.5.dp, Color.White, CircleShape),
-                  contentAlignment = Alignment.Center
-                ) {
-                  Icon(
-                    imageVector = Icons.Rounded.Favorite,
-                    contentDescription = null,
-                    tint = Color(0xFFFF4081),
-                    modifier = Modifier.size(11.dp)
-                  )
-                }
-              }
-
-              Spacer(modifier = Modifier.height(4.dp))
-
-              Text(
-                text = partnerUser?.displayName.orEmpty(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDarkPlum
-              )
-
-              Spacer(modifier = Modifier.height(3.dp))
-
-              // Badges: Soft Pastel Age & Zodiac
-              Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFFCE4EC)
-                ) {
-                  Text(
-                    text = if ((partnerUser?.age ?: 0) > 0) "${partnerUser?.age ?: 0}t" else "$girlAge t",
-                    color = Color(0xFFC2185B),
-                    fontSize = 10.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                  )
-                }
-
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFFFF0F5)
-                ) {
-                  Text(
-                    text = partnerUser?.zodiac.orEmpty().ifEmpty { girlZodiac },
-                    color = Color(0xFFAD1457),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                  )
-                }
-              }
-
-              Spacer(modifier = Modifier.height(2.dp))
-
-              Text(
-                text = partnerUser?.birthDate.orEmpty().ifEmpty { girlBirthDate },
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextSubtlePlum
-              )
-            }
+            val partnerBirth = partnerUser?.birthDate.orEmpty().ifEmpty { girlBirthDate }
+            PartnerCard(
+              avatarUrl = partnerUser?.avatarUrl.orEmpty().ifEmpty { girlAvatarUrl },
+              name = displayPartnerName(partnerUser?.effectiveDisplayName.orEmpty().ifBlank { girlName }, isEnglish),
+              age = ProfileUtils.calculateAge(partnerBirth).takeIf { it > 0 } ?: (if ((partnerUser?.age ?: 0) > 0) partnerUser?.age ?: 0 else girlAge),
+              zodiac = ProfileUtils.formatZodiacDisplay(partnerUser?.zodiac.orEmpty().ifEmpty { girlZodiac }, isEnglish),
+              birthDate = partnerBirth,
+              showHeartBadge = true,
+              avatarOuterSize = avatarOuterSize,
+              avatarInnerSize = avatarInnerSize,
+              onClick = { viewModel.openPairingScreen() },
+              testTag = "partner_user_profile_col",
+              modifier = Modifier.weight(1f)
+            )
           } else {
             // Offline Partner Profile State: Always displays offline partner, user can tap to edit partner name/photo
-            Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier
-                .weight(1f)
-                .clickable { viewModel.openEditCoupleDialog() }
-                .testTag("partner_offline_profile_col")
-            ) {
-              Box(
-                modifier = Modifier.size(avatarOuterSize),
-                contentAlignment = Alignment.Center
-              ) {
-                Box(
-                  modifier = Modifier
-                    .size(avatarInnerSize)
-                    .clip(CircleShape)
-                    .border(2.dp, Color(0xFFFF80AB), CircleShape)
-                    .shadow(3.dp, CircleShape)
-                ) {
-                  AsyncImage(
-                    model = girlAvatarUrl.ifEmpty { "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" },
-                    contentDescription = girlName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                  )
-                }
-              }
-
-              Spacer(modifier = Modifier.height(4.dp))
-
-              Text(
-                text = girlName.ifEmpty { if (isEnglish) "Partner" else "Người thương" },
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextDarkPlum
-              )
-
-              Spacer(modifier = Modifier.height(3.dp))
-
-              // Badges: Soft Pastel Age & Zodiac or Offline Tag
-              Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                if (girlAge > 0) {
-                  Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = Color(0xFFFCE4EC)
-                  ) {
-                    Text(
-                      text = "${girlAge}t",
-                      color = Color(0xFFC2185B),
-                      fontSize = 10.5.sp,
-                      fontWeight = FontWeight.Bold,
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                  }
-                }
-
-                if (girlZodiac.isNotBlank()) {
-                  Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = Color(0xFFFFF0F5)
-                  ) {
-                    Text(
-                      text = girlZodiac,
-                      color = Color(0xFFAD1457),
-                      fontSize = 10.sp,
-                      fontWeight = FontWeight.SemiBold,
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                  }
-                }
-
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFE8F5E9)
-                ) {
-                  Text(
-                    text = if (isEnglish) "OFFLINE" else "MÁY",
-                    color = Color(0xFF2E7D32),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                  )
-                }
-              }
-
-              if (girlBirthDate.isNotBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                  text = girlBirthDate,
-                  fontSize = 10.5.sp,
-                  fontWeight = FontWeight.Medium,
-                  color = TextSubtlePlum
-                )
-              }
-            }
+            PartnerCard(
+              avatarUrl = girlAvatarUrl,
+              name = partnerLabel,
+              age = ProfileUtils.calculateAge(girlBirthDate).takeIf { it > 0 } ?: girlAge,
+              zodiac = ProfileUtils.formatZodiacDisplay(girlZodiac, isEnglish),
+              birthDate = girlBirthDate,
+              showHeartBadge = false,
+              avatarOuterSize = avatarOuterSize,
+              avatarInnerSize = avatarInnerSize,
+              onClick = { viewModel.openEditCoupleDialog() },
+              testTag = "partner_offline_profile_col",
+              modifier = Modifier.weight(1f)
+            )
           }
         }
       }
@@ -1082,8 +937,8 @@ fun LoveHomeScreen(
       LoveDaysCalculatorWidget(
         anniversaryDate = anniversaryDate,
         currentLoveDays = loveDays,
-        boyName = boyName,
-        girlName = girlName,
+        boyName = meLabel,
+        girlName = partnerLabel,
         language = appLanguage,
         onRecalculateAndSync = { calculatedDays ->
           viewModel.syncCalculatedDaysToHome(calculatedDays)
@@ -1094,9 +949,9 @@ fun LoveHomeScreen(
         onTriggerHearts = {
           viewModel.triggerFloatingHearts()
           val msg = if (appLanguage == AppLanguage.VI) {
-            "Hai bạn $boyName & $girlName đã gắn bó $loveDays ngày yêu thương! ❤️"
+            "Hai bạn $meLabel & $partnerLabel đã gắn bó $loveDays ngày yêu thương! ❤️"
           } else {
-            "$boyName & $girlName have been in love for $loveDays days! ❤️"
+            "$meLabel & $partnerLabel have been in love for $loveDays days! ❤️"
           }
           viewModel.showToast(msg)
         },
@@ -1229,61 +1084,25 @@ fun LoveHomeScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
-            Button(
+            PrimaryGradientButton(
+              text = strings.btnGiftIdeas,
               onClick = onNavigateToGifts,
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = Primary
-              ),
               modifier = Modifier
                 .weight(1f)
-                .height(40.dp)
-                .testTag("btn_next_anniversary_gifts")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.CardGiftcard,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = Color.White
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = strings.btnGiftIdeas,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              icon = Icons.Filled.CardGiftcard,
+              testTag = "btn_next_anniversary_gifts"
+            )
 
-            Button(
+            SecondaryButton(
+              text = strings.btnAnniversaryCalendar,
               onClick = onNavigateToCalendar,
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFF80AB)
-              ),
               modifier = Modifier
                 .weight(1f)
-                .height(40.dp)
-                .testTag("btn_next_anniversary_calendar")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = Color.White
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = strings.btnAnniversaryCalendar,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              icon = Icons.Filled.CalendarMonth,
+              testTag = "btn_next_anniversary_calendar"
+            )
           }
 
           // Floating Hearts Particle Celebration Action
@@ -1446,47 +1265,23 @@ fun LoveHomeScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
-            val shuffleRotation by animateFloatAsState(
-              targetValue = currentQuoteIndex.intValue * 360f,
-              animationSpec = tween(420, easing = FastOutSlowInEasing),
-              label = "quote_shuffle_rotation"
-            )
-
-            Button(
+            SecondaryButton(
+              text = strings.btnShuffleQuote,
               onClick = {
                 currentQuoteIndex.intValue = (currentQuoteIndex.intValue + 1) % loveQuotes.size
                 viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã đổi sang thông điệp yêu thương mới ✨" else "New love reflection loaded ✨")
               },
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFF80AB)
-              ),
               modifier = Modifier
                 .weight(1f)
-                .height(40.dp)
-                .testTag("btn_shuffle_quote")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Refresh,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier
-                  .size(16.dp)
-                  .graphicsLayer { rotationZ = shuffleRotation }
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = strings.btnShuffleQuote,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-              )
-            }
+                .heightIn(min = MinTouchBox),
+              icon = Icons.Filled.Refresh,
+              testTag = "btn_shuffle_quote"
+            )
 
             Button(
               onClick = {
                 viewModel.triggerFloatingHearts()
-                viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã sao chép lời yêu thương ngọt ngào để gửi cho $girlName! 💌" else "Sweet love quote copied to send to $girlName! 💌")
+                viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã sao chép lời yêu thương ngọt ngào để gửi cho $partnerLabel! 💌" else "Sweet love quote copied to send to $partnerLabel! 💌")
               },
               shape = RoundedCornerShape(14.dp),
               colors = ButtonDefaults.buttonColors(

@@ -1,9 +1,11 @@
 package com.example.data.repository
 
+import com.example.data.cloud.AndroidCloudFunctionsClient
+import com.example.data.cloud.CloudFunctionsClient
+import com.example.data.cloud.CloudFunctionsCode
+import com.example.data.cloud.CloudFunctionsException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.FirebaseFunctionsException
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CancellationException
 
 /** Máy chủ đòi đăng nhập lại gần đây trước khi xoá tài khoản; người dùng đăng nhập lại rồi thử xoá lần nữa. */
 class RecentLoginRequiredException : Exception()
@@ -20,8 +22,9 @@ interface RemoteAccountCleanup {
   suspend fun deleteAuthIdentity()
 }
 
-private const val DELETION_FUNCTIONS_REGION = "asia-southeast1"
 private const val NEED_ONLINE_LOGIN = "Cần kết nối mạng và đăng nhập lại để xoá dữ liệu đám mây trước khi xoá tài khoản."
+private const val CLOUD_REQUEST_FAILED =
+  "Chưa gửi được yêu cầu xoá lên máy chủ (mạng chậm hoặc mất kết nối). Tài khoản vẫn còn nguyên, vui lòng thử lại."
 
 object NoopRemoteAccountCleanup : RemoteAccountCleanup {
   override suspend fun deleteCloudData(uid: String, coupleCode: String) = Unit
@@ -29,22 +32,26 @@ object NoopRemoteAccountCleanup : RemoteAccountCleanup {
 }
 
 /**
- * Xoá phía máy chủ: gửi yêu cầu cho callable `requestAccountDeletion`; Cloud Functions xoá dữ liệu, tệp và
- * danh tính Auth rồi tự thử lại nếu lỗi giữa chừng. Máy chủ chỉ nhận khi đăng nhập trong vài phút gần đây.
- * Máy chủ chặn bằng App Check + auth_time nên `coupleCode` không còn cần ở client.
+ * Xoá phía máy chủ: gửi yêu cầu cho callable `requestAccountDeletion` (qua CloudFunctionsClient: timeout 20s + ánh xạ lỗi);
+ * Cloud Functions xoá dữ liệu, tệp và danh tính Auth rồi tự thử lại nếu lỗi giữa chừng. Máy chủ chỉ nhận khi đăng nhập
+ * trong vài phút gần đây. Máy chủ chặn bằng App Check + auth_time nên `coupleCode` không còn cần ở client.
  */
-class FirebaseRemoteAccountCleanup : RemoteAccountCleanup {
+class FirebaseRemoteAccountCleanup(
+  private val functions: CloudFunctionsClient = AndroidCloudFunctionsClient(),
+  private val currentUid: () -> String? = { FirebaseAuth.getInstance().currentUser?.uid },
+) : RemoteAccountCleanup {
   override suspend fun deleteCloudData(uid: String, coupleCode: String) {
-    if (FirebaseAuth.getInstance().currentUser?.uid != uid) throw IllegalStateException(NEED_ONLINE_LOGIN)
+    if (currentUid() != uid) throw IllegalStateException(NEED_ONLINE_LOGIN)
     try {
-      FirebaseFunctions.getInstance(DELETION_FUNCTIONS_REGION).getHttpsCallable("requestAccountDeletion").call().await()
-    } catch (e: FirebaseFunctionsException) {
-      // Máy chủ trả details.reason để client phân biệt "cần đăng nhập lại" với lỗi khác.
-      val reason = (e.details as? Map<*, *>)?.get("reason")
-      if (e.code == FirebaseFunctionsException.Code.FAILED_PRECONDITION && reason == "recent-login-required") {
-        throw RecentLoginRequiredException()
-      }
+      functions.call("requestAccountDeletion")
+    } catch (e: CancellationException) {
       throw e
+    } catch (e: Exception) {
+      // Máy chủ trả details.reason để client phân biệt "cần đăng nhập lại" với lỗi khác.
+      val recentLogin = e is CloudFunctionsException &&
+        e.code == CloudFunctionsCode.FAILED_PRECONDITION && e.reason == "recent-login-required"
+      if (recentLogin) throw RecentLoginRequiredException()
+      throw IllegalStateException(CLOUD_REQUEST_FAILED, e)
     }
   }
 

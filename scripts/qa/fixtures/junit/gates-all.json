@@ -1,0 +1,10 @@
+{
+  "gates": [
+    { "id": "A", "runner": "android", "sourceGlob": "scripts/qa/fixtures/junit/all/**/TEST-com.example.DateMathTest.xml", "classGlob": "com.example.DateMathTest", "tests": ["adds days", "subtracts days"], "minCases": 2 },
+    { "id": "B-MOCHA", "runner": "backend", "sourceGlob": "scripts/qa/fixtures/junit/all/**/mocha-xunit.xml", "classGlob": "users/{uid} entitlement protection (T2)", "tests": ["denies create with isVip", "denies update that adds role"], "minCases": 2 },
+    { "id": "B-NODE", "runner": "backend", "sourceGlob": "scripts/qa/fixtures/junit/all/**/node-test.xml", "classGlob": "Suite A", "tests": ["passes"], "minCases": 1 },
+    { "id": "S", "runner": "ios-shared", "sourceGlob": "scripts/qa/fixtures/junit/all/**/TEST-com.example.shared.PairCodeTest.xml", "classGlob": "com.example.shared.*", "tests": [], "minCases": 1 },
+    { "id": "P", "runner": "ios-packages", "sourceGlob": "scripts/qa/fixtures/junit/all/**/swift-test.xml", "classGlob": "InLoveCoreTests.*", "tests": [], "minCases": 2 },
+    { "id": "U", "runner": "ios-ui", "sourceGlob": "scripts/qa/fixtures/junit/all/**/fastlane-scan.xml", "classGlob": "InLoveUITests.SmokeLaunchTests", "tests": ["testLaunch()", "testRelaunch()"], "minCases": 2 }
+  ]
+}

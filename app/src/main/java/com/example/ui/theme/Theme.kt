@@ -108,7 +108,7 @@ fun AppDensity(content: @Composable () -> Unit) {
 }
 
 /** Global UI scale. 1f = stock sizes; lower = denser. Tune here only. */
-private const val UI_SCALE = 0.85f
+internal const val UI_SCALE = 0.85f
 
 /** Min tap box in layout dp: renders at >= 48dp after AppDensity. */
 val MinTouchBox: Dp = ceil(48f / UI_SCALE).dp
