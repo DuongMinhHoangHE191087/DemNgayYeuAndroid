@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release/main safe baseline for appplugin ad resource lookup via getIdentifier.
+     flagTest=0 disables debug test-device mode and verbose SDK test logging.
+     Real production AdMob unit IDs should be provided either in app/src/release/res/values/ads_ids.xml
+     or via Firebase Remote Config (`cf_ids_placement`) before Play Store publication; never put
+     Google sample test IDs (ca-app-pub-3940256099942544/*) in main or release resources.
+     app/src/debug/res/values/ads_ids.xml overrides all keys below in debug and unit tests. -->
+<resources>
+    <string name="flagTest" translatable="false">0</string>
+    <string name="admob_banner" translatable="false"></string>
+    <string name="admob_rect" translatable="false"></string>
+    <string name="admob_full" translatable="false"></string>
+    <string name="admob_openad" translatable="false"></string>
+    <string-array name="ads_collapsible_placements" />
+</resources>

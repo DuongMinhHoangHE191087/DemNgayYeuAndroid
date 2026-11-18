@@ -142,6 +142,31 @@ object VietnameseHolidays {
             )
         ),
         LunarHoliday(
+            titleVi = "Lễ Thất Tịch",
+            titleEn = "Qixi / Thất Tịch Love Day",
+            emoji = "🌌",
+            suggestedGiftCategory = "Lãng Mạn",
+            isCoupleRelevant = true,
+            datesByYear = mapOf(
+                2025 to LocalDate.of(2025, 8, 29),
+                2026 to LocalDate.of(2026, 8, 19),
+                2027 to LocalDate.of(2027, 8, 8),
+                2028 to LocalDate.of(2028, 8, 26),
+                2029 to LocalDate.of(2029, 8, 16),
+                2030 to LocalDate.of(2030, 8, 5),
+                2031 to LocalDate.of(2031, 8, 24),
+                2032 to LocalDate.of(2032, 8, 12),
+                2033 to LocalDate.of(2033, 8, 1),
+                2034 to LocalDate.of(2034, 8, 20),
+                2035 to LocalDate.of(2035, 8, 10),
+                2036 to LocalDate.of(2036, 8, 28),
+                2037 to LocalDate.of(2037, 8, 17),
+                2038 to LocalDate.of(2038, 8, 7),
+                2039 to LocalDate.of(2039, 8, 26),
+                2040 to LocalDate.of(2040, 8, 14)
+            )
+        ),
+        LunarHoliday(
             titleVi = "Lễ Vu Lan",
             titleEn = "Vu Lan (Ancestors' Day)",
             emoji = "🪷",

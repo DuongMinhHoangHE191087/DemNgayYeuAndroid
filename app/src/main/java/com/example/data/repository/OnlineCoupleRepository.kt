@@ -68,16 +68,16 @@ class OnlineCoupleRepository(
     const val USER_B_NAME = "Tester B"
 
     val AVAILABLE_INTERESTS = listOf(
-      "coffee" to "Cà phê ☕",
-      "travel" to "Du lịch ✈️",
-      "technology" to "Công nghệ 💻",
-      "cycling" to "Xe đạp 🚴",
-      "fashion" to "Thời trang 👗",
-      "music" to "Âm nhạc 🎵",
-      "cinema" to "Điện ảnh 🎬",
-      "cooking" to "Nấu ăn 🍳",
-      "books" to "Sách & Thơ 📚",
-      "gaming" to "Chơi game 🎮"
+      "coffee" to "Cà phê",
+      "travel" to "Du lịch",
+      "technology" to "Công nghệ",
+      "cycling" to "Xe đạp",
+      "fashion" to "Thời trang",
+      "music" to "Âm nhạc",
+      "cinema" to "Điện ảnh",
+      "cooking" to "Nấu ăn",
+      "books" to "Sách & Thơ",
+      "gaming" to "Chơi game"
     )
 
     fun createEmptyUser(uid: String = GUEST_UID): OnlineUserEntity {

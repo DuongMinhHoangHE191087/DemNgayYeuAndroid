@@ -53,6 +53,7 @@ internal fun PartnerCard(
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
     modifier = modifier
+      .clip(RoundedCornerShape(16.dp))
       .clickable(onClick = onClick)
       .testTag(testTag)
   ) {

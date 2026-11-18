@@ -73,6 +73,13 @@ module.exports = Object.freeze({
     claimPurchase: Object.freeze({ max: 30, windowMs: 60 * 60 * 1000 }),
     getEntitlement: Object.freeze({ max: 60, windowMs: 60 * 60 * 1000 }),
     signAvatarUpload: Object.freeze({ max: 10, windowMs: 60 * 60 * 1000 }),
+    generateGiftAdvice: Object.freeze({ max: 30, windowMs: 60 * 60 * 1000 }),
+  }),
+
+  aiAdvisor: Object.freeze({
+    freeMonthlyQuota: 2,
+    vipMonthlyQuota: 60,
+    geminiModel: 'gemini-2.5-flash',
   }),
 
   // Khoá đối tượng trên R2: inlove_mem_<memoryId>. Không có thư mục, không có tên người dùng.

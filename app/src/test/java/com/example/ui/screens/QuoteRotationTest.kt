@@ -1,9 +1,5 @@
 package com.example.ui.screens
 
-// V-09 run B: pins the quote card of LoveHomeScreen as it behaves today (FP-112: the shuffle button moves to the next quote and wraps
-// around, and the position is a plain remember, so it is not kept when the screen is left and opened again; the send button toasts and starts the hearts).
-// Real view model + in-memory Room, English UI (one test in Vietnamese). The list of quotes depends on the language (6 English and 6 Vietnamese).
-// The quotes are matched by their full text: quote 2 and quote 6 carry the number of love days, which is read from the view model.
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
@@ -49,26 +45,37 @@ class QuoteRotationTest {
   private lateinit var viewModel: InLoveViewModel
   private var language = AppLanguage.EN
 
-  // The six quotes of LoveHomeScreen in the language of the test, in order, exactly as shown (quotes 2 and 6 carry the number of love days).
   private fun quotes(): List<String> {
     val days = viewModel.loveDays.value
     return if (language == AppLanguage.VI) {
       listOf(
-        "Dù mai này cuộc sống có bận rộn đến đâu, anh vẫn luôn chọn yêu em như những ngày đầu tiên 💕",
-        "Cảm ơn vì đã cùng anh đi qua $days ngày ngọt ngào, đầy ắp tiếng cười và những cái ôm ấm áp ✨",
-        "Tình yêu không phải là tìm một người hoàn hảo, mà là cùng nhau hoàn thiện và bao dung mỗi ngày 🌸",
-        "Bên cạnh em, mỗi phút giây bình dị nhất cũng trở thành những kỷ niệm vô giá của cuộc đời anh 💖",
-        "Cảm ơn em vì đã là mảnh ghép dịu dàng nhất bước vào thanh xuân của anh 🌷",
-        "$days ngày bên nhau không chỉ là một con số, mà là minh chứng cho tình yêu bền chặt của đôi ta 💍"
+        "Dù ngày mai có bận rộn đến đâu, anh vẫn chọn lắng nghe và yêu em như những ngày đầu tiên.",
+        "Cảm ơn em đã cùng anh đi qua $days ngày bình yên, qua những bữa cơm tối và cái ôm cuối ngày.",
+        "Tình yêu bền lâu không phải là không bao giờ giận hờn, mà là luôn tìm cách quay về bên nhau sau mỗi lần hiểu lầm.",
+        "Bên cạnh em, những khoảnh khắc giản dị nhất như đi dạo cuối tuần cũng trở thành điều anh mong đợi.",
+        "Cảm ơn em đã kiên nhẫn bước vào cuộc sống của anh bằng tất cả sự dịu dàng.",
+        "$days ngày bên nhau không chỉ là một con số, mà là từng bước nhỏ mình cùng giữ lời hứa với nhau.",
+        "Không cần dịp thật lớn mới nói lời thương, chỉ cần mỗi sáng thức dậy vẫn thấy hai đứa còn nhớ về nhau.",
+        "Anh thích cách hai đứa có thể im lặng ngồi cạnh nhau hàng giờ mà vẫn thấy lòng nhẹ tênh.",
+        "Mỗi mùa đi qua, điều anh trân trọng nhất vẫn là được nhìn em cười trong những câu chuyện nhỏ hằng ngày.",
+        "Cảm ơn vì đã tin tưởng và nắm tay anh cả những lúc mọi thứ chưa thật sự dễ dàng.",
+        "Chỉ cần biết tối nay vẫn có em chờ chia sẻ chuyện vui buồn, cả ngày dài bỗng trở nên dịu lại.",
+        "Hành trình dài hay ngắn không quan trọng bằng việc mỗi chặng đường đều có dấu chân của cả hai."
       )
     } else {
       listOf(
-        "No matter how busy life gets, I will always choose to love you like day one 💕",
-        "Thank you for walking with me through $days sweet days filled with warm smiles and hugs ✨",
-        "Love isn't about finding someone perfect, but growing and cherishing each other every day 🌸",
-        "Beside you, even the simplest moments turn into priceless treasures 💖",
-        "Thank you for being the sweetest part of my youth 🌷",
-        "$days days together is not just a number, but a testament to our everlasting love 💍"
+        "No matter how busy tomorrow gets, I still choose to listen and care for you like day one.",
+        "Thank you for walking with me through $days quiet days, shared dinners, and warm evening talks.",
+        "Lasting love is not the absence of small misunderstandings, but always finding our way back to kindness.",
+        "Beside you, even an ordinary weekend walk feels like something worth remembering.",
+        "Thank you for stepping into my life with patience, warmth, and quiet steadiness.",
+        "$days days together is not just a count on a screen, it is every promise we kept along the way.",
+        "We do not need a grand occasion to say we care, just remembering the small things each morning.",
+        "I love that we can sit together in quiet company for hours and still feel completely at home.",
+        "With every passing season, my favorite moments are still hearing you laugh over everyday stories.",
+        "Thank you for holding my hand through the uncertain days as faithfully as the bright ones.",
+        "Knowing I can tell you about my day at the end of it makes every hard hour softer.",
+        "The distance ahead matters less when every milestone carries both of our footprints."
       )
     }
   }
@@ -82,13 +89,11 @@ class QuoteRotationTest {
 
   @After
   fun tearDown() {
-    viewModelStore.clear() // onCleared(): cancels viewModelScope and stops the sync coordinator BEFORE the database is closed
+    viewModelStore.clear()
     injectDatabase(null)
     db.close()
   }
 
-  // InLoveViewModel reaches Room through AppDatabase.getDatabase(context); setting the INSTANCE field is how it gets the in-memory test database.
-  // D-42 changes how the DAO is obtained: this is the ONE place to adapt (nothing else here may mention INSTANCE).
   private fun injectDatabase(value: AppDatabase?) {
     val field = AppDatabase::class.java.getDeclaredField("INSTANCE")
     field.isAccessible = true
@@ -101,7 +106,7 @@ class QuoteRotationTest {
   private fun launch() {
     viewModel = newViewModel()
     viewModel.setLanguage(language)
-    viewModel.clearToast() // setLanguage toasts "Switched to English"
+    viewModel.clearToast()
     composeTestRule.setContent {
       MyApplicationTheme {
         if (screenVisible.value) LoveHomeScreen(viewModel, onNavigateToCalendar = {}, onNavigateToGifts = {})
@@ -110,19 +115,16 @@ class QuoteRotationTest {
     eventually { assertQuoteShown(0) }
   }
 
-  // Retries the check until it passes; on a timeout the last run throws the real assertion message.
   private fun eventually(check: () -> Unit) {
     try {
       composeTestRule.waitUntil(timeoutMillis = 5_000) { runCatching { check() }.isSuccess }
     } catch (_: Throwable) {
-      // fall through: the final check below reports what is actually wrong
     }
     check()
   }
 
-  // The counter reads "<n>/6", the quote of position n is on screen and no other quote is.
   private fun assertQuoteShown(index: Int) {
-    composeTestRule.onNodeWithText("${index + 1}/6").assertExists()
+    composeTestRule.onNodeWithText("${index + 1}/12").assertExists()
     quotes().forEachIndexed { i, text ->
       val node = composeTestRule.onNode(hasText(text))
       if (i == index) node.assertExists() else node.assertDoesNotExist()
@@ -148,39 +150,37 @@ class QuoteRotationTest {
 
     shuffle()
     eventually { assertQuoteShown(1) }
-    assertEquals("New love reflection loaded ✨", viewModel.toastMessage.value)
+    assertEquals("Next reflection loaded", viewModel.toastMessage.value)
 
     shuffle()
     eventually { assertQuoteShown(2) }
   }
 
-  // Six quotes: the sixth tap comes back to the first one.
   @Test
   fun `FP-112 quote shuffle button wraps around to the first quote after the last`() {
     launch()
-    for (next in 1..5) {
+    for (next in 1..11) {
       shuffle()
       eventually { assertQuoteShown(next) }
     }
-    composeTestRule.onNodeWithText("6/6").assertExists()
+    composeTestRule.onNodeWithText("12/12").assertExists()
 
     shuffle()
 
     eventually { assertQuoteShown(0) }
-    composeTestRule.onNodeWithText("6/6").assertDoesNotExist()
+    composeTestRule.onNodeWithText("12/12").assertDoesNotExist()
   }
 
-  // The Vietnamese list has its own six quotes and its own shuffle toast.
   @Test
   fun `FP-112 quote texts and shuffle toast in Vietnamese`() {
     language = AppLanguage.VI
     launch()
 
-    for (next in 1..5) {
+    for (next in 1..11) {
       shuffle()
       eventually { assertQuoteShown(next) }
     }
-    assertEquals("Đã đổi sang thông điệp yêu thương mới ✨", viewModel.toastMessage.value)
+    assertEquals("Đã chuyển sang lời nhắn tiếp theo", viewModel.toastMessage.value)
 
     shuffle()
     eventually { assertQuoteShown(0) }
@@ -200,7 +200,6 @@ class QuoteRotationTest {
     eventually { assertQuoteShown(0) }
   }
 
-  // The toast says "copied", but the code puts nothing on the clipboard today: the button only toasts for the partner and starts the floating hearts.
   @Test
   fun `FP-112 quote send button toasts for the partner and starts the floating hearts`() {
     launch()
@@ -209,7 +208,7 @@ class QuoteRotationTest {
 
     composeTestRule.onNodeWithTag("btn_send_quote").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
 
-    eventually { assertEquals("Sweet love quote copied to send to Partner! 💌", viewModel.toastMessage.value) }
+    eventually { assertEquals("Sweet love reflection ready for Partner", viewModel.toastMessage.value) }
     assertNotEquals("floating hearts started", heartsBefore, viewModel.floatingHeartsTrigger.value)
     assertFalse("a plain shower, not a milestone one", viewModel.isMilestoneCelebration.value)
     assertQuoteShown(0)

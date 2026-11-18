@@ -127,7 +127,11 @@ object LoveAnniversaryMilestoneScheduler {
             daysRemaining = daysRemaining,
             isAnnual = false,
             emoji = if (days >= 365) "👑" else if (days >= 100) "💎" else "💖",
-            description = "Cột mốc $days ngày bên nhau đong đầy kỷ niệm"
+            description = if (isEnglish) {
+              "Milestone of $days days together filled with memories"
+            } else {
+              "Cột mốc $days ngày bên nhau đong đầy kỷ niệm"
+            }
           )
         )
       }
@@ -165,7 +169,11 @@ object LoveAnniversaryMilestoneScheduler {
             daysRemaining = daysRemaining,
             isAnnual = true,
             emoji = "💍",
-            description = "Tròn $yearsInLove năm tình yêu bền vững và hạnh phúc"
+            description = if (isEnglish) {
+              "Celebrating $yearsInLove years of lasting love and happiness"
+            } else {
+              "Tròn $yearsInLove năm tình yêu bền vững và hạnh phúc"
+            }
           )
         )
       }
@@ -403,11 +411,21 @@ object LoveAnniversaryMilestoneScheduler {
     partnerName: String = "người ấy",
     sampleMilestoneTitle: String = "💎 Bách Nhật Yêu (100 Ngày)"
   ) {
-    val name = partnerName.ifBlank { "người ấy" }
+    val isEnglish = LocaleManager.getInitialLanguage(context) == AppLanguage.EN
+    val (title, message) = if (isEnglish) {
+      val localizedPartner = if (partnerName.isBlank() || partnerName == "người ấy") "your partner" else partnerName
+      val localizedMilestone = if (sampleMilestoneTitle == "💎 Bách Nhật Yêu (100 Ngày)") "💎 100 Days in Love" else sampleMilestoneTitle
+      "🔔 Test: $localizedMilestone ❤️" to
+        "Your love milestone notifications are working! You'll get alerts 3 days before, 1 day before, and on the milestone day with $localizedPartner! ✨"
+    } else {
+      val name = partnerName.ifBlank { "người ấy" }
+      "🔔 Thử Nghiệm: Cột Mốc $sampleMilestoneTitle ❤️" to
+        "Thông báo nhắc nhở cột mốc kỷ niệm tình yêu từ Firestore hoạt động hoàn hảo! Bạn sẽ nhận được thông báo trước 3 ngày, 1 ngày và vào đúng ngày kỷ niệm cùng $name! ✨"
+    }
     ReminderAlarmReceiver.showNotification(
       context = context,
-      title = "🔔 Thử Nghiệm: Cột Mốc $sampleMilestoneTitle ❤️",
-      message = "Thông báo nhắc nhở cột mốc kỷ niệm tình yêu từ Firestore hoạt động hoàn hảo! Bạn sẽ nhận được thông báo trước 3 ngày, 1 ngày và vào đúng ngày kỷ niệm cùng $name! ✨",
+      title = title,
+      message = message,
       notificationId = 8888,
       channelId = ReminderAlarmReceiver.CHANNEL_ANNIVERSARIES_ID,
       targetTab = "calendar"

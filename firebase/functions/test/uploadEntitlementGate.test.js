@@ -46,6 +46,7 @@ function load({ gates = GATES, deps = makeDeps() } = {}) {
     './src/pairing': {},
     './src/accountDeletion': {},
     './src/avatar': {},
+    './src/aiAdvisor': {},
     './src/objectStore': { createObjectStore: () => cloudFake },
     './src/entitlement': {},
     './src/entitlement/options': { STORE_SECRETS: [secret('STORE_SECRET')] },

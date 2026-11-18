@@ -1,25 +1,8 @@
 @file:Suppress("FunctionName")
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,111 +12,60 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.Celebration
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.FormatQuote
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.VolunteerActivism
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Wallpaper
-import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.ui.components.AnniversaryMemoriesWidget
-import com.example.ui.components.LoveDaysCalculatorWidget
-import com.example.ui.components.MilestoneBadgeDashboardCard
-import com.example.ui.components.PartnerCard
-import com.example.ui.components.PrimaryGradientButton
-import com.example.ui.components.ProfileAvatar
-import com.example.ui.components.SecondaryButton
-import com.example.ui.components.pressClickable
-import com.example.ui.theme.MinTouchBox
-import com.example.ui.util.AppLanguage
-import com.example.ui.util.LocalizedStrings
-import com.example.ui.util.ProfileUtils
-import com.example.ui.util.displayMeName
-import com.example.ui.util.displayPartnerName
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.sin
+import coil.compose.AsyncImage
+import com.example.ui.components.AnniversaryMemoriesWidget
+import com.example.ui.components.LoveDaysCalculatorWidget
+import com.example.ui.components.MilestoneBadgeDashboardCard
+import com.example.ui.components.pressClickable
+import com.example.ui.designsystem.InLoveLayoutGrid
+import com.example.ui.screens.home.AmbientFloatingHeartsCanvasContent
+import com.example.ui.screens.home.HomeCoupleProfileCard
+import com.example.ui.screens.home.HomeCoupleReflectionsCard
+import com.example.ui.screens.home.HomeDaysCounterHero
+import com.example.ui.screens.home.HomeNextMilestoneCard
+import com.example.ui.screens.home.HomeStatusBanners
+import com.example.ui.screens.home.NextOccasionReadinessCard
+import com.example.ui.theme.CardBorder
+import com.example.ui.theme.MinTouchBox
+import com.example.ui.util.AppLanguage
+import com.example.ui.util.LocalizedStrings
+import com.example.ui.util.displayMeName
+import com.example.ui.util.displayPartnerName
+import com.example.ui.viewmodel.InLoveViewModel
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.delay
-import coil.compose.AsyncImage
-import com.example.ui.theme.HotPink
-import com.example.ui.theme.Primary
-import com.example.ui.theme.PrimaryContainer
-import com.example.ui.theme.PrimaryFixed
-import com.example.ui.theme.RoseGradientEnd
-import com.example.ui.theme.RoseGradientMid
-import com.example.ui.theme.RoseGradientStart
-import com.example.ui.theme.Secondary
-import com.example.ui.theme.CardBorder
-import com.example.ui.theme.TextDarkPlum
-import com.example.ui.theme.TextSubtlePlum
-import com.example.ui.viewmodel.InLoveViewModel
 
-// High-quality romantic cherry blossom floral background
 const val CHERRY_BLOSSOM_BG =
   "https://images.unsplash.com/photo-1522383225653-ed111181a951?q=80&w=1080&auto=format&fit=crop"
 
@@ -160,7 +92,6 @@ fun LoveHomeScreen(
   val loveDays by viewModel.loveDays.collectAsState()
   val anniversaryDate by viewModel.anniversaryDate.collectAsState()
 
-  // Online 1-1 Set Love States
   val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
   val partnerUser by viewModel.partnerOnlineUser.collectAsState()
   val relationshipStatus by viewModel.relationshipStatus.collectAsState()
@@ -169,6 +100,8 @@ fun LoveHomeScreen(
 
   val selectedWallpaperUrl by viewModel.selectedWallpaperUrl.collectAsState()
   val isOnline by viewModel.isOnline.collectAsState()
+  val nextReadiness by viewModel.nextOccasionReadiness.collectAsState()
+  val isSacredCelebrationToday by viewModel.isSacredCelebrationToday.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
   val strings = LocalizedStrings.get(appLanguage)
   val isEnglish = appLanguage == AppLanguage.EN
@@ -178,115 +111,11 @@ fun LoveHomeScreen(
   val scrollState = rememberScrollState()
   var showEditLoveTitleDialog by remember { mutableStateOf(false) }
 
-  // Heart pulse animation
-  val infiniteTransition = rememberInfiniteTransition(label = "heart_pulse")
-  val pulseScale by infiniteTransition.animateFloat(
-    initialValue = 1.0f,
-    targetValue = 1.18f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(800, easing = FastOutSlowInEasing),
-      repeatMode = RepeatMode.Reverse
-    ),
-    label = "heart_scale"
-  )
-
-  // Heartbeat expanding ripple wave 1
-  val ripple1Scale by infiniteTransition.animateFloat(
-    initialValue = 1.0f,
-    targetValue = 1.75f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(1400, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "ripple1_scale"
-  )
-  val ripple1Alpha by infiniteTransition.animateFloat(
-    initialValue = 0.55f,
-    targetValue = 0.0f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(1400, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "ripple1_alpha"
-  )
-
-  // Heartbeat expanding ripple wave 2
-  val ripple2Scale by infiniteTransition.animateFloat(
-    initialValue = 1.0f,
-    targetValue = 1.50f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(1800, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "ripple2_scale"
-  )
-  val ripple2Alpha by infiniteTransition.animateFloat(
-    initialValue = 0.45f,
-    targetValue = 0.0f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(1800, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "ripple2_alpha"
-  )
-
-  // Rotating soft aura around the Days in Love circular counter
-  val counterAuraAngle by infiniteTransition.animateFloat(
-    initialValue = 0f,
-    targetValue = 360f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(12000, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "counter_aura_angle"
-  )
-
-  // Sweet romantic feedback quotes & reflections
-  val loveQuotes = remember(loveDays, boyName, girlName, appLanguage) {
-    if (appLanguage == AppLanguage.VI) {
-      listOf(
-        "Dù mai này cuộc sống có bận rộn đến đâu, anh vẫn luôn chọn yêu em như những ngày đầu tiên 💕",
-        "Cảm ơn vì đã cùng anh đi qua $loveDays ngày ngọt ngào, đầy ắp tiếng cười và những cái ôm ấm áp ✨",
-        "Tình yêu không phải là tìm một người hoàn hảo, mà là cùng nhau hoàn thiện và bao dung mỗi ngày 🌸",
-        "Bên cạnh em, mỗi phút giây bình dị nhất cũng trở thành những kỷ niệm vô giá của cuộc đời anh 💖",
-        "Cảm ơn em vì đã là mảnh ghép dịu dàng nhất bước vào thanh xuân của anh 🌷",
-        "$loveDays ngày bên nhau không chỉ là một con số, mà là minh chứng cho tình yêu bền chặt của đôi ta 💍"
-      )
-    } else {
-      listOf(
-        "No matter how busy life gets, I will always choose to love you like day one 💕",
-        "Thank you for walking with me through $loveDays sweet days filled with warm smiles and hugs ✨",
-        "Love isn't about finding someone perfect, but growing and cherishing each other every day 🌸",
-        "Beside you, even the simplest moments turn into priceless treasures 💖",
-        "Thank you for being the sweetest part of my youth 🌷",
-        "$loveDays days together is not just a number, but a testament to our everlasting love 💍"
-      )
-    }
-  }
-  val currentQuoteIndex = remember { mutableIntStateOf(0) }
-
-  // Calculation for upcoming anniversary milestone
   val nextMilestone = ((loveDays / 100) + 1) * 100
   val daysRemaining = (nextMilestone - loveDays).coerceAtLeast(1)
   val milestoneProgress = ((loveDays % 100).toFloat() / 100f).coerceIn(0.05f, 1f)
 
-  // Fluid UI animations for love days counter and milestone progress
-  val animatedLoveDays by animateIntAsState(
-    targetValue = loveDays,
-    animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
-    label = "animated_love_days"
-  )
-  val animatedMilestoneProgress by animateFloatAsState(
-    targetValue = milestoneProgress,
-    animationSpec = spring(
-      dampingRatio = Spring.DampingRatioMediumBouncy,
-      stiffness = Spring.StiffnessLow
-    ),
-    label = "animated_milestone_progress"
-  )
-
-  // Responsive dimension calculations for optimal mobile rendering
-  val screenConfig = androidx.compose.ui.platform.LocalConfiguration.current
+  val screenConfig = LocalConfiguration.current
   val isCompactScreen = screenConfig.screenWidthDp < 390 || screenConfig.screenHeightDp < 750
   val counterBoxSize = if (isCompactScreen) 198.dp else 222.dp
   val counterSurfaceSize = counterBoxSize - 22.dp
@@ -298,15 +127,10 @@ fun LoveHomeScreen(
   val avatarInnerSize = avatarOuterSize - 4.dp
   val centerHeartSize = if (isCompactScreen) 44.dp else 50.dp
 
-  // Trigger floating heart celebration overlay whenever a milestone anniversary is reached
-  val isMilestoneReached = (loveDays > 0 && loveDays % 100 == 0)
+  val isMilestoneReached = loveDays > 0 && loveDays % 100 == 0
   LaunchedEffect(loveDays) {
-    if (isMilestoneReached) {
-      viewModel.celebrateMilestoneAnniversary(loveDays)
-    }
+    if (isMilestoneReached) viewModel.celebrateMilestoneAnniversary(loveDays)
   }
-
-  // The home counter is otherwise refreshed only on resume: re-read the clock each minute so it rolls over after midnight
   LaunchedEffect(Unit) {
     while (true) {
       delay(1.minutes)
@@ -315,62 +139,38 @@ fun LoveHomeScreen(
   }
 
   Box(modifier = Modifier.fillMaxSize()) {
-    // 1. Romantic Background (Dynamic based on selected wallpaper)
     AsyncImage(
       model = selectedWallpaperUrl,
       contentDescription = "Romantic Wallpaper Background",
       contentScale = ContentScale.Crop,
       modifier = Modifier.fillMaxSize()
     )
-
-    // Soft pearl and romantic dreamy gradient overlay ensuring high contrast and readability over any wallpaper
     Box(
       modifier = Modifier
         .fillMaxSize()
         .background(
           Brush.verticalGradient(
-            listOf(
-              Color(0x70FFF5F8), // Soft Pearl Rose Scrim (high readability)
-              Color(0x55FFE4E1), // Misty Rose Cream
-              Color(0x75FCE4EC), // Soft Strawberry Pastel
-              Color(0xF5FFF0F5)  // Solid Lavender Blush Base
-            )
+            listOf(Color(0x70FFF5F8), Color(0x55FFE4E1), Color(0x75FCE4EC), Color(0xF5FFF0F5))
           )
         )
     )
+    AmbientFloatingHeartsCanvas(modifier = Modifier.fillMaxSize())
 
-    // Custom Love Animation: Ambient Floating Pastel Hearts drifting smoothly across background
-    AmbientFloatingHeartsCanvas(
-      modifier = Modifier.fillMaxSize()
-    )
-
-    // 2. Main Scrollable Content
     Column(
       modifier = Modifier
         .fillMaxSize()
         .verticalScroll(scrollState)
-        .padding(horizontal = 12.dp, vertical = 4.dp)
+        .padding(horizontal = InLoveLayoutGrid.ScreenHorizontal, vertical = 4.dp)
         .padding(bottom = 20.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      // Top Quick Action Bar: Symmetrical, cohesive, soft pastel glassmorphic card
-      Row(
-        modifier = Modifier.padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
       Surface(
         shape = RoundedCornerShape(20.dp),
         color = Color.White.copy(alpha = 0.98f),
         shadowElevation = 4.dp,
         modifier = Modifier
-          .weight(1f)
-          .border(
-            width = 1.2.dp,
-            color = CardBorder,
-            shape = RoundedCornerShape(20.dp)
-          )
-          .padding(vertical = 0.dp)
+          .fillMaxWidth()
+          .border(width = 1.2.dp, color = CardBorder, shape = RoundedCornerShape(20.dp))
       ) {
         Row(
           modifier = Modifier
@@ -379,7 +179,6 @@ fun LoveHomeScreen(
           horizontalArrangement = Arrangement.SpaceAround,
           verticalAlignment = Alignment.CenterVertically
         ) {
-          // 1. Change Wallpaper
           HomeQuickActionButton(
             icon = Icons.Filled.Wallpaper,
             label = strings.actionWallpaper,
@@ -387,8 +186,6 @@ fun LoveHomeScreen(
             testTag = "btn_quick_wallpaper",
             modifier = Modifier.weight(1f)
           )
-
-          // 2. Capture / Save Memory
           HomeQuickActionButton(
             icon = Icons.Filled.CameraAlt,
             label = strings.actionMemory,
@@ -396,8 +193,6 @@ fun LoveHomeScreen(
             testTag = "btn_quick_memory",
             modifier = Modifier.weight(1f)
           )
-
-          // 4. User Guide
           HomeQuickActionButton(
             icon = Icons.AutoMirrored.Filled.MenuBook,
             label = strings.actionGuide,
@@ -407,551 +202,89 @@ fun LoveHomeScreen(
           )
         }
       }
-      }
+
       Spacer(modifier = Modifier.height(8.dp))
 
+      HomeStatusBanners(
+        isOnline = isOnline,
+        hasLocalOrOnlineName = currentOnlineUser.isProfileSetup || boyName.isNotBlank(),
+        incomingInvite = incomingInvite,
+        showPairBanner = shouldShowPairBanner(relationshipStatus, girlName, coupleLoaded),
+        isEnglish = isEnglish,
+        onOpenEditProfile = { viewModel.openEditProfileDialog() },
+        onOpenPairingScreen = { viewModel.openPairingScreen() }
+      )
 
-      // Offline Banner — backed by AppServiceLocator's NetworkMonitor, which was already
-      // running process-wide but had no UI reading it anywhere (the checklist's "no offline/
-      // online awareness" gap). Informational only, not clickable: nothing to tap into.
-      if (!isOnline) {
-        Surface(
-          shape = RoundedCornerShape(16.dp),
-          color = Color(0xFFECEFF1),
-          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB0BEC5)),
-          shadowElevation = 2.dp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp)
-            .testTag("home_offline_banner")
-        ) {
-          Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Default.WifiOff,
-              contentDescription = null,
-              tint = Color(0xFF455A64),
-              modifier = Modifier.size(22.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-              Text(
-                text = if (isEnglish) "You're offline" else "Bạn đang mất kết nối mạng",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = Color(0xFF263238)
-              )
-              Text(
-                text = if (isEnglish) "New memories and pairing changes will sync once you're back online."
-                       else "Kỷ niệm mới và thay đổi ghép đôi sẽ tự đồng bộ khi có mạng trở lại.",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF455A64)
-              )
-            }
-          }
-        }
-      }
-
-      // Dynamic Banner 1: Profile Setup Warning (Anonymous State)
-      val hasLocalOrOnlineName = currentOnlineUser.isProfileSetup || boyName.isNotBlank()
-      if (!hasLocalOrOnlineName) {
-        Surface(
-          shape = RoundedCornerShape(16.dp),
-          color = Color(0xFFFFF3E0),
-          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB74D)),
-          shadowElevation = 2.dp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable { viewModel.openEditProfileDialog() }
-            .padding(bottom = 8.dp)
-            .testTag("home_anonymous_profile_banner")
-        ) {
-          Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Default.AutoAwesome,
-              contentDescription = null,
-              tint = Color(0xFFE65100),
-              modifier = Modifier.size(22.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-              Text(
-                text = if (isEnglish) "Your profile name is not set" else "Hồ sơ của bạn đang là \"Vô danh\"",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = Color(0xFFBF360C)
-              )
-              Text(
-                text = if (isEnglish) "Tap here to set your name & birthday (age & zodiac will auto-calculate!)"
-                       else "Bấm vào đây để nhập tên & ngày sinh (tuổi & cung hoàng đạo sẽ tự động tính!)",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF4E1D00)
-              )
-            }
-          }
-        }
-      }
-
-      // Dynamic Banner 2: Incoming Set Love Invite Notice
-      if (incomingInvite != null) {
-        Surface(
-          shape = RoundedCornerShape(16.dp),
-          color = Color(0xFFFFF0F5),
-          border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFF4081)),
-          shadowElevation = 3.dp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable { viewModel.openPairingScreen() }
-            .padding(bottom = 8.dp)
-            .testTag("home_incoming_invite_banner")
-        ) {
-          Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Default.Favorite,
-              contentDescription = null,
-              tint = Color(0xFFE91E63),
-              modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-              Text(
-                text = if (isEnglish) "💌 Pairing invite from ${incomingInvite?.effectiveSenderName.orEmpty().ifBlank { "Partner" }}"
-                       else "💌 Lời mời kết đôi từ ${incomingInvite?.effectiveSenderName.orEmpty().ifBlank { "Người ấy" }}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = Color(0xFF880E4F)
-              )
-              Text(
-                text = if (isEnglish) "Tap to verify partner identity and anniversary date before accepting 💕"
-                       else "Bấm để kiểm tra danh tính và ngày yêu trước khi đồng ý 💕",
-                fontSize = 11.sp,
-                color = Color(0xFFC2185B)
-              )
-            }
-            Surface(
-              shape = RoundedCornerShape(8.dp),
-              color = Color(0xFFE91E63)
-            ) {
-              Text(
-                text = if (isEnglish) "View" else "Xem",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-              )
-            }
-          }
-        }
-      } else if (shouldShowPairBanner(relationshipStatus, girlName, coupleLoaded)) {
-        // Dynamic Banner 3: Prompt to Pair 1-1 (not once a partner is set up)
-        Surface(
-          shape = RoundedCornerShape(16.dp),
-          color = Color.White.copy(alpha = 0.95f),
-          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFC6DB)),
-          shadowElevation = 2.dp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable { viewModel.openPairingScreen() }
-            .padding(bottom = 8.dp)
-            .testTag("home_prompt_pair_banner")
-        ) {
-          Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Default.VolunteerActivism,
-              contentDescription = null,
-              tint = Color(0xFFE91E63),
-              modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (isEnglish) "Pair with your partner" else "Ghép đôi cùng người ấy",
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Bold,
-              color = TextDarkPlum,
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
-              modifier = Modifier.weight(1f)
-            )
-            Text(
-              text = if (isEnglish) "Pair >" else "Ghép >",
-              fontSize = 11.5.sp,
-              fontWeight = FontWeight.ExtraBold,
-              color = Primary
-            )
-          }
-        }
-      }
-
-      // 3. Middle Area: Trái tim kèm theo số ngày yêu nổi bật (Large Circular Counter)
-      Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-          .size(counterBoxSize)
-          .clickable {
-            viewModel.triggerFloatingHearts()
-            val toastMsg = if (isEnglish) "$loveDays wonderful days together in love! ❤️" else "Bên nhau $loveDays ngày hạnh phúc vô bờ! ❤️"
-            viewModel.showToast(toastMsg)
-          }
-          .testTag("love_circle_days_counter")
-      ) {
-        // Glowing animated circular progress ring with soft rotating pastel aura
-        Canvas(modifier = Modifier.fillMaxSize()) {
-          val strokeWidth = 5.dp.toPx()
-          // Background soft ring
-          drawCircle(
-            color = Color(0xFFFFE4EE).copy(alpha = 0.85f),
-            radius = size.minDimension / 2 - strokeWidth / 2,
-            style = Stroke(width = strokeWidth)
-          )
-          // Glowing rotating soft pastel romantic sweep arc
-          drawArc(
-            brush = Brush.sweepGradient(
-              listOf(
-                Color(0xFFFFB6C1),
-                Color(0xFFFF4081),
-                Color(0xFFFF80AB),
-                Color(0xFFF48FB1),
-                Color(0xFFFFB6C1)
-              )
-            ),
-            startAngle = counterAuraAngle,
-            sweepAngle = 280f,
-            useCenter = false,
-            style = Stroke(width = strokeWidth + 2.dp.toPx(), cap = StrokeCap.Round)
-          )
-        }
-
-        // Main Pristine Circular Card
-        Surface(
-          shape = CircleShape,
-          color = Color.White.copy(alpha = 0.98f),
-          shadowElevation = 8.dp,
-          modifier = Modifier.size(counterSurfaceSize)
-        ) {
-          Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-          ) {
-            // Love title with romantic heart borders & quick edit action
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(4.dp),
-              modifier = Modifier
-                .widthIn(max = counterSurfaceSize - 24.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .clickable { showEditLoveTitleDialog = true }
-                .padding(horizontal = 4.dp, vertical = 2.dp)
-            ) {
-              Text(
-                text = loveTitle,
-                fontSize = daysTitleFontSize,
-                fontWeight = FontWeight.Bold,
-                color = Primary,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
-              )
-            }
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            // Big Days Count in High Contrast
-            Text(
-              text = "$animatedLoveDays",
-              fontSize = daysCountFontSize,
-              fontWeight = FontWeight.ExtraBold,
-              color = TextDarkPlum,
-              lineHeight = daysCountLineHeight
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.Center
-            ) {
-              Icon(
-                imageVector = Icons.Filled.VolunteerActivism,
-                contentDescription = null,
-                tint = Color(0xFFFF4081),
-                modifier = Modifier.size(14.dp)
-              )
-              Spacer(modifier = Modifier.width(3.dp))
-              Text(
-                text = strings.daysInLove,
-                fontSize = daysInLoveLabelSize,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF880E4F)
-              )
-              Spacer(modifier = Modifier.width(3.dp))
-              Icon(
-                imageVector = Icons.Rounded.Favorite,
-                contentDescription = null,
-                tint = HotPink,
-                modifier = Modifier.size(12.dp)
-              )
-            }
-          }
-        }
-      }
+      HomeDaysCounterHero(
+        loveDays = loveDays,
+        loveTitle = loveTitle,
+        daysInLoveLabel = strings.daysInLove,
+        isEnglish = isEnglish,
+        counterBoxSize = counterBoxSize,
+        counterSurfaceSize = counterSurfaceSize,
+        daysTitleFontSize = daysTitleFontSize,
+        daysCountFontSize = daysCountFontSize,
+        daysCountLineHeight = daysCountLineHeight,
+        daysInLoveLabelSize = daysInLoveLabelSize,
+        onCounterClick = {
+          viewModel.triggerFloatingHearts()
+          val toastMsg = if (isEnglish) "$loveDays wonderful days together" else "Bên nhau $loveDays ngày thật ngọt ngào"
+          viewModel.showToast(toastMsg)
+        },
+        onEditTitleClick = { showEditLoveTitleDialog = true }
+      )
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // 4. Bottom Area: Hồ sơ 2 người với ảnh đại diện, tuổi, cung hoàng đạo & ngày sinh
-      Card(
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = Color.White.copy(alpha = 0.98f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .testTag("couple_bottom_section")
-      ) {
-        val isCoupled = relationshipStatus == com.example.data.model.OnlineStatus.COUPLED && partnerUser != null
-
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          // Left: Current User Profile (User can only edit their own profile)
-          Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-              .weight(1f)
-              .testTag("current_user_profile_col")
-          ) {
-            Box(
-              modifier = Modifier.size(avatarOuterSize).clickable(onClickLabel = if (isEnglish) "Edit profile" else "Chỉnh sửa hồ sơ", role = Role.Button) { viewModel.openEditProfileDialog() }.testTag("home_my_avatar"),
-              contentAlignment = Alignment.Center
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(avatarInnerSize)
-                  .clip(CircleShape)
-                  .border(2.dp, Color(0xFF81D4FA), CircleShape)
-                  .shadow(3.dp, CircleShape),
-                contentAlignment = Alignment.Center
-              ) {
-                ProfileAvatar(
-                  url = currentOnlineUser.avatarUrl.ifEmpty { boyAvatarUrl },
-                  contentDescription = currentOnlineUser.effectiveDisplayName,
-                  modifier = Modifier.fillMaxSize()
-                )
-              }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            val displayedUserName = currentOnlineUser.effectiveDisplayName.ifBlank { meLabel }
-            Text(
-              text = displayedUserName,
-              fontSize = 14.sp,
-              fontWeight = FontWeight.Bold,
-              color = TextDarkPlum,
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            val myBirth = currentOnlineUser.birthDate.ifBlank { boyBirthDate }
-
-            // Badges: Soft Pastel Age & Zodiac (Auto calculated)
-            Row(
-              horizontalArrangement = Arrangement.spacedBy(4.dp),
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              if (!currentOnlineUser.isProfileSetup && boyName.isBlank()) {
-                Surface(
-                  shape = RoundedCornerShape(50.dp),
-                  color = Color(0xFFFFEBEE)
-                ) {
-                  Text(
-                    text = if (isEnglish) "Not set" else "Vô danh",
-                    color = Color(0xFFC62828),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                  )
-                }
-              } else {
-                val myAge = ProfileUtils.calculateAge(myBirth).takeIf { it > 0 } ?: (if (currentOnlineUser.age > 0) currentOnlineUser.age else boyAge)
-                if (myAge > 0) {
-                  Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = Color(0xFFE0F7FA)
-                  ) {
-                    Text(
-                      text = "${myAge}t",
-                      color = Color(0xFF00838F),
-                      fontSize = 10.5.sp,
-                      fontWeight = FontWeight.Bold,
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                  }
-                }
-
-                val myZodiac = ProfileUtils.formatZodiacDisplay(currentOnlineUser.zodiac.ifEmpty { boyZodiac }, isEnglish)
-                if (myZodiac.isNotBlank()) {
-                  Surface(
-                    shape = RoundedCornerShape(50.dp),
-                    color = Color(0xFFF3E5F5),
-                    modifier = Modifier.weight(1f, fill = false)
-                  ) {
-                    Text(
-                      text = myZodiac,
-                      color = Color(0xFF7B1FA2),
-                      fontSize = 10.sp,
-                      fontWeight = FontWeight.SemiBold,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis,
-                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                  }
-                }
-              }
-            }
-
-            if (myBirth.isNotBlank()) {
-              Spacer(modifier = Modifier.height(2.dp))
-              Text(
-                text = myBirth,
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextSubtlePlum
-              )
-            }
-          }
-
-          // Center: Beating Romantic Heart Button with Dual Love Expanding Waves
-          Box(
-            modifier = Modifier.size(avatarOuterSize),
-            contentAlignment = Alignment.Center
-          ) {
-            // Expanding Heartbeat Ripple 1
-            Box(
-              modifier = Modifier
-                .size(centerHeartSize)
-                .scale(ripple1Scale)
-                .clip(CircleShape)
-                .background(Color(0xFFFF80AB).copy(alpha = ripple1Alpha))
-            )
-            // Expanding Heartbeat Ripple 2
-            Box(
-              modifier = Modifier
-                .size(centerHeartSize)
-                .scale(ripple2Scale)
-                .clip(CircleShape)
-                .background(Color(0xFFFFB6C1).copy(alpha = ripple2Alpha))
-            )
-            // Center Core Heart
-            Box(
-              modifier = Modifier
-                .scale(pulseScale)
-                .size(centerHeartSize)
-                .clip(CircleShape)
-                .background(
-                  Brush.linearGradient(
-                    listOf(RoseGradientStart, RoseGradientMid)
-                  )
-                )
-                .shadow(4.dp, CircleShape)
-                .clickable {
-                  viewModel.triggerFloatingHearts()
-                  if (isCoupled) {
-                    viewModel.showToast(if (isEnglish) "Heart connection: $meLabel & $partnerLabel ❤️" else "Trái tim kết nối $meLabel & $partnerLabel ❤️")
-                  } else {
-                    viewModel.showToast(if (isEnglish) "Sweet love of $meLabel & $partnerLabel! ❤️" else "Hai bạn $meLabel & $partnerLabel luôn ngọt ngào bên nhau! ❤️")
-                  }
-                }
-                .testTag("btn_center_heart"),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Favorite,
-                contentDescription = if (isEnglish) "Love heart" else "Trái tim tình yêu",
-                tint = Color.White,
-                modifier = Modifier.size(22.dp)
-              )
-            }
-          }
-
-          // Right: Partner Profile (if online coupled: partnerUser, if offline: girl profile)
-          if (isCoupled && partnerUser != null) {
-            val partnerBirth = partnerUser?.birthDate.orEmpty().ifEmpty { girlBirthDate }
-            PartnerCard(
-              avatarUrl = partnerUser?.avatarUrl.orEmpty().ifEmpty { girlAvatarUrl },
-              name = displayPartnerName(partnerUser?.effectiveDisplayName.orEmpty().ifBlank { girlName }, isEnglish),
-              age = ProfileUtils.calculateAge(partnerBirth).takeIf { it > 0 } ?: (if ((partnerUser?.age ?: 0) > 0) partnerUser?.age ?: 0 else girlAge),
-              zodiac = ProfileUtils.formatZodiacDisplay(partnerUser?.zodiac.orEmpty().ifEmpty { girlZodiac }, isEnglish),
-              birthDate = partnerBirth,
-              showHeartBadge = true,
-              avatarOuterSize = avatarOuterSize,
-              avatarInnerSize = avatarInnerSize,
-              onClick = { viewModel.openPairingScreen() },
-              testTag = "partner_user_profile_col",
-              modifier = Modifier.weight(1f)
-            )
+      HomeCoupleProfileCard(
+        currentOnlineUser = currentOnlineUser,
+        partnerUser = partnerUser,
+        relationshipStatus = relationshipStatus,
+        boyName = boyName,
+        boyBirthDate = boyBirthDate,
+        boyAvatarUrl = boyAvatarUrl,
+        boyAge = boyAge,
+        boyZodiac = boyZodiac,
+        girlName = girlName,
+        girlBirthDate = girlBirthDate,
+        girlAvatarUrl = girlAvatarUrl,
+        girlAge = girlAge,
+        girlZodiac = girlZodiac,
+        meLabel = meLabel,
+        partnerLabel = partnerLabel,
+        isEnglish = isEnglish,
+        avatarOuterSize = avatarOuterSize,
+        avatarInnerSize = avatarInnerSize,
+        centerHeartSize = centerHeartSize,
+        onMyAvatarClick = { viewModel.openEditProfileDialog() },
+        onHeartClick = { isCoupled ->
+          viewModel.triggerFloatingHearts()
+          if (isCoupled) {
+            viewModel.showToast(if (isEnglish) "Heart connection: $meLabel & $partnerLabel" else "Kết nối $meLabel & $partnerLabel")
           } else {
-            // Offline Partner Profile State: Always displays offline partner, user can tap to edit partner name/photo
-            PartnerCard(
-              avatarUrl = girlAvatarUrl,
-              name = partnerLabel,
-              age = ProfileUtils.calculateAge(girlBirthDate).takeIf { it > 0 } ?: girlAge,
-              zodiac = ProfileUtils.formatZodiacDisplay(girlZodiac, isEnglish),
-              birthDate = girlBirthDate,
-              showHeartBadge = false,
-              avatarOuterSize = avatarOuterSize,
-              avatarInnerSize = avatarInnerSize,
-              onClick = { viewModel.openEditCoupleDialog() },
-              testTag = "partner_offline_profile_col",
-              modifier = Modifier.weight(1f)
-            )
+            viewModel.showToast(if (isEnglish) "$meLabel & $partnerLabel together" else "Hai bạn $meLabel & $partnerLabel luôn gắn kết bên nhau")
           }
-        }
-      }
+        },
+        onCoupledPartnerClick = { viewModel.openPairingScreen() },
+        onOfflinePartnerClick = { viewModel.openEditCoupleDialog() }
+      )
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // 5. BỘ ĐẾM & MÁY TÍNH TOÁN NGÀY YÊU (Love Days Calculator Widget)
       LoveDaysCalculatorWidget(
         anniversaryDate = anniversaryDate,
         currentLoveDays = loveDays,
         boyName = meLabel,
         girlName = partnerLabel,
         language = appLanguage,
-        onRecalculateAndSync = { calculatedDays ->
-          viewModel.syncCalculatedDaysToHome(calculatedDays)
-        },
-        onUpdateAnniversaryDate = { newDate ->
-          viewModel.setAnniversaryAndRecalculateDays(newDate)
-        },
+        onRecalculateAndSync = { viewModel.syncCalculatedDaysToHome(it) },
+        onUpdateAnniversaryDate = { viewModel.setAnniversaryAndRecalculateDays(it) },
         onTriggerHearts = {
           viewModel.triggerFloatingHearts()
           val msg = if (appLanguage == AppLanguage.VI) {
-            "Hai bạn $meLabel & $partnerLabel đã gắn bó $loveDays ngày yêu thương! ❤️"
+            "Hai bạn $meLabel & $partnerLabel đã gắn bó $loveDays ngày yêu thương"
           } else {
-            "$meLabel & $partnerLabel have been in love for $loveDays days! ❤️"
+            "$meLabel & $partnerLabel have been in love for $loveDays days"
           }
           viewModel.showToast(msg)
         },
@@ -960,7 +293,6 @@ fun LoveHomeScreen(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // Visual Milestone Tracker & Heart Badges Showcase Card
       MilestoneBadgeDashboardCard(
         viewModel = viewModel,
         onOpenFullShowcase = { viewModel.openBadgeShowcase() },
@@ -969,7 +301,6 @@ fun LoveHomeScreen(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // 'Memories' Carousel Widget associated with specific anniversaries (Coil powered)
       AnniversaryMemoriesWidget(
         viewModel = viewModel,
         onNavigateToFullAlbum = onNavigateToMemories,
@@ -978,344 +309,52 @@ fun LoveHomeScreen(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // 6. GỢI Ý NGÀY KỶ NIỆM TIẾP THEO (Next Anniversary Milestone Suggestion Card)
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = Color.White.copy(alpha = 0.98f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp)
-        ) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-              Box(
-                modifier = Modifier
-                  .size(32.dp)
-                  .clip(CircleShape)
-                  .background(Color(0xFFFCE4EC)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.VolunteerActivism,
-                  contentDescription = null,
-                  tint = Color(0xFFFF4081),
-                  modifier = Modifier.size(20.dp)
-                )
-              }
-              Spacer(modifier = Modifier.width(8.dp))
-              Column {
-                Text(
-                  text = String.format(strings.nextMilestoneTitle, nextMilestone),
-                  fontSize = 14.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = TextDarkPlum,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis
-                )
-              }
-            }
+      HomeNextMilestoneCard(
+        loveDays = loveDays,
+        nextMilestone = nextMilestone,
+        daysRemaining = daysRemaining,
+        milestoneProgress = milestoneProgress,
+        isMilestoneReached = isMilestoneReached,
+        titleFormat = strings.nextMilestoneTitle,
+        daysRemainingFormat = strings.daysRemainingFormat,
+        progressTowardsLabel = strings.progressTowards,
+        giftButtonLabel = strings.btnGiftIdeas,
+        calendarButtonLabel = strings.btnAnniversaryCalendar,
+        celebrationTitle = strings.milestoneCelebrationTitle,
+        celebrationButtonLabel = strings.milestoneCelebrationBtn,
+        onOpenGifts = onNavigateToGifts,
+        onOpenCalendar = onNavigateToCalendar,
+        onCelebrate = { viewModel.celebrateMilestoneAnniversary(if (isMilestoneReached) loveDays else nextMilestone) }
+      )
 
-            // Countdown Pill with soft pastel shadow
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = Color(0xFFFF4081),
-              shadowElevation = 2.dp
-            ) {
-              Text(
-                text = String.format(strings.daysRemainingFormat, daysRemaining),
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(12.dp))
-
-          // Progress bar towards milestone
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Text(
-              text = strings.progressTowards,
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Medium,
-              color = TextSubtlePlum
-            )
-            Text(
-              text = "${(milestoneProgress * 100).toInt()}% ($loveDays / $nextMilestone)",
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Bold,
-              color = Primary
-            )
-          }
-
-          Spacer(modifier = Modifier.height(6.dp))
-
-          LinearProgressIndicator(
-            progress = { animatedMilestoneProgress },
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(8.dp)
-              .clip(RoundedCornerShape(50.dp)),
-            color = Primary,
-            trackColor = Color(0xFFFFD1DF)
-          )
-
-          Spacer(modifier = Modifier.height(10.dp))
-
-          // Action Buttons: Gifts and Calendar
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-          ) {
-            PrimaryGradientButton(
-              text = strings.btnGiftIdeas,
-              onClick = onNavigateToGifts,
-              modifier = Modifier
-                .weight(1f)
-                .heightIn(min = MinTouchBox),
-              icon = Icons.Filled.CardGiftcard,
-              testTag = "btn_next_anniversary_gifts"
-            )
-
-            SecondaryButton(
-              text = strings.btnAnniversaryCalendar,
-              onClick = onNavigateToCalendar,
-              modifier = Modifier
-                .weight(1f)
-                .heightIn(min = MinTouchBox),
-              icon = Icons.Filled.CalendarMonth,
-              testTag = "btn_next_anniversary_calendar"
-            )
-          }
-
-          // Floating Hearts Particle Celebration Action
-          Spacer(modifier = Modifier.height(10.dp))
-          Button(
-            onClick = {
-              viewModel.celebrateMilestoneAnniversary(if (isMilestoneReached) loveDays else nextMilestone)
-            },
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-              containerColor = Color(0xFFFF4081)
-            ),
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(42.dp)
-              .testTag("btn_celebrate_milestone_hearts")
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Favorite,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-              imageVector = Icons.Filled.Celebration,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (isMilestoneReached) {
-                strings.milestoneCelebrationTitle
-              } else {
-                strings.milestoneCelebrationBtn
-              },
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color.White,
-              maxLines = 1,
-              overflow = TextOverflow.Ellipsis
-            )
-          }
-        }
+      nextReadiness?.let { readiness ->
+        Spacer(modifier = Modifier.height(14.dp))
+        NextOccasionReadinessCard(
+          readiness = readiness,
+          isSacredCelebrationToday = isSacredCelebrationToday,
+          isEnglish = isEnglish,
+          onOpenGifts = onNavigateToGifts,
+          onOpenCalendar = onNavigateToCalendar
+        )
       }
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // 6. DÒNG CẢM XÚC & PHẢN HỒI YÊU THƯƠNG (Romantic Quotes & Sweet Feedback Card)
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = Color.White.copy(alpha = 0.98f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, CardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-        ) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Box(
-                modifier = Modifier
-                  .size(36.dp)
-                  .clip(CircleShape)
-                  .background(Color(0xFFFCE4EC)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.Favorite,
-                  contentDescription = null,
-                  tint = Color(0xFFFF4081),
-                  modifier = Modifier.size(20.dp)
-                )
-              }
-              Spacer(modifier = Modifier.width(8.dp))
-              Column {
-                Text(
-                  text = strings.quoteSectionTag,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.ExtraBold,
-                  color = Primary,
-                  letterSpacing = 0.8.sp
-                )
-                Text(
-                  text = strings.quoteSectionTitle,
-                  fontSize = 15.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = TextDarkPlum
-                )
-              }
-            }
-
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = Color(0xFFFFF0F5),
-              border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFC6DB))
-            ) {
-              Text(
-                text = "${currentQuoteIndex.intValue + 1}/${loveQuotes.size}",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = Primary,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(12.dp))
-
-          // Quote Box with elegant styling
-          Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFF5F8),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFD1DF)),
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Row(
-              modifier = Modifier.padding(14.dp),
-              verticalAlignment = Alignment.Top
-            ) {
-              Icon(
-                imageVector = Icons.Filled.FormatQuote,
-                contentDescription = null,
-                tint = Primary.copy(alpha = 0.6f),
-                modifier = Modifier.size(24.dp)
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              AnimatedContent(
-                targetState = loveQuotes[currentQuoteIndex.intValue],
-                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
-                label = "quote_transition"
-              ) { quoteText ->
-                Text(
-                  text = quoteText,
-                  fontSize = 13.5.sp,
-                  fontStyle = FontStyle.Italic,
-                  fontWeight = FontWeight.Medium,
-                  lineHeight = 20.sp,
-                  color = TextDarkPlum
-                )
-              }
-            }
-          }
-
-          Spacer(modifier = Modifier.height(12.dp))
-
-          // Quote Action Buttons
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-          ) {
-            SecondaryButton(
-              text = strings.btnShuffleQuote,
-              onClick = {
-                currentQuoteIndex.intValue = (currentQuoteIndex.intValue + 1) % loveQuotes.size
-                viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã đổi sang thông điệp yêu thương mới ✨" else "New love reflection loaded ✨")
-              },
-              modifier = Modifier
-                .weight(1f)
-                .heightIn(min = MinTouchBox),
-              icon = Icons.Filled.Refresh,
-              testTag = "btn_shuffle_quote"
-            )
-
-            Button(
-              onClick = {
-                viewModel.triggerFloatingHearts()
-                viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã sao chép lời yêu thương ngọt ngào để gửi cho $partnerLabel! 💌" else "Sweet love quote copied to send to $partnerLabel! 💌")
-              },
-              shape = RoundedCornerShape(14.dp),
-              colors = ButtonDefaults.buttonColors(
-                containerColor = Primary
-              ),
-              modifier = Modifier
-                .weight(1f)
-                .height(40.dp)
-                .testTag("btn_send_quote")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Favorite,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(15.dp)
-              )
-              Spacer(modifier = Modifier.width(4.dp))
-              Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(15.dp)
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = strings.btnSendToPartner,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-              )
-            }
-          }
+      HomeCoupleReflectionsCard(
+        loveDays = loveDays,
+        appLanguage = appLanguage,
+        sectionTag = strings.quoteSectionTag,
+        sectionTitle = strings.quoteSectionTitle,
+        shuffleLabel = strings.btnShuffleQuote,
+        sendLabel = strings.btnSendToPartner,
+        onShuffle = {
+          viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã chuyển sang lời nhắn tiếp theo" else "Next reflection loaded")
+        },
+        onSend = {
+          viewModel.triggerFloatingHearts()
+          viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã sẵn sàng gửi lời nhắn ngọt ngào tới $partnerLabel" else "Sweet love reflection ready for $partnerLabel")
         }
-      }
+      )
 
       Spacer(modifier = Modifier.height(16.dp))
     }
@@ -1356,101 +395,15 @@ fun HomeQuickActionButton(
       modifier = Modifier
         .size(34.dp)
         .clip(CircleShape)
-        .background(
-          Brush.linearGradient(
-            listOf(Color(0xFFFFB6C1), Color(0xFFFF80AB))
-          )
-        )
+        .background(Brush.linearGradient(listOf(Color(0xFFFFB6C1), Color(0xFFFF80AB))))
         .shadow(2.dp, CircleShape),
       contentAlignment = Alignment.Center
     ) {
-      Icon(
-        imageVector = icon,
-        contentDescription = label,
-        tint = Color.White,
-        modifier = Modifier.size(17.dp)
-      )
+      Icon(imageVector = icon, contentDescription = label, tint = Color.White, modifier = Modifier.size(17.dp))
     }
   }
 }
 
-/**
- * Custom animation: Gentle romantic ambient floating hearts drifting smoothly
- * across the background of the dashboard using soft pastel colors.
- */
 @Composable
-fun AmbientFloatingHeartsCanvas(modifier: Modifier = Modifier) {
-  val infiniteTransition = rememberInfiniteTransition(label = "ambient_hearts")
-  val progress by infiniteTransition.animateFloat(
-    initialValue = 0f,
-    targetValue = 1f,
-    animationSpec = infiniteRepeatable(
-      animation = tween(durationMillis = 7000, easing = LinearEasing),
-      repeatMode = RepeatMode.Restart
-    ),
-    label = "drift_progress"
-  )
-
-  Canvas(modifier = modifier) {
-    val heartColors = listOf(
-      Color(0xFFFFB6C1).copy(alpha = 0.40f), // Soft Pastel Pink
-      Color(0xFFFFC0CB).copy(alpha = 0.35f), // Soft Blossom
-      Color(0xFFFFD1DC).copy(alpha = 0.42f), // Pastel Rose
-      Color(0xFFF8BBD0).copy(alpha = 0.38f), // Soft Strawberry
-      Color(0xFFE1BEE7).copy(alpha = 0.30f), // Soft Pastel Lavender
-      Color(0xFFFFE4E1).copy(alpha = 0.45f)  // Misty Rose
-    )
-
-    val particles = listOf(
-      Pair(0.10f, 0.15f),
-      Pair(0.24f, 0.65f),
-      Pair(0.38f, 0.05f),
-      Pair(0.52f, 0.85f),
-      Pair(0.68f, 0.40f),
-      Pair(0.82f, 0.70f),
-      Pair(0.92f, 0.25f),
-      Pair(0.30f, 0.45f),
-      Pair(0.60f, 0.20f)
-    )
-
-    particles.forEachIndexed { index, (xFrac, offsetFrac) ->
-      val localProg = (progress + offsetFrac) % 1f
-      val y = size.height * (1f - localProg)
-      val sway = sin((localProg * 3.5 * Math.PI) + index).toFloat() * 18.dp.toPx()
-      val x = size.width * xFrac + sway
-      val heartSize = (14 + (index % 4) * 4).dp.toPx()
-      val color = heartColors[index % heartColors.size]
-
-      drawHeartPath(
-        center = Offset(x, y),
-        size = heartSize,
-        color = color
-      )
-    }
-  }
-}
-
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawHeartPath(
-  center: Offset,
-  size: Float,
-  color: Color
-) {
-  val path = Path().apply {
-    val half = size / 2f
-    val topCurveHeight = size * 0.35f
-    moveTo(center.x, center.y + half * 0.8f)
-    cubicTo(
-      center.x - half, center.y,
-      center.x - half, center.y - topCurveHeight,
-      center.x, center.y - topCurveHeight * 0.35f
-    )
-    cubicTo(
-      center.x + half, center.y - topCurveHeight,
-      center.x + half, center.y,
-      center.x, center.y + half * 0.8f
-    )
-    close()
-  }
-  drawPath(path = path, color = color)
-}
-
+fun AmbientFloatingHeartsCanvas(modifier: Modifier = Modifier) =
+  AmbientFloatingHeartsCanvasContent(modifier)

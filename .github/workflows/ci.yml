@@ -1,0 +1,82 @@
+name: InLove CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - kmp-ios
+  push:
+    branches:
+      - main
+      - kmp-ios
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa-gates:
+    name: QA & Architecture Gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.2.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'firebase/functions/package-lock.json'
+      - name: Install Firebase Functions dependencies
+        run: npm ci --prefix firebase/functions
+      - name: Run all Node QA & architecture gates
+        run: node scripts/qa/run-all-gates.mjs
+      - name: Verify Room schema baseline
+        run: bash scripts/kmp/schema-check.sh
+      - name: Verify Kotlin-Swift iOS bridge rules
+        run: bash scripts/kmp/check-ios-bridge.sh
+
+  android-and-shared:
+    name: Android & KMP Shared Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-java@v4.7.0
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4.3.1
+      - name: Ensure local debug keystore exists
+        run: |
+          if [ ! -f debug.keystore ]; then
+            keytool -genkeypair -v -keystore debug.keystore -storepass android \
+              -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+              -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+      - name: Compile KMP metadata, run shared & Android tests and lint
+        run: |
+          chmod +x gradlew
+          ./gradlew :shared:compileCommonMainKotlinMetadata :shared:testAndroidHostTest :app:testDebugUnitTest :app:lintDebug --stacktrace
+
+  ios-kmp-and-swift:
+    name: iOS KMP & Swift Core Tests
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-java@v4.7.0
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4.3.1
+      - name: Run InLoveIosCore Swift package tests
+        run: swift test --package-path iosApp/Packages/InLoveIosCore
+      - name: Run KMP iOS Simulator tests
+        run: |
+          chmod +x gradlew
+          ./gradlew :shared:iosSimulatorArm64Test --stacktrace

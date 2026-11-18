@@ -80,8 +80,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -758,9 +758,9 @@ fun AddMemoryDialog(
           modifier = Modifier
             .fillMaxWidth()
             .testTag("input_memory_title"),
-          colors = OutlinedTextFieldDefaults.colors(
+          colors = inLoveOutlinedTextFieldColors(
             focusedBorderColor = Color(0xFFFF2D75),
-            unfocusedBorderColor = Color(0xFFFFDDE6)
+            unfocusedBorderColor = Color(0xFFFFDDE6),
           )
         )
 
@@ -789,9 +789,9 @@ fun AddMemoryDialog(
             .fillMaxWidth()
             .animateContentSize()
             .testTag("input_memory_note"),
-          colors = OutlinedTextFieldDefaults.colors(
+          colors = inLoveOutlinedTextFieldColors(
             focusedBorderColor = Color(0xFFFF2D75),
-            unfocusedBorderColor = Color(0xFFFFDDE6)
+            unfocusedBorderColor = Color(0xFFFFDDE6),
           )
         )
 

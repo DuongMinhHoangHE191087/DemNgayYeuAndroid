@@ -5,14 +5,19 @@
   ],
   "products" : [
     {
-      "displayPrice" : "59.99",
+      "displayPrice" : "39.99",
       "familyShareable" : false,
       "internalID" : "6000000003",
       "localizations" : [
         {
-          "description" : "Mở khóa VIP một lần, không gia hạn",
-          "displayName" : "VIP trọn đời",
+          "description" : "Mở khóa Pro một lần, dùng trọn đời không gia hạn",
+          "displayName" : "InLove Pro Trọn đời",
           "locale" : "vi"
+        },
+        {
+          "description" : "Unlock Pro once — lifetime access, no renewal",
+          "displayName" : "InLove Pro Lifetime",
+          "locale" : "en_US"
         }
       ],
       "productID" : "vip_lifetime",
@@ -35,16 +40,21 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "4.99",
+          "displayPrice" : "2.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6000000001",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Mở khóa VIP, gia hạn mỗi tháng",
-              "displayName" : "VIP hàng tháng",
+              "description" : "Mở khóa InLove Pro linh hoạt theo tháng",
+              "displayName" : "InLove Pro Hàng tháng",
               "locale" : "vi"
+            },
+            {
+              "description" : "Flexible monthly InLove Pro access, cancel anytime",
+              "displayName" : "InLove Pro Monthly",
+              "locale" : "en_US"
             }
           ],
           "productID" : "vip_monthly",
@@ -60,7 +70,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "29.99",
+          "displayPrice" : "17.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6000000002",
@@ -72,9 +82,14 @@
           },
           "localizations" : [
             {
-              "description" : "Mở khóa VIP, dùng thử miễn phí 3 ngày, gia hạn mỗi năm",
-              "displayName" : "VIP hàng năm",
+              "description" : "Tiết kiệm 57% · Dùng thử miễn phí 3 ngày, gia hạn mỗi năm",
+              "displayName" : "InLove Pro Hàng năm",
               "locale" : "vi"
+            },
+            {
+              "description" : "Save 57% · 3-Day Free Trial, billed yearly",
+              "displayName" : "InLove Pro Yearly",
+              "locale" : "en_US"
             }
           ],
           "productID" : "vip_yearly",

@@ -63,8 +63,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -116,19 +116,9 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun authTextFieldColors() = OutlinedTextFieldDefaults.colors(
-  focusedTextColor = Color(0xFF1E1E24),
-  unfocusedTextColor = Color(0xFF1E1E24),
-  focusedContainerColor = Color.White,
+fun authTextFieldColors() = inLoveOutlinedTextFieldColors(
   unfocusedContainerColor = Color(0xFFFAFAFA),
-  disabledContainerColor = Color(0xFFF5F5F7),
-  focusedBorderColor = Color(0xFFE91E63),
-  unfocusedBorderColor = Color(0xFFC7C7CC),
   focusedLabelColor = Color(0xFFC2185B),
-  unfocusedLabelColor = Color(0xFF424242),
-  focusedPlaceholderColor = Color(0xFF757575),
-  unfocusedPlaceholderColor = Color(0xFF9E9E9E),
-  cursorColor = Color(0xFFE91E63)
 )
 
 @Composable
@@ -225,7 +215,7 @@ fun AuthScreen(
         verticalAlignment = Alignment.CenterVertically
       ) {
         SecondaryButton(
-          text = "Quay lại chế độ Khách (Offline)",
+          text = "Tiếp tục với chế độ khách",
           icon = Icons.AutoMirrored.Filled.ArrowBack,
           onClick = {
             viewModel.closeAuthScreen()

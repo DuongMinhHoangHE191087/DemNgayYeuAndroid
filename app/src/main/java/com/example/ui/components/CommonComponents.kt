@@ -85,7 +85,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
+import com.example.ui.designsystem.InLoveLayoutGrid
 import com.example.ui.theme.CardBorder
+import com.example.ui.theme.InLoveFonts
 import com.example.ui.theme.Primary
 import com.example.ui.theme.PrimaryFixed
 import com.example.ui.theme.RoseGradientEnd
@@ -108,14 +110,14 @@ internal fun InLoveTopBar(
   avatarUrl: String,
   latest: NotificationItem?,
   isEnglish: Boolean,
-  scrollBehavior: TopAppBarScrollBehavior,
+  scrollBehavior: TopAppBarScrollBehavior? = null,
   hasUnread: Boolean = false,
   onBellClick: () -> Unit = {},
   onProfileClick: () -> Unit = {},
   onSeeAll: () -> Unit = {},
   includeStatusBarPadding: Boolean = true
 ) {
-  val state = scrollBehavior.state
+  val state = scrollBehavior?.state
   val barShape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
   Box(
     modifier = Modifier
@@ -132,7 +134,7 @@ internal fun InLoveTopBar(
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(start = 20.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+          .padding(start = InLoveLayoutGrid.ScreenHorizontal, end = 14.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
         Row(
@@ -143,8 +145,9 @@ internal fun InLoveTopBar(
           Text(
             text = title,
             color = Color(0xFF2B0A1E),
-            fontSize = 21.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontFamily = InLoveFonts.DisplaySerif,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag("topbar_large_title")
@@ -169,23 +172,19 @@ internal fun InLoveTopBar(
       }
 
       if (latest != null) {
-        Column(
-          modifier = Modifier
-            .clipToBounds()
-            .layout { m, c ->
-              val p = m.measure(c.copy(minHeight = 0))
-              if (state.heightOffsetLimit != -p.height.toFloat()) state.heightOffsetLimit = -p.height.toFloat()
-              val h = (p.height + state.heightOffset).roundToInt().coerceAtLeast(0)
-              layout(p.width, h) { p.place(0, h - p.height) }
-            }
-            .padding(start = 16.dp, end = 16.dp, bottom = 10.dp)
-        ) {
+        val stripModifier = if (state != null) {
+          Modifier.clipToBounds().layout { m, c ->
+            val p = m.measure(c.copy(minHeight = 0))
+            if (state.heightOffsetLimit != -p.height.toFloat()) state.heightOffsetLimit = -p.height.toFloat()
+            val h = (p.height + state.heightOffset).roundToInt().coerceAtLeast(0)
+            layout(p.width, h) { p.place(0, h - p.height) }
+          }
+        } else Modifier
+        Column(modifier = stripModifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp)) {
           NotificationStrip(latest, isEnglish, onSeeAll)
         }
-      } else {
-        if (state.heightOffsetLimit == 0f) {
-          state.heightOffsetLimit = -1f
-        }
+      } else if (state != null && state.heightOffsetLimit != 0f) {
+        state.heightOffsetLimit = 0f
       }
     }
   }

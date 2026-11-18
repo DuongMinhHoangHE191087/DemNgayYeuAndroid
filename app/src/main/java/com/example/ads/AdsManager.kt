@@ -3,6 +3,7 @@ package com.example.ads
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import com.example.shared.monetization.SacredZone
 
 /**
  * Contract trừu tượng hóa toàn bộ nghiệp vụ quảng cáo Google AdMob.
@@ -12,8 +13,9 @@ import android.content.Context
  *
  * Nguyên tắc bắt buộc:
  *  - Mọi lệnh gọi phải kiểm tra [setVipStatus] trước — VIP không bao giờ thấy quảng cáo.
- *  - Interstitial có interval tối thiểu 30 giây (capped).
- *  - App Open Ad không hiện khi Paywall/Splash/Permission dialog đang mở.
+ *  - Interstitial tuân theo [com.example.shared.monetization.AdPlacementPolicy]
+ *    (warmup 60s, cooldown 120s, tối đa 3 lần/phiên, tắt hoàn toàn trong SacredZone).
+ *  - App Open Ad không hiện khi Paywall/Splash/Permission dialog hoặc SacredZone đang mở.
  */
 interface AdsManager {
     /**
@@ -41,10 +43,10 @@ interface AdsManager {
     fun preloadInterstitial(context: Context, adUnitId: String)
 
     /**
-     * Hiển thị Interstitial Ad với Interval Capping 30 giây.
+     * Hiển thị Interstitial Ad với cooldown 120s, warmup 60s, max 3 lần/phiên & SacredZone check.
      *
      * @param onAdDismissed Callback luôn được gọi — dù ad được hiển thị rồi đóng,
-     *   hoặc bị chặn bởi interval/VIP/load failure. Người dùng không bao giờ bị chờ.
+     *   hoặc bị chặn bởi interval/VIP/SacredZone/load failure. Người dùng không bao giờ bị chờ.
      */
     fun showInterstitial(activity: Activity, onAdDismissed: () -> Unit)
 
@@ -60,4 +62,16 @@ interface AdsManager {
      * Gọi lại [setAppOpenAdSuppressed](false) khi đóng các màn hình đó.
      */
     fun setAppOpenAdSuppressed(isSuppressed: Boolean)
+
+    /** Đánh dấu user đang ở vùng cảm xúc thiêng liêng (tắt toàn bộ quảng cáo). */
+    fun enterSacredZone(zone: SacredZone) {}
+
+    /** Rời khỏi vùng cảm xúc thiêng liêng. */
+    fun exitSacredZone(zone: SacredZone) {}
+
+    /** Đánh dấu hôm nay là ngày kỷ niệm/sinh nhật trọng đại (tắt quảng cáo cả ngày). */
+    fun setCelebrationDay(isCelebrationDay: Boolean) {}
+
+    /** Trả true nếu đang trong bất kỳ SacredZone hoặc ngày kỷ niệm nào. */
+    fun isInSacredZone(): Boolean = false
 }

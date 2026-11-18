@@ -12,6 +12,9 @@
     "source": "firebase/functions",
     "ignore": ["node_modules", "test", "scripts", "*.log", ".env", ".env.*"]
   },
+  "remoteconfig": {
+    "template": "firebase/remoteconfig.template.json"
+  },
   "emulators": {
     "firestore": {
       "port": 8080

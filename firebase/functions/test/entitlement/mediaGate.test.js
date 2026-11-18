@@ -48,6 +48,7 @@ function load({ gateFor = async () => ({ tier: 'free' }), enforce = async () => 
     './src/pairing': {},
     './src/accountDeletion': {},
     './src/avatar': {},
+    './src/aiAdvisor': {},
     './src/objectStore': { createObjectStore: () => ({}) },
     './src/entitlement': ENTITLEMENT_EXPORTS,
     './src/entitlement/options': { STORE_SECRETS: [secret('STORE_SECRET')] },

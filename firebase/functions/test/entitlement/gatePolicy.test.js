@@ -78,14 +78,15 @@ test('unknownGate_throws', () => {
   }
 });
 
-test('table_classifiesNineCallables', () => {
-  assert.equal(Object.keys(GATES).length, 9);
+test('table_classifiesTenCallables', () => {
+  assert.equal(Object.keys(GATES).length, 10);
   for (const n of ['acceptCoupleInvite', 'requestAccountDeletion', 'getAccountToken', 'claimPurchase', 'getEntitlement', 'signAvatarUpload']) {
     assert.equal(GATES[n].gate, 'free', n);
   }
-  for (const n of ['signMemoryUpload', 'confirmMemoryUpload', 'getMemoryMediaUrl']) {
+  for (const n of ['signMemoryUpload', 'confirmMemoryUpload', 'getMemoryMediaUrl', 'generateGiftAdvice']) {
     assert.equal(GATES[n].gate, 'tiered', n);
   }
+  assert.equal(GATES.generateGiftAdvice.freeAllowed, true);
 });
 
 test('table_mediaAreTieredWithFreeAllowedTrue', () => {

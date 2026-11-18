@@ -1,143 +1,79 @@
 @file:Suppress("FunctionName")
 package com.example.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
-import com.example.ui.util.AppLanguage
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import com.example.ui.components.AppAlertDialog
-import com.example.ui.components.AppDialog
-import com.example.ui.components.animateDialogEntrance
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AlarmOn
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.material.icons.filled.AutoFixHigh
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Checklist
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DinnerDining
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.HistoryEdu
-import androidx.compose.material.icons.filled.LocalFlorist
-import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.NaturePeople
-import androidx.compose.material.icons.filled.Redeem
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.TableRestaurant
-import androidx.compose.material.icons.filled.TaskAlt
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.data.model.ChecklistItemEntity
 import com.example.data.model.GiftIdeaEntity
 import com.example.data.model.GiftReminderEntity
 import com.example.domain.content.GiftCatalog
-import com.example.domain.usecase.GetPersonalizedGiftSuggestionsUseCase
 import com.example.domain.usecase.PersonalizedGiftSuggestion
+import com.example.ui.components.AppAlertDialog
 import com.example.ui.components.PrimaryGradientButton
 import com.example.ui.components.SecondaryButton
-import com.example.ui.components.disabledLook
+import com.example.ui.components.animateDialogEntrance
+import com.example.ui.designsystem.InLoveColors
+import com.example.ui.screens.gift.AiGiftConciergeSection
+import com.example.ui.screens.gift.ChecklistRowContent
+import com.example.ui.screens.gift.GiftAmbientBannerCard
+import com.example.ui.screens.gift.GiftBottomActions
+import com.example.ui.screens.gift.GiftCategoryFilterRow
+import com.example.ui.screens.gift.GiftChecklistCard
+import com.example.ui.screens.gift.GiftIdeaCardContent
+import com.example.ui.screens.gift.GiftIllustrationCaption
+import com.example.ui.screens.gift.GiftReminderRowContent
+import com.example.ui.screens.gift.GiftRemindersCard
+import com.example.ui.screens.gift.GiftVipProposalBanner
+import com.example.ui.screens.gift.PartnerDossierCard
+import com.example.ui.screens.gift.PartnerDossierSheet
+import com.example.ui.screens.gift.PartnerPreferencesEditorContent
+import com.example.ui.screens.gift.PersonalizedGiftCardContent
+import com.example.ui.screens.gift.PersonalizedGiftListContent
+import com.example.ui.screens.gift.WishlistNotebookDialogContent
+import com.example.ui.theme.InLoveFonts
 import com.example.ui.theme.MinTouchBox
-import com.example.ui.theme.OnPrimaryFixed
 import com.example.ui.theme.OnSurface
-import com.example.ui.theme.OnSurfaceVariant
-import com.example.ui.theme.OutlineVariant
 import com.example.ui.theme.Primary
-import com.example.ui.theme.PrimaryContainer
-import com.example.ui.theme.PrimaryFixed
-import com.example.ui.theme.RoseGradientMid
-import com.example.ui.theme.RoseGradientStart
-import com.example.ui.theme.Secondary
-import com.example.ui.theme.SecondaryFixed
-import com.example.ui.theme.SurfaceContainer
-import com.example.ui.theme.SurfaceContainerHigh
-import com.example.ui.theme.SurfaceContainerHighest
-import com.example.ui.theme.SurfaceContainerLow
-import com.example.ui.theme.SurfaceContainerLowest
-import com.example.ui.theme.Tertiary
+import com.example.ui.theme.TextDarkPlum
+import com.example.ui.theme.TextSubtlePlum
+import com.example.ui.util.AppLanguage
 import com.example.ui.viewmodel.InLoveViewModel
 
 @Composable
@@ -151,10 +87,19 @@ fun GiftScreen(
   val selectedCategory by viewModel.giftCategory.collectAsState()
   val mutualInterests by viewModel.mutualInterests.collectAsState()
   val partnerUser by viewModel.partnerOnlineUser.collectAsState()
-  val relationshipStatus by viewModel.relationshipStatus.collectAsState()
   val appLanguage by viewModel.appLanguage.collectAsState()
   val isEnglish = appLanguage == AppLanguage.EN
   val coupleProfile by viewModel.coupleProfile.collectAsState()
+  val isVip by viewModel.isVip.collectAsState()
+  val partnerDossier by viewModel.partnerDossier.collectAsState()
+  val showDossierSheet by viewModel.showPartnerDossierSheet.collectAsState()
+  val dossierSoftPaywall by viewModel.dossierSoftPaywallPrompt.collectAsState()
+  val nextReadiness by viewModel.nextOccasionReadiness.collectAsState()
+  val selectedTone by viewModel.selectedConciergeTone.collectAsState()
+  val isAiLoading by viewModel.isAiConciergeLoading.collectAsState()
+  val aiBundle by viewModel.aiAdviceBundle.collectAsState()
+  val aiAllowance by viewModel.aiRemainingAllowance.collectAsState()
+  val aiSoftPaywall by viewModel.aiSoftPaywallPrompt.collectAsState()
   val context = LocalContext.current
 
   var giftItemToDelete by remember { mutableStateOf<ChecklistItemEntity?>(null) }
@@ -162,16 +107,14 @@ fun GiftScreen(
   var showWishlistDialog by remember { mutableStateOf(false) }
   var sharePreview by remember { mutableStateOf<String?>(null) }
 
-  // Xem trước rồi mới gửi: nội dung chỉ gồm tên quà và giá tham khảo, không kèm thông tin hồ sơ nào.
-  // ponytail: chỉ Sharesheet của Android; bản ghi gợi ý riêng cho thành viên trong cặp (Firestore) làm sau khi có thời gian.
   sharePreview?.let { text ->
     AppAlertDialog(
       onDismissRequest = { sharePreview = null },
       scrollableText = true,
       modifier = Modifier.animateDialogEntrance(),
       containerColor = Color.White,
-      title = { Text(if (isEnglish) "Share this suggestion?" else "Chia sẻ gợi ý này?", fontWeight = FontWeight.Bold) },
-      text = { Text(text = text, fontSize = 14.sp) },
+      title = { Text(if (isEnglish) "Share this suggestion?" else "Chia sẻ gợi ý này?", fontWeight = FontWeight.Bold, color = TextDarkPlum) },
+      text = { Text(text = text, fontSize = 14.sp, color = TextDarkPlum) },
       confirmButton = {
         PrimaryGradientButton(
           text = if (isEnglish) "Share" else "Chia sẻ",
@@ -197,19 +140,46 @@ fun GiftScreen(
     )
   }
 
+  dossierSoftPaywall?.let { prompt ->
+    AppAlertDialog(
+      onDismissRequest = { viewModel.dismissDossierSoftPaywall() },
+      scrollableText = true,
+      modifier = Modifier.animateDialogEntrance(),
+      containerColor = Color.White,
+      title = { Text(if (isEnglish) prompt.titleEn else prompt.titleVi, fontWeight = FontWeight.Bold, color = TextDarkPlum) },
+      text = { Text(if (isEnglish) prompt.messageEn else prompt.messageVi, fontSize = 14.sp, color = TextSubtlePlum) },
+      confirmButton = {
+        PrimaryGradientButton(
+          text = if (isEnglish) prompt.ctaEn else prompt.ctaVi,
+          onClick = {
+            viewModel.dismissDossierSoftPaywall()
+            viewModel.closePartnerDossierSheet()
+            viewModel.setVipDialogVisible(true)
+          },
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
+      },
+      dismissButton = {
+        SecondaryButton(
+          text = if (isEnglish) "Later" else "Để sau",
+          onClick = { viewModel.dismissDossierSoftPaywall() },
+          modifier = Modifier.heightIn(min = MinTouchBox)
+        )
+      }
+    )
+  }
+
   reminderToDelete?.let { reminder ->
     DeleteConfirmationDialog(
       title = if (isEnglish) "Delete Gift Reminder?" else "Xóa lời nhắc quà tặng?",
-      message = if (isEnglish) "Are you sure you want to delete reminder '${reminder.title}' from the database?" else "Bạn có chắc chắn muốn xóa lời nhắc '${reminder.title}' khỏi cơ sở dữ liệu không?",
+      message = if (isEnglish) "Remove reminder '${reminder.title}' from your gift list?" else "Bạn có muốn xóa lời nhắc '${reminder.title}' khỏi danh sách quà không?",
       itemName = reminder.title,
       isEnglish = isEnglish,
       onConfirm = {
         viewModel.deleteGiftReminder(reminder.id)
         reminderToDelete = null
       },
-      onDismiss = {
-        reminderToDelete = null
-      }
+      onDismiss = { reminderToDelete = null }
     )
   }
 
@@ -223,18 +193,19 @@ fun GiftScreen(
         viewModel.deleteChecklistItem(item.id)
         giftItemToDelete = null
       },
-      onDismiss = {
-        giftItemToDelete = null
-      }
+      onDismiss = { giftItemToDelete = null }
     )
   }
 
   val completedCount = checklistItems.count { it.isCompleted }
   val totalCount = checklistItems.size
   val progressPercent = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) * 100f else 0f
-
   val filteredIdeas = remember(giftIdeas, selectedCategory) {
     GiftCatalog.filterByChip(giftIdeas, selectedCategory)
+  }
+  val upcomingOccasionTitle = remember(nextReadiness, isEnglish) {
+    nextReadiness?.let { if (isEnglish) it.titleEn else it.titleVi }
+      ?: if (isEnglish) "Love Anniversary" else "Kỷ niệm ngày yêu"
   }
 
   LazyColumn(
@@ -245,79 +216,19 @@ fun GiftScreen(
     verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
     // 1. Ambient Banner Card
-    item {
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = Color.White.copy(alpha = 0.85f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column(
-          modifier = Modifier
-            .background(
-              Brush.linearGradient(
-                listOf(
-                  SurfaceContainerHigh.copy(alpha = 0.8f),
-                  SurfaceContainerLow.copy(alpha = 0.8f)
-                )
-              )
-            )
-            .padding(12.dp)
-        ) {
-          Text(
-            text = if (isEnglish) "Gift & Surprise Ideas" else "Gợi Ý Quà & Bất Ngờ",
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Bold,
-            color = OnSurface
-          )
-
-          Spacer(modifier = Modifier.height(8.dp))
-
-          // Progress Row
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Timer,
-              contentDescription = if (isEnglish) "Progress" else "Tiến độ",
-              tint = Primary,
-              modifier = Modifier.size(15.dp)
-            )
-            Text(
-              text = "${progressPercent.toInt()}%",
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Bold,
-              color = Primary
-            )
-          }
-
-          Spacer(modifier = Modifier.height(6.dp))
-
-          LinearProgressIndicator(
-            progress = { progressPercent / 100f },
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(7.dp)
-              .clip(RoundedCornerShape(50.dp)),
-            color = Primary,
-            trackColor = SurfaceContainerHighest,
-            strokeCap = StrokeCap.Round
-          )
-        }
-      }
+    item(contentType = "gift_ambient_banner") {
+      GiftAmbientBannerCard(progressPercent = progressPercent, isEnglish = isEnglish)
     }
 
-    // Personalized suggestions (shared interests + partner preferences + budget + upcoming occasion) with the preferences editor
-    item {
+    // 1b. Personalized suggestions + legacy partner preferences editor
+    item(contentType = "gift_personalized") {
       Card(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7F9)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF80AB).copy(alpha = 0.5f)),
-        modifier = Modifier.fillMaxWidth().testTag("mutual_interests_gift_card")
+        colors = CardDefaults.cardColors(containerColor = InLoveColors.SoftBlushCard),
+        border = BorderStroke(1.dp, Color(0xFFFF80AB).copy(alpha = 0.5f)),
+        modifier = Modifier
+          .fillMaxWidth()
+          .testTag("mutual_interests_gift_card")
       ) {
         Column(modifier = Modifier.padding(16.dp)) {
           if (mutualInterests.isNotEmpty()) {
@@ -325,7 +236,7 @@ fun GiftScreen(
               text = if (isEnglish) "You both love: ${mutualInterests.joinToString(" • ")}" else "Hai bạn cùng yêu thích: ${mutualInterests.joinToString(" • ")}",
               fontSize = 12.sp,
               fontWeight = FontWeight.SemiBold,
-              color = Color(0xFF4A148C)
+              color = TextDarkPlum
             )
             Spacer(modifier = Modifier.height(8.dp))
           }
@@ -334,20 +245,26 @@ fun GiftScreen(
             PersonalizedGiftList(
               suggestions = personalizedGifts,
               shareLabel = if (isEnglish) "Share this suggestion" else "Chia sẻ gợi ý này",
-              onShare = { sharePreview = it }
+              onShare = { sharePreview = it },
+              onScheduleReminder = { s ->
+                viewModel.openSetAlarmDialog(
+                  title = s.gift.title,
+                  message = listOf(s.reason, s.preparation).filter { it.isNotBlank() }.joinToString(" • ")
+                )
+              },
+              reminderLabel = if (isEnglish) "Remind to prepare gift" else "Nhắc chuẩn bị quà"
             )
           } else {
             Text(
-              text = if (isEnglish) "Choose interests on the Pairing screen, note what your partner likes below, or add your anniversary and birthdays, to see suggestions made for both of you. You can still browse the full catalog below." else "Hãy chọn sở thích ở trang Ghép Đôi, ghi lại điều đối tác thích ở bên dưới, hoặc nhập ngày yêu và ngày sinh, để xem gợi ý dành riêng cho hai bạn. Bạn vẫn có thể xem toàn bộ danh mục bên dưới.",
+              text = if (isEnglish) "Pick interests below for tailored ideas." else "Chọn sở thích bên dưới để nhận gợi ý riêng.",
               fontSize = 12.sp,
-              color = Color.Gray
+              color = TextSubtlePlum
             )
           }
 
           Spacer(modifier = Modifier.height(10.dp))
           PrimaryGradientButton(
             text = if (isEnglish) "More ideas" else "Gợi ý thêm",
-            icon = Icons.Default.AutoAwesome,
             onClick = { viewModel.triggerAiGiftSuggestions() },
             modifier = Modifier
               .fillMaxWidth()
@@ -368,219 +285,85 @@ fun GiftScreen(
       }
     }
 
-    // 2. Category Filter Tabs (Horizontal Scroll)
-    item {
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        GiftCatalog.chips(isEnglish).forEach { chip ->
-          val isSelected = selectedCategory == chip.key
-          Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = if (isSelected) Color.Transparent else Color.White.copy(alpha = 0.85f),
-            shadowElevation = if (isSelected) 4.dp else 1.dp,
-            modifier = Modifier
-              .clip(RoundedCornerShape(24.dp))
-              .then(
-                if (isSelected) {
-                  Modifier.background(
-                    Brush.horizontalGradient(
-                      listOf(RoseGradientStart, RoseGradientMid)
-                    )
-                  )
-                } else Modifier
-              )
-              .clickable { viewModel.setGiftCategory(chip.key) }
-              .testTag("gift_tab_${chip.key}")
-          ) {
-            // Icon-only tabs; only the selected one spells out its name.
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(6.dp),
-              modifier = Modifier
-                .animateContentSize()
-                .padding(horizontal = 12.dp, vertical = 9.dp)
-            ) {
-              Icon(
-                imageVector = giftChipIcon(chip.key),
-                contentDescription = chip.label,
-                tint = if (isSelected) Color.White else OnSurfaceVariant,
-                modifier = Modifier.size(18.dp)
-              )
-              if (isSelected) {
-                Text(
-                  text = chip.label,
-                  fontSize = 12.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color.White
-                )
-              }
-            }
-          }
+    // 1c. Deep Partner Dossier Summary Card
+    item(contentType = "gift_partner_dossier") {
+      PartnerDossierCard(
+        dossier = partnerDossier,
+        isVip = isVip,
+        isEnglish = isEnglish,
+        onOpenEditor = { viewModel.openPartnerDossierSheet() }
+      )
+    }
+
+    // 1d. Interactive Gift & Love-Note Concierge
+    item(contentType = "gift_ai_concierge") {
+      AiGiftConciergeSection(
+        selectedTone = selectedTone,
+        occasionTitle = upcomingOccasionTitle,
+        adviceBundle = aiBundle,
+        isLoading = isAiLoading,
+        isVip = isVip,
+        remainingAllowance = aiAllowance,
+        softPaywallPrompt = aiSoftPaywall,
+        isEnglish = isEnglish,
+        onSelectTone = viewModel::selectConciergeTone,
+        onGenerateAdvice = { viewModel.generateAiGiftAdvice(upcomingOccasionTitle) },
+        onOpenPaywall = { viewModel.setVipDialogVisible(true) },
+        onCopyLoveNote = { note ->
+          val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+          clipboard?.setPrimaryClip(ClipData.newPlainText("inlove_note", note))
+          viewModel.showToast(if (isEnglish) "Love note copied" else "Đã sao chép lời chúc")
+        },
+        onShareText = { sharePreview = it },
+        onSaveGiftReminder = { rec ->
+          viewModel.addGiftReminder(
+            title = rec.title,
+            recipient = partnerUser?.effectiveDisplayName?.ifBlank { null } ?: if (isEnglish) "Partner" else "Người ấy",
+            occasion = upcomingOccasionTitle,
+            estimatedBudget = rec.priceRangeLabel,
+            notes = listOf(rec.reason, rec.preparationPlan).filter { it.isNotBlank() }.joinToString(" • ")
+          )
         }
-      }
+      )
+    }
+
+    // 2. Category Filter Tabs
+    item(contentType = "gift_category_tabs") {
+      GiftCategoryFilterRow(
+        selectedCategory = selectedCategory,
+        isEnglish = isEnglish,
+        onSelectCategory = viewModel::setGiftCategory
+      )
     }
 
     // 3. VIP Featured Proposal Banner
-    item {
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .testTag("vip_proposal_banner")
-      ) {
-        Column(
-          modifier = Modifier
-            .background(
-              Brush.linearGradient(
-                listOf(Secondary, Primary, PrimaryContainer)
-              )
-            )
-            .padding(18.dp)
-        ) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Surface(
-              shape = RoundedCornerShape(20.dp),
-              color = Color.White.copy(alpha = 0.25f)
-            ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.Star,
-                  contentDescription = if (isEnglish) "Celebration ideas" else "Gợi ý kỷ niệm",
-                  tint = Color.White,
-                  modifier = Modifier.size(13.dp)
-                )
-              }
-            }
-          }
-
-          Spacer(modifier = Modifier.height(10.dp))
-
-          Text(
-            text = if (isEnglish) "1,000-Day Celebration Ideas" else "Ý Tưởng Kỷ Niệm 1.000 Ngày",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-          )
-
-          Spacer(modifier = Modifier.height(12.dp))
-
-          // 3 Highlights Box
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            val highlights = if (isEnglish) listOf(
-              Pair("Roses", Icons.Filled.LocalFlorist),
-              Pair("Dinner", Icons.Filled.DinnerDining),
-              Pair("A Note", Icons.Filled.Mail)
-            ) else listOf(
-              Pair("Hoa Hồng", Icons.Filled.LocalFlorist),
-              Pair("Bữa Tối", Icons.Filled.DinnerDining),
-              Pair("Lời Nhắn", Icons.Filled.Mail)
-            )
-
-            highlights.forEach { (name, icon) ->
-              Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White.copy(alpha = 0.18f),
-                modifier = Modifier.weight(1f)
-              ) {
-                Column(
-                  modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                  horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                  Icon(
-                    imageVector = icon,
-                    contentDescription = name,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                  )
-                }
-              }
-            }
-          }
-
-          Spacer(modifier = Modifier.height(14.dp))
-
-          Surface(
-            shape = RoundedCornerShape(50.dp),
-            color = Color.White,
-            modifier = Modifier
-              .fillMaxWidth()
-              .clickable { viewModel.openVipProposal() }
-              .testTag("btn_view_vip_proposal")
-          ) {
-            Row(
-              modifier = Modifier.padding(vertical = 12.dp),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.Center
-            ) {
-              Text(
-                text = if (isEnglish) "View VIP plan" else "Xem gói VIP",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = Primary
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = Primary,
-                modifier = Modifier.size(16.dp)
-              )
-            }
-          }
-        }
-      }
+    item(contentType = "gift_vip_proposal") {
+      GiftVipProposalBanner(
+        isEnglish = isEnglish,
+        onOpenVipProposal = { viewModel.openVipProposal() }
+      )
     }
 
     // 4. Section Title
-    item {
+    item(contentType = "gift_ideas_header") {
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Redeem,
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(20.dp)
-          )
-          Text(
-            text = if (isEnglish) "Gift Preparation Ideas" else "Ý Tưởng Chuẩn Bị Quà",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = OnSurface
-          )
-        }
         Text(
-          text = "${filteredIdeas.size}",
-          fontSize = 12.sp,
-          color = OnSurfaceVariant
+          text = if (isEnglish) "Gift Preparation Ideas" else "Ý Tưởng Chuẩn Bị Quà",
+          fontFamily = InLoveFonts.DisplaySerif,
+          fontSize = 18.sp,
+          fontWeight = FontWeight.Bold,
+          color = OnSurface,
         )
+        Text("${filteredIdeas.size}", fontSize = 12.sp, color = TextSubtlePlum)
       }
     }
 
     // 5. Ideas Stream
-    items(filteredIdeas, key = { it.id }) { idea ->
+    items(filteredIdeas, key = { it.id }, contentType = { "gift_idea_card" }) { idea ->
       GiftIdeaCard(
         idea = idea,
         isEnglish = isEnglish,
@@ -590,303 +373,43 @@ fun GiftScreen(
     }
 
     // 6. Interactive Checklist Section
-    item {
-      // Collapsible: header tap toggles the list; expanded by default
-      var checklistExpanded by rememberSaveable { mutableStateOf(true) }
-      val checklistChevron by animateFloatAsState(
-        targetValue = if (checklistExpanded) 180f else 0f,
-        label = "checklist_section_chevron"
+    item(contentType = "gift_checklist") {
+      GiftChecklistCard(
+        checklistItems = checklistItems,
+        completedCount = completedCount,
+        totalCount = totalCount,
+        isEnglish = isEnglish,
+        onOpenAddDialog = { viewModel.openAddChecklistDialog() },
+        onToggleItem = viewModel::toggleChecklist,
+        onRenameItem = viewModel::renameChecklist,
+        onRequestDeleteItem = { giftItemToDelete = it }
       )
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = SurfaceContainerLow.copy(alpha = 0.9f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .testTag("checklist_section")
-      ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clickable { checklistExpanded = !checklistExpanded },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Row(
-              modifier = Modifier.weight(1f),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(36.dp)
-                  .clip(CircleShape)
-                  .background(Primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.TaskAlt,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(20.dp)
-                )
-              }
-              Column {
-                Text(
-                  text = if (isEnglish) "Anniversary Gift Checklist" else "Checklist Quà Kỷ Niệm",
-                  fontSize = 16.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = OnSurface
-                )
-                Text(
-                  text = "$completedCount/$totalCount",
-                  fontSize = 11.sp,
-                  color = OnSurfaceVariant
-                )
-              }
-            }
-
-            IconButton(
-              onClick = { viewModel.openAddChecklistDialog() },
-              modifier = Modifier.testTag("btn_add_checklist_task")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = if (isEnglish) "Add task" else "Thêm việc",
-                tint = Primary
-              )
-            }
-            Icon(
-              imageVector = Icons.Filled.ExpandMore,
-              contentDescription = if (isEnglish) "Expand" else "Mở rộng",
-              tint = OnSurfaceVariant,
-              modifier = Modifier
-                .size(22.dp)
-                .rotate(checklistChevron)
-            )
-          }
-
-          AnimatedVisibility(
-            visible = checklistExpanded,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-          ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              Spacer(modifier = Modifier.height(4.dp))
-              checklistItems.forEach { item ->
-                ChecklistRow(
-                  item = item,
-                  isEnglish = isEnglish,
-                  onToggle = { viewModel.toggleChecklist(item) },
-                  onEdit = { text -> viewModel.renameChecklist(item, text) },
-                  onDelete = { giftItemToDelete = item }
-                )
-              }
-            }
-          }
-        }
-      }
     }
 
-    // 6b. Room-Persisted Gift Reminders Section
-    item {
-      // Collapsible: header tap toggles the list; expanded by default
-      var remindersExpanded by rememberSaveable { mutableStateOf(true) }
-      val remindersChevron by animateFloatAsState(
-        targetValue = if (remindersExpanded) 180f else 0f,
-        label = "gift_reminders_chevron"
+    // 6b. Saved Gift Reminders Section
+    item(contentType = "gift_reminders") {
+      GiftRemindersCard(
+        giftReminders = giftReminders,
+        isEnglish = isEnglish,
+        onOpenAddDialog = { viewModel.openAddGiftReminderDialog() },
+        onToggleReminder = viewModel::toggleGiftReminderCompleted,
+        onUpdateReminder = viewModel::updateGiftReminder,
+        onRequestDeleteReminder = { reminderToDelete = it }
       )
-      Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = Color.White.copy(alpha = 0.92f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .testTag("gift_reminders_section")
-      ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clickable { remindersExpanded = !remindersExpanded },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Row(
-              modifier = Modifier.weight(1f),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(36.dp)
-                  .clip(CircleShape)
-                  .background(Primary.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.CardGiftcard,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(20.dp)
-                )
-              }
-              Column {
-                Text(
-                  text = if (isEnglish) "Saved Gift Reminders" else "Lời Nhắc Quà Tặng Đã Lưu",
-                  fontSize = 16.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = OnSurface
-                )
-                val completedReminders = giftReminders.count { it.isCompleted }
-                Text(
-                  text = "$completedReminders/${giftReminders.size}",
-                  fontSize = 11.sp,
-                  color = OnSurfaceVariant
-                )
-              }
-            }
-
-            IconButton(
-              onClick = { viewModel.openAddGiftReminderDialog() },
-              modifier = Modifier.testTag("btn_add_gift_reminder_header")
-            ) {
-              Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = if (isEnglish) "Add reminder" else "Thêm nhắc quà",
-                tint = Primary
-              )
-            }
-            Icon(
-              imageVector = Icons.Filled.ExpandMore,
-              contentDescription = if (isEnglish) "Expand" else "Mở rộng",
-              tint = OnSurfaceVariant,
-              modifier = Modifier
-                .size(22.dp)
-                .rotate(remindersChevron)
-            )
-          }
-
-          AnimatedVisibility(
-            visible = remindersExpanded,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-          ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              Spacer(modifier = Modifier.height(4.dp))
-              if (giftReminders.isEmpty()) {
-                Icon(
-                  imageVector = Icons.Filled.CardGiftcard,
-                  contentDescription = if (isEnglish) "No gift reminders" else "Chưa có lời nhắc",
-                  tint = OutlineVariant,
-                  modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = 8.dp)
-                    .size(32.dp)
-                )
-              } else {
-                giftReminders.forEach { reminder ->
-                  GiftReminderRow(
-                    item = reminder,
-                    isEnglish = isEnglish,
-                    onToggle = { viewModel.toggleGiftReminderCompleted(reminder) },
-                    onEdit = { updated -> viewModel.updateGiftReminder(updated) },
-                    onDelete = { reminderToDelete = reminder }
-                  )
-                }
-              }
-            }
-          }
-        }
-      }
     }
 
     // 7. Dual Bottom Action Buttons
-    item {
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // Gradient alarm button
-        Surface(
-          shape = RoundedCornerShape(50.dp),
-          shadowElevation = 6.dp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(50.dp))
-            .background(
-              Brush.horizontalGradient(
-                listOf(RoseGradientStart, RoseGradientMid, Secondary)
-              )
-            )
-            .clickable {
-              viewModel.openSetAlarmDialog(
-                title = if (isEnglish) "Gift Preparation Reminder 🎁" else "Nhắc nhở chuẩn bị quà tặng 🎁",
-                message = if (isEnglish) "Don't forget to prepare a meaningful gift for your partner!" else "Đừng quên chuẩn bị món quà ý nghĩa tặng người ấy nhé!"
-              )
-            }
-            .testTag("btn_reminder_alarm")
-        ) {
-          Row(
-            modifier = Modifier
-              .background(
-                Brush.horizontalGradient(
-                  listOf(RoseGradientStart, RoseGradientMid, Secondary)
-                )
-              )
-              .padding(vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-          ) {
-            Icon(
-              imageVector = Icons.Filled.AlarmOn,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (isEnglish) "Gift reminder" else "Nhắc mua quà",
-              fontSize = 14.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color.White
-            )
-          }
-        }
-
-        // Secondary glass note button — opens the real favorited-ideas list (WishlistNotebookDialog)
-        Surface(
-          shape = RoundedCornerShape(50.dp),
-          color = Color.White.copy(alpha = 0.9f),
-          shadowElevation = 2.dp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showWishlistDialog = true }
-            .testTag("btn_preferences_notebook")
-        ) {
-          Row(
-            modifier = Modifier.padding(vertical = 13.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-          ) {
-            Icon(
-              imageVector = Icons.Filled.BookmarkBorder,
-              contentDescription = null,
-              tint = Secondary,
-              modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = if (isEnglish) "Wishlist" else "Yêu thích",
-              fontSize = 13.sp,
-              fontWeight = FontWeight.SemiBold,
-              color = OnSurface
-            )
-          }
-        }
-      }
+    item(contentType = "gift_bottom_actions") {
+      GiftBottomActions(
+        isEnglish = isEnglish,
+        onOpenAlarm = {
+          viewModel.openSetAlarmDialog(
+            title = if (isEnglish) "Gift preparation reminder" else "Nhắc chuẩn bị quà tặng",
+            message = if (isEnglish) "Prepare a thoughtful gift in time for your partner" else "Chuẩn bị sẵn món quà ý nghĩa cho người ấy đúng hẹn"
+          )
+        },
+        onOpenWishlist = { showWishlistDialog = true }
+      )
     }
   }
 
@@ -899,11 +422,25 @@ fun GiftScreen(
       onDismiss = { showWishlistDialog = false }
     )
   }
+
+  if (showDossierSheet) {
+    PartnerDossierSheet(
+      dossier = partnerDossier,
+      isVip = isVip,
+      isEnglish = isEnglish,
+      onDismiss = { viewModel.closePartnerDossierSheet() },
+      onSaveDossier = { viewModel.savePartnerDossier(it) },
+      onAddSecretNote = { note, hint -> viewModel.addSecretSurpriseNote(note, hint) },
+      onToggleSecretNotePurchased = { id, purchased -> viewModel.toggleSecretNotePurchased(id, purchased) },
+      onRemoveSecretNote = { id -> viewModel.removeSecretNote(id) },
+      onOpenPaywall = {
+        viewModel.closePartnerDossierSheet()
+        viewModel.setVipDialogVisible(true)
+      }
+    )
+  }
 }
 
-// Shows the items *I've* favorited — gift ideas/favorites are plain local Room state, never
-// synced to Firestore (unlike memories/anniversaries/pairing), so this cannot actually reflect
-// what a partner favorited on their own device. Framed honestly as "my wishlist", not "partner's".
 @Composable
 fun WishlistNotebookDialog(
   giftIdeas: List<GiftIdeaEntity>,
@@ -911,90 +448,7 @@ fun WishlistNotebookDialog(
   onFavoriteToggle: (GiftIdeaEntity) -> Unit,
   onItemClick: (GiftIdeaEntity) -> Unit,
   onDismiss: () -> Unit
-) {
-  val favorites = remember(giftIdeas) { giftIdeas.filter { it.isFavorited } }
-
-  AppDialog(onDismissRequest = onDismiss) {
-    Surface(
-      shape = RoundedCornerShape(28.dp),
-      color = Color.White,
-      shadowElevation = 16.dp,
-      modifier = Modifier
-        .widthIn(max = 380.dp)
-        .fillMaxWidth(0.92f)
-        .animateDialogEntrance()
-        .fillMaxHeight(0.85f)
-    ) {
-      Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-              imageVector = Icons.Filled.BookmarkBorder,
-              contentDescription = null,
-              tint = Secondary,
-              modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-              Text(
-                text = if (isEnglish) "Wishlist" else "Yêu thích",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = OnSurface
-              )
-              Text(
-                text = "${favorites.size}",
-                fontSize = 11.sp,
-                color = OnSurfaceVariant
-              )
-            }
-          }
-          IconButton(onClick = onDismiss, modifier = Modifier.size(MinTouchBox)) {
-            Icon(imageVector = Icons.Filled.Close, contentDescription = if (isEnglish) "Close" else "Đóng")
-          }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (favorites.isEmpty()) {
-          Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-          ) {
-            Icon(
-              imageVector = Icons.Filled.BookmarkBorder,
-              contentDescription = null,
-              tint = OnSurfaceVariant.copy(alpha = 0.4f),
-              modifier = Modifier.size(56.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-              text = if (isEnglish) "No favorites yet" else "Chưa có mục yêu thích",
-              fontWeight = FontWeight.SemiBold,
-              color = OnSurfaceVariant
-            )
-          }
-        } else {
-          LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(favorites, key = { it.id }) { idea ->
-              GiftIdeaCard(
-                idea = idea,
-                isEnglish = isEnglish,
-                onFavoriteToggle = { onFavoriteToggle(idea) },
-                onActionClick = { onItemClick(idea) }
-              )
-            }
-          }
-        }
-      }
-    }
-  }
-}
+) = WishlistNotebookDialogContent(giftIdeas, isEnglish, onFavoriteToggle, onItemClick, onDismiss)
 
 @Composable
 fun GiftIdeaCard(
@@ -1002,210 +456,8 @@ fun GiftIdeaCard(
   isEnglish: Boolean = false,
   onFavoriteToggle: () -> Unit,
   onActionClick: () -> Unit
-) {
-  val gift = GiftCatalog.localized(idea, isEnglish)
-  val accent = if (idea.isAiGenerated) Tertiary else Secondary
+) = GiftIdeaCardContent(idea, isEnglish, onFavoriteToggle, onActionClick)
 
-  Card(
-    shape = RoundedCornerShape(24.dp),
-    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
-    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-    modifier = Modifier
-      .fillMaxWidth()
-      .testTag("gift_idea_${idea.id}")
-  ) {
-    Column(modifier = Modifier.padding(14.dp)) {
-      // Photo with Badge, Illustration Caption & Heart button
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(170.dp)
-          .clip(RoundedCornerShape(18.dp))
-      ) {
-        AsyncImage(
-          model = idea.imageUrl,
-          contentDescription = gift.title,
-          contentScale = ContentScale.Crop,
-          modifier = Modifier.fillMaxSize()
-        )
-
-        // Badge Pill Top Left
-        Surface(
-          shape = RoundedCornerShape(20.dp),
-          color = Color.White.copy(alpha = 0.85f),
-          modifier = Modifier
-            .padding(10.dp)
-            .align(Alignment.TopStart)
-        ) {
-          Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-          ) {
-            Icon(
-              imageVector = giftCategoryIcon(gift.categoryKey),
-              contentDescription = null,
-              tint = accent,
-              modifier = Modifier.size(14.dp)
-            )
-            Text(
-              text = gift.badge,
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Bold,
-              color = accent
-            )
-          }
-        }
-
-        // Seed photos are stock illustrations, not the gift itself
-        if (gift.isSeed) {
-          IllustrationCaption(
-            isEnglish = isEnglish,
-            modifier = Modifier
-              .padding(10.dp)
-              .align(Alignment.BottomStart)
-          )
-        }
-
-        // Heart Button Top Right — 48dp touch target (AGENTS.md minimum), not the old 36dp.
-        IconButton(
-          onClick = onFavoriteToggle,
-          modifier = Modifier
-            .padding(2.dp)
-            .align(Alignment.TopEnd)
-            .size(MinTouchBox)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.85f))
-        ) {
-          Icon(
-            imageVector = if (idea.isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = if (isEnglish) "Favorite" else "Yêu thích",
-            tint = Primary,
-            modifier = Modifier.size(18.dp)
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(10.dp))
-
-      // Title & Tag
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-      ) {
-        Text(
-          text = gift.title,
-          fontSize = 15.sp,
-          fontWeight = FontWeight.Bold,
-          color = OnSurface,
-          modifier = Modifier.weight(1f)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Surface(
-          shape = RoundedCornerShape(12.dp),
-          color = if (idea.isAiGenerated) SecondaryFixed.copy(alpha = 0.7f) else PrimaryFixed.copy(alpha = 0.6f)
-        ) {
-          Text(
-            text = gift.tag,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (idea.isAiGenerated) Secondary else Primary,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(4.dp))
-
-      Text(
-        text = gift.description,
-        fontSize = 12.sp,
-        color = OnSurfaceVariant,
-        lineHeight = 17.sp
-      )
-
-      GiftCatalog.priceLabel(idea.priceRange, isEnglish)?.let { price ->
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-          text = price,
-          fontSize = 11.sp,
-          fontWeight = FontWeight.Bold,
-          color = Primary
-        )
-      }
-
-      if (gift.detailsSnippet.isNotBlank()) {
-        Spacer(modifier = Modifier.height(10.dp))
-        Surface(
-          shape = RoundedCornerShape(14.dp),
-          color = SurfaceContainerLow,
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Text(
-            text = gift.detailsSnippet,
-            fontSize = 11.sp,
-            color = OnSurfaceVariant,
-            lineHeight = 16.sp,
-            modifier = Modifier.padding(10.dp)
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(10.dp))
-
-      // Action Button
-      Surface(
-        shape = RoundedCornerShape(50.dp),
-        color = SurfaceContainer,
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable { onActionClick() }
-      ) {
-        Row(
-          modifier = Modifier.padding(vertical = 10.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.Center
-        ) {
-          Icon(
-            imageVector = giftCategoryIcon(gift.categoryKey),
-            contentDescription = null,
-            tint = Primary,
-            modifier = Modifier.size(16.dp)
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = gift.actionText,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = Primary
-          )
-        }
-      }
-    }
-  }
-}
-
-private fun giftChipIcon(key: String) = when (key) {
-  GiftCatalog.ALL_KEY -> Icons.Filled.GridView
-  GiftCatalog.AI_KEY -> Icons.Filled.AutoFixHigh
-  else -> giftCategoryIcon(key)
-}
-
-/** Icon for a gift's category; the Room id is not a content key. */
-private fun giftCategoryIcon(categoryKey: String) = when (categoryKey) {
-  GiftCatalog.ROMANTIC -> Icons.Filled.Favorite
-  GiftCatalog.JEWELRY -> Icons.Filled.AutoAwesome
-  GiftCatalog.HANDMADE -> Icons.Filled.Brush
-  GiftCatalog.DATES -> Icons.Filled.Restaurant
-  GiftCatalog.SECRET -> Icons.Filled.CardGiftcard
-  else -> Icons.Filled.NaturePeople
-}
-
-/**
- * Một gợi ý cá nhân hóa: tên quà, lý do, ghi chú chuẩn bị và giá tham khảo. Không nhận ViewModel để xem trước được.
- * [onShare] khác null thì hiện nút chia sẻ (đích tới ≥48dp); thẻ chỉ báo sự kiện, bản xem trước và Sharesheet do màn hình lo.
- */
 @Composable
 internal fun PersonalizedGiftCard(
   title: String,
@@ -1214,79 +466,37 @@ internal fun PersonalizedGiftCard(
   priceLabel: String?,
   modifier: Modifier = Modifier,
   onShare: (() -> Unit)? = null,
-  shareLabel: String = ""
-) {
-  var expanded by rememberSaveable { mutableStateOf(false) }
-  Column(
-    modifier = modifier
-      .fillMaxWidth()
-      .background(Color.White, RoundedCornerShape(10.dp))
-      .heightIn(min = 48.dp)
-      .clickable { expanded = !expanded }
-      .padding(horizontal = 10.dp, vertical = 8.dp)
-  ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      Icon(
-        imageVector = Icons.Default.Favorite,
-        contentDescription = null,
-        tint = Color(0xFFFF4081),
-        modifier = Modifier.size(14.dp)
-      )
-      Spacer(modifier = Modifier.width(8.dp))
-      Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-      if (onShare != null) {
-        IconButton(
-          onClick = onShare,
-          modifier = Modifier
-            .size(MinTouchBox)
-            .testTag("btn_share_gift_suggestion")
-        ) {
-          Icon(
-            imageVector = Icons.Filled.Share,
-            contentDescription = shareLabel,
-            tint = Color(0xFFC2185B),
-            modifier = Modifier.size(20.dp)
-          )
-        }
-      }
-    }
-    if (expanded) {
-      Text(text = reason, fontSize = 11.sp, color = Color.Gray)
-      Text(text = preparation, fontSize = 11.sp, color = Color.Gray)
-    }
-    if (priceLabel != null) {
-      Text(text = priceLabel, fontSize = 11.sp, color = Color.Gray, maxLines = 1)
-    }
-  }
-}
+  shareLabel: String = "",
+  onScheduleReminder: (() -> Unit)? = null,
+  reminderLabel: String = ""
+) = PersonalizedGiftCardContent(
+  title = title,
+  reason = reason,
+  preparation = preparation,
+  priceLabel = priceLabel,
+  modifier = modifier,
+  onShare = onShare,
+  shareLabel = shareLabel,
+  onScheduleReminder = onScheduleReminder,
+  reminderLabel = reminderLabel
+)
 
-/**
- * Danh sách gợi ý cá nhân hóa của màn Quà tặng. Mỗi thẻ gắn với quà của nó (khóa là [GiftIdeaEntity.remoteId]),
- * nên khi thứ tự đổi, trạng thái mở rộng đi theo đúng quà thay vì theo vị trí trong danh sách.
- */
 @Composable
 internal fun PersonalizedGiftList(
   suggestions: List<PersonalizedGiftSuggestion>,
   shareLabel: String,
-  onShare: (String) -> Unit
-) {
-  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    suggestions.forEach { s ->
-      key(s.idea.remoteId) {
-        PersonalizedGiftCard(
-          title = s.gift.title,
-          reason = s.reason,
-          preparation = s.preparation,
-          priceLabel = s.priceLabel,
-          onShare = { onShare(listOfNotNull(s.gift.title, s.priceLabel).joinToString("\n")) },
-          shareLabel = shareLabel
-        )
-      }
-    }
-  }
-}
+  onShare: (String) -> Unit,
+  onScheduleReminder: ((PersonalizedGiftSuggestion) -> Unit)? = null,
+  reminderLabel: String = ""
+) = PersonalizedGiftListContent(
+  suggestions = suggestions,
+  shareLabel = shareLabel,
+  onShare = onShare,
+  onScheduleReminder = onScheduleReminder,
+  reminderLabel = reminderLabel
+)
 
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Preview(showBackground = true)
 @Composable
 private fun PersonalizedGiftCardPreview() {
   PersonalizedGiftCard(
@@ -1297,13 +507,6 @@ private fun PersonalizedGiftCardPreview() {
   )
 }
 
-/**
- * Ghi lại điều đối tác thích, ngân sách quà (VND) và vùng dịp lễ để gợi ý sát hơn. Lưu vào hồ sơ cặp đôi trên máy này,
- * nên cặp chưa ghép đôi vẫn dùng được. Hàng hồ sơ chỉ được cập nhật chứ không tạo ở đây: chưa có hồ sơ thì nút Lưu bị khoá kèm lời nhắc.
- *
- * ponytail: sở thích để trống ban đầu (không gieo sẵn); ngân sách 0/trống = không giới hạn; vùng chỉ VN/INTL (bấm lại chip để bỏ chọn)
- * và độc lập với ngôn ngữ giao diện. Chưa kiểm tra trùng/chính tả sở thích; thêm gợi ý chọn nhanh khi cần.
- */
 @Composable
 internal fun PartnerPreferencesEditor(
   profileExists: Boolean,
@@ -1312,124 +515,11 @@ internal fun PartnerPreferencesEditor(
   savedRegion: String,
   isEnglish: Boolean,
   onSave: (String, Long, String) -> Unit
-) {
-  var expanded by remember { mutableStateOf(false) }
-  var likes by remember(savedLikes) { mutableStateOf(savedLikes) }
-  var budgetText by remember(savedBudgetVnd) { mutableStateOf(if (savedBudgetVnd > 0L) savedBudgetVnd.toString() else "") }
-  var region by remember(savedRegion) { mutableStateOf(savedRegion) }
-
-  Column(modifier = Modifier.fillMaxWidth()) {
-    TextButton(
-      onClick = { expanded = !expanded },
-      colors = ButtonDefaults.textButtonColors(contentColor = Primary),
-      modifier = Modifier
-        .heightIn(min = 48.dp)
-        .testTag("btn_toggle_partner_preferences")
-    ) {
-      Text(
-        text = if (isEnglish) "Likes & budget" else "Sở thích & ngân sách",
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium
-      )
-    }
-    if (expanded) {
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(
-          value = likes,
-          onValueChange = { likes = it.take(200) },
-          label = { Text(if (isEnglish) "What your partner likes" else "Điều đối tác thích") },
-          placeholder = { Text(if (isEnglish) "coffee, travel, books" else "cà phê, du lịch, sách") },
-          singleLine = true,
-          modifier = Modifier
-            .fillMaxWidth()
-            .testTag("partner_likes_field")
-        )
-        OutlinedTextField(
-          value = budgetText,
-          onValueChange = { budgetText = it.filter(Char::isDigit).take(12) },
-          label = { Text(if (isEnglish) "Gift budget (VND)" else "Ngân sách quà (VND)") },
-          supportingText = { Text(if (isEnglish) "0 = no limit" else "0 = không giới hạn") },
-          singleLine = true,
-          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-          modifier = Modifier
-            .fillMaxWidth()
-            .testTag("partner_budget_field")
-        )
-        Text(
-          text = if (isEnglish) "Holiday region" else "Vùng dịp lễ",
-          fontSize = 12.sp,
-          color = Color.Gray
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          listOf(
-            Triple(GetPersonalizedGiftSuggestionsUseCase.REGION_VN, if (isEnglish) "Vietnam" else "Việt Nam", "partner_region_vn"),
-            Triple(GetPersonalizedGiftSuggestionsUseCase.REGION_INTL, if (isEnglish) "International" else "Quốc tế", "partner_region_intl")
-          ).forEach { (key, label, tag) ->
-            val isSelected = region == key
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-              modifier = Modifier
-                .widthIn(min = MinTouchBox)
-                .heightIn(min = MinTouchBox)
-                .clip(RoundedCornerShape(20.dp))
-                .background(if (isSelected) Color(0xFFC2185B) else Color(0xFFFFF5F8))
-                .clickable { region = if (isSelected) "" else key }
-                .animateContentSize()
-                .padding(horizontal = 12.dp)
-                .testTag(tag)
-            ) {
-              Icon(
-                imageVector = if (key == GetPersonalizedGiftSuggestionsUseCase.REGION_VN) Icons.Filled.Flag else Icons.Filled.Public,
-                contentDescription = label,
-                tint = if (isSelected) Color.White else Color(0xFF6B2B50),
-                modifier = Modifier.size(18.dp)
-              )
-              if (isSelected) Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            }
-          }
-        }
-        if (!profileExists) {
-          Text(
-            text = if (isEnglish) "Create your couple profile first to save." else "Tạo hồ sơ cặp đôi trước để lưu.",
-            fontSize = 11.sp,
-            color = Color.Gray
-          )
-        }
-        PrimaryGradientButton(
-          text = if (isEnglish) "Save" else "Lưu",
-          onClick = {
-            if (profileExists) {
-              onSave(likes.trim(), budgetText.toLongOrNull() ?: 0L, region)
-              expanded = false
-            }
-          },
-          modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = MinTouchBox)
-            .disabledLook(profileExists),
-          testTag = "btn_save_partner_preferences"
-        )
-      }
-    }
-  }
-}
+) = PartnerPreferencesEditorContent(profileExists, savedLikes, savedBudgetVnd, savedRegion, isEnglish, onSave)
 
 @Composable
-internal fun IllustrationCaption(isEnglish: Boolean, modifier: Modifier = Modifier) {
-  Surface(
-    shape = RoundedCornerShape(20.dp),
-    color = Color.Black.copy(alpha = 0.35f),
-    modifier = modifier
-  ) {
-    Text(
-      text = if (isEnglish) "Illustration" else "Ảnh minh họa",
-      fontSize = 10.sp,
-      color = Color.White,
-      modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-    )
-  }
-}
+internal fun IllustrationCaption(isEnglish: Boolean, modifier: Modifier = Modifier) =
+  GiftIllustrationCaption(isEnglish, modifier)
 
 @Composable
 fun ChecklistRow(
@@ -1438,104 +528,7 @@ fun ChecklistRow(
   onToggle: () -> Unit,
   onEdit: (String) -> Unit,
   onDelete: () -> Unit
-) {
-  val iconVector = when (item.iconName) {
-    "cake" -> Icons.Filled.Cake
-    "history_edu" -> Icons.Filled.HistoryEdu
-    "table_restaurant" -> Icons.Filled.TableRestaurant
-    else -> Icons.Filled.Checklist
-  }
-  // Tap the row to reveal edit / delete
-  var expanded by rememberSaveable(item.id) { mutableStateOf(false) }
-  var showEdit by remember { mutableStateOf(false) }
-
-  Surface(
-    shape = RoundedCornerShape(16.dp),
-    color = Color.White.copy(alpha = 0.8f),
-    modifier = Modifier
-      .fillMaxWidth()
-      .clip(RoundedCornerShape(16.dp))
-      .clickable { expanded = !expanded }
-      .testTag("checklist_item_${item.id}")
-  ) {
-    Column(modifier = Modifier.animateContentSize()) {
-      Row(
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-      ) {
-        // Check circle: the only toggle target now that a row tap expands
-        Box(
-          modifier = Modifier
-            .size(MinTouchBox)
-            .clip(CircleShape)
-            .clickable { onToggle() }
-            .testTag("btn_toggle_checklist_${item.id}"),
-          contentAlignment = Alignment.Center
-        ) {
-          Box(
-            modifier = Modifier
-              .size(24.dp)
-              .clip(CircleShape)
-              .background(if (item.isCompleted) Primary else SurfaceContainerHighest),
-            contentAlignment = Alignment.Center
-          ) {
-            if (item.isCompleted) {
-              Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = if (isEnglish) "Completed" else "Hoàn thành",
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
-              )
-            }
-          }
-        }
-
-        Text(
-          text = item.text,
-          fontSize = 13.sp,
-          color = if (item.isCompleted) OnSurface.copy(alpha = 0.5f) else OnSurface,
-          textDecoration = if (item.isCompleted) TextDecoration.LineThrough else null,
-          modifier = Modifier.weight(1f)
-        )
-
-        Icon(
-          imageVector = iconVector,
-          contentDescription = null,
-          tint = OutlineVariant,
-          modifier = Modifier.size(18.dp)
-        )
-      }
-
-      AnimatedVisibility(
-        visible = expanded,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        RowActions(
-          isEnglish = isEnglish,
-          onEdit = { showEdit = true },
-          onDelete = onDelete,
-          deleteTag = "btn_delete_checklist_${item.id}",
-          editTag = "btn_edit_checklist_${item.id}"
-        )
-      }
-    }
-  }
-
-  if (showEdit) {
-    EditFieldsDialog(
-      isEnglish = isEnglish,
-      labels = listOf(if (isEnglish) "Task" else "Việc"),
-      initial = listOf(item.text),
-      onDismiss = { showEdit = false },
-      onSave = { values ->
-        onEdit(values[0])
-        showEdit = false
-      }
-    )
-  }
-}
+) = ChecklistRowContent(item, isEnglish, onToggle, onEdit, onDelete)
 
 @Composable
 fun GiftReminderRow(
@@ -1544,225 +537,4 @@ fun GiftReminderRow(
   onToggle: () -> Unit,
   onEdit: (GiftReminderEntity) -> Unit,
   onDelete: () -> Unit
-) {
-  // Tap the row to reveal edit / delete
-  var expanded by rememberSaveable(item.id) { mutableStateOf(false) }
-  var showEdit by remember { mutableStateOf(false) }
-
-  Surface(
-    shape = RoundedCornerShape(16.dp),
-    color = if (item.isCompleted) SurfaceContainerHighest.copy(alpha = 0.4f) else SurfaceContainerLowest,
-    modifier = Modifier
-      .fillMaxWidth()
-      .clip(RoundedCornerShape(16.dp))
-      .clickable { expanded = !expanded }
-      .testTag("gift_reminder_item_${item.id}")
-  ) {
-    Column(modifier = Modifier.animateContentSize()) {
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        IconButton(
-          onClick = onToggle,
-          modifier = Modifier
-            .size(MinTouchBox)
-            .testTag("btn_toggle_gift_reminder_${item.id}")
-        ) {
-          Icon(
-            imageVector = if (item.isCompleted) Icons.Filled.CheckCircle else Icons.Filled.TaskAlt,
-            contentDescription = if (isEnglish) "Completed" else "Hoàn thành",
-            tint = if (item.isCompleted) Primary else OnSurfaceVariant.copy(alpha = 0.4f),
-            modifier = Modifier.size(22.dp)
-          )
-        }
-
-        Column(modifier = Modifier.weight(1f).padding(vertical = 6.dp)) {
-          Text(
-            text = item.title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (item.isCompleted) OnSurfaceVariant else OnSurface,
-            textDecoration = if (item.isCompleted) TextDecoration.LineThrough else null,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
-          Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Text(
-              text = if (isEnglish) "To: ${item.recipient}" else "Tặng: ${item.recipient}",
-              fontSize = 11.sp,
-              color = Primary,
-              fontWeight = FontWeight.Medium
-            )
-            Text(
-              text = "• ${item.dueDateText}",
-              fontSize = 11.sp,
-              color = OnSurfaceVariant
-            )
-            if (item.estimatedBudget.isNotBlank()) {
-              Text(
-                text = "• ${item.estimatedBudget}",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Secondary
-              )
-            }
-          }
-          if (item.notes.isNotBlank()) {
-            Text(
-              text = item.notes,
-              fontSize = 11.sp,
-              color = OnSurfaceVariant.copy(alpha = 0.8f),
-              maxLines = if (expanded) 4 else 1,
-              overflow = TextOverflow.Ellipsis
-            )
-          }
-        }
-      }
-
-      AnimatedVisibility(
-        visible = expanded,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        RowActions(
-          isEnglish = isEnglish,
-          onEdit = { showEdit = true },
-          onDelete = onDelete,
-          deleteTag = "btn_delete_gift_reminder_${item.id}",
-          editTag = "btn_edit_gift_reminder_${item.id}"
-        )
-      }
-    }
-  }
-
-  if (showEdit) {
-    EditFieldsDialog(
-      isEnglish = isEnglish,
-      labels = listOf(
-        if (isEnglish) "Gift" else "Món quà",
-        if (isEnglish) "For" else "Tặng ai",
-        if (isEnglish) "Date" else "Ngày",
-        if (isEnglish) "Budget" else "Ngân sách",
-        if (isEnglish) "Notes" else "Ghi chú"
-      ),
-      initial = listOf(item.title, item.recipient, item.dueDateText, item.estimatedBudget, item.notes),
-      onDismiss = { showEdit = false },
-      onSave = { v ->
-        onEdit(
-          item.copy(
-            title = v[0].trim().ifBlank { item.title },
-            recipient = v[1].trim().ifBlank { item.recipient },
-            dueDateText = v[2].trim().ifBlank { item.dueDateText },
-            estimatedBudget = v[3].trim(),
-            notes = v[4].trim()
-          )
-        )
-        showEdit = false
-      }
-    )
-  }
-}
-
-/** Icon-only edit + delete strip revealed when a row is tapped. */
-@Composable
-private fun RowActions(
-  isEnglish: Boolean,
-  onEdit: () -> Unit,
-  onDelete: () -> Unit,
-  editTag: String,
-  deleteTag: String
-) {
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(start = 12.dp, end = 12.dp, bottom = 6.dp),
-    horizontalArrangement = Arrangement.End,
-    verticalAlignment = Alignment.CenterVertically
-  ) {
-    IconButton(onClick = onEdit, modifier = Modifier.size(MinTouchBox).testTag(editTag)) {
-      Icon(
-        imageVector = Icons.Filled.Edit,
-        contentDescription = if (isEnglish) "Edit" else "Sửa",
-        tint = Primary,
-        modifier = Modifier.size(20.dp)
-      )
-    }
-    IconButton(onClick = onDelete, modifier = Modifier.size(MinTouchBox).testTag(deleteTag)) {
-      Icon(
-        imageVector = Icons.Filled.Delete,
-        contentDescription = if (isEnglish) "Delete" else "Xóa",
-        tint = OnSurfaceVariant,
-        modifier = Modifier.size(20.dp)
-      )
-    }
-  }
-}
-
-/** Small multi-field text editor dialog shared by checklist and gift-reminder rows. */
-@Composable
-private fun EditFieldsDialog(
-  isEnglish: Boolean,
-  labels: List<String>,
-  initial: List<String>,
-  onDismiss: () -> Unit,
-  onSave: (List<String>) -> Unit
-) {
-  val values = remember { mutableStateListOf(*initial.toTypedArray()) }
-  AppAlertDialog(
-    onDismissRequest = onDismiss,
-    scrollableText = true,
-    modifier = Modifier.animateDialogEntrance(),
-    shape = RoundedCornerShape(28.dp),
-    containerColor = Color.White,
-    title = {
-      Icon(
-        imageVector = Icons.Filled.Edit,
-        contentDescription = if (isEnglish) "Edit" else "Sửa",
-        tint = Primary
-      )
-    },
-    text = {
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        labels.forEachIndexed { i, label ->
-          OutlinedTextField(
-            value = values[i],
-            onValueChange = { values[i] = it },
-            label = { Text(label) },
-            singleLine = i != labels.lastIndex || labels.size == 1,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-          )
-        }
-      }
-    },
-    confirmButton = {
-      IconButton(
-        onClick = { onSave(values.toList()) },
-        enabled = values.firstOrNull()?.isNotBlank() == true,
-        modifier = Modifier.testTag("btn_save_gift_edit")
-      ) {
-        Icon(
-          imageVector = Icons.Filled.Check,
-          contentDescription = if (isEnglish) "Save" else "Lưu",
-          tint = Primary
-        )
-      }
-    },
-    dismissButton = {
-      IconButton(onClick = onDismiss) {
-        Icon(
-          imageVector = Icons.Filled.Close,
-          contentDescription = if (isEnglish) "Cancel" else "Hủy",
-          tint = OnSurfaceVariant
-        )
-      }
-    }
-  )
-}
+) = GiftReminderRowContent(item, isEnglish, onToggle, onEdit, onDelete)

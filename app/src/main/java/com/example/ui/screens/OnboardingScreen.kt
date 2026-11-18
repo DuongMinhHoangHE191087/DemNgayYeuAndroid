@@ -39,9 +39,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CardGiftcard
+import com.example.ui.components.InLoveDatePickerField
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Language
@@ -51,8 +50,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -97,9 +96,9 @@ fun OnboardingScreen(
   var currentStep by remember { mutableIntStateOf(0) }
   val totalSteps = 5
 
-  // Quick setup inputs for Step 5
   var boyNameInput by remember { mutableStateOf("") }
   var girlNameInput by remember { mutableStateOf("") }
+  var loveStartDateInput by remember { mutableStateOf("") }
 
   val infiniteTransition = rememberInfiniteTransition(label = "heart_pulse")
   val pulseScale by infiniteTransition.animateFloat(
@@ -257,8 +256,11 @@ fun OnboardingScreen(
                 strings = strings,
                 boyName = boyNameInput,
                 girlName = girlNameInput,
+                loveStartDate = loveStartDateInput,
+                isEnglish = appLanguage == AppLanguage.EN,
                 onBoyNameChange = { boyNameInput = it },
-                onGirlNameChange = { girlNameInput = it }
+                onGirlNameChange = { girlNameInput = it },
+                onLoveStartDateChange = { loveStartDateInput = it }
               )
             }
           }
@@ -274,17 +276,14 @@ fun OnboardingScreen(
           if (currentStep < totalSteps - 1) {
             currentStep++
           } else {
-            // Save initial couple names if entered
-            if (boyNameInput.isNotBlank() || girlNameInput.isNotBlank()) {
-              // Empty title -> ViewModel falls back to the app-wide DEFAULT_LOVE_TITLE,
-              // same as every other save path (was a duplicate, Vietnamese-only literal here).
-              viewModel.completeOnboardingProfile(boyNameInput.trim(), girlNameInput.trim(), "")
+            if (boyNameInput.isNotBlank() || girlNameInput.isNotBlank() || loveStartDateInput.isNotBlank()) {
+              viewModel.completeOnboardingProfile(boyNameInput.trim(), girlNameInput.trim(), "", loveStartDateInput.trim())
             }
             viewModel.completeFirstLaunch()
             onFinishOnboarding()
           }
         },
-        icon = if (currentStep == totalSteps - 1) Icons.Filled.AutoAwesome else Icons.AutoMirrored.Filled.ArrowForward,
+        icon = Icons.AutoMirrored.Filled.ArrowForward,
         modifier = Modifier
           .fillMaxWidth()
           .heightIn(min = MinTouchBox)
@@ -573,7 +572,7 @@ private fun OnboardingStepReminders(
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
           Icon(
-            imageVector = Icons.Default.AutoAwesome,
+            imageVector = Icons.Filled.Favorite,
             contentDescription = null,
             tint = Color(0xFFFF4081),
             modifier = Modifier.size(18.dp)
@@ -596,88 +595,63 @@ private fun OnboardingStepStart(
   strings: com.example.ui.util.AppStrings,
   boyName: String,
   girlName: String,
+  loveStartDate: String,
+  isEnglish: Boolean,
   onBoyNameChange: (String) -> Unit,
-  onGirlNameChange: (String) -> Unit
+  onGirlNameChange: (String) -> Unit,
+  onLoveStartDateChange: (String) -> Unit
 ) {
   Surface(
     shape = CircleShape,
     color = Color(0xFFFFEBF2),
     border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFF4081)),
-    modifier = Modifier.size(90.dp)
+    modifier = Modifier.size(72.dp)
   ) {
     Box(contentAlignment = Alignment.Center) {
-      Icon(
-        imageVector = Icons.Filled.AutoAwesome,
-        contentDescription = null,
-        tint = Color(0xFFE91E63),
-        modifier = Modifier.size(44.dp)
-      )
+      Icon(Icons.Filled.Favorite, contentDescription = null, tint = Color(0xFFE91E63), modifier = Modifier.size(36.dp))
     }
   }
-
-  Spacer(modifier = Modifier.height(20.dp))
-
-  Text(
-    text = strings.onboardingStartTitle,
-    fontSize = 24.sp,
-    fontWeight = FontWeight.ExtraBold,
-    color = Color(0xFF26071B),
-    textAlign = TextAlign.Center
-  )
-
-  Spacer(modifier = Modifier.height(8.dp))
-
-  Text(
-    text = strings.onboardingStartSub,
-    fontSize = 14.sp,
-    color = Color(0xFF7A2955),
-    textAlign = TextAlign.Center,
-    lineHeight = 20.sp,
-    modifier = Modifier.padding(horizontal = 16.dp)
-  )
-
-  Spacer(modifier = Modifier.height(24.dp))
-
-  // Couple name input card (Optional quick personalization)
+  Spacer(modifier = Modifier.height(14.dp))
+  Text(strings.onboardingStartTitle, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF26071B), textAlign = TextAlign.Center)
+  Spacer(modifier = Modifier.height(6.dp))
+  Text(strings.onboardingStartSub, fontSize = 14.sp, color = Color(0xFF7A2955), textAlign = TextAlign.Center, lineHeight = 20.sp, modifier = Modifier.padding(horizontal = 16.dp))
+  Spacer(modifier = Modifier.height(16.dp))
   Column(
-    modifier = Modifier
-      .fillMaxWidth()
-      .clip(RoundedCornerShape(20.dp))
-      .background(Color.White)
-      .border(1.dp, Color(0xFFFFD1E7), RoundedCornerShape(20.dp))
-      .padding(18.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp)
+    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Color.White).border(1.dp, Color(0xFFFFD1E7), RoundedCornerShape(20.dp)).padding(16.dp),
+    verticalArrangement = Arrangement.spacedBy(10.dp)
   ) {
-    OutlinedTextField(
-      value = boyName,
-      onValueChange = onBoyNameChange,
-      label = { Text(strings.onboardingPartner1Label) },
-      placeholder = { Text(strings.onboardingPartner1Placeholder) },
-      singleLine = true,
-      keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false),
-      modifier = Modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(12.dp),
-      colors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = Color(0xFFFF4081),
-        unfocusedBorderColor = Color(0xFFFFD1E7)
-      )
-    )
-
-    OutlinedTextField(
-      value = girlName,
-      onValueChange = onGirlNameChange,
-      label = { Text(strings.onboardingPartner2Label) },
-      placeholder = { Text(strings.onboardingPartner2Placeholder) },
-      singleLine = true,
-      keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, autoCorrectEnabled = false),
-      modifier = Modifier.fillMaxWidth(),
-      shape = RoundedCornerShape(12.dp),
-      colors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = Color(0xFFFF4081),
-        unfocusedBorderColor = Color(0xFFFFD1E7)
-      )
+    OnboardingNameField(boyName, onBoyNameChange, strings.onboardingPartner1Label, strings.onboardingPartner1Placeholder)
+    OnboardingNameField(girlName, onGirlNameChange, strings.onboardingPartner2Label, strings.onboardingPartner2Placeholder)
+    InLoveDatePickerField(
+      value = loveStartDate,
+      onValueChange = onLoveStartDateChange,
+      label = if (isEnglish) "Love start date (optional)" else "Ngày bắt đầu yêu (tùy chọn)",
+      dialogTitle = if (isEnglish) "Select love start date" else "Chọn ngày bắt đầu yêu",
+      pickerOnly = true,
+      isEnglish = isEnglish,
+      maxDateMillis = System.currentTimeMillis(),
+      testTag = "onboarding_start_date_field",
+      onClear = if (loveStartDate.isNotBlank()) ({ onLoveStartDateChange("") }) else null
     )
   }
+}
+
+@Composable
+private fun OnboardingNameField(value: String, onValueChange: (String) -> Unit, label: String, placeholder: String) {
+  OutlinedTextField(
+    value = value,
+    onValueChange = onValueChange,
+    label = { Text(label) },
+    placeholder = { Text(placeholder) },
+    singleLine = true,
+    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+      capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words,
+      autoCorrectEnabled = false
+    ),
+    modifier = Modifier.fillMaxWidth(),
+    shape = RoundedCornerShape(12.dp),
+    colors = inLoveOutlinedTextFieldColors(focusedBorderColor = Color(0xFFFF4081), unfocusedBorderColor = Color(0xFFFFD1E7))
+  )
 }
 
 @Composable

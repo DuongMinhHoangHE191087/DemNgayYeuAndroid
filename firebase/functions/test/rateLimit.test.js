@@ -19,7 +19,7 @@ const keyOf = (name, uid, nowMs) => `mediaQuota/rl_${name}_${uid}_${Math.floor(n
 const exhausted = { code: 'resource-exhausted' };
 const INDEX_SRC = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
 const ENTITLEMENT_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'entitlement', 'index.js'), 'utf8');
-const HANDLERS = ['acceptCoupleInvite', 'requestAccountDeletion', 'signMemoryUpload', 'confirmMemoryUpload', 'getMemoryMediaUrl', 'signAvatarUpload'];
+const HANDLERS = ['acceptCoupleInvite', 'requestAccountDeletion', 'signMemoryUpload', 'confirmMemoryUpload', 'getMemoryMediaUrl', 'signAvatarUpload', 'generateGiftAdvice'];
 
 // Gọi enforce đúng n lần, tuần tự.
 async function callN(enforce, args, n) {
@@ -172,6 +172,7 @@ test('12. wiring: index.js gọi rateLimit.enforce đúng db/uid/name/nowMs, tr�
     './src/pairing': rec('pairing'),
     './src/accountDeletion': rec('accountDeletion'),
     './src/avatar': rec('avatar'),
+    './src/aiAdvisor': rec('aiAdvisor'),
     './src/objectStore': { createObjectStore: () => ({}) },
     './src/entitlement': {},
     './src/entitlement/options': { STORE_SECRETS: [] },

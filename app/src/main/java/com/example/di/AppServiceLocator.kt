@@ -4,6 +4,8 @@ import android.content.Context
 import com.example.ads.AdsManager
 import com.example.ads.AdsManagerImpl
 import com.example.billing.BillingManager
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -38,6 +40,8 @@ object AppServiceLocator {
     // syncCoordinator/profileSync keep a stale InLoveDao bound to a database another test already closed.
     // Root cause of "GiftReminderCrudTest passes alone, fails in the full suite".
     @Volatile private var _initializedContextId: Int? = null
+    @Volatile private var _adPolicyGate: com.example.monetization.AdPlacementPolicyGate? = null
+    @Volatile private var _monetizationFacade: com.example.monetization.AppPluginMonetizationFacade? = null
     @Volatile private var _adsManager: AdsManager? = null
     @Volatile private var _billingManager: BillingManager? = null
     @Volatile private var _syncCoordinator: com.example.data.sync.SyncCoordinator? = null
@@ -45,10 +49,30 @@ object AppServiceLocator {
     @Volatile private var _networkMonitor: com.example.data.sync.NetworkMonitor? = null
     @Volatile private var _entitlementRepository: com.example.billing.EntitlementRepository? = null
     @Volatile private var _memoryMediaRepository: com.example.domain.media.MemoryMediaRepository? = null
+    @Volatile private var _partnerDossierRepository: com.example.data.dossier.PartnerDossierRepository? = null
+    @Volatile private var _cloudPartnerDossierSync: com.example.data.dossier.CloudPartnerDossierSync? = null
+    @Volatile private var _dossierSyncScope: kotlinx.coroutines.CoroutineScope? = null
+    @Volatile private var _aiGiftAdvisorRepository: com.example.data.ai.HybridAiGiftAdvisorRepository? = null
 
     /** Singleton instance của [AdsManager] — throw [IllegalStateException] nếu chưa initialize */
     val adsManager: AdsManager
         get() = _adsManager ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.monetization.AppPluginMonetizationFacade] — throw [IllegalStateException] nếu chưa initialize */
+    val monetizationFacade: com.example.monetization.AppPluginMonetizationFacade
+        get() = _monetizationFacade ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.data.dossier.PartnerDossierRepository] — throw [IllegalStateException] nếu chưa initialize */
+    val partnerDossierRepository: com.example.data.dossier.PartnerDossierRepository
+        get() = _partnerDossierRepository ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.data.dossier.CloudPartnerDossierSync] — throw [IllegalStateException] nếu chưa initialize */
+    val cloudPartnerDossierSync: com.example.data.dossier.CloudPartnerDossierSync
+        get() = _cloudPartnerDossierSync ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
+
+    /** Singleton instance của [com.example.data.ai.HybridAiGiftAdvisorRepository] — throw [IllegalStateException] nếu chưa initialize */
+    val aiGiftAdvisorRepository: com.example.data.ai.HybridAiGiftAdvisorRepository
+        get() = _aiGiftAdvisorRepository ?: error("AppServiceLocator chưa được initialize. Gọi initialize(context) trong onCreate().")
 
     /** Singleton instance của [BillingManager] — throw [IllegalStateException] nếu chưa initialize */
     val billingManager: BillingManager
@@ -76,13 +100,18 @@ object AppServiceLocator {
             override fun onSessionStarted(uid: String) {
                 syncCoordinator.start(uid, onRemoteChange)
                 profileSync?.start(uid, applyRemoteProfile)
+                _dossierSyncScope?.launch {
+                    runCatching { _cloudPartnerDossierSync?.syncNow() }
+                }
             }
             override fun onSessionEnded() {
                 syncCoordinator.stop()
                 profileSync?.stop()
+                _cloudPartnerDossierSync?.stop()
             }
             override fun onAccountDeleting() {
                 profileSync?.stop()
+                _cloudPartnerDossierSync?.stop()
             }
         }
 
@@ -122,14 +151,30 @@ object AppServiceLocator {
                 if (_initializedContextId != appContextId) {
                     _syncCoordinator?.stop()
                     _profileSync?.stop()
+                    _cloudPartnerDossierSync?.stop()
+                    _dossierSyncScope?.cancel()
+                    _dossierSyncScope = null
+                    _adPolicyGate = null
+                    _monetizationFacade = null
                     _billingManager = null
                     _entitlementRepository = null
                     _adsManager = null
                     _networkMonitor = null
                     _memoryMediaRepository = null
+                    _partnerDossierRepository = null
+                    _cloudPartnerDossierSync = null
+                    _aiGiftAdvisorRepository = null
                     _syncCoordinator = null
                     _profileSync = null
                     _initializedContextId = appContextId
+                }
+            }
+        }
+
+        if (_adPolicyGate == null) {
+            synchronized(this) {
+                if (_adPolicyGate == null) {
+                    _adPolicyGate = com.example.monetization.AdPlacementPolicyGate()
                 }
             }
         }
@@ -156,10 +201,23 @@ object AppServiceLocator {
             }
         }
 
+        if (_monetizationFacade == null) {
+            synchronized(this) {
+                if (_monetizationFacade == null) {
+                    _monetizationFacade = com.example.monetization.AppPluginMonetizationFacade(
+                        adPolicyGate = _adPolicyGate!!,
+                        pluginBridge = com.example.monetization.DefaultAppPluginBridge
+                    ).also { facade ->
+                        _entitlementRepository?.let { repo -> facade.updateVip(repo.isVipUser.value) }
+                    }
+                }
+            }
+        }
+
         if (_adsManager == null) {
             synchronized(this) {
                 if (_adsManager == null) {
-                    _adsManager = AdsManagerImpl().also {
+                    _adsManager = AdsManagerImpl(adPolicyGate = _adPolicyGate!!).also {
                         // Cached VIP is known synchronously; apply it before consent/SDK start can load anything.
                         _entitlementRepository?.let { repo -> it.setVipStatus(repo.isVipUser.value) }
                     }
@@ -179,6 +237,38 @@ object AppServiceLocator {
             synchronized(this) {
                 if (_memoryMediaRepository == null) {
                     _memoryMediaRepository = com.example.data.media.CloudMemoryMediaRepository()
+                }
+            }
+        }
+
+        if (_partnerDossierRepository == null) {
+            synchronized(this) {
+                if (_partnerDossierRepository == null) {
+                    val db = com.example.data.db.AppDatabase.getDatabase(appContext)
+                    _partnerDossierRepository = com.example.data.dossier.LocalJsonPartnerDossierRepository(
+                        context = appContext,
+                        dao = db.inLoveDao()
+                    )
+                }
+            }
+        }
+
+        if (_aiGiftAdvisorRepository == null) {
+            synchronized(this) {
+                if (_aiGiftAdvisorRepository == null) {
+                    _aiGiftAdvisorRepository = com.example.data.ai.HybridAiGiftAdvisorRepository(
+                        cloudFunctions = com.example.data.cloud.AndroidCloudFunctionsClient(),
+                        prefs = appContext.getSharedPreferences("inlove_ai_advisor", Context.MODE_PRIVATE),
+                        currentUidProvider = {
+                            runCatching {
+                                if (com.google.firebase.FirebaseApp.getApps(appContext).isNotEmpty()) {
+                                    com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                                } else null
+                            }.getOrNull()
+                        },
+                        isOnlineProvider = { _networkMonitor?.isOnline?.value ?: true },
+                        isVipProvider = { _entitlementRepository?.isVipUser?.value ?: false }
+                    )
                 }
             }
         }
@@ -225,6 +315,42 @@ object AppServiceLocator {
                         )
                     } else null
                     _syncCoordinator = com.example.data.sync.SyncCoordinator(db.inLoveDao(), fs, syncScope)
+                }
+            }
+        }
+
+        if (_cloudPartnerDossierSync == null) {
+            synchronized(this) {
+                if (_cloudPartnerDossierSync == null) {
+                    val dossierScope = _dossierSyncScope ?: kotlinx.coroutines.CoroutineScope(
+                        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO +
+                            kotlinx.coroutines.CoroutineExceptionHandler { _, t ->
+                                android.util.Log.w("CloudPartnerDossier", "uncaught sync error: ${t.javaClass.simpleName}")
+                            }
+                    ).also { _dossierSyncScope = it }
+                    _cloudPartnerDossierSync = com.example.data.dossier.CloudPartnerDossierSync(
+                        localStore = _partnerDossierRepository!!,
+                        gateway = com.example.data.dossier.FirestorePartnerDossierCloudGateway(
+                            firestoreProvider = {
+                                try {
+                                    if (com.google.firebase.FirebaseApp.getApps(appContext).isNotEmpty()) {
+                                        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                    } else null
+                                } catch (_: Exception) {
+                                    null
+                                }
+                            }
+                        ),
+                        signedInUidProvider = {
+                            runCatching {
+                                if (com.google.firebase.FirebaseApp.getApps(appContext).isNotEmpty()) {
+                                    com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                                } else null
+                            }.getOrNull()
+                        },
+                        isOnlineProvider = { _networkMonitor?.isOnline?.value ?: true },
+                        scope = dossierScope,
+                    )
                 }
             }
         }

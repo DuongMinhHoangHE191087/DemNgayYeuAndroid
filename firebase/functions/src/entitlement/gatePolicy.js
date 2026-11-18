@@ -9,6 +9,7 @@ const MEDIA_FREE_ALLOWED = true;
 
 const free = Object.freeze({ gate: 'free' });
 const media = Object.freeze({ gate: 'tiered', freeAllowed: MEDIA_FREE_ALLOWED });
+const aiAdvisor = Object.freeze({ gate: 'tiered', freeAllowed: true });
 
 const GATES = Object.freeze({
   acceptCoupleInvite: free,
@@ -20,6 +21,7 @@ const GATES = Object.freeze({
   signMemoryUpload: media,
   confirmMemoryUpload: media,
   getMemoryMediaUrl: media,
+  generateGiftAdvice: aiAdvisor,
 });
 
 const DENIED = 'vip-required';

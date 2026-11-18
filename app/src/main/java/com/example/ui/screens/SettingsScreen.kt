@@ -16,7 +16,6 @@ import androidx.core.net.toUri
 import com.example.alarm.AlarmNotificationScheduler
 import com.example.ui.util.findActivity
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
@@ -65,6 +63,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WorkspacePremium
 import com.example.ui.components.animateDialogEntrance
 import com.example.ui.components.AppAlertDialog
+import com.example.ui.designsystem.InLoveTypography
 import com.example.ui.components.ProfileAvatar
 import com.example.ui.components.MemoryPrivacyNotice
 import com.example.ui.components.PrimaryGradientButton
@@ -90,7 +89,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -109,11 +107,9 @@ import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.OnSurface
 import com.example.ui.theme.OnSurfaceVariant
 import com.example.ui.theme.Primary
-import com.example.ui.theme.PrimaryFixed
 import com.example.ui.theme.RoseGradientEnd
 import com.example.ui.theme.RoseGradientMid
 import com.example.ui.theme.RoseGradientStart
-import com.example.ui.theme.SurfaceContainerHigh
 import com.example.ui.theme.SurfaceContainerLow
 import com.example.ui.theme.SurfaceContainerLowest
 import com.example.ui.theme.UpsellBorderPink
@@ -234,55 +230,44 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       Column(modifier = Modifier.fillMaxWidth()) {
         Card(
           shape = RoundedCornerShape(20.dp),
-          colors = CardDefaults.cardColors(
-            containerColor = if (isVip) VipGoldContainer else SurfaceContainerLow
-          ),
-          border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isVip) VipGoldBorder else UpsellBorderPink
-          ),
-          elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+          colors = CardDefaults.cardColors(containerColor = if (isVip) VipGoldContainer else SurfaceContainerLow),
+          border = androidx.compose.foundation.BorderStroke(1.dp, if (isVip) VipGoldBorder else UpsellBorderPink),
+          elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
           modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = MinTouchBox)
             .clickable { viewModel.setVipDialogVisible(true) }
             .testTag("settings_vip_upgrade_card")
         ) {
           Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
           ) {
-            Box(
-              modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(if (isVip) VipGold else Primary),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                imageVector = Icons.Filled.WorkspacePremium,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(26.dp)
-              )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
+            Icon(
+              imageVector = Icons.Filled.WorkspacePremium,
+              contentDescription = null,
+              tint = if (isVip) VipGold else Primary,
+              modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
               Text(
-                text = if (isVip) (if (isEnglish) "InLove VIP Member 👑" else "Thành Viên InLove VIP 👑") else (if (isEnglish) "Upgrade to Love VIP ✨" else "Nâng Cấp Gói VIP Tình Yêu ✨"),
-                fontWeight = FontWeight.Bold,
+                text = if (isVip) {
+                  if (isEnglish) "InLove Pro Member" else "Thành viên InLove Pro"
+                } else {
+                  if (isEnglish) "Upgrade to InLove Pro" else "Nâng cấp InLove Pro"
+                },
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
                 color = if (isVip) VipGoldText else Primary
               )
               Spacer(modifier = Modifier.height(2.dp))
               Text(
-                // Chỉ liệt kê quyền lợi ĐÃ XÁC MINH thật sự dành riêng cho VIP: tắt quảng cáo
-                // là quyền lợi duy nhất được BillingManager/AdsManagerImpl gate theo isVip.
-                // "Cloud sync" (Firebase3NFService) và "AI không giới hạn" (gợi ý quà) đã bị
-                // xoá khỏi dòng này vì cả hai đều KHÔNG được gate theo VIP trong code thực tế
-                // (sync cloud là dead code chưa từng gọi; gợi ý quà mở cho mọi người dùng miễn
-                // phí) — Google Play Policy cấm quảng cáo sai sự thật về tính năng.
-                text = if (isVip) (if (isEnglish) "Ad-free" else "Không quảng cáo")
-                       else (if (isEnglish) "No ads • 3-day free trial" else "Không quảng cáo • Dùng thử 3 ngày"),
+                text = if (isVip) {
+                  if (isEnglish) "Ad-free experience" else "Bỏ toàn bộ quảng cáo"
+                } else {
+                  if (isEnglish) "Ad-free experience · 3-day free trial" else "Bỏ toàn bộ quảng cáo · Dùng thử 3 ngày"
+                },
                 fontSize = 12.sp,
                 color = OnSurfaceVariant
               )
@@ -290,7 +275,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             Icon(
               imageVector = Icons.Filled.ChevronRight,
               contentDescription = null,
-              tint = if (isVip) VipGold else Primary
+              tint = OnSurfaceVariant
             )
           }
         }
@@ -331,9 +316,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
     item {
       Text(
         text = stringResource(R.string.settings_section_appearance),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        color = Primary
+        style = InLoveTypography.SectionHeader.copy(fontSize = 15.5.sp, color = Primary)
       )
       Spacer(modifier = Modifier.height(8.dp))
 
@@ -343,7 +326,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
       ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
           SettingClickableRow(
             icon = Icons.Filled.Favorite,
             title = if (isEnglish) "Customize Love Journey Title" else "Đổi Tiêu Đề Hành Trình Yêu",
@@ -372,9 +355,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
     item {
       Text(
         text = stringResource(R.string.settings_section_notifications),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        color = Primary
+        style = InLoveTypography.SectionHeader.copy(fontSize = 15.5.sp, color = Primary)
       )
       Spacer(modifier = Modifier.height(8.dp))
 
@@ -384,7 +365,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
       ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
           if (!exactGranted) {
             Row(
               modifier = Modifier
@@ -403,20 +384,12 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-              Box(
-                modifier = Modifier
-                  .size(36.dp)
-                  .clip(CircleShape)
-                  .background(SurfaceContainerHigh),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Filled.Notifications,
-                  contentDescription = null,
-                  tint = Primary,
-                  modifier = Modifier.size(18.dp)
-                )
-              }
+              Icon(
+                imageVector = Icons.Filled.Notifications,
+                contentDescription = null,
+                tint = OnSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+              )
               Column(modifier = Modifier.weight(1f)) {
                 Text(
                   text = stringResource(R.string.settings_exact_alarm_title),
@@ -461,16 +434,14 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
       }
     }
 
-    // Thông báo riêng tư kỷ niệm (T17): chỉ hiện khi kỷ niệm ở lại trên máy
-    item { MemoryPrivacyNotice() }
+    // Thông báo riêng tư kỷ niệm (T17): rút gọn mặc định trên Cài đặt
+    item { MemoryPrivacyNotice(initiallyExpanded = false) }
 
     // 6. Settings Group: Dữ Liệu & Bảo Mật Nâng Cao (Security & Privacy Center)
     item {
       Text(
-        text = if (isEnglish) "Account" else "Tài khoản",
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Bold,
-        color = Primary
+        text = if (isEnglish) "Account" else "Tài Khoản",
+        style = InLoveTypography.SectionHeader.copy(fontSize = 15.5.sp, color = Primary)
       )
       Spacer(modifier = Modifier.height(8.dp))
 
@@ -497,16 +468,16 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
               Column(modifier = Modifier.weight(1f)) {
                 Text(
                   text = currentUser.effectiveDisplayName.ifBlank { currentAccount.displayName },
-                  fontWeight = FontWeight.Bold,
+                  fontWeight = FontWeight.SemiBold,
                   fontSize = 15.sp,
-                  color = Color(0xFF212121),
+                  color = OnSurface,
                   maxLines = 1,
                   overflow = TextOverflow.Ellipsis
                 )
                 Text(
                   text = currentAccount.email,
                   fontSize = 12.sp,
-                  color = Color(0xFF757575),
+                  color = OnSurfaceVariant,
                   maxLines = 1,
                   overflow = TextOverflow.Ellipsis
                 )
@@ -546,10 +517,8 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
                   )
                   Spacer(modifier = Modifier.width(8.dp))
                   Text(
-                    text = if (isEnglish) "Guest Mode (Offline)" else "Chế độ Khách (Offline)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = Color(0xFF880E4F)
+                    text = if (isEnglish) "Guest mode" else "Chế độ khách",
+                    style = InLoveTypography.SectionHeader.copy(fontSize = 16.sp, color = Color(0xFF880E4F))
                   )
                 }
                 PrimaryGradientButton(
@@ -778,7 +747,7 @@ fun SettingsScreen(viewModel: InLoveViewModel) {
             if (isEnglish) "Google Play Policy Compliance: You can also request account deletion via the Web link:"
             else "Tuân thủ chính sách bảo mật Google Play: Bạn cũng có thể yêu cầu xóa tài khoản qua liên kết Web:",
             fontSize = 12.sp,
-            color = Color.Gray
+            color = OnSurfaceVariant
           )
           TextButton(
             onClick = {
@@ -941,19 +910,20 @@ private fun LanguageToggleButton(
     shape = RoundedCornerShape(10.dp),
     color = backgroundColor,
     modifier = modifier
+      .heightIn(min = MinTouchBox)
       .clip(RoundedCornerShape(10.dp))
       .clickable { onClick() }
   ) {
     Row(
       modifier = Modifier
-        .padding(vertical = 6.dp, horizontal = 14.dp),
+        .padding(vertical = 8.dp, horizontal = 14.dp),
       horizontalArrangement = Arrangement.Center,
       verticalAlignment = Alignment.CenterVertically
     ) {
       Text(
         text = title,
         color = textColor,
-        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
         fontSize = 13.5.sp
       )
     }
@@ -969,38 +939,44 @@ fun SettingSwitchRow(
   onCheckedChange: (Boolean) -> Unit
 ) {
   Row(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = Modifier
+      .fillMaxWidth()
+      .heightIn(min = MinTouchBox)
+      .padding(vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.SpaceBetween
   ) {
     Row(
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(10.dp),
-      modifier = Modifier.weight(1f)
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      modifier = Modifier
+        .weight(1f)
+        .padding(end = 8.dp)
     ) {
-      Box(
-        modifier = Modifier
-          .size(36.dp)
-          .clip(CircleShape)
-          .background(PrimaryFixed.copy(alpha = 0.5f)),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = icon,
-          contentDescription = null,
-          tint = Primary,
-          modifier = Modifier.size(18.dp)
-        )
-      }
+      Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = OnSurfaceVariant,
+        modifier = Modifier.size(20.dp)
+      )
       Column {
         Text(
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
           text = title,
-          fontSize = 13.sp,
+          fontSize = 13.5.sp,
           fontWeight = FontWeight.SemiBold,
           color = OnSurface
         )
+        if (subtitle.isNotBlank()) {
+          Text(
+            text = subtitle,
+            fontSize = 11.5.sp,
+            color = OnSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+          )
+        }
       }
     }
 
@@ -1025,39 +1001,43 @@ fun SettingClickableRow(
   Row(
     modifier = Modifier
       .fillMaxWidth()
+      .heightIn(min = MinTouchBox)
       .clickable { onClick() }
-      .padding(vertical = 4.dp),
+      .padding(vertical = 6.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.SpaceBetween
   ) {
     Row(
       verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(10.dp),
-      modifier = Modifier.weight(1f)
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      modifier = Modifier
+        .weight(1f)
+        .padding(end = 8.dp)
     ) {
-      Box(
-        modifier = Modifier
-          .size(36.dp)
-          .clip(CircleShape)
-          .background(SurfaceContainerHigh),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = icon,
-          contentDescription = null,
-          tint = Primary,
-          modifier = Modifier.size(18.dp)
-        )
-      }
+      Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = OnSurfaceVariant,
+        modifier = Modifier.size(20.dp)
+      )
       Column {
         Text(
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
           text = title,
-          fontSize = 13.sp,
+          fontSize = 13.5.sp,
           fontWeight = FontWeight.SemiBold,
           color = OnSurface
         )
+        if (subtitle.isNotBlank()) {
+          Text(
+            text = subtitle,
+            fontSize = 11.5.sp,
+            color = OnSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+          )
+        }
       }
     }
 

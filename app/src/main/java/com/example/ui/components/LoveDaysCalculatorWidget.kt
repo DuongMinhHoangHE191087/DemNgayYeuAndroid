@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.CheckCircle
@@ -65,8 +64,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.InLoveFonts
 import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
+import com.example.ui.theme.TextDarkPlum
 import com.example.ui.util.AppLanguage
 import com.example.ui.util.ProfileUtils
 import java.text.SimpleDateFormat
@@ -240,44 +241,23 @@ fun LoveDaysCalculatorWidget(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(12.dp),
+        .padding(16.dp),
       verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-      // 1. Header with icon, title, and "Đổi ngày" button
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          Box(
-            modifier = Modifier
-              .size(32.dp)
-              .clip(CircleShape)
-              .background(Color(0xFFFCE4EC)),
-            contentAlignment = Alignment.Center
-          ) {
-            Icon(
-              imageVector = Icons.Filled.DateRange,
-              contentDescription = null,
-              tint = Color(0xFFFF4081),
-              modifier = Modifier.size(22.dp)
-            )
-          }
-
-          Text(
-            text = if (isVietnamese) "Bộ Đếm Ngày Yêu" else "Love Days",
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = Color(0xFF1F0416)
-          )
-        }
-
+        Text(
+          text = if (isVietnamese) "Bộ Đếm Ngày Yêu" else "Love Days",
+          fontFamily = InLoveFonts.DisplaySerif,
+          fontWeight = FontWeight.Bold,
+          fontSize = 17.sp,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+          color = TextDarkPlum
+        )
       }
 
       // 2. Anniversary Start Date Banner

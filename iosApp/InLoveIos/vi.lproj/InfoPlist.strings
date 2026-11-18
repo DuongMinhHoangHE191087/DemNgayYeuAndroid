@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "InLove";
+"NSCameraUsageDescription" = "InLove cần quyền máy ảnh để chụp ảnh kỷ niệm và ảnh đại diện đôi.";
+"NSPhotoLibraryUsageDescription" = "InLove cần quyền thư viện ảnh để lưu giữ ảnh kỷ niệm và ảnh đại diện của hai bạn.";

@@ -60,8 +60,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.InLoveTypography
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -230,32 +231,9 @@ fun AnniversaryMemoriesWidget(
           verticalAlignment = Alignment.CenterVertically,
           modifier = Modifier.weight(1f)
         ) {
-          Box(
-            modifier = Modifier
-              .size(32.dp)
-              .clip(CircleShape)
-              .background(
-                Brush.linearGradient(
-                  colors = listOf(Color(0xFFFF4081), Color(0xFFFF80AB))
-                )
-              ),
-            contentAlignment = Alignment.Center
-          ) {
-            Icon(
-              imageVector = Icons.Filled.PhotoLibrary,
-              contentDescription = null,
-              tint = Color.White,
-              modifier = Modifier.size(20.dp)
-            )
-          }
-
-          Spacer(modifier = Modifier.width(10.dp))
-
           Text(
             text = if (isVietnamese) "Khoảnh khắc kỷ niệm" else "Memories",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF26071B),
+            style = InLoveTypography.SectionHeader,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false)
@@ -321,25 +299,14 @@ fun AnniversaryMemoriesWidget(
         val isAllSelected = selectedFilter == "Tất cả" || selectedFilter == "All"
 
         AnniversaryFilterPill(
-          emoji = "🌟",
-          name = if (isVietnamese) "Tất cả kỷ niệm" else "All Anniversaries",
+          name = if (isVietnamese) "Tất cả" else "All",
           isSelected = isAllSelected,
           onClick = { viewModel.selectAnniversaryFilter(allFilterLabel) }
         )
 
         defaultAnniversaryList.forEach { anniversaryName ->
           val isSelected = selectedFilter.equals(anniversaryName, ignoreCase = true)
-          val chipIcon = when {
-            anniversaryName.contains("Bắt Đầu") || anniversaryName.contains("Yêu") -> "🌹"
-            anniversaryName.contains("1 Năm") || anniversaryName.contains("Year") -> "💍"
-            anniversaryName.contains("100") -> "💕"
-            anniversaryName.contains("Valentine") || anniversaryName.contains("14/02") -> "🍫"
-            anniversaryName.contains("Du Lịch") -> "✈️"
-            anniversaryName.contains("Sinh Nhật") -> "🎂"
-            else -> "✨"
-          }
           AnniversaryFilterPill(
-            emoji = chipIcon,
             name = anniversaryName,
             isSelected = isSelected,
             onClick = { viewModel.selectAnniversaryFilter(anniversaryName) }
@@ -1040,9 +1007,9 @@ private fun AddAnniversaryPhotoDialog(
           singleLine = true,
           modifier = Modifier.fillMaxWidth(),
           shape = RoundedCornerShape(14.dp),
-          colors = OutlinedTextFieldDefaults.colors(
+          colors = inLoveOutlinedTextFieldColors(
             focusedBorderColor = Primary,
-            unfocusedBorderColor = Color(0xFFFFCDD2)
+            unfocusedBorderColor = Color(0xFFFFCDD2),
           )
         )
 
@@ -1060,9 +1027,9 @@ private fun AddAnniversaryPhotoDialog(
             singleLine = true,
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
+            colors = inLoveOutlinedTextFieldColors(
               focusedBorderColor = Primary,
-              unfocusedBorderColor = Color(0xFFFFCDD2)
+              unfocusedBorderColor = Color(0xFFFFCDD2),
             )
           )
 
@@ -1073,9 +1040,9 @@ private fun AddAnniversaryPhotoDialog(
             singleLine = true,
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
+            colors = inLoveOutlinedTextFieldColors(
               focusedBorderColor = Primary,
-              unfocusedBorderColor = Color(0xFFFFCDD2)
+              unfocusedBorderColor = Color(0xFFFFCDD2),
             )
           )
         }
@@ -1090,9 +1057,9 @@ private fun AddAnniversaryPhotoDialog(
           maxLines = 3,
           modifier = Modifier.fillMaxWidth(),
           shape = RoundedCornerShape(14.dp),
-          colors = OutlinedTextFieldDefaults.colors(
+          colors = inLoveOutlinedTextFieldColors(
             focusedBorderColor = Primary,
-            unfocusedBorderColor = Color(0xFFFFCDD2)
+            unfocusedBorderColor = Color(0xFFFFCDD2),
           )
         )
 
@@ -1321,22 +1288,27 @@ private fun AnniversaryPhotoDetailDialog(
   }
 }
 
-/** Emoji-only pill; only the selected one spells out its name. */
+/** Clean text filter pill matching DESIGN.md (zero decorative emojis, readable at rest). */
 @Composable
-private fun AnniversaryFilterPill(emoji: String, name: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun AnniversaryFilterPill(name: String, isSelected: Boolean, onClick: () -> Unit) {
   Row(
     verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(6.dp),
     modifier = Modifier
       .heightIn(min = 40.dp)
       .clip(RoundedCornerShape(20.dp))
-      .background(if (isSelected) Primary else Color(0xFFFFF5F8))
+      .background(if (isSelected) Primary else Color.White)
+      .border(1.dp, if (isSelected) Primary else Color(0xFFFFC6DB), RoundedCornerShape(20.dp))
       .clickable(onClick = onClick)
-      .animateContentSize()
-      .padding(horizontal = 12.dp)
+      .padding(horizontal = 14.dp, vertical = 8.dp)
       .semantics { contentDescription = name }
   ) {
-    Text(text = emoji, fontSize = 18.sp)
-    if (isSelected) Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+    Text(
+      text = name,
+      fontSize = 12.5.sp,
+      fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+      color = if (isSelected) Color.White else Color(0xFF1F0416),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
   }
 }

@@ -82,6 +82,26 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
+    // Owner-only private partner dossier backup (secret gift notes MUST never be readable by partner).
+    function privateDossierFields() {
+      return ['payloadJson', 'schemaVersion', 'updatedAtEpochMs', 'updatedAt'];
+    }
+    function validPrivateDossier(d) {
+      return d.keys().hasOnly(['payloadJson', 'schemaVersion', 'updatedAtEpochMs', 'updatedAt']) &&
+        d.keys().hasAll(['payloadJson', 'schemaVersion', 'updatedAtEpochMs', 'updatedAt']) &&
+        d.payloadJson is string && d.payloadJson.size() <= 32768 &&
+        d.schemaVersion == 1 &&
+        d.updatedAtEpochMs is int &&
+        d.updatedAt is timestamp;
+    }
+    match /users/{userId}/privateDossier/{docId} {
+      allow get: if docId == 'current' && isOwner(userId);
+      allow list: if false;
+      allow create, update: if docId == 'current' && isOwner(userId) &&
+        validPrivateDossier(request.resource.data);
+      allow delete: if docId == 'current' && isOwner(userId);
+    }
+
     // ===============================================================
     // Couple Codes (public lookup: code -> ownerUid, needed for real
     // two-device pairing since `users` is owner-only readable)

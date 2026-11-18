@@ -34,7 +34,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.WorkspacePremium
 import kotlin.time.Duration.Companion.milliseconds
@@ -61,7 +60,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
@@ -76,9 +74,11 @@ import com.example.billing.BillingManager
 import com.example.billing.PurchaseEvent
 import com.example.billing.findBestOffer
 import com.example.billing.toPlanOffer
+import com.example.shared.monetization.ProTierCatalog
 import com.example.ui.components.PrimaryGradientButton
 import com.example.ui.components.disabledLook
 import com.example.ui.components.pressClickable
+import com.example.ui.theme.InLoveFonts
 import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
 
@@ -139,11 +139,12 @@ fun PaywallScreen(
         label = "sparkleAlpha"
     )
 
-    // ─── Chặn App Open Ad khi Paywall đang mở ────────────────────────────────
-    // Tuân thủ Policy: AOA không được hiện đè lên màn hình thanh toán.
+    // ─── Chặn App Open Ad & kích hoạt SacredZone khi Paywall đang mở ─────────
     DisposableEffect(Unit) {
         adsManager.setAppOpenAdSuppressed(true)
+        adsManager.enterSacredZone(com.example.shared.monetization.SacredZone.PAYWALL)
         onDispose {
+            adsManager.exitSacredZone(com.example.shared.monetization.SacredZone.PAYWALL)
             adsManager.setAppOpenAdSuppressed(false)
         }
     }
@@ -248,7 +249,7 @@ fun PaywallScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -269,7 +270,7 @@ fun PaywallScreen(
             // ── Badge & Icon Vương Miện ──────────────────────────────────────
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
                     .background(
                         Brush.radialGradient(
@@ -286,83 +287,79 @@ fun PaywallScreen(
                     imageVector = Icons.Default.WorkspacePremium,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // ── Tiêu đề ───────────────────────────────────────────────────────
             Text(
                 text = stringResource(R.string.paywall_title),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontFamily = InLoveFonts.DisplaySerif,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF1F0416),
-                letterSpacing = 1.5.sp
+                letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.paywall_sub),
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 color = Color(0xFF8A2E5B),
                 textAlign = TextAlign.Center,
-                lineHeight = 21.sp
+                lineHeight = 18.sp
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // ── Đặc quyền VIP ─────────────────────────────────────────────────
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White)
-                    .border(
-                        1.dp,
-                        Color(0xFFFFD1E7),
-                        RoundedCornerShape(20.dp)
-                    )
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.paywall_benefits_header),
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFE91E63),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                VipBenefitItem(
-                    icon = Icons.Default.CheckCircle,
-                    text = stringResource(R.string.paywall_benefit_ads)
-                )
-                VipBenefitItem(
-                    icon = Icons.Default.CheckCircle,
-                    text = stringResource(R.string.paywall_benefit_support)
-                )
-            }
+            val paywallConfig = androidx.compose.ui.platform.LocalConfiguration.current
+            val isEnglishPaywall = androidx.core.os.ConfigurationCompat.getLocales(paywallConfig)[0]?.language == "en"
+            com.example.ui.screens.paywall.ProBenefitsMatrixSection(
+                headerText = stringResource(R.string.paywall_benefits_header),
+                isEnglish = isEnglishPaywall
+            )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // ── Các gói đăng ký ───────────────────────────────────────────────
 
-            // Gói NĂM — không gắn nhãn so sánh (chưa có dữ liệu chứng minh "phổ biến"/"tiết kiệm")
+            val yearlySpec = ProTierCatalog.planFor(BillingManager.PRODUCT_VIP_YEARLY)
+            val monthlySpec = ProTierCatalog.planFor(BillingManager.PRODUCT_VIP_MONTHLY)
+            val yearlyBadge = yearlySpec?.let { spec ->
+                if (isEnglishPaywall) {
+                    "Save ${spec.savingsPercent}% · ${spec.freeTrialDays}-Day Free Trial"
+                } else {
+                    "Tiết kiệm ${spec.savingsPercent}% · ${spec.freeTrialDays} ngày miễn phí"
+                }
+            }
+            val yearlySubText = stringResource(R.string.paywall_plan_yearly_sub)
+            val monthlySubText = monthlySpec?.let { if (isEnglishPaywall) it.taglineEn else it.taglineVi }
+                ?.takeIf { it.isNotBlank() } ?: stringResource(R.string.paywall_plan_monthly_sub)
+            val lifetimeBadge = if (isEnglishPaywall) "ONE-TIME" else "MUA 1 LẦN"
+            val lifetimeSubText = if (isEnglishPaywall) {
+                "Pay once · No renewal"
+            } else {
+                "Không gia hạn · Dùng dài lâu"
+            }
+
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_yearly_title),
                 price = dynamicYearlyPrice,
-                subText = stringResource(R.string.paywall_plan_yearly_sub),
-                badge = null,
-                badgeColor = Color.Transparent,
+                subText = yearlySubText,
+                badge = yearlyBadge,
+                badgeColor = Primary,
                 isSelected = selectedPlan == PaywallPlan.YEARLY,
                 onClick = { selectedPlan = PaywallPlan.YEARLY }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Gói THÁNG
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_monthly_title),
                 price = dynamicMonthlyPrice,
-                subText = stringResource(R.string.paywall_plan_monthly_sub),
+                subText = monthlySubText,
                 badge = null,
                 badgeColor = Color.Transparent,
                 isSelected = selectedPlan == PaywallPlan.MONTHLY,
@@ -371,12 +368,11 @@ fun PaywallScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Gói TRỌN ĐỜI (LIFETIME)
             PaywallPlanCard(
                 title = stringResource(R.string.paywall_plan_lifetime_title),
                 price = dynamicLifetimePrice,
-                subText = stringResource(R.string.paywall_plan_lifetime_sub),
-                badge = stringResource(R.string.paywall_plan_lifetime_badge),
+                subText = lifetimeSubText,
+                badge = lifetimeBadge,
                 badgeColor = Color(0xFFFF9800),
                 isSelected = selectedPlan == PaywallPlan.LIFETIME,
                 onClick = { selectedPlan = PaywallPlan.LIFETIME }
@@ -569,8 +565,10 @@ internal fun PaywallFooter(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
+                val restoreLabel = stringResource(R.string.paywall_btn_restore)
+                    .replace(" (Restore Purchases)", "")
                 Text(
-                    text = stringResource(R.string.paywall_btn_restore),
+                    text = restoreLabel,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
@@ -630,36 +628,6 @@ private fun LegalLink(text: String, onClick: () -> Unit) {
 }
 
 // ─── Sub-composables ──────────────────────────────────────────────────────────
-
-/** Một dòng đặc quyền VIP với icon và text chuẩn Light Mode */
-@Composable
-private fun VipBenefitItem(
-    icon: ImageVector,
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Color(0xFF00C853), // Xanh lá tươi nổi bật trên nền trắng
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            color = Color(0xFF1F0416),
-            fontSize = 13.5.sp,
-            fontWeight = FontWeight.Normal,
-            lineHeight = 19.sp
-        )
-    }
-}
 
 /** Card hiển thị một gói đăng ký — highlight khi được chọn chuẩn Light Mode */
 @Composable
@@ -740,9 +708,13 @@ private fun PaywallPlanCard(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = price,
-                color = Color(0xFFE91E63),
-                fontSize = 18.5.sp,
-                fontWeight = FontWeight.ExtraBold
+                style = androidx.compose.ui.text.TextStyle(
+                    fontFamily = InLoveFonts.BodySans,
+                    color = Color(0xFFE91E63),
+                    fontSize = 18.5.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFeatureSettings = "tnum",
+                )
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(

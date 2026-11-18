@@ -14,6 +14,7 @@ const media = require('./src/media');
 const pairing = require('./src/pairing');
 const accountDeletion = require('./src/accountDeletion');
 const avatar = require('./src/avatar');
+const aiAdvisor = require('./src/aiAdvisor');
 const rateLimit = require('./src/rateLimit');
 const { getAuth } = require('firebase-admin/auth');
 const { createObjectStore } = require('./src/objectStore');
@@ -28,6 +29,15 @@ const R2_BUCKET = defineString('R2_BUCKET');
 const R2_ACCESS_KEY_ID = defineSecret('R2_ACCESS_KEY_ID');
 const R2_SECRET_ACCESS_KEY = defineSecret('R2_SECRET_ACCESS_KEY');
 const R2_SECRETS = [R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY];
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+
+function readGeminiApiKey() {
+  try {
+    return String(GEMINI_API_KEY.value() ?? '').trim();
+  } catch {
+    return String(process.env.GEMINI_API_KEY ?? '').trim();
+  }
+}
 
 // Một client cho mỗi instance. Secret không đổi trong vòng đời instance; đổi secret thì deploy lại.
 let objectStore = null;
@@ -82,6 +92,13 @@ const callableOptions = {
   region: cfg.region,
   enforceAppCheck: true,
   secrets: [...R2_SECRETS, ...STORE_SECRETS],
+  maxInstances: 10,
+};
+
+const aiCallableOptions = {
+  region: cfg.region,
+  enforceAppCheck: true,
+  secrets: [...STORE_SECRETS, GEMINI_API_KEY],
   maxInstances: 10,
 };
 
@@ -158,6 +175,22 @@ exports.getMemoryMediaUrl = onCall(callableOptions, async (request) => {
   const { tier } = await gateFor('getMemoryMediaUrl', uid);
   const input = policy.parseIds(request.data ?? {});
   return media.getDeliveryUrl({ db: db(), cloud: cloud(), uid, input, tier, nowMs: Date.now() });
+});
+
+// Trợ lý gợi ý quà tặng & lời chúc AI: kiểm tra quyền (vip 60 lượt/tháng, free 2 lượt/tháng), rơi về engine thông minh nếu thiếu Gemini key.
+exports.generateGiftAdvice = onCall(aiCallableOptions, async (request) => {
+  const uid = requireUid(request);
+  await limit('generateGiftAdvice', uid);
+  const { tier } = await gateFor('generateGiftAdvice', uid);
+  const input = aiAdvisor.parseAiGiftInput(request.data ?? {});
+  return aiAdvisor.generateGiftAdvice({
+    db: db(),
+    uid,
+    tier,
+    input,
+    geminiApiKey: readGeminiApiKey(),
+    nowMs: Date.now(),
+  });
 });
 
 // Memory bị xoá (bởi bất kỳ thành viên nào), hoặc bị bỏ ảnh (cloudinaryPublicId về rỗng), thì giải phóng tệp của nó.

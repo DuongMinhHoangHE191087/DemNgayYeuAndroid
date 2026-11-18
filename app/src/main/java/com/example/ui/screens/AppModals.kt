@@ -19,41 +19,25 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PhotoAlbum
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Wallpaper
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -74,7 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.R
-import com.example.ui.theme.HotPink
+import com.example.shared.guide.GuideQuickAction
+import com.example.ui.screens.guide.InLoveUserGuideDialog
 import com.example.ui.theme.MinTouchBox
 import com.example.ui.theme.Primary
 import com.example.ui.theme.PrimaryFixed
@@ -297,339 +282,18 @@ private fun LanguageOptionCard(
 }
 
 // ==========================================
-// 2. COMPREHENSIVE USER GUIDE DIALOG
+// 2. INTERACTIVE 4-CHAPTER USER GUIDE
 // ==========================================
 @Composable
 fun UserGuideDialog(
   language: AppLanguage,
-  onDismiss: () -> Unit
-) {
-  val strings = LocalizedStrings.get(language)
-  var selectedTab by remember { mutableIntStateOf(0) }
-
-  val tabs = listOf(
-    Pair(strings.guideTabCounter, Icons.Filled.Favorite),
-    Pair(strings.guideTabPairing, Icons.Filled.Link),
-    Pair(strings.guideTabMemories, Icons.Filled.PhotoAlbum),
-    Pair(strings.guideTabCalendar, Icons.Filled.CalendarMonth),
-    Pair(strings.guideTabGifts, Icons.Filled.CardGiftcard),
-    Pair(strings.guideTabReminders, Icons.Filled.Notifications),
-    Pair(strings.guideTabSettings, Icons.Filled.Settings)
-  )
-
-  AppDialog(onDismissRequest = onDismiss) {
-    Surface(
-      shape = RoundedCornerShape(28.dp),
-      color = Color.White.copy(alpha = 0.98f),
-      shadowElevation = 16.dp,
-      modifier = Modifier
-        .fillMaxWidth()
-        .animateDialogEntrance()
-        .border(
-          width = 1.5.dp,
-          brush = Brush.horizontalGradient(
-            listOf(Color(0xFFFF4081), Color(0xFFFF80AB), Color(0xFFFF4081))
-          ),
-          shape = RoundedCornerShape(28.dp)
-        )
-    ) {
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(18.dp)
-      ) {
-        // Header
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-              modifier = Modifier
-                .size(38.dp)
-                .clip(CircleShape)
-                .background(
-                  Brush.linearGradient(listOf(RoseGradientStart, RoseGradientMid))
-                ),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-              )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-              text = strings.guideTitle,
-              fontSize = 16.sp,
-              fontWeight = FontWeight.ExtraBold,
-              color = Color(0xFF26071B)
-            )
-          }
-
-          IconButton(
-            onClick = onDismiss,
-            modifier = Modifier.size(MinTouchBox)
-          ) {
-            Icon(
-              imageVector = Icons.Filled.Close,
-              contentDescription = "Close",
-              tint = Color(0xFF6B2B50)
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Horizontal Category Tabs
-        LazyRow(
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          items(tabs.size) { index ->
-            val (tabTitle, icon) = tabs[index]
-            val isSelected = selectedTab == index
-            Surface(
-              shape = RoundedCornerShape(50.dp),
-              color = if (isSelected) Primary else Color(0xFFFFF0F5),
-              modifier = Modifier
-                .clip(RoundedCornerShape(50.dp))
-                .clickable { selectedTab = index }
-            ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-              ) {
-                Icon(
-                  imageVector = icon,
-                  contentDescription = null,
-                  tint = if (isSelected) Color.White else Primary,
-                  modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                  text = tabTitle,
-                  fontSize = 11.5.sp,
-                  fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                  color = if (isSelected) Color.White else Color(0xFF26071B)
-                )
-              }
-            }
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Scrollable Guide Content per Tab
-        Box(
-          modifier = Modifier
-            .weight(1f, fill = false)
-            .height(280.dp)
-            .verticalScroll(rememberScrollState())
-        ) {
-          when (selectedTab) {
-            0 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "1. Đếm Ngày Yêu & Hồ Sơ Cặp Đôi" else "1. Love Counter & Couple Profile",
-              desc = if (language == AppLanguage.VI)
-                "Theo dõi số ngày bên nhau với độ chính xác cao và thông tin chi tiết của 2 bạn:"
-              else
-                "Keep track of your exact days together and customize your couple profile:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Đếm chính xác từng ngày từ ngày bắt đầu yêu thương của hai bạn.",
-                "Chạm vào nút Trái Tim ở giữa để kích hoạt hiệu ứng Mưa Tim bay lãng mạn.",
-                "Chạm vào ảnh đại diện để cập nhật tên, ngày sinh, tuổi, cung hoàng đạo của cả 2.",
-                "Mọi thay đổi trong hồ sơ được lưu tự động."
-              ) else listOf(
-                "Accurately counts every single day from your anniversary start date.",
-                "Tap the beating heart in the center to trigger floating romantic hearts animation.",
-                "Tap a partner avatar to update names, birthdays, zodiacs, and avatars.",
-                "Profile changes are saved automatically."
-              )
-            )
-            1 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "2. Ghép Đôi Với Người Ấy" else "2. Pairing With Your Partner",
-              desc = if (language == AppLanguage.VI)
-                "Kết nối 2 máy thật qua Firestore để cùng nhau dùng chung 1 tài khoản tình yêu:"
-              else
-                "Link two real devices via Firestore so you both share one love account:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Mỗi người có 1 mã ghép đôi riêng — chia sẻ mã hoặc link cho người ấy để họ gửi lời mời.",
-                "Xác nhận ngày bắt đầu yêu khi chấp nhận lời mời; có thể từ chối hoặc hủy lời mời đã gửi bất kỳ lúc nào.",
-                "Sau khi ghép đôi, kỷ niệm/ngày kỷ niệm/hồ sơ được đồng bộ hai chiều theo thời gian thực giữa 2 máy.",
-                "Muốn dừng lại: yêu cầu hủy Set Love cần cả 2 người xác nhận (không thể tự ý hủy một phía)."
-              ) else listOf(
-                "Each account gets its own pairing code — share the code or link so your partner can send an invite.",
-                "Confirm your relationship start date when accepting an invite; a pending invite can be declined or cancelled anytime.",
-                "Once paired, memories/anniversaries/profile sync both ways in real time between the two devices.",
-                "Ending it requires mutual confirmation from both partners — neither side can unpair alone."
-              )
-            )
-            2 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "3. Kho Kỷ Niệm" else "3. Memories Album",
-              desc = if (language == AppLanguage.VI)
-                "Lưu giữ những khoảnh khắc đáng nhớ với ảnh và video thật:"
-              else
-                "Save your real, cherished moments with actual photos and videos:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Chụp ảnh mới hoặc chọn ảnh/video có sẵn trên máy — có ở cả trang chủ và tab Kỷ Niệm.",
-                "Ảnh/video của kỷ niệm chia sẻ với người thương được tải lên khi bạn lưu. Nếu mạng yếu hoặc tải lên lỗi, kỷ niệm chưa được lưu và app sẽ báo để bạn thử lại.",
-                "Đặt quyền riêng tư cho từng kỷ niệm: Chỉ 2 người (chia sẻ với người thương) hoặc Chỉ mình tôi (chỉ lưu trên máy này).",
-                "Nhấn vào ảnh để xem chi tiết, đánh dấu Yêu thích, hoặc xóa khi không cần nữa."
-              ) else listOf(
-                "Capture a new photo or pick an existing photo/video from your device — available on both Home and the Memories tab.",
-                "Memories shared with your partner upload their photo or video when you save. On a weak connection or a failed upload, the memory isn't saved and the app tells you so you can try again.",
-                "Set a privacy level per memory: Couple Only (shared with your partner) or Just Me (kept only on this device).",
-                "Tap any memory to view details, mark it a favorite, or delete it."
-              )
-            )
-            3 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "4. Lịch Kỷ Niệm & Cột Mốc" else "4. Anniversary Calendar & Milestones",
-              desc = if (language == AppLanguage.VI)
-                "Không bỏ lỡ ngày quan trọng:"
-              else
-                "Never miss a special day:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Xem đếm ngược số ngày đến cột mốc tiếp theo (100 ngày, 500 ngày, 1000 ngày, 1 năm...).",
-                "Thêm mốc kỷ niệm tùy chỉnh mới với ảnh minh họa, tiêu đề và ngày hẹn.",
-                "Bộ lọc thông minh: Kỷ niệm quan trọng, Sắp tới, Đã qua và Sinh nhật.",
-                "Bật chuông thông báo để được nhắc nhở trước 7 ngày, 3 ngày và 1 ngày."
-              ) else listOf(
-                "View countdown to upcoming milestones (100 days, 500 days, 1-year anniversary...).",
-                "Add custom milestones with photos, personalized descriptions, and date tags.",
-                "Smart filtering: Important, Upcoming, Past, and Birthdays.",
-                "Toggle notifications to receive alerts 7 days, 3 days, and 1 day in advance."
-              )
-            )
-            4 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "5. Gợi Ý Quà Tặng & Checklist Hẹn Hò" else "5. Gift Suggestions & Date Checklist",
-              desc = if (language == AppLanguage.VI)
-                "Gợi ý những món quà tinh tế và danh sách cần chuẩn bị:"
-              else
-                "Curated romantic gift ideas and essential date preparation checklist:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Danh mục phong phú: Hoa tươi & Thiệp, Trang sức cặp đôi, Bữa tối lãng mạn, Quà công nghệ.",
-                "Nhấn ♥ để lưu món yêu thích.",
-                "Xem chi tiết địa điểm gợi ý và bí quyết chuẩn bị bất ngờ cho đối phương.",
-                "Danh sách chuẩn bị (Checklist): Đánh dấu đồ đã chuẩn bị hoặc thêm đầu việc mới."
-              ) else listOf(
-                "Diverse categories: Flowers & Cards, Couple Jewelry, Candlelight Dinners, Tech Gifts.",
-                "Tap ♥ to save a gift.",
-                "View venue recommendations, budgeting, and romantic tips for each surprise.",
-                "Interactive Checklist: Check off prepared items and add custom date to-dos."
-              )
-            )
-            5 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "6. Nhắc Hẹn & Thông Báo" else "6. Reminders & Notifications",
-              desc = if (language == AppLanguage.VI)
-                "Không bỏ lỡ những ngày đặc biệt:"
-              else
-                "Never miss a special day:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Bật chuông khi thêm sự kiện hoặc cột mốc trong Lịch để được nhắc đúng ngày.",
-                "Đặt báo thức cho từng món quà để kịp chuẩn bị.",
-                "Thông báo có nút 'Mở InLove' và 'Nhắc lại sau 1h'.",
-                "Chạm biểu tượng chuông ở góc trên để xem tất cả thông báo."
-              ) else listOf(
-                "Turn on the bell when you add a calendar event or milestone to be reminded on the day.",
-                "Set an alarm on any gift idea to get it in time.",
-                "Notifications have 'Open InLove' and 'Snooze 1h' buttons.",
-                "Tap the bell at the top to see all your notifications."
-              )
-            )
-            6 -> GuideContentSection(
-              title = if (language == AppLanguage.VI) "7. Cài Đặt, Đổi Nền & Bảo Mật" else "7. Settings, Wallpapers & Privacy",
-              desc = if (language == AppLanguage.VI)
-                "Cá nhân hóa trải nghiệm và bảo vệ những khoảnh khắc riêng tư:"
-              else
-                "Personalize your experience and safeguard couple memories:",
-              points = if (language == AppLanguage.VI) listOf(
-                "Đổi hình nền: chọn mẫu có sẵn hoặc tải ảnh đôi từ máy — được lưu lại cho lần mở app sau.",
-                "Chuyển đổi ngôn ngữ Tiếng Việt 🇻🇳 và English 🇬🇧 bất kỳ lúc nào.",
-                "Khóa ứng dụng bằng mã PIN 4 số riêng tư (app hiện chưa hỗ trợ vân tay/FaceID)."
-              ) else listOf(
-                "Change the wallpaper: pick a preset or upload your own couple photo — remembered across app restarts.",
-                "Switch languages between Tiếng Việt 🇻🇳 and English 🇬🇧 at any time.",
-                "Lock the app with a private 4-digit PIN (fingerprint/Face unlock isn't supported yet)."
-              )
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Confirm Button
-        PrimaryGradientButton(
-          text = strings.btnGotIt,
-          onClick = onDismiss,
-          modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = MinTouchBox),
-          testTag = "btn_close_guide"
-        )
-      }
-    }
-  }
-}
-
-@Composable
-private fun GuideContentSection(
-  title: String,
-  desc: String,
-  points: List<String>
-) {
-  Card(
-    shape = RoundedCornerShape(20.dp),
-    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7F9)),
-    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-    modifier = Modifier
-      .fillMaxWidth()
-      .border(1.dp, Color(0xFFFFCDD2).copy(alpha = 0.6f), RoundedCornerShape(20.dp))
-  ) {
-    Column(modifier = Modifier.padding(14.dp)) {
-      Text(
-        text = title,
-        fontSize = 14.5.sp,
-        fontWeight = FontWeight.ExtraBold,
-        color = Primary
-      )
-      Spacer(modifier = Modifier.height(4.dp))
-      Text(
-        text = desc,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Medium,
-        color = Color(0xFF6B2B50)
-      )
-
-      Spacer(modifier = Modifier.height(10.dp))
-
-      points.forEach { point ->
-        Row(
-          modifier = Modifier.padding(vertical = 3.dp),
-          verticalAlignment = Alignment.Top
-        ) {
-          Icon(
-            imageVector = Icons.Filled.CheckCircle,
-            contentDescription = null,
-            tint = HotPink,
-            modifier = Modifier
-              .size(16.dp)
-              .padding(top = 2.dp)
-          )
-          Spacer(modifier = Modifier.width(8.dp))
-          Text(
-            text = point,
-            fontSize = 12.sp,
-            color = Color(0xFF26071B),
-            lineHeight = 17.sp
-          )
-        }
-      }
-    }
-  }
-}
+  onDismiss: () -> Unit,
+  onQuickAction: (GuideQuickAction) -> Unit = {},
+) = InLoveUserGuideDialog(
+  language = language,
+  onDismiss = onDismiss,
+  onQuickAction = onQuickAction,
+)
 
 // ==========================================
 // 3. WALLPAPER PICKER DIALOG

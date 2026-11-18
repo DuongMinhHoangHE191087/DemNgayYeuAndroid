@@ -55,8 +55,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -1108,19 +1108,7 @@ fun InLoveDatePickerField(
           }
         }
       },
-      colors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = Color(0xFF1E1E24),
-        unfocusedTextColor = Color(0xFF1E1E24),
-        focusedContainerColor = Color.White,
-        unfocusedContainerColor = Color.White,
-        focusedBorderColor = Primary,
-        unfocusedBorderColor = Color(0xFFC7C7CC),
-        focusedLabelColor = Primary,
-        unfocusedLabelColor = Color(0xFF424242),
-        focusedPlaceholderColor = Color(0xFF757575),
-        unfocusedPlaceholderColor = Color(0xFF9E9E9E),
-        cursorColor = Primary
-      ),
+      colors = inLoveOutlinedTextFieldColors(),
       shape = RoundedCornerShape(12.dp),
       modifier = Modifier
         .fillMaxWidth()

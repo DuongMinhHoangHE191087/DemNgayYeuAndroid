@@ -56,8 +56,8 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -88,19 +88,7 @@ import com.example.ui.util.Birthday
 import java.io.File
 
 @Composable
-private fun profileDialogTextFieldColors() = OutlinedTextFieldDefaults.colors(
-  focusedTextColor = Color(0xFF1E1E24),
-  unfocusedTextColor = Color(0xFF1E1E24),
-  focusedContainerColor = Color.White,
-  unfocusedContainerColor = Color.White,
-  focusedBorderColor = Color(0xFFE91E63),
-  unfocusedBorderColor = Color(0xFFC7C7CC),
-  focusedLabelColor = Color(0xFFE91E63),
-  unfocusedLabelColor = Color(0xFF424242),
-  focusedPlaceholderColor = Color(0xFF757575),
-  unfocusedPlaceholderColor = Color(0xFF9E9E9E),
-  cursorColor = Color(0xFFE91E63)
-)
+private fun profileDialogTextFieldColors() = inLoveOutlinedTextFieldColors()
 
 @Composable
 fun EditMyProfileDialog(

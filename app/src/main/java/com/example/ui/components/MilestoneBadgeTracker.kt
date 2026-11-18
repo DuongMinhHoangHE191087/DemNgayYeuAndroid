@@ -82,8 +82,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import com.example.ui.designsystem.inLoveOutlinedTextFieldColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -1359,9 +1359,9 @@ fun DigitalTrophyRewardDialog(
                   .fillMaxWidth()
                   .padding(top = 6.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
+                colors = inLoveOutlinedTextFieldColors(
                   focusedBorderColor = Primary,
-                  unfocusedBorderColor = Color(0xFFDDDDDD)
+                  unfocusedBorderColor = Color(0xFFDDDDDD),
                 ),
                 maxLines = 3,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

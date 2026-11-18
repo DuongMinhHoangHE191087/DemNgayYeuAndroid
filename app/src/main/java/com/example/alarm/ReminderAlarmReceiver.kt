@@ -146,31 +146,30 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
     const val CHANNEL_ANNIVERSARIES_ID = "love_anniversaries_channel"
     const val CHANNEL_REMINDERS_ID = "love_reminders_channel"
+    const val CHANNEL_ANNIVERSARIES_SILENT_ID = "love_anniversaries_silent_channel"
+    const val CHANNEL_REMINDERS_SILENT_ID = "love_reminders_silent_channel"
 
-    const val EXTRA_TITLE = "extra_reminder_title"
-    const val EXTRA_MESSAGE = "extra_reminder_message"
-    const val EXTRA_REMINDER_ID = "extra_reminder_id"
-    const val EXTRA_TARGET_TAB = "extra_target_tab"
-    const val EXTRA_CHANNEL_ID = "extra_channel_id"
-    // Account token that scheduled the alarm (AccountDataVault.currentToken); other accounts' alarms are dropped.
-    const val EXTRA_OWNER = "extra_owner_token"
+    internal fun resolveChannelId(requestedChannelId: String, soundEnabled: Boolean): String {
+      if (soundEnabled) {
+        return when (requestedChannelId) {
+          CHANNEL_ANNIVERSARIES_SILENT_ID -> CHANNEL_ANNIVERSARIES_ID
+          CHANNEL_REMINDERS_SILENT_ID -> CHANNEL_REMINDERS_ID
+          else -> requestedChannelId
+        }
+      }
+      return when (requestedChannelId) {
+        CHANNEL_ANNIVERSARIES_ID, CHANNEL_ANNIVERSARIES_SILENT_ID -> CHANNEL_ANNIVERSARIES_SILENT_ID
+        else -> CHANNEL_REMINDERS_SILENT_ID
+      }
+    }
 
-    /** The receiver has no Compose state, so it reads the language the app saved. */
-    private fun tr(context: Context, vi: String, en: String) =
-      if (LocaleManager.getInitialLanguage(context) == AppLanguage.EN) en else vi
-
-    fun showNotification(
+    private fun ensureNotificationChannels(
       context: Context,
-      title: String,
-      message: String,
-      notificationId: Int = 1001,
-      channelId: String = CHANNEL_ANNIVERSARIES_ID,
-      targetTab: String = "calendar"
+      notificationManager: NotificationManager,
+      soundEnabled: Boolean,
     ) {
-      val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-      // Create Notification Channels for Android O+
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+      if (soundEnabled) {
         val anniversaryChannel = NotificationChannel(
           CHANNEL_ANNIVERSARIES_ID,
           tr(context, "Kỷ niệm & Ngày đặc biệt ❤️", "Anniversaries & Special Days ❤️"),
@@ -195,7 +194,59 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
           enableVibration(true)
         }
         notificationManager.createNotificationChannel(remindersChannel)
+      } else {
+        val silentAnniversaryChannel = NotificationChannel(
+          CHANNEL_ANNIVERSARIES_SILENT_ID,
+          tr(context, "Kỷ niệm & Ngày đặc biệt (Im lặng)", "Anniversaries & Special Days (Silent)"),
+          NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+          description = tr(context, "Thông báo im lặng nhắc nhở ngày kỷ niệm tình yêu", "Silent reminders for love anniversaries and special milestones")
+          enableLights(true)
+          lightColor = Color.rgb(255, 64, 129)
+          setSound(null, null)
+          enableVibration(false)
+        }
+        notificationManager.createNotificationChannel(silentAnniversaryChannel)
+
+        val silentRemindersChannel = NotificationChannel(
+          CHANNEL_REMINDERS_SILENT_ID,
+          tr(context, "Nhắc hẹn & Báo thức (Im lặng)", "Reminders & Alarms (Silent)"),
+          NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+          description = tr(context, "Thông báo im lặng nhắc hẹn hò và chuẩn bị quà tặng", "Silent reminders for dates and gift preparation")
+          enableLights(true)
+          lightColor = Color.rgb(255, 138, 101)
+          setSound(null, null)
+          enableVibration(false)
+        }
+        notificationManager.createNotificationChannel(silentRemindersChannel)
       }
+    }
+
+    const val EXTRA_TITLE = "extra_reminder_title"
+    const val EXTRA_MESSAGE = "extra_reminder_message"
+    const val EXTRA_REMINDER_ID = "extra_reminder_id"
+    const val EXTRA_TARGET_TAB = "extra_target_tab"
+    const val EXTRA_CHANNEL_ID = "extra_channel_id"
+    // Account token that scheduled the alarm (AccountDataVault.currentToken); other accounts' alarms are dropped.
+    const val EXTRA_OWNER = "extra_owner_token"
+
+    /** The receiver has no Compose state, so it reads the language the app saved. */
+    private fun tr(context: Context, vi: String, en: String) =
+      if (LocaleManager.getInitialLanguage(context) == AppLanguage.EN) en else vi
+
+    fun showNotification(
+      context: Context,
+      title: String,
+      message: String,
+      notificationId: Int = 1001,
+      channelId: String = CHANNEL_ANNIVERSARIES_ID,
+      targetTab: String = "calendar"
+    ) {
+      val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+      val soundEnabled = LocaleManager.isSoundEnabled(context)
+      val effectiveChannelId = resolveChannelId(channelId, soundEnabled)
+      ensureNotificationChannels(context, notificationManager, soundEnabled)
 
       val launchIntent = Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -226,18 +277,15 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
       )
 
-      val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-      val notification = NotificationCompat.Builder(context, channelId)
+      val builder = NotificationCompat.Builder(context, effectiveChannelId)
         .setSmallIcon(R.drawable.ic_stat_heart)
         .setContentTitle(title)
         .setContentText(message)
         .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setPriority(if (soundEnabled) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
         .setCategory(NotificationCompat.CATEGORY_REMINDER)
         .setAutoCancel(true)
-        .setSound(defaultSoundUri)
-        .setVibrate(longArrayOf(0, 300, 150, 300))
+        .setSilent(!soundEnabled)
         .setColor(0xFFFF4081.toInt())
         .setContentIntent(pendingIntent)
         .addAction(
@@ -250,9 +298,20 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
           tr(context, "Nhắc lại sau 1h ⏰", "Snooze 1h ⏰"),
           snoozePendingIntent
         )
-        .build()
 
-      notificationManager.notify(notificationId, notification)
+      if (soundEnabled) {
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        builder
+          .setSound(defaultSoundUri)
+          .setVibrate(longArrayOf(0, 300, 150, 300))
+      } else {
+        builder
+          .setSound(null)
+          .setVibrate(null)
+          .setDefaults(0)
+      }
+
+      notificationManager.notify(notificationId, builder.build())
     }
   }
 }

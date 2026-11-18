@@ -22,9 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -226,7 +223,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
       ) { isGranted ->
         if (isGranted) {
-          viewModel.showToast(if (appLanguage == AppLanguage.VI) "🔔 Đã kích hoạt quyền thông báo kỷ niệm!" else "🔔 Anniversary notifications enabled!")
+          viewModel.showToast(if (appLanguage == AppLanguage.VI) "Đã kích hoạt quyền thông báo kỷ niệm" else "Anniversary notifications enabled")
           viewModel.resyncAllAnniversaryAlarms()
         }
       }
@@ -268,12 +265,6 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       else -> strings.navSettings
     }
 
-    val topBarState = rememberTopAppBarState()
-    val topBarScroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topBarState)
-    LaunchedEffect(selectedTab) {
-      topBarState.heightOffset = 0f
-      topBarState.contentOffset = 0f
-    }
     val currentOnlineUser by viewModel.currentOnlineUser.collectAsState()
     val cardUser = currentOnlineUser.withCardFallback(boyName, boyBirthDate, boyAvatarUrl)
     LifecycleResumeEffect(Unit) {
@@ -335,7 +326,6 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
             avatarUrl = cardUser.avatarUrl,
             latest = null,
             isEnglish = appLanguage == AppLanguage.EN,
-            scrollBehavior = topBarScroll,
             hasUnread = hasUnreadNotifications,
             onBellClick = { viewModel.setShowNotifications(true) },
             onProfileClick = { viewModel.openEditProfileDialog() },
@@ -360,7 +350,7 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
         )
       },
       snackbarHost = { SnackbarHost(snackbarHostState) },
-      modifier = Modifier.fillMaxSize().nestedScroll(topBarScroll.nestedScrollConnection)
+      modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
       Box(
         modifier = Modifier
@@ -561,9 +551,6 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       )
     }
 
-    // viewModel.openSetAlarmDialog() is called from CalendarScreen/GiftScreen,
-    // but until this block was added nothing ever collected showSetAlarmDialog or rendered the
-    // dialog — tapping the alarm icon flipped the StateFlow with no visible effect at all.
     if (showSetAlarmDialog) {
       SetAlarmReminderDialog(
         initialTitle = alarmDialogPresetTitle,
@@ -586,39 +573,34 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
     if (showGuideDialog) {
       UserGuideDialog(
         language = appLanguage,
-        onDismiss = { viewModel.closeGuideDialog() }
+        onDismiss = { viewModel.closeGuideDialog() },
+        onQuickAction = { action ->
+          viewModel.closeGuideDialog()
+          when (action) {
+            com.example.shared.guide.GuideQuickAction.OPEN_HOME -> viewModel.setTab(0)
+            com.example.shared.guide.GuideQuickAction.OPEN_PAIRING -> viewModel.openPairingScreen()
+            com.example.shared.guide.GuideQuickAction.OPEN_DOSSIER -> { viewModel.setTab(3); viewModel.openPartnerDossierSheet() }
+            com.example.shared.guide.GuideQuickAction.OPEN_CALENDAR -> viewModel.setTab(2)
+          }
+        }
       )
     }
 
     if (showBadgeShowcaseDialog) {
-      MilestoneBadgeShowcaseDialog(
-        viewModel = viewModel,
-        onDismiss = { viewModel.closeBadgeShowcase() }
-      )
+      MilestoneBadgeShowcaseDialog(viewModel = viewModel, onDismiss = { viewModel.closeBadgeShowcase() })
     }
 
     selectedBadge?.let { badge ->
-      DigitalTrophyRewardDialog(
-        badge = badge,
-        currentLoveDays = loveDays,
-        viewModel = viewModel,
-        onDismiss = { viewModel.selectBadge(null) }
-      )
+      DigitalTrophyRewardDialog(badge = badge, currentLoveDays = loveDays, viewModel = viewModel, onDismiss = { viewModel.selectBadge(null) })
     }
 
     val showPairingScreen by viewModel.showPairingScreen.collectAsState()
     if (showPairingScreen) {
       com.example.ui.components.AppDialog(
         onDismissRequest = { viewModel.closePairingScreen() },
-        properties = androidx.compose.ui.window.DialogProperties(
-          usePlatformDefaultWidth = false,
-          dismissOnBackPress = true
-        )
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = true)
       ) {
-        PairingScreen(
-          viewModel = viewModel,
-          onNavigateBack = { viewModel.closePairingScreen() }
-        )
+        PairingScreen(viewModel = viewModel, onNavigateBack = { viewModel.closePairingScreen() })
       }
     }
 
@@ -628,27 +610,20 @@ fun InLoveApp(viewModel: InLoveViewModel = viewModel()) {
       EditMyProfileDialog(
         currentUser = cardUser,
         presetAvatars = dynamicPresetAvatars,
-        isEnglish = appLanguage == com.example.ui.util.AppLanguage.EN,
+        isEnglish = appLanguage == AppLanguage.EN,
         canEditPhoto = true,
         onPhotoPicked = { viewModel.saveLocalAvatar(it, false) },
         onPhotoDiscarded = { viewModel.deleteUnsavedAvatar(it) },
         onDismiss = { viewModel.closeEditProfileDialog() },
-        onSave = { name, birth, avatar, gender, bio, clearBirthday ->
-          viewModel.updateMyProfile(name, birth, avatar, gender, bio, clearBirthday)
-        }
+        onSave = { name, birth, avatar, gender, bio, clearBirthday -> viewModel.updateMyProfile(name, birth, avatar, gender, bio, clearBirthday) }
       )
     }
 
     if (showVipDialog) {
       com.example.ui.components.AppDialog(
         onDismissRequest = { viewModel.setVipDialogVisible(false) },
-        properties = androidx.compose.ui.window.DialogProperties(
-          usePlatformDefaultWidth = false,
-          dismissOnBackPress = true
-        )
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = true)
       ) {
-        // A Dialog window re-provides LocalContext/LocalConfiguration from its own view, dropping the
-        // in-app locale override, so re-apply it or stringResource() follows the device language.
         androidx.compose.runtime.CompositionLocalProvider(*compositionLocals) {
           PaywallScreen(
             billingManager = com.example.di.AppServiceLocator.billingManager,

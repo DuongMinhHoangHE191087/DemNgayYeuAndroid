@@ -1,0 +1,114 @@
+{
+  "parameters": {
+    "sdk_kill_android": {
+      "defaultValue": {
+        "value": "{\"ads\":false,\"iap\":false,\"logevent\":false}"
+      },
+      "valueType": "JSON",
+      "description": "Emergency remote kill switch for Android :appplugin (SdkKillSwitch)."
+    },
+    "ads_policy_android": {
+      "defaultValue": {
+        "value": "{\"schema_version\":1,\"no_interstitial_first_session\":true,\"app_open_from_session\":2,\"interstitial_min_gap_seconds\":120,\"screens_before_interstitial\":3,\"post_click_cooldown_seconds\":5,\"app_open_max_age_minutes\":240,\"fullscreen_max_age_minutes\":60,\"by_tier\":{\"T1\":{\"no_interstitial_first_session\":true,\"app_open_from_session\":2,\"interstitial_min_gap_seconds\":120,\"screens_before_interstitial\":3,\"post_click_cooldown_seconds\":5},\"T2\":{\"no_interstitial_first_session\":true,\"app_open_from_session\":2,\"interstitial_min_gap_seconds\":120,\"screens_before_interstitial\":3,\"post_click_cooldown_seconds\":5},\"VN\":{\"no_interstitial_first_session\":true,\"app_open_from_session\":3,\"interstitial_min_gap_seconds\":180,\"screens_before_interstitial\":4,\"post_click_cooldown_seconds\":8},\"OTHER\":{\"no_interstitial_first_session\":true,\"app_open_from_session\":2,\"interstitial_min_gap_seconds\":150,\"screens_before_interstitial\":4,\"post_click_cooldown_seconds\":6}}}"
+      },
+      "valueType": "JSON",
+      "description": "Geo-tiered Android ad frequency & cooldown caps matching AdsPolicy / AdPlacementPolicy."
+    },
+    "brain_policy_android": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_brain_v1\",\"enabled\":false,\"guardrails\":{\"max_interstitial_per_session\":3,\"max_ads_24h\":12,\"min_minutes_between_interstitial\":2,\"churn_risk_threshold\":0.7},\"iap\":{\"max_offers_per_session\":3,\"min_minutes_between_offers\":10,\"max_purchases_per_session_before_break\":3,\"frustration_streak_threshold\":2},\"experiment\":{\"holdout_fraction\":0.05,\"holdout_salt\":\"inlove_brain_holdout_v1\",\"rollout_fraction\":0.0,\"exploration_floor\":0.05},\"remove_ads_products\":[\"vip_monthly\",\"vip_yearly\",\"vip_lifetime\"],\"reward\":{\"weight_immediate_value\":0.3,\"weight_continuation\":0.7}}"
+      },
+      "valueType": "JSON",
+      "description": "Android BrainPolicy tuning & safety caps (disabled by default matching InLoveApplication)."
+    },
+    "paywall_config_android": {
+      "defaultValue": {
+        "value": "{\"schema_version\":2,\"version\":\"inlove_paywall_v2_1\",\"holdout\":{\"fraction\":0.05},\"session_cap\":2,\"placements\":{\"settings_vip\":{\"decision_point\":\"SHOP_OPEN\",\"proactive\":false,\"variants\":[{\"id\":\"yearly_anchor\",\"weight\":80,\"products\":[\"vip_yearly\",\"vip_monthly\",\"vip_lifetime\"],\"highlight\":\"vip_yearly\"},{\"id\":\"lifetime_anchor\",\"weight\":20,\"products\":[\"vip_lifetime\",\"vip_yearly\",\"vip_monthly\"],\"highlight\":\"vip_lifetime\"}]},\"gift_ai_limit\":{\"decision_point\":\"CURRENCY_LOW\",\"proactive\":false,\"variants\":[{\"id\":\"ai_concierge_yearly\",\"weight\":100,\"products\":[\"vip_yearly\",\"vip_monthly\",\"vip_lifetime\"],\"highlight\":\"vip_yearly\"}]},\"post_gift_explore\":{\"decision_point\":\"SHOP_OPEN\",\"proactive\":true,\"variants\":[{\"id\":\"soft_nudge_yearly\",\"weight\":100,\"products\":[\"vip_yearly\",\"vip_monthly\",\"vip_lifetime\"],\"highlight\":\"vip_yearly\"}]}}}"
+      },
+      "valueType": "JSON",
+      "description": "Android PaywallConfigV2 placements with native 5% holdout and canonical VIP SKUs outside SacredZones."
+    },
+    "subscription_lifecycle_android": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_sub_lifecycle_v1\",\"enabled\":true,\"dunning_cadence\":[1,2,4],\"win_back_enabled\":true,\"in_app_messages\":{\"enabled\":true}}"
+      },
+      "valueType": "JSON",
+      "description": "Android SubscriptionLifecycle dunning cadence, Play in-app messaging, and win-back policy."
+    },
+    "ads_bidding_partners_android": {
+      "defaultValue": {
+        "value": "{\"schema_version\":1,\"partners\":[\"meta\"]}"
+      },
+      "valueType": "JSON",
+      "description": "Android BiddingPartners allowlist restricting active mediation adapters."
+    },
+    "sdk_kill_ios": {
+      "defaultValue": {
+        "value": "{\"ads\":false,\"iap\":false,\"logevent\":false}"
+      },
+      "valueType": "JSON",
+      "description": "Emergency remote kill switch for iOS monetization and ad layers."
+    },
+    "brain_policy_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_brain_ios_v1\",\"enabled\":false,\"guardrails\":{\"max_interstitial_per_session\":3,\"max_ads_24h\":12,\"min_minutes_between_interstitial\":2,\"churn_risk_threshold\":0.7},\"iap\":{\"max_offers_per_session\":3,\"min_minutes_between_offers\":10,\"max_purchases_per_session_before_break\":3,\"frustration_streak_threshold\":2},\"experiment\":{\"holdout_fraction\":0.05,\"holdout_salt\":\"inlove_brain_holdout_v1\",\"rollout_fraction\":0.0,\"exploration_floor\":0.05},\"remove_ads_products\":[\"vip_monthly\",\"vip_yearly\",\"vip_lifetime\"],\"reward\":{\"weight_immediate_value\":0.3,\"weight_continuation\":0.7}}"
+      },
+      "valueType": "JSON",
+      "description": "iOS MonetizationBrainCore BrainPolicy parameters synchronized with Android."
+    },
+    "paywall_config_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_paywall_ios_v1\",\"placements\":{\"settings_vip\":{\"decision_point\":\"SHOP_OPEN\",\"variants\":[{\"id\":\"yearly_anchor\",\"weight\":80,\"products\":[\"vip_yearly\",\"vip_monthly\",\"vip_lifetime\"],\"highlight\":\"vip_yearly\"},{\"id\":\"lifetime_anchor\",\"weight\":20,\"products\":[\"vip_lifetime\",\"vip_yearly\",\"vip_monthly\"],\"highlight\":\"vip_lifetime\"}]},\"gift_ai_limit\":{\"decision_point\":\"CURRENCY_LOW\",\"variants\":[{\"id\":\"ai_concierge_yearly\",\"weight\":100,\"products\":[\"vip_yearly\",\"vip_monthly\",\"vip_lifetime\"],\"highlight\":\"vip_yearly\"}]},\"post_gift_explore\":{\"decision_point\":\"SHOP_OPEN\",\"variants\":[{\"id\":\"soft_nudge_yearly\",\"weight\":100,\"products\":[\"vip_yearly\",\"vip_monthly\",\"vip_lifetime\"],\"highlight\":\"vip_yearly\"}]}}}"
+      },
+      "valueType": "JSON",
+      "description": "iOS PaywallManager placements synchronized with canonical StoreKit 2 SKUs."
+    },
+    "purchase_routing_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_routing_ios_v1\",\"web_shop\":{\"enabled\":false},\"rules\":[{\"product_id\":\"vip_monthly\",\"channel\":\"app_store\"},{\"product_id\":\"vip_yearly\",\"channel\":\"app_store\"},{\"product_id\":\"vip_lifetime\",\"channel\":\"app_store\"}]}"
+      },
+      "valueType": "JSON",
+      "description": "iOS PurchaseRouter routing all canonical VIP SKUs through App Store StoreKit 2."
+    },
+    "subscription_lifecycle_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_sub_lifecycle_ios_v1\",\"enabled\":true,\"dunning_cadence\":[1,2,4],\"win_back_enabled\":true}"
+      },
+      "valueType": "JSON",
+      "description": "iOS SubscriptionLifecycle dunning cadence and win-back toggles."
+    },
+    "battle_pass_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_bp_dormant_v1\",\"season_id\":\"inlove_dormant_s0\",\"start_ts_ms\":1735689600000,\"end_ts_ms\":1735776000000,\"tiers\":[{\"tier\":1,\"xp_required\":0}]}"
+      },
+      "valueType": "JSON",
+      "description": "Dormant historical season satisfying BattlePass parser validation while remaining inactive for InLove."
+    },
+    "recurring_grants_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_grants_ios_v1\",\"enabled\":false,\"grants\":[]}"
+      },
+      "valueType": "JSON",
+      "description": "iOS RecurringGrants disabled for utility couple app."
+    },
+    "offerwall_config_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_offerwall_ios_v1\",\"enabled\":false,\"providers\":[]}"
+      },
+      "valueType": "JSON",
+      "description": "iOS OfferwallManager disabled to keep romantic UX clean."
+    },
+    "crm_bridge_ios": {
+      "defaultValue": {
+        "value": "{\"version\":\"inlove_crm_ios_v1\",\"enabled\":false,\"sinks\":[]}"
+      },
+      "valueType": "JSON",
+      "description": "iOS CrmBridge disabled until external CRM sink is integrated."
+    }
+  },
+  "version": {
+    "versionNumber": "1",
+    "updateOrigin": "REST_API",
+    "updateType": "INCREMENTAL_UPDATE"
+  }
+}

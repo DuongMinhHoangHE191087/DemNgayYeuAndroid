@@ -5,9 +5,10 @@
     "paths": [
       "shared/src/commonMain/kotlin/com/example/data",
       "shared/src/commonMain/kotlin/com/example/domain",
-      "shared/src/commonMain/kotlin/com/example/config"
+      "shared/src/commonMain/kotlin/com/example/config",
+      "shared/src/commonMain/kotlin/com/example/shared"
     ],
     "exceptGlobs": [],
-    "reason": "Code commonMain (data, domain, config) không được import API nền tảng (android.*, java/javax, Firebase, Moshi, androidx work/core/sqlite.db). Dùng interface hoặc expect/actual."
+    "reason": "Code commonMain (data, domain, config, shared) không được import API nền tảng (android.*, java/javax, Firebase, Moshi, androidx work/core/sqlite.db). Dùng interface hoặc expect/actual."
   }
 ]
